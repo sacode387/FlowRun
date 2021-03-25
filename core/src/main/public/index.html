@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="user-scalable=no, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, minimal-ui">
+
+    <title>FlowRun</title>
+
+    <link rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/cytoscape-context-menus@4.0.0/cytoscape-context-menus.css">
+    <link href="https://fonts.googleapis.com/css2?family=Ubuntu+Mono&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/water.css">
+    <style>
+        pre {
+            margin: 2px;
+        }
+        #content {
+            display: grid;
+            grid-template-columns: 50% auto;
+            grid-gap: 10px;
+        }
+        #cy {
+            border: 1px solid black;
+        }
+        #buttons-wrapper {
+            padding: 1em;
+            border-style:  solid;
+            border-width: 0 1px 0 1px;
+        }
+        #edit-wrapper {
+            height: 30vh;
+            padding: 1em;
+            border: 1px solid;
+        }
+        #run-output-wrapper {
+            height: 20vh;
+            padding: 1em;
+            border: 1px solid;
+        }
+        #run-output-wrapper .error {
+            color: red;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="content">
+        <div id="cy"></div>
+
+        <div>
+            <div id="edit-wrapper"></div>
+            <div id="buttons-wrapper">
+                <button id="run-btn">Run</button>
+            </div>
+            
+            <div id="run-output-wrapper">
+                
+                <div id="run-output"></div>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+    
+    <script src="https://cdn.jsdelivr.net/npm/cytoscape@3.17.1/dist/cytoscape.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/cytoscape-context-menus@4.0.0/cytoscape-context-menus.min.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/dagre@0.8.5/dist/dagre.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/cytoscape-dagre@2.3.2/cytoscape-dagre.js"></script>
+    
+    <script src="scripts/flowrun-fastopt.js"></script>
+</body>
+
+</html>
