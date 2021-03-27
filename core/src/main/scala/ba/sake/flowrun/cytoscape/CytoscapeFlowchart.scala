@@ -60,31 +60,42 @@ class CytoscapeFlowchart(
             onClickFunction = { (event: dom.Event) =>
               val target = event.target.asDyn
 
-              if (target.data("tpe").toString == Node.If) {
+             /* if (target.data("tpe").toString == Node.If) {
+                // if it is IF/WHILE/FOR node
+                // we need to delete everything between it and its IF-END
                 val endId = target.data("endId").toString
 
                 val prevEdge = target.incomers("edge").first()
                 val nextId = cy.asDyn.nodes(s"node[id = '$endId']").outgoers("node").first().data("id").toString
-
                 prevEdge.move(js.Dynamic.literal(target = nextId))
+
                 val toDeleteIds = getDeleteIds(target, endId)
                 toDeleteIds.foreach(id => cy.remove(s"node[id = '$id']"))
-              } else {
-                val ins = target.incomers("node").toArray().asInstanceOf[js.Array[js.Object]].toSeq
-                val outs = target.outgoers("node").toArray().asInstanceOf[js.Array[js.Object]].toSeq
-                target.remove()
-                // rebind remaining nodes
-                ins.foreach { inNode =>
-                  val inNodeId = inNode.asDyn.id().toString
-                  outs.foreach { outNode =>
-                    val outNodeId = outNode.asDyn.id().toString
-                    cy.add(Edge(inNodeId, outNodeId).toLit)
-                  }
-                }
-              }
+              } else*/ {
 
-              // TODO skontat ako je true/false
-              // DODAT DUMMY OPET !!! ?
+                val prevEdge = target.incomers("edge").first()
+                val prevEdgeLabel = prevEdge.data("label").toString
+                val prevId = target.incomers("node").first().data("id").toString
+
+                // MAYBE END NODE (IF/WHILE/FOR)
+                val maybeEndId = Option(target.data("endId").toString).filterNot(_.trim.isEmpty)
+                val nextId = maybeEndId match
+                  case Some(endId) =>
+                    cy.asDyn.nodes(s"node[id = '$endId']").outgoers("node").first().data("id").toString
+                  case None =>
+                    target.outgoers("node").first().data("id").toString
+
+                if prevEdgeLabel == "true" || prevEdgeLabel == "false" then
+                  val dummyNode = Node("", Node.Dummy, startId = prevId, endId = nextId)
+                  cy.add(dummyNode.toLit)
+                  cy.add(Edge(dummyNode.id, nextId, dir = "vert").toLit)
+                  prevEdge.move(js.Dynamic.literal(target = dummyNode.id)) // rebind
+                else 
+                  prevEdge.move(js.Dynamic.literal(target = nextId)) // rebind
+
+                val toDeleteIds = getDeleteIds(target, maybeEndId)
+                toDeleteIds.foreach(id => cy.remove(s"node[id = '$id']"))
+              }
               
               doLayout()
 
@@ -343,15 +354,18 @@ class CytoscapeFlowchart(
     }
   }
 
-  // set of nodes to be deleted, e.g. when deleting an IF
-  private def getDeleteIds(node: js.Dynamic, endId: String): Set[String] = {
-    val outgoers = node.outgoers("node").toArray().asInstanceOf[js.Array[js.Dynamic]]
-    val res = for (outgoer <- outgoers) yield {
-      val outgoerId = outgoer.data("id").toString
-      if (outgoerId != endId) getDeleteIds(outgoer, endId)
-      else Set.empty
-    }
-    res.flatten.toSet + node.data("id").toString + endId
+  // set of nodes to be deleted, until END-ID, e.g. when deleting an IF
+  private def getDeleteIds(node: js.Dynamic, maybeEndId: Option[String]): Set[String] = maybeEndId match {
+    case None =>
+      Set(node.data("id").toString)
+    case Some(endId) =>
+      val outgoers = node.outgoers("node").toArray().asInstanceOf[js.Array[js.Dynamic]]
+      val res = for (outgoer <- outgoers) yield {
+        val outgoerId = outgoer.data("id").toString
+        if (outgoerId != endId) getDeleteIds(outgoer, Some(endId))
+        else Set.empty
+      }
+      res.flatten.toSet + node.data("id").toString + endId
   }
   
   private def doLayout(): Unit = {

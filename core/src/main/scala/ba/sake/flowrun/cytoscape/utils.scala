@@ -7,7 +7,7 @@ object utils {
 
   val styleJson = js.JSON.parse("""[
     {
-      "selector": "node, edge",
+      "selector": "node",
       "style": {
         "overlay-opacity": 0,
         "font-family": "Ubuntu Mono, monospace",
@@ -104,6 +104,9 @@ object utils {
     }, {
       "selector": "edge",
       "style": {
+        "overlay-opacity": 0,
+        "font-family": "Ubuntu Mono, monospace",
+        "font-size": "12px",
         "label": "data(label)",
         "text-margin-y": -10,
         "width": 2,
@@ -118,6 +121,18 @@ object utils {
       "selector": "edge[dir = 'vert']",
       "style": {
         "taxi-direction": "vertical"
+      }
+    }, {
+      "selector": "edge[label = 'false']",
+      "style": {
+        "line-color": "red",
+        "target-arrow-color": "red"
+      }
+    }, {
+      "selector": "edge[label = 'true']",
+      "style": {
+        "line-color": "green",
+        "target-arrow-color": "green"
       }
     }
   ]""")
