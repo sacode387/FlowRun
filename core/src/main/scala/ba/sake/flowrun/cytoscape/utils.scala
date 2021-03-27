@@ -73,6 +73,7 @@ object utils {
     }, {
       "selector": "node.output",
       "style": {
+        "label": "data(rawExpr)",
         "background-color": "#0000ff",
         "color": "white",
         "shape": "polygon",

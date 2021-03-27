@@ -49,7 +49,7 @@ class CytoscapeFlowchart(
   private def setupMenus(): Unit = {
     cy.contextMenus(
       js.Dynamic.literal(
-        evtType = "cxttap", // cxttap == right-click, tap == click
+        evtType = "cxttap", // right-click
         menuItems = js.Array(
           js.Dynamic.literal(
             id = "remove",
@@ -101,7 +101,7 @@ class CytoscapeFlowchart(
 
               val target = event.target.asDyn
 
-              val newNode = Node("output", Node.Output)
+              val newNode = Node("\"TODO\"", Node.Output, rawExpr = "\"TODO\"")
               val (edge, nextNodeId, maybeDummy, dir) = getInsertData(target)
               cy.add(newNode.toLit)
               edge.move(js.Dynamic.literal(target = newNode.id))

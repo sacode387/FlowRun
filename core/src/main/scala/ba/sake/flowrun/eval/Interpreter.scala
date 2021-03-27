@@ -51,7 +51,7 @@ class Interpreter(programModel: ProgramModel, outputElem: dom.Element) {
           case condition: Boolean =>
             if (condition) interpret(ifTrueStatements)
             else interpret(ifFalseStatements)
-          case _ => throw EvalException("Not a valid condition: " + condValue, id)
+          case _ => throw EvalException(s"Not a valid condition: '$condValue'", id)
         }
       case block: Block =>
         block.statements.foreach(interpret)

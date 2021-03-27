@@ -60,7 +60,7 @@ enum Atom {
 }
 
 ///////////////////////////////////////////////
-/* quazi AST, represented visually! */
+/* AST, represented visually! */
 
 enum Statement(val id: String) {
   case Begin extends Statement("beginId")

@@ -21,12 +21,12 @@ final class ProgramModel(
   }
 
   def addOutput(id: String)(afterId: String, blockId: String): Unit = {
-    val newStat = Statement.Output(id, parseExpr(id, "\"<TODO>\""))
+    val newStat = Statement.Output(id, parseExpr(id, "\"TODO\""))
     doInsert(afterId, newStat, blockId)
   }
 
   def addIf(id: String, trueId: String, falseId: String, endId: String)(afterId: String, blockId: String): Unit = {
-    val condExpr = parseExpr(id, "true")
+    val condExpr = parseExpr(id, "\"\"")
     val newStat = Statement.If(id, condExpr, Statement.Block(trueId), Statement.Block(falseId))
     val newEndStat = Statement.BlockEnd(endId)
     
