@@ -1,7 +1,10 @@
 package ba.sake.flowrun
 
-import ba.sake.flowrun.parse._, Expression.Type
+import scala.scalajs.js, js.annotation._
+import ba.sake.flowrun.parse.parseExpr
+import ba.sake.flowrun.exec.Request._
 
+@JSExportTopLevel("ProgramModel", Module.Exec)
 final class ProgramModel(
   programAst: Program
 ) {
@@ -10,63 +13,68 @@ final class ProgramModel(
 
   private var statementByIds = Map.empty[String, Statement]
 
-  def addDeclare(id: String, name: String, tpe: Type)(afterId: String, blockId: String): Unit = {
-    val newStat = Statement.Declare(id, name, tpe, None)
-    doInsert(afterId, newStat, blockId)
+  def addDeclare(req: AddDeclare): Unit = {
+    val newStat = Statement.Declare(req.id, req.name, req.tpe, None)
+    doInsert(req.afterId, newStat, req.blockId)
   }
 
-  def addAssign(id: String)(afterId: String, blockId: String): Unit = {
-    val newStat = Statement.Assign(id, "", parseExpr(id, "null"))
-    doInsert(afterId, newStat, blockId)
+  def addAssign(req: AddAssign): Unit = {
+    val newStat = Statement.Assign(req.id, "", parseExpr(req.id, "null"))
+    doInsert(req.afterId, newStat, req.blockId)
   }
 
-  def addOutput(id: String)(afterId: String, blockId: String): Unit = {
-    val newStat = Statement.Output(id, parseExpr(id, "\"TODO\""))
-    doInsert(afterId, newStat, blockId)
+  def addOutput(req: AddOutput): Unit = {
+    val newStat = Statement.Output(req.id, parseExpr(req.id, "\"TODO\""))
+    doInsert(req.afterId, newStat, req.blockId)
   }
 
-  def addIf(id: String, trueId: String, falseId: String, endId: String)(afterId: String, blockId: String): Unit = {
-    val condExpr = parseExpr(id, "\"\"")
-    val newStat = Statement.If(id, condExpr, Statement.Block(trueId), Statement.Block(falseId))
-    val newEndStat = Statement.BlockEnd(endId)
+  def addInput(req: AddInput): Unit = {
+    val newStat = Statement.Input(req.id, "", parseExpr(req.id, "null"))
+    doInsert(req.afterId, newStat, req.blockId)
+  }
+
+  def addIf(req: AddIf): Unit = {
+    val condExpr = parseExpr(req.id, "\"\"")
+    val newStat = Statement.If(req.id, condExpr, Statement.Block(req.trueId), Statement.Block(req.falseId))
+    val newEndStat = Statement.BlockEnd(req.endId)
     
-    doInsert(afterId, newEndStat, blockId) // insert END marker, so we can insert/delete properly..
-    doInsert(afterId, newStat, blockId)
+    doInsert(req.afterId, newEndStat, req.blockId) // insert END marker, so we can insert/delete properly..
+    doInsert(req.afterId, newStat, req.blockId)
   }
 
   // TODO
-  def updateDeclare(id: String, name: Option[String] = None, tpe: Option[Type] = None, expr: Option[Expression] = None): Unit = {
-    var updatedStat = statementByIds(id).asInstanceOf[Statement.Declare]
-    name.foreach(n => updatedStat = updatedStat.copy(name = n))
-    tpe.foreach(t => updatedStat = updatedStat.copy(tpe = t))
-    expr.foreach(e => updatedStat = updatedStat.copy(initValue = expr))
-    doUpdate(id, updatedStat)
+  def updateDeclare(req: UpdateDeclare): Unit = {
+    var updatedStat = statementByIds(req.id).asInstanceOf[Statement.Declare]
+    req.name.foreach(n => updatedStat = updatedStat.copy(name = n))
+    req.tpe.foreach(t => updatedStat = updatedStat.copy(tpe = t))
+    req.expr.foreach(e => updatedStat = updatedStat.copy(initValue = req.expr))
+    doUpdate(req.id, updatedStat)
   }
 
-  def updateAssign(id: String, name: Option[String] = None, expr: Option[Expression] = None): Unit = {
-    var updatedStat = statementByIds(id).asInstanceOf[Statement.Assign]
-    name.foreach(n => updatedStat = updatedStat.copy(name = n))
-    expr.foreach(e => updatedStat = updatedStat.copy(value = e))
-    doUpdate(id, updatedStat)
+  def updateAssign(req: UpdateAssign): Unit = {
+    var updatedStat = statementByIds(req.id).asInstanceOf[Statement.Assign]
+    req.name.foreach(n => updatedStat = updatedStat.copy(name = n))
+    req.expr.foreach(e => updatedStat = updatedStat.copy(value = e))
+    doUpdate(req.id, updatedStat)
   }
 
-  def updateOutput(id: String, expr: Expression): Unit = {
-    val newStat = Statement.Output(id, expr)
-    doUpdate(id, newStat)
+  def updateOutput(req: UpdateOutput): Unit = {
+    val newStat = Statement.Output(req.id, req.expr)
+    doUpdate(req.id, newStat)
   }
 
-  def updateIf(id: String, expr: Expression): Unit = {
-    var updatedStat = statementByIds(id).asInstanceOf[Statement.If]
-    println(s"IF BEFORE: $updatedStat")
-    updatedStat = updatedStat.copy(condition = expr)
-    println(s"IF AFTER: $updatedStat")
-    doUpdate(id, updatedStat)
+  def updateIf(req: UpdateIf): Unit = {
+    var updatedStat = statementByIds(req.id).asInstanceOf[Statement.If]
+    //println(s"IF BEFORE: $updatedStat")
+    updatedStat = updatedStat.copy(condition = req.expr)
+    //println(s"IF AFTER: $updatedStat")
+    doUpdate(req.id, updatedStat)
   }
 
-  def delete(id: String): Unit = {
-    val newStats = delete(ast.statements, id)
+  def delete(req: Delete): Unit = {
+    val newStats = delete(ast.statements, req.id)
     ast = ast.copy(statements = newStats)
-    statementByIds -= id
+    statementByIds -= req.id
   }
 
   /* HELPERS */
@@ -79,11 +87,11 @@ final class ProgramModel(
   }
 
   private def insert(
-    statements: Seq[Statement],
+    statements: List[Statement],
     afterId: String,
     newStatement: Statement,
     blockId: String
-  ): Seq[Statement] = {
+  ): List[Statement] = {
     val afterStatementIdx = statements.indexWhere(_.id == afterId)
     if (afterStatementIdx >= 0) {
       val afterStatement = statements(afterStatementIdx)
@@ -102,7 +110,7 @@ final class ProgramModel(
           statementByIds += newIfStatement.id -> newIfStatement
           statements.updated(afterStatementIdx, newIfStatement)
         case _ =>
-          statements.patch(afterStatementIdx + 1, Seq(newStatement), 0)
+          statements.patch(afterStatementIdx + 1, List(newStatement), 0)
       }
     } else {
       statements.map {
@@ -128,10 +136,10 @@ final class ProgramModel(
   }
 
   private def update(
-    statements: Seq[Statement],
+    statements: List[Statement],
     statementId: String,
     newStatement: Statement
-  ): Seq[Statement] = {
+  ): List[Statement] = {
     val statementIdx = statements.indexWhere(_.id == statementId)
     if (statementIdx >= 0) {
       val existingStatement = statements(statementIdx)
@@ -159,20 +167,20 @@ final class ProgramModel(
   }
 
   private def delete(
-    statements: Seq[Statement],
+    statements: List[Statement],
     statementId: String
-  ): Seq[Statement] = {
+  ): List[Statement] = {
     import Statement._
     statements.flatMap {
       case Block(_, blockStats) =>
         delete(blockStats, statementId)
       case ifStat @ If(id, expr, trueBlock, falseBlock) =>
-        if statementId == id then Seq.empty
+        if statementId == id then List.empty
         else 
           val newIfStat = ifStat
             .copy(trueBlock = trueBlock.copy(statements = delete(trueBlock.statements, statementId)))
             .copy(falseBlock = falseBlock.copy(statements = delete(falseBlock.statements, statementId)))
-          Seq(newIfStat)
+          List(newIfStat)
       case st => // TODO: [minor] remove BlockEnd..
         Option.unless(st.id == statementId)(st)
     }

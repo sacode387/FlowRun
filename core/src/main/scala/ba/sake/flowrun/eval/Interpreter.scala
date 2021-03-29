@@ -1,50 +1,67 @@
 package ba.sake.flowrun
 package eval
 
+import scala.concurrent.Future
 import scalajs.js
+import scalajs.js.annotation._
 import org.scalajs.dom
+import org.scalajs.dom.window
 import ba.sake.flowrun.parse.Token
+import ba.sake.flowrun.exec._
 
-class Interpreter(programModel: ProgramModel, outputElem: dom.Element) {
+@js.native
+@JSGlobalScope
+object WebWorkerGlobals extends js.Any {
+  def postMessage(aMessage: js.Any): Unit = js.native
+}
+
+// runs in a separate WebWorker thread
+@JSExportTopLevel("Interpreter", Module.Exec)
+class Interpreter(programModel: ProgramModel) {
+  import Interpreter._
 
   private val symTab = SymbolTable()
+
+  var state = State.INITIALIZED
 
   def run(): Unit = {
     import js.JSConverters._
     pprint.pprintln(programModel.ast)
-    outputElem.classList.remove("error")
-    outputElem.innerText = ""
     try {
+      state = State.RUNNING
       programModel.ast.statements.foreach(interpret)
+      state = State.FINISHED
+      sendToMain(Response.Finished())
     } catch {
       case e: EvalException =>
-        outputElem.innerText = "Runtime error: " + e.getMessage
-        outputElem.classList.add("error")
-        val errorEvent = new dom.CustomEvent("eval-error",
-          js.Dynamic.literal(detail = 
-            js.Dynamic.literal(nodeId = e.nodeId)
-          ).asInstanceOf[dom.raw.CustomEventInit]
-        )
-        dom.document.dispatchEvent(errorEvent)
+        state = State.FAILED
+        sendToMain(Response.Failed(e.getMessage, e.nodeId))
     }
   }
 
   private def interpret(stmt: Statement): Unit = {
-    //println(s"interpreting: $stmt")
+    println(s"interpreting: $stmt")
     import Statement._
     stmt match {
       case Declare(id, name, tpe, initValue) =>
+        if (name.trim.isEmpty)
+          throw EvalException(s"Not a valid name: '$name'", id)
         val maybeExprVal = initValue.map(e => eval(id, e))
         symTab.add(name, tpe, Symbol.Kind.Var, maybeExprVal)
       case Assign(id, name, expr) =>
         val exprValue = eval(id, expr)
         symTab.set(id, name, exprValue)
       case Input(id, name, value) =>
+        state = State.PAUSED
+        println("SET TO PAUSED")
+          // TODO GET INPUT FROM USER
+          state = State.RUNNING
+          println("SET TO RUNNING")
       case Output(id, expr) =>
         val outputValue = eval(id, expr)
-        val newOutput = dom.document.createElement("pre")
-        newOutput.innerText = Option(outputValue).getOrElse("null").toString
-        outputElem.appendChild(newOutput)
+        val newOutput = Option(outputValue).getOrElse("null").toString
+        sendToMain(Response.Output(newOutput))
+        println("SENT RESPONSE OUTPUT")
       case If(id, condition, ifTrueStatements, ifFalseStatements) =>
         val condValue = eval(id, condition)
         condValue match {
@@ -165,4 +182,11 @@ class Interpreter(programModel: ProgramModel, outputElem: dom.Element) {
       case FalseLit           => false
       case NullLit            => null
       case Parens(expression) => eval(id, expression)
+  
+  private def sendToMain(res: Response): Unit =
+    WebWorkerGlobals.postMessage(res.toNative)
 }
+
+object Interpreter:
+  enum State:
+    case INITIALIZED, RUNNING, PAUSED, FINISHED, FAILED

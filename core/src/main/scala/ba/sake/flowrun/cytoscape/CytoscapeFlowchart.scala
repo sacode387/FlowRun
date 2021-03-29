@@ -2,15 +2,15 @@ package ba.sake.flowrun
 package cytoscape
 
 import scalajs.js
-import js.annotation._
 import org.scalajs.dom
 
 import ba.sake.flowrun.parse._, Expression.Type
+import ba.sake.flowrun.exec.Request
 
 class CytoscapeFlowchart(
   container: dom.Element,
   editWrapperElem: dom.Element,
-  programModel: ProgramModel
+  execWorker: WebWorker
 ) {
   
   val cy = new cytoscape(
@@ -42,6 +42,8 @@ class CytoscapeFlowchart(
     cy.asDyn.nodes().data("has-error", false)
 
   dom.document.addEventListener("eval-error", (e: dom.CustomEvent) => {
+    // TODO dodat i za syntaxne erore
+    // kad unese invalid expression
     val nodeId = e.detail.asDyn.nodeId
     cy.asDyn.nodes(s"node[id = '$nodeId']").data("has-error", true)
   })
@@ -60,46 +62,32 @@ class CytoscapeFlowchart(
             onClickFunction = { (event: dom.Event) =>
               val target = event.target.asDyn
 
-             /* if (target.data("tpe").toString == Node.If) {
-                // if it is IF/WHILE/FOR node
-                // we need to delete everything between it and its IF-END
-                val endId = target.data("endId").toString
+              val prevEdge = target.incomers("edge").first()
+              val prevEdgeLabel = prevEdge.data("label").toString
+              val prevId = target.incomers("node").first().data("id").toString
 
-                val prevEdge = target.incomers("edge").first()
-                val nextId = cy.asDyn.nodes(s"node[id = '$endId']").outgoers("node").first().data("id").toString
-                prevEdge.move(js.Dynamic.literal(target = nextId))
+              // MAYBE END NODE (IF/WHILE/FOR)
+              val maybeEndId = Option(target.data("endId").toString).filterNot(_.trim.isEmpty)
+              val nextId = maybeEndId match
+                case Some(endId) =>
+                  cy.asDyn.nodes(s"node[id = '$endId']").outgoers("node").first().data("id").toString
+                case None =>
+                  target.outgoers("node").first().data("id").toString
 
-                val toDeleteIds = getDeleteIds(target, endId)
-                toDeleteIds.foreach(id => cy.remove(s"node[id = '$id']"))
-              } else*/ {
+              if prevEdgeLabel == "true" || prevEdgeLabel == "false" then
+                val dummyNode = Node("", Node.Dummy, startId = prevId, endId = nextId)
+                cy.add(dummyNode.toLit)
+                cy.add(Edge(dummyNode.id, nextId, dir = "vert").toLit)
+                prevEdge.move(js.Dynamic.literal(target = dummyNode.id)) // rebind
+              else 
+                prevEdge.move(js.Dynamic.literal(target = nextId)) // rebind
 
-                val prevEdge = target.incomers("edge").first()
-                val prevEdgeLabel = prevEdge.data("label").toString
-                val prevId = target.incomers("node").first().data("id").toString
-
-                // MAYBE END NODE (IF/WHILE/FOR)
-                val maybeEndId = Option(target.data("endId").toString).filterNot(_.trim.isEmpty)
-                val nextId = maybeEndId match
-                  case Some(endId) =>
-                    cy.asDyn.nodes(s"node[id = '$endId']").outgoers("node").first().data("id").toString
-                  case None =>
-                    target.outgoers("node").first().data("id").toString
-
-                if prevEdgeLabel == "true" || prevEdgeLabel == "false" then
-                  val dummyNode = Node("", Node.Dummy, startId = prevId, endId = nextId)
-                  cy.add(dummyNode.toLit)
-                  cy.add(Edge(dummyNode.id, nextId, dir = "vert").toLit)
-                  prevEdge.move(js.Dynamic.literal(target = dummyNode.id)) // rebind
-                else 
-                  prevEdge.move(js.Dynamic.literal(target = nextId)) // rebind
-
-                val toDeleteIds = getDeleteIds(target, maybeEndId)
-                toDeleteIds.foreach(id => cy.remove(s"node[id = '$id']"))
-              }
+              val toDeleteIds = getDeleteIds(target, maybeEndId)
+              toDeleteIds.foreach(id => cy.remove(s"node[id = '$id']"))
               
               doLayout()
 
-              programModel.delete(target.data("id").toString)
+              sendToWorker(Request.Delete(target.data("id").toString))
             }
           ),
           js.Dynamic.literal(
@@ -121,7 +109,7 @@ class CytoscapeFlowchart(
               
               doLayout()
 
-              programModel.addOutput(newNode.id)(edge.source().data("id").toString, edge.data("blockId").toString)
+              sendToWorker(Request.AddOutput(newNode.id, edge.source().data("id").toString, edge.data("blockId").toString))
             }
           ),
           js.Dynamic.literal(
@@ -142,6 +130,8 @@ class CytoscapeFlowchart(
               maybeDummy.foreach(dummyId => cy.remove(s"node[id = '$dummyId']"))
               
               doLayout()
+
+              sendToWorker(Request.AddInput(newNode.id, edge.source().data("id").toString, edge.data("blockId").toString))
             },
             hasTrailingDivider = true
           ),
@@ -164,7 +154,7 @@ class CytoscapeFlowchart(
 
               doLayout()
 
-              programModel.addDeclare(newNode.id, "", Type.Integer)(edge.source().data("id").toString, edge.data("blockId").toString)
+              sendToWorker(Request.AddDeclare(newNode.id, "", Type.Integer, edge.source().data("id").toString, edge.data("blockId").toString))
             }
           ),
           js.Dynamic.literal(
@@ -186,7 +176,7 @@ class CytoscapeFlowchart(
 
               doLayout()
 
-              programModel.addAssign(newNode.id)(edge.source().data("id").toString, edge.data("blockId").toString)
+              sendToWorker(Request.AddAssign(newNode.id, edge.source().data("id").toString, edge.data("blockId").toString))
             },
             hasTrailingDivider = true
           ),
@@ -237,7 +227,7 @@ class CytoscapeFlowchart(
               
               doLayout()
 
-              programModel.addIf(ifNode.id, trueEdge.id, falseEdge.id, ifEndNode.id)(edge.source().data("id").toString, edge.data("blockId").toString)
+              sendToWorker(Request.AddIf(ifNode.id, trueEdge.id, falseEdge.id, ifEndNode.id, edge.source().data("id").toString, edge.data("blockId").toString))
             }
           )
         )
@@ -265,10 +255,11 @@ class CytoscapeFlowchart(
 
       nameInputElem.oninput = (event: dom.Event) => {
         val newName = nameInputElem.value
+
         if nodeType == Node.Declare then
-          programModel.updateDeclare(nodeId, name = Some(newName))
+          sendToWorker(Request.UpdateDeclare(nodeId, name = Some(newName)))
         else
-          programModel.updateAssign(nodeId, name = Some(newName))
+          sendToWorker(Request.UpdateAssign(nodeId, name = Some(newName)))
         
         node.data("rawName", newName)
         val newLabel = getLabel()
@@ -280,15 +271,16 @@ class CytoscapeFlowchart(
         val newExprText = exprInputElem.value.trim
         val newExpr = if newExprText.isEmpty then None
           else Some(parseExpr(nodeId, exprInputElem.value))
+
         if nodeType == Node.Declare then
-          programModel.updateDeclare(nodeId, expr = newExpr)
+          sendToWorker(Request.UpdateDeclare(nodeId, expr = newExpr))
         else if nodeType == Node.Assign then
-          programModel.updateAssign(nodeId, expr = newExpr)
+          sendToWorker(Request.UpdateAssign(nodeId, expr = newExpr))
         else if nodeType == Node.If then
-          programModel.updateIf(nodeId, expr = newExpr.getOrElse(parseExpr(nodeId, "true")))
+          sendToWorker(Request.UpdateIf(nodeId, expr = newExpr.getOrElse(parseExpr(nodeId, "true"))))
         else
-          programModel.updateOutput(nodeId, newExpr.getOrElse(parseExpr(nodeId, "\"\"")))
-        
+          sendToWorker(Request.UpdateOutput(nodeId, newExpr.getOrElse(parseExpr(nodeId, "\"\""))))
+
         node.data("rawExpr", exprInputElem.value)
         val newLabel = getLabel()
         node.data("label", newLabel)
@@ -381,5 +373,8 @@ class CytoscapeFlowchart(
     )
     cy.asDyn.layout(layoutOpts).run()
   }
+
+  private def sendToWorker(req: Request): Unit =
+    execWorker.postMessage(req.toNative)
 
 }

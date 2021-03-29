@@ -1,6 +1,7 @@
 package ba.sake.flowrun.parse
 
 import scala.collection.mutable
+import org.getshaka.nativeconverter.NativeConverter
 
 final class Lexer(nodeId: String, input: String) {
   import Token.Type
@@ -127,10 +128,10 @@ case class Token(
   tpe: Token.Type,
   text: String,
   pos: Int
-)
+) derives NativeConverter
 
 object Token {
-  enum Type {
+  enum Type derives NativeConverter {
     case Integer    // 123
     case Real       // 123.45
     case String     // "abc"

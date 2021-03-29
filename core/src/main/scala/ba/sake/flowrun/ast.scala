@@ -1,5 +1,7 @@
 package ba.sake.flowrun
 
+import org.getshaka.nativeconverter.NativeConverter
+
 import ba.sake.flowrun.parse.Token
 
 /*
@@ -18,38 +20,36 @@ atom                -> NUMBER | STRING | "true" | "false" | "null"
                     | "(" expression ")" ;
 */
 
-case class Expression(boolOrComparison: BoolOrComparison, boolOrComparisons: Seq[BoolOrComparison])
+case class Expression(boolOrComparison: BoolOrComparison, boolOrComparisons: List[BoolOrComparison]) derives NativeConverter
 
-object Expression {
-  enum Type {
+object Expression:
+  enum Type derives NativeConverter:
     case Void
     case Integer
     case Real
     case String
     case Boolean
-  }
-}
 
-case class BoolOrComparison(boolAndComparison: BoolAndComparison, boolAndComparisons: Seq[BoolAndComparison])
+case class BoolOrComparison(boolAndComparison: BoolAndComparison, boolAndComparisons: List[BoolAndComparison]) derives NativeConverter
 
-case class BoolAndComparison(numComparison: NumComparison, numComparisons: Seq[NumComparisonOpt])
+case class BoolAndComparison(numComparison: NumComparison, numComparisons: List[NumComparisonOpt]) derives NativeConverter
 
-case class NumComparison(term: Term, terms: Seq[TermOpt])
-case class NumComparisonOpt(op: Token, numComparison: NumComparison)
+case class NumComparison(term: Term, terms: List[TermOpt]) derives NativeConverter
+case class NumComparisonOpt(op: Token, numComparison: NumComparison) derives NativeConverter
 
-case class Term(factor: Factor, factors: Seq[FactorOpt])
-case class TermOpt(op: Token, term: Term)
+case class Term(factor: Factor, factors: List[FactorOpt]) derives NativeConverter
+case class TermOpt(op: Token, term: Term) derives NativeConverter
 
-case class Factor(unary: Unary, unaries: Seq[UnaryOpt])
-case class FactorOpt(op: Token, factor: Factor)
+case class Factor(unary: Unary, unaries: List[UnaryOpt]) derives NativeConverter
+case class FactorOpt(op: Token, factor: Factor) derives NativeConverter
 
-enum Unary {
+enum Unary derives NativeConverter:
   case Prefixed(op: Token, unary: Unary)
   case Simple(atom: Atom)
-}
-case class UnaryOpt(op: Token, unary: Unary)
 
-enum Atom {
+case class UnaryOpt(op: Token, unary: Unary) derives NativeConverter
+
+enum Atom derives NativeConverter:
   case NumberLit(value: Double)
   case StringLit(value: String)
   case Identifier(name: String)
@@ -57,19 +57,18 @@ enum Atom {
   case FalseLit
   case NullLit
   case Parens(expression: Expression)
-}
 
 ///////////////////////////////////////////////
 /* AST, represented visually! */
 
-enum Statement(val id: String) {
+enum Statement(val id: String):
   case Begin extends Statement("beginId")
   case End extends Statement("endId")
   case Declare(override val id: String, name: String, tpe: Expression.Type, initValue: Option[Expression]) extends Statement(id)
   case Assign(override val id: String, name: String, value: Expression) extends Statement(id)
   case Input(override val id: String, name: String, value: Expression) extends Statement(id)
   case Output(override val id: String, value: Expression) extends Statement(id)
-  case Block(override val id: String, statements: Seq[Statement] = Seq.empty) extends Statement(id)
+  case Block(override val id: String, statements: List[Statement] = List.empty) extends Statement(id)
   case BlockEnd(override val id: String) extends Statement(id)
   case If(
     override val id: String,
@@ -77,10 +76,9 @@ enum Statement(val id: String) {
     trueBlock: Block,
     falseBlock: Block
   ) extends Statement(id)
-}
 
 case class Program(
-  statements: Seq[Statement] = Seq(
+  statements: List[Statement] = List(
     Statement.Begin, Statement.End
   )
 )

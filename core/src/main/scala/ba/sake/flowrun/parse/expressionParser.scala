@@ -27,59 +27,59 @@ final class ExpressionParser(nodeId: String, allTokens: List[Token]) {
   private def boolOrComparison(): BoolOrComparison =
     BoolOrComparison(boolAndComparison(), boolAndComparisons())
 
-  private def boolOrComparisons(): Seq[BoolOrComparison] =
+  private def boolOrComparisons(): List[BoolOrComparison] =
     val opts = mutable.ArrayBuffer.empty[BoolOrComparison]
     while Type.Or == lookahead.tpe do
       eat(lookahead.tpe)
       opts += boolOrComparison()
-    opts.toSeq
+    opts.toList
   
   private def boolAndComparison(): BoolAndComparison =
     BoolAndComparison(numComparison(), numComparisons())
 
-  private def boolAndComparisons(): Seq[BoolAndComparison] =
+  private def boolAndComparisons(): List[BoolAndComparison] =
     val opts = mutable.ArrayBuffer.empty[BoolAndComparison]
     while Type.And == lookahead.tpe do
       eat(lookahead.tpe)
       opts += boolAndComparison()
-    opts.toSeq
+    opts.toList
 
   private def numComparison(): NumComparison =
     NumComparison(term(), terms())
 
-  private def numComparisons(): Seq[NumComparisonOpt] =
+  private def numComparisons(): List[NumComparisonOpt] =
     val opts = mutable.ArrayBuffer.empty[NumComparisonOpt]
     while Set(Type.EqualsEquals, Type.NotEquals).contains(lookahead.tpe) do
       val op = eat(lookahead.tpe)
       opts += NumComparisonOpt(op, numComparison())
-    opts.toSeq
+    opts.toList
 
   private def term(): Term =
     Term(factor(), factors())
   
-  private def terms(): Seq[TermOpt] =
+  private def terms(): List[TermOpt] =
     val opts = mutable.ArrayBuffer.empty[TermOpt]
     while Set(Type.Gt, Type.GtEq, Type.Lt, Type.LtEq).contains(lookahead.tpe) do
       val op = eat(lookahead.tpe)
       opts += TermOpt(op, term())
-    opts.toSeq
+    opts.toList
   
   private def factor(): Factor =
     Factor(unary(), unaries())
 
-  private def factors(): Seq[FactorOpt] =
+  private def factors(): List[FactorOpt] =
     val opts = mutable.ArrayBuffer.empty[FactorOpt]
     while Set(Type.Plus, Type.Minus).contains(lookahead.tpe) do
       val op = eat(lookahead.tpe)
       opts += FactorOpt(op, factor())
-    opts.toSeq
+    opts.toList
   
-  private def unaries(): Seq[UnaryOpt] =
+  private def unaries(): List[UnaryOpt] =
     val opts = mutable.ArrayBuffer.empty[UnaryOpt]
     while Set(Type.Times, Type.Div, Type.Mod).contains(lookahead.tpe) do
       val op = eat(lookahead.tpe)
       opts += UnaryOpt(op, unary())
-    opts.toSeq
+    opts.toList
     
   private def unary(): Unary =
     lookahead.tpe match
