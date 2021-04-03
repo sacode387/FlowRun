@@ -28,7 +28,7 @@ final class ProgramModel(
   }
 
   def addInput(req: AddInput): Unit = {
-    val newStat = Statement.Input(req.id, "", parseExpr(req.id, "null"))
+    val newStat = Statement.Input(req.id, "")
     doInsert(req.afterId, newStat, req.blockId)
   }
 
@@ -58,6 +58,11 @@ final class ProgramModel(
 
   def updateOutput(req: UpdateOutput): Unit = {
     val newStat = Statement.Output(req.id, req.expr)
+    doUpdate(req.id, newStat)
+  }
+
+  def updateInput(req: UpdateInput): Unit = {
+    val newStat = Statement.Input(req.id, req.name)
     doUpdate(req.id, newStat)
   }
 
@@ -199,4 +204,5 @@ object ProgramModel:
     case UpdateDeclare(id: String, name: Option[String] = None, tpe: Option[Type] = None, expr: Option[Expression] = None)
     case UpdateAssign(id: String, name: Option[String] = None, expr: Option[Expression] = None)
     case UpdateOutput(id: String, expr: Expression)
+    case UpdateInput(id: String, name: String)
     case UpdateIf(id: String, expr: Expression)

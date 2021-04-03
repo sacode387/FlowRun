@@ -12,7 +12,7 @@ import ba.sake.flowrun.parse.Token
 class Interpreter(programModel: ProgramModel) {
   import Interpreter._
 
-  private val symTab = SymbolTable()
+  val symTab = SymbolTable()
 
   private var state = State.INITIALIZED
 
@@ -64,8 +64,12 @@ class Interpreter(programModel: ProgramModel) {
       case Assign(id, name, expr) =>
         val exprValue = eval(id, expr)
         symTab.set(id, name, exprValue)
-      case Input(id, name, value) =>
+      case Input(id, name) =>
         state = State.PAUSED
+        EventUtils.dispatchEvent("eval-input", js.Dynamic.literal(
+          nodeId = id,
+          name = name
+        ))
       case Output(id, expr) =>
         val outputValue = eval(id, expr)
         val newOutput = Option(outputValue).getOrElse("null").toString

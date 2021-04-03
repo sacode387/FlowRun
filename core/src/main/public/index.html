@@ -10,12 +10,14 @@
     <link rel="stylesheet"
         href="https://cdn.jsdelivr.net/npm/cytoscape-context-menus@4.0.0/cytoscape-context-menus.css">
     <link href="https://fonts.googleapis.com/css2?family=Ubuntu+Mono&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/water.css">
+    <link rel="stylesheet" href="https://unpkg.com/sakura.css/css/sakura.css">
     <style>
         pre {
-            margin: 2px;
+            padding: 5px;
+            margin: 3px;
         }
         #content {
+            height: 400px;
             display: grid;
             grid-template-columns: 50% auto;
             grid-gap: 10px;
@@ -23,19 +25,18 @@
         #cy {
             border: 1px solid black;
         }
+        #edit-wrapper {
+            height: 40%;
+            padding: 7px;
+            border: 1px solid;
+        }
         #buttons-wrapper {
-            padding: 1em;
+            padding: 7px;
             border-style:  solid;
             border-width: 0 1px 0 1px;
         }
-        #edit-wrapper {
-            height: 30vh;
-            padding: 1em;
-            border: 1px solid;
-        }
         #run-output-wrapper {
-            height: 20vh;
-            padding: 1em;
+            padding: 7px;
             border: 1px solid;
         }
         #run-output-wrapper .error {
@@ -53,7 +54,6 @@
             <div id="edit-wrapper"></div>
             <div id="buttons-wrapper">
                 <button id="run-btn">Run</button>
-                <button id="continue-btn">Run</button>
             </div>
             
             <div id="run-output-wrapper">

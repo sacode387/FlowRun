@@ -66,7 +66,7 @@ enum Statement(val id: String):
   case End extends Statement("endId")
   case Declare(override val id: String, name: String, tpe: Expression.Type, initValue: Option[Expression]) extends Statement(id)
   case Assign(override val id: String, name: String, value: Expression) extends Statement(id)
-  case Input(override val id: String, name: String, value: Expression) extends Statement(id)
+  case Input(override val id: String, name: String) extends Statement(id)
   case Output(override val id: String, value: Expression) extends Statement(id)
   case Block(override val id: String, statements: List[Statement] = List.empty) extends Statement(id)
   case BlockEnd(override val id: String) extends Statement(id)

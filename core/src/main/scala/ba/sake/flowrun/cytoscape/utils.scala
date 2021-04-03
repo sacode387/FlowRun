@@ -82,6 +82,7 @@ object utils {
     }, {
       "selector": "node.input",
       "style": {
+        "label": "data(rawName)",
         "background-color": "#ffc266",
         "color": "black",
         "shape": "polygon",

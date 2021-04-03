@@ -258,6 +258,8 @@ class CytoscapeFlowchart(
 
         if nodeType == Node.Declare then
           programModel.updateDeclare(Request.UpdateDeclare(nodeId, name = Some(newName)))
+        else if nodeType == Node.Input then
+          programModel.updateInput(Request.UpdateInput(nodeId, name = newName))
         else
           programModel.updateAssign(Request.UpdateAssign(nodeId, name = Some(newName)))
         
@@ -270,7 +272,7 @@ class CytoscapeFlowchart(
       exprInputElem.oninput = (event: dom.Event) => {
         val newExprText = exprInputElem.value.trim
         val newExpr = if newExprText.isEmpty then None
-          else Some(parseExpr(nodeId, exprInputElem.value))
+          else Some(parseExpr(nodeId, newExprText))
 
         if nodeType == Node.Declare then
           programModel.updateDeclare(Request.UpdateDeclare(nodeId, expr = newExpr))
@@ -281,7 +283,7 @@ class CytoscapeFlowchart(
         else
           programModel.updateOutput(Request.UpdateOutput(nodeId, newExpr.getOrElse(parseExpr(nodeId, "\"\""))))
 
-        node.data("rawExpr", exprInputElem.value)
+        node.data("rawExpr", newExprText)
         val newLabel = getLabel()
         node.data("label", newLabel)
         node.data("width", 55 max newLabel.length * 11)
@@ -300,18 +302,16 @@ class CytoscapeFlowchart(
       editWrapperElem.innerText = "" // clear
 
       // append edit elements
-      if (Set(Node.Declare, Node.Assign).contains(nodeType)) {
+      if (Set(Node.Declare, Node.Assign, Node.Input).contains(nodeType)) {
         val editElem = dom.document.createElement("div")
         editElem.appendChild(nameLabelElem)
         editWrapperElem.appendChild(editElem)
       }
-      locally {
+      if (Set(Node.Declare, Node.Assign, Node.Output, Node.If).contains(nodeType)) {
         val editElem = dom.document.createElement("div")
         editElem.appendChild(exprLabelElem)
         editWrapperElem.appendChild(editElem)
       }
-      
-      
     })
 
     cy.asDyn.on("unselect add remove", "node", (evt: js.Dynamic) => {
