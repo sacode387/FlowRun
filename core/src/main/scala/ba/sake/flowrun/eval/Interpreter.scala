@@ -205,7 +205,7 @@ class Interpreter(programModel: ProgramModel) {
   private def waitForContinue(): Future[Unit] = {
     val p = Promise[Unit]()
     val pingHandle: js.timers.SetIntervalHandle = js.timers.setInterval(50) {
-      println("STATE: " + state)
+      //println("STATE: " + state)
       if state == State.RUNNING && !p.isCompleted then
         p.success(())
         

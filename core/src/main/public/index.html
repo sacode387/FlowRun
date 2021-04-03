@@ -12,32 +12,32 @@
     <link href="https://fonts.googleapis.com/css2?family=Ubuntu+Mono&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://unpkg.com/sakura.css/css/sakura.css">
     <style>
+        body {
+            max-width: 60em;
+        }
         pre {
             padding: 5px;
             margin: 3px;
         }
+        .wrapper {
+            border: 1px solid black;
+        }
         #content {
             height: 400px;
             display: grid;
-            grid-template-columns: 50% auto;
+            grid-template-columns: 50% 30% 20%;
             grid-gap: 10px;
-        }
-        #cy {
-            border: 1px solid black;
         }
         #edit-wrapper {
             height: 40%;
             padding: 7px;
-            border: 1px solid;
         }
         #buttons-wrapper {
             padding: 7px;
-            border-style:  solid;
             border-width: 0 1px 0 1px;
         }
         #run-output-wrapper {
             padding: 7px;
-            border: 1px solid;
         }
         #run-output-wrapper .error {
             color: red;
@@ -48,20 +48,20 @@
 <body>
 
     <div id="content">
-        <div id="cy"></div>
+        <div id="cy" class="wrapper"></div>
 
-        <div>
+        <div class="wrapper">
             <div id="edit-wrapper"></div>
             <div id="buttons-wrapper">
                 <button id="run-btn">Run</button>
             </div>
             
             <div id="run-output-wrapper">
-                
                 <div id="run-output"></div>
             </div>
-            
         </div>
+
+        <div id="variables-output" class="wrapper"></div>
         
     </div>
     
