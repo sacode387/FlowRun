@@ -15,13 +15,16 @@ lazy val core = (project in file("core"))
         "org.getshaka" %%% "native-converter" % "0.4.0",
         "com.lihaoyi" %%% "pprint" % "0.6.2",
     ),
-    scalacOptions ++= Seq("-Ycheck-init"),
+    scalacOptions ++= Seq(
+      "-Xmax-inlines", "64",
+      "-Ycheck-init"
+    ),
     (Compile / compile) := {
       WebKeys.assets.value // run assets
       ( Compile / compile).value
     },
     scalaJSLinkerConfig ~= {
-      .withModuleKind(ModuleKind.ESModule)
+      _.withModuleKind(ModuleKind.ESModule)
     },
     scalaJSLinkerOutputDirectory in (Compile, fastLinkJS) :=
       (Assets / WebKeys.public).value / "scripts"

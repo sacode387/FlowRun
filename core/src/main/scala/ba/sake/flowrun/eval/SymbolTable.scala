@@ -12,28 +12,28 @@ class SymbolTable() {
   def add(nodeId: String, name: String, tpe: Type, kind: Symbol.Kind, value: Option[Any]): Symbol = {
     if isDeclared(name) then
       error(s"Variable with name '$name' is already declared.", nodeId)
-    var newSymbol = Symbol(name, tpe, kind)
-    value.foreach(v => newSymbol = newSymbol.copy(value = value))
+    val newSymbol = Symbol(name, tpe, kind,  value)
     symbols += (name -> newSymbol)
-    //println(s"SYMBOLS: $symbols")
     EventUtils.dispatchEvent("eval-var-updated", null)
     newSymbol
   }
 
-  def set(nodeId: String, name: String, value: Any): Unit = {
+  def set(nodeId: String, name: String, value: Any): Unit =
     symbols.get(name) match {
-      case None => error(s"Variable '$name' is not declared.", nodeId)
+      case None =>
+        error(s"Variable '$name' is not declared.", nodeId)
       case Some(sym) =>
         val updatedSym = sym.copy(value = Some(value))
         symbols += (name -> updatedSym)
         EventUtils.dispatchEvent("eval-var-updated", null)
     }
-  }
 
   def get(nodeId: String, name: String): Any =
     symbols.get(name) match {
-      case None => error(s"Variable '$name' is not declared.", nodeId)
-      case Some(sym) => sym.value.getOrElse(error(s"Variable '$name' is not initialized.", nodeId))
+      case None =>
+        error(s"Variable '$name' is not declared.", nodeId)
+      case Some(sym) =>
+        sym.value.getOrElse(error(s"Variable '$name' is not initialized.", nodeId))
     }
   
   def isDeclared(name: String): Boolean =

@@ -3,10 +3,11 @@ package eval
 
 import scala.util._
 import scala.concurrent.{ Future, Promise }
-import concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.ExecutionContext.Implicits.global
 import scalajs.js
 import org.scalajs.dom
 import org.scalajs.dom.window
+
 import ba.sake.flowrun.parse.Token
 
 class Interpreter(programModel: ProgramModel) {
@@ -21,8 +22,8 @@ class Interpreter(programModel: ProgramModel) {
     //pprint.pprintln(programModel.ast)
     state = State.RUNNING
 
-    // run statements sequentually
-    // start from empty future, 
+    // run statements sequentually.
+    // start from empty future,
     // wait for it -> then next, next...
     // https://users.scala-lang.org/t/process-a-list-future-sequentially/3704/4
     val statements = programModel.ast.statements
@@ -30,11 +31,9 @@ class Interpreter(programModel: ProgramModel) {
       a.flatMap(_ => interpret(b))
     }
 
-    futureExec.onComplete { _ =>
-      state = State.FINISHED
-    }
     futureExec.onComplete {
       case Success(_) =>
+        state = State.FINISHED
       case Failure(e: EvalException) =>
         state = State.FAILED
         EventUtils.dispatchEvent("eval-error",
