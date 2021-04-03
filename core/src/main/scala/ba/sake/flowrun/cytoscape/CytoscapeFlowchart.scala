@@ -5,12 +5,12 @@ import scalajs.js
 import org.scalajs.dom
 
 import ba.sake.flowrun.parse._, Expression.Type
-import ba.sake.flowrun.exec.Request
+import ba.sake.flowrun.ProgramModel.Request
 
 class CytoscapeFlowchart(
+  programModel: ProgramModel,
   container: dom.Element,
-  editWrapperElem: dom.Element,
-  execWorker: WebWorker
+  editWrapperElem: dom.Element
 ) {
   
   val cy = new cytoscape(
@@ -87,7 +87,7 @@ class CytoscapeFlowchart(
               
               doLayout()
 
-              sendToWorker(Request.Delete(target.data("id").toString))
+              programModel.delete(Request.Delete(target.data("id").toString))
             }
           ),
           js.Dynamic.literal(
@@ -109,7 +109,7 @@ class CytoscapeFlowchart(
               
               doLayout()
 
-              sendToWorker(Request.AddOutput(newNode.id, edge.source().data("id").toString, edge.data("blockId").toString))
+              programModel.addOutput(Request.AddOutput(newNode.id, edge.source().data("id").toString, edge.data("blockId").toString))
             }
           ),
           js.Dynamic.literal(
@@ -131,7 +131,7 @@ class CytoscapeFlowchart(
               
               doLayout()
 
-              sendToWorker(Request.AddInput(newNode.id, edge.source().data("id").toString, edge.data("blockId").toString))
+              programModel.addInput(Request.AddInput(newNode.id, edge.source().data("id").toString, edge.data("blockId").toString))
             },
             hasTrailingDivider = true
           ),
@@ -154,7 +154,7 @@ class CytoscapeFlowchart(
 
               doLayout()
 
-              sendToWorker(Request.AddDeclare(newNode.id, "", Type.Integer, edge.source().data("id").toString, edge.data("blockId").toString))
+              programModel.addDeclare(Request.AddDeclare(newNode.id, "", Type.Integer, edge.source().data("id").toString, edge.data("blockId").toString))
             }
           ),
           js.Dynamic.literal(
@@ -176,7 +176,7 @@ class CytoscapeFlowchart(
 
               doLayout()
 
-              sendToWorker(Request.AddAssign(newNode.id, edge.source().data("id").toString, edge.data("blockId").toString))
+              programModel.addAssign(Request.AddAssign(newNode.id, edge.source().data("id").toString, edge.data("blockId").toString))
             },
             hasTrailingDivider = true
           ),
@@ -227,7 +227,7 @@ class CytoscapeFlowchart(
               
               doLayout()
 
-              sendToWorker(Request.AddIf(ifNode.id, trueEdge.id, falseEdge.id, ifEndNode.id, edge.source().data("id").toString, edge.data("blockId").toString))
+              programModel.addIf(Request.AddIf(ifNode.id, trueEdge.id, falseEdge.id, ifEndNode.id, edge.source().data("id").toString, edge.data("blockId").toString))
             }
           )
         )
@@ -257,9 +257,9 @@ class CytoscapeFlowchart(
         val newName = nameInputElem.value
 
         if nodeType == Node.Declare then
-          sendToWorker(Request.UpdateDeclare(nodeId, name = Some(newName)))
+          programModel.updateDeclare(Request.UpdateDeclare(nodeId, name = Some(newName)))
         else
-          sendToWorker(Request.UpdateAssign(nodeId, name = Some(newName)))
+          programModel.updateAssign(Request.UpdateAssign(nodeId, name = Some(newName)))
         
         node.data("rawName", newName)
         val newLabel = getLabel()
@@ -273,13 +273,13 @@ class CytoscapeFlowchart(
           else Some(parseExpr(nodeId, exprInputElem.value))
 
         if nodeType == Node.Declare then
-          sendToWorker(Request.UpdateDeclare(nodeId, expr = newExpr))
+          programModel.updateDeclare(Request.UpdateDeclare(nodeId, expr = newExpr))
         else if nodeType == Node.Assign then
-          sendToWorker(Request.UpdateAssign(nodeId, expr = newExpr))
+          programModel.updateAssign(Request.UpdateAssign(nodeId, expr = newExpr))
         else if nodeType == Node.If then
-          sendToWorker(Request.UpdateIf(nodeId, expr = newExpr.getOrElse(parseExpr(nodeId, "true"))))
+          programModel.updateIf(Request.UpdateIf(nodeId, expr = newExpr.getOrElse(parseExpr(nodeId, "true"))))
         else
-          sendToWorker(Request.UpdateOutput(nodeId, newExpr.getOrElse(parseExpr(nodeId, "\"\""))))
+          programModel.updateOutput(Request.UpdateOutput(nodeId, newExpr.getOrElse(parseExpr(nodeId, "\"\""))))
 
         node.data("rawExpr", exprInputElem.value)
         val newLabel = getLabel()
@@ -373,8 +373,4 @@ class CytoscapeFlowchart(
     )
     cy.asDyn.layout(layoutOpts).run()
   }
-
-  private def sendToWorker(req: Request): Unit =
-    execWorker.postMessage(req.toNative)
-
 }

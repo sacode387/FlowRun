@@ -1,70 +1,55 @@
 package ba.sake.flowrun
 package eval
 
+import scala.util._
 import scala.concurrent.{ Future, Promise }
 import concurrent.ExecutionContext.Implicits.global
 import scalajs.js
-import scalajs.js.annotation._
 import org.scalajs.dom
 import org.scalajs.dom.window
 import ba.sake.flowrun.parse.Token
-import ba.sake.flowrun.exec._
 
-@js.native
-@JSGlobalScope
-object WebWorkerGlobals extends js.Any {
-  def postMessage(aMessage: js.Any): Unit = js.native
-  def setTimeout(handler: js.Function0[Any], timeout: Double): Int = js.native
-}
-
-// runs in a separate WebWorker thread
-@JSExportTopLevel("Interpreter", Module.Exec)
 class Interpreter(programModel: ProgramModel) {
   import Interpreter._
 
   private val symTab = SymbolTable()
 
-  var state = State.INITIALIZED
+  private var state = State.INITIALIZED
 
   def run(): Unit = {
     import js.JSConverters._
-    pprint.pprintln(programModel.ast)
-    try {
-      state = State.RUNNING
+    //pprint.pprintln(programModel.ast)
+    state = State.RUNNING
 
-      state = State.PAUSED
+    // run statements sequentually
+    // start from empty future, 
+    // wait for it -> then next, next...
+    // https://users.scala-lang.org/t/process-a-list-future-sequentially/3704/4
+    val statements = programModel.ast.statements
+    val futureExec = statements.foldLeft(Future.unit){ (a, b) =>
+      a.flatMap(_ => interpret(b))
+    }
 
-      // run statements sequentually
-      // start from empty future, 
-      // wait for it -> then next, next...
-      // https://users.scala-lang.org/t/process-a-list-future-sequentially/3704/4
-      val statements = programModel.ast.statements
-      statements.foldLeft(Future.unit){ (a, b) =>
-        a.flatMap(_ => interpret(b))
-      }
-
-
+    futureExec.onComplete { _ =>
       state = State.FINISHED
-      sendToMain(Response.Finished())
-    } catch {
-      case e: EvalException =>
+    }
+    futureExec.onComplete {
+      case Success(_) =>
+      case Failure(e: EvalException) =>
         state = State.FAILED
-        sendToMain(Response.Failed(e.getMessage, e.nodeId))
+        EventUtils.dispatchEvent("eval-error",
+          js.Dynamic.literal(
+            msg = e.getMessage,
+            nodeId = e.nodeId
+          )
+        )
+      case Failure(e) =>
+        println(s"Unexpected error: $e")
     }
   }
 
   def continue(): Unit =
     state = State.RUNNING
-
-  // adapted https://stackoverflow.com/a/46619347/4496364
-  def waitForContinue(): Future[Unit] = {
-    val p = Promise[Unit]()
-    js.timers.setInterval(100) {
-      if state == State.RUNNING && !p.isCompleted
-      then p.success(())
-    }
-    p.future
-  }
 
   private def interpret(stmt: Statement): Future[Unit] = waitForContinue().map { _ =>
     println(s"interpreting: $stmt")
@@ -81,15 +66,14 @@ class Interpreter(programModel: ProgramModel) {
         symTab.set(id, name, exprValue)
       case Input(id, name, value) =>
         state = State.PAUSED
-        println("SET TO PAUSED")
-          // TODO GET INPUT FROM USER
-          state = State.RUNNING
-          println("SET TO RUNNING")
       case Output(id, expr) =>
         val outputValue = eval(id, expr)
         val newOutput = Option(outputValue).getOrElse("null").toString
-        sendToMain(Response.Output(newOutput))
-        println("SENT RESPONSE OUTPUT")
+        EventUtils.dispatchEvent("eval-output",
+          js.Dynamic.literal(
+            output = newOutput
+          )
+        )
       case If(id, condition, ifTrueStatements, ifFalseStatements) =>
         val condValue = eval(id, condition)
         condValue match {
@@ -211,9 +195,23 @@ class Interpreter(programModel: ProgramModel) {
       case FalseLit           => false
       case NullLit            => null
       case Parens(expression) => eval(id, expression)
+    
   
-  private def sendToMain(res: Response): Unit =
-    WebWorkerGlobals.postMessage(res.toNative)
+  // adapted https://stackoverflow.com/a/46619347/4496364
+  private def waitForContinue(): Future[Unit] = {
+    val p = Promise[Unit]()
+    val pingHandle: js.timers.SetIntervalHandle = js.timers.setInterval(50) {
+      println("STATE: " + state)
+      if state == State.RUNNING && !p.isCompleted then
+        p.success(())
+        
+    }
+    val f = p.future
+    f.onComplete { _ => 
+      js.timers.clearInterval(pingHandle)
+    }
+    f
+  }
 }
 
 object Interpreter:

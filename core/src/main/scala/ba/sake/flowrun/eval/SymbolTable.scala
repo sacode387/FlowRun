@@ -1,10 +1,8 @@
 package ba.sake.flowrun
 package eval
 
-import scalajs.js.annotation._
 import ba.sake.flowrun.Expression.Type
 
-@JSExportTopLevel("SymbolTable", Module.Exec)
 class SymbolTable() {
 
   private var symbols: Map[String, Symbol] = Map()

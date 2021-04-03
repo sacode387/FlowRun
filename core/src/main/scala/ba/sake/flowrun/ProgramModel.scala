@@ -1,13 +1,12 @@
 package ba.sake.flowrun
 
-import scala.scalajs.js, js.annotation._
+import scala.scalajs.js
 import ba.sake.flowrun.parse.parseExpr
-import ba.sake.flowrun.exec.Request._
 
-@JSExportTopLevel("ProgramModel", Module.Exec)
 final class ProgramModel(
   programAst: Program
 ) {
+  import ProgramModel.Request._
   
   var ast = programAst
 
@@ -42,7 +41,6 @@ final class ProgramModel(
     doInsert(req.afterId, newStat, req.blockId)
   }
 
-  // TODO
   def updateDeclare(req: UpdateDeclare): Unit = {
     var updatedStat = statementByIds(req.id).asInstanceOf[Statement.Declare]
     req.name.foreach(n => updatedStat = updatedStat.copy(name = n))
@@ -186,3 +184,19 @@ final class ProgramModel(
     }
   }
 }
+
+object ProgramModel:
+  import ba.sake.flowrun.Expression
+  import ba.sake.flowrun.Expression.Type
+
+  enum Request:
+    case Delete(id: String)
+    case AddDeclare(id: String, name: String, tpe: Type, afterId: String, blockId: String)
+    case AddAssign(id: String, afterId: String, blockId: String)
+    case AddOutput(id: String, afterId: String, blockId: String)
+    case AddInput(id: String, afterId: String, blockId: String)
+    case AddIf(id: String, trueId: String, falseId: String, endId: String, afterId: String, blockId: String)
+    case UpdateDeclare(id: String, name: Option[String] = None, tpe: Option[Type] = None, expr: Option[Expression] = None)
+    case UpdateAssign(id: String, name: Option[String] = None, expr: Option[Expression] = None)
+    case UpdateOutput(id: String, expr: Expression)
+    case UpdateIf(id: String, expr: Expression)
