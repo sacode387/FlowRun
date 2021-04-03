@@ -45,7 +45,7 @@ final class ProgramModel(
     var updatedStat = statementByIds(req.id).asInstanceOf[Statement.Declare]
     req.name.foreach(n => updatedStat = updatedStat.copy(name = n))
     req.tpe.foreach(t => updatedStat = updatedStat.copy(tpe = t))
-    req.expr.foreach(e => updatedStat = updatedStat.copy(initValue = req.expr))
+    req.expr.foreach(e => updatedStat = updatedStat.copy(initValue = e))
     doUpdate(req.id, updatedStat)
   }
 
@@ -201,7 +201,7 @@ object ProgramModel:
     case AddOutput(id: String, afterId: String, blockId: String)
     case AddInput(id: String, afterId: String, blockId: String)
     case AddIf(id: String, trueId: String, falseId: String, endId: String, afterId: String, blockId: String)
-    case UpdateDeclare(id: String, name: Option[String] = None, tpe: Option[Type] = None, expr: Option[Expression] = None)
+    case UpdateDeclare(id: String, name: Option[String] = None, tpe: Option[Type] = None, expr: Option[Option[Expression]] = None)
     case UpdateAssign(id: String, name: Option[String] = None, expr: Option[Expression] = None)
     case UpdateOutput(id: String, expr: Expression)
     case UpdateInput(id: String, name: String)

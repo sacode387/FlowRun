@@ -21,17 +21,20 @@ import ba.sake.flowrun.eval._
     val editWrapperElem = document.getElementById("edit-wrapper")
 
     val programModel = ProgramModel(Program())
-    val interpreter = Interpreter(programModel)
     val cytoscapeFlowchart = CytoscapeFlowchart(programModel, container, editWrapperElem)
+
+    var interpreter = Interpreter(programModel)
 
     runBtn.onclick = _ => {
       cytoscapeFlowchart.clearErrors()
-      outputElem.innerText = ""
+      outputElem.innerText = s"Started at: $getNowTime"
+
+      interpreter = Interpreter(programModel) // fresh SymTable etc
       interpreter.run()
     }
 
     dom.document.addEventListener("eval-error", (e: dom.CustomEvent) => {
-      outputElem.innerText = "Runtime error: " + e.detail.asDyn.msg
+      outputElem.innerText += "\nRuntime error: " + e.detail.asDyn.msg
       outputElem.classList.add("error")
     })
 
@@ -59,12 +62,18 @@ import ba.sake.flowrun.eval._
 
       valueBtnElem.onclick = _ => {
         val inputValue = valueInputElem.value.trim
-        interpreter.symTab.set(nodeId, name, inputValue)
-        interpreter.continue()
-
-        valueLabelElem.removeChild(valueBtnElem)
-        valueLabelElem.removeChild(valueInputElem)
-        valueLabelElem.innerText = valueLabelElem.innerText + inputValue
+        try {
+          interpreter.symTab.set(nodeId, name, inputValue)
+          interpreter.continue()
+          valueLabelElem.removeChild(valueBtnElem)
+          valueLabelElem.removeChild(valueInputElem)
+          valueLabelElem.innerText = valueLabelElem.innerText + " " + inputValue
+        } catch {
+          case (e: EvalException) =>
+            EventUtils.dispatchEvent("eval-error",
+              js.Dynamic.literal(msg = e.getMessage, nodeId = e.nodeId)
+            )
+        }
       }
     })
 
@@ -79,5 +88,9 @@ import ba.sake.flowrun.eval._
         symElem.innerText = s"${sym.name}: ${sym.tpe} = ${sym.value.getOrElse("")}"
         variablesElem.appendChild(symElem)
       }
+    
+    def getNowTime: String =
+      val now = new js.Date()
+      now.toLocaleTimeString
   }
 }

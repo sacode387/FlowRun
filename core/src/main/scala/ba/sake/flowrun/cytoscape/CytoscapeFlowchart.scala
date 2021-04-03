@@ -122,7 +122,7 @@ class CytoscapeFlowchart(
 
               val target = event.target.asDyn
 
-              val newNode = Node("input", Node.Input, rawName = "<INPUT>")
+              val newNode = Node("input", Node.Input, rawName = "⤵")
               val (edge, nextNodeId, maybeDummy, dir) = getInsertData(target)
               cy.add(newNode.toLit)
               edge.move(js.Dynamic.literal(target = newNode.id))
@@ -275,7 +275,7 @@ class CytoscapeFlowchart(
           else Some(parseExpr(nodeId, newExprText))
 
         if nodeType == Node.Declare then
-          programModel.updateDeclare(Request.UpdateDeclare(nodeId, expr = newExpr))
+          programModel.updateDeclare(Request.UpdateDeclare(nodeId, expr = Some(newExpr)))
         else if nodeType == Node.Assign then
           programModel.updateAssign(Request.UpdateAssign(nodeId, expr = newExpr))
         else if nodeType == Node.If then
@@ -304,16 +304,30 @@ class CytoscapeFlowchart(
       editWrapperElem.innerText = "" // clear
 
       // append edit elements
+      var hasName = false
+      var filledName = false
       if (Set(Node.Declare, Node.Assign, Node.Input).contains(nodeType)) {
+        hasName = true
+        filledName = nameInputElem.value.nonEmpty
         val editElem = dom.document.createElement("div")
         editElem.appendChild(nameLabelElem)
         editWrapperElem.appendChild(editElem)
       }
+
+      var hasExpr = false
       if (Set(Node.Declare, Node.Assign, Node.Output, Node.If).contains(nodeType)) {
+        hasExpr = true
         val editElem = dom.document.createElement("div")
         editElem.appendChild(exprLabelElem)
         editWrapperElem.appendChild(editElem)
       }
+
+      if !hasExpr || (hasName && !filledName) then
+        nameInputElem.focus()
+        nameInputElem.select()
+      else
+        exprInputElem.focus()
+        exprInputElem.select()
     })
 
     cy.asDyn.on("unselect add remove", "node", (evt: js.Dynamic) => {

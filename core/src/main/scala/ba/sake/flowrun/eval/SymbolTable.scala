@@ -9,7 +9,9 @@ class SymbolTable() {
 
   var symbols: Map[String, Symbol] = Map()
 
-  def add(name: String, tpe: Type, kind: Symbol.Kind, value: Option[Any]): Symbol = {
+  def add(nodeId: String, name: String, tpe: Type, kind: Symbol.Kind, value: Option[Any]): Symbol = {
+    if isDeclared(name) then
+      error(s"Variable with name '$name' is already declared.", nodeId)
     var newSymbol = Symbol(name, tpe, kind)
     value.foreach(v => newSymbol = newSymbol.copy(value = value))
     symbols += (name -> newSymbol)
@@ -20,7 +22,7 @@ class SymbolTable() {
 
   def set(nodeId: String, name: String, value: Any): Unit = {
     symbols.get(name) match {
-      case None => error(s"Variable '$name' is not defined.", nodeId)
+      case None => error(s"Variable '$name' is not declared.", nodeId)
       case Some(sym) =>
         val updatedSym = sym.copy(value = Some(value))
         symbols += (name -> updatedSym)
@@ -30,18 +32,15 @@ class SymbolTable() {
 
   def get(nodeId: String, name: String): Any =
     symbols.get(name) match {
-      case None => error(s"Variable '$name' is not defined.", nodeId)
+      case None => error(s"Variable '$name' is not declared.", nodeId)
       case Some(sym) => sym.value.getOrElse(error(s"Variable '$name' is not initialized.", nodeId))
     }
   
+  def isDeclared(name: String): Boolean =
+    symbols.isDefinedAt(name)
+  
   private def error(msg: String, nodeId: String): Unit =
-    EventUtils.dispatchEvent("eval-error",
-      js.Dynamic.literal(
-        msg = msg,
-        nodeId = nodeId
-      )
-    )
-
+    throw EvalException(msg, nodeId)
 }
 
 

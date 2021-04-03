@@ -57,14 +57,16 @@ class Interpreter(programModel: ProgramModel) {
     
     stmt match {
       case Declare(id, name, tpe, initValue) =>
-        if (name.trim.isEmpty)
+        if name.trim.isEmpty then
           throw EvalException(s"Not a valid name: '$name'", id)
         val maybeExprVal = initValue.map(e => eval(id, e))
-        symTab.add(name, tpe, Symbol.Kind.Var, maybeExprVal)
+        symTab.add(id, name, tpe, Symbol.Kind.Var, maybeExprVal)
       case Assign(id, name, expr) =>
         val exprValue = eval(id, expr)
         symTab.set(id, name, exprValue)
       case Input(id, name) =>
+        if !symTab.isDeclared(name) then
+          throw EvalException(s"Not a valid name: '$name'", id)
         state = State.PAUSED
         EventUtils.dispatchEvent("eval-input", js.Dynamic.literal(
           nodeId = id,
