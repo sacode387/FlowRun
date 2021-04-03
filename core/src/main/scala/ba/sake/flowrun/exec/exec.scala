@@ -18,6 +18,8 @@ object Exec {
       req match
         case Run() =>
           interpreter.run()
+        case Continue() =>
+          interpreter.continue()
         case req: Delete =>
           programModel.delete(req)
         case req: AddDeclare =>

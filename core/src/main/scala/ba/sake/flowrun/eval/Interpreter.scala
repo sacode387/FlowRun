@@ -1,7 +1,8 @@
 package ba.sake.flowrun
 package eval
 
-import scala.concurrent.Future
+import scala.concurrent.{ Future, Promise }
+import concurrent.ExecutionContext.Implicits.global
 import scalajs.js
 import scalajs.js.annotation._
 import org.scalajs.dom
@@ -13,6 +14,7 @@ import ba.sake.flowrun.exec._
 @JSGlobalScope
 object WebWorkerGlobals extends js.Any {
   def postMessage(aMessage: js.Any): Unit = js.native
+  def setTimeout(handler: js.Function0[Any], timeout: Double): Int = js.native
 }
 
 // runs in a separate WebWorker thread
@@ -29,7 +31,19 @@ class Interpreter(programModel: ProgramModel) {
     pprint.pprintln(programModel.ast)
     try {
       state = State.RUNNING
-      programModel.ast.statements.foreach(interpret)
+
+      state = State.PAUSED
+
+      // run statements sequentually
+      // start from empty future, 
+      // wait for it -> then next, next...
+      // https://users.scala-lang.org/t/process-a-list-future-sequentially/3704/4
+      val statements = programModel.ast.statements
+      statements.foldLeft(Future.unit){ (a, b) =>
+        a.flatMap(_ => interpret(b))
+      }
+
+
       state = State.FINISHED
       sendToMain(Response.Finished())
     } catch {
@@ -39,9 +53,23 @@ class Interpreter(programModel: ProgramModel) {
     }
   }
 
-  private def interpret(stmt: Statement): Unit = {
+  def continue(): Unit =
+    state = State.RUNNING
+
+  // adapted https://stackoverflow.com/a/46619347/4496364
+  def waitForContinue(): Future[Unit] = {
+    val p = Promise[Unit]()
+    js.timers.setInterval(100) {
+      if state == State.RUNNING && !p.isCompleted
+      then p.success(())
+    }
+    p.future
+  }
+
+  private def interpret(stmt: Statement): Future[Unit] = waitForContinue().map { _ =>
     println(s"interpreting: $stmt")
     import Statement._
+    
     stmt match {
       case Declare(id, name, tpe, initValue) =>
         if (name.trim.isEmpty)
@@ -74,6 +102,7 @@ class Interpreter(programModel: ProgramModel) {
         block.statements.foreach(interpret)
       case Begin | End | BlockEnd(_) => // noop
     }
+    ()
   }
 
   private def eval(id: String, expr: Expression): Any =

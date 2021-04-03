@@ -11,6 +11,7 @@ import ba.sake.flowrun.Expression.Type
 
 enum Request derives NativeConverter:
   case Run()
+  case Continue()
   case Delete(id: String)
   case AddDeclare(id: String, name: String, tpe: Type, afterId: String, blockId: String)
   case AddAssign(id: String, afterId: String, blockId: String)

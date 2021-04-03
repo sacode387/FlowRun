@@ -32,6 +32,10 @@ import exec._
       sendToWorker(Request.Run())
     }
 
+    document.getElementById("continue-btn").asInstanceOf[dom.html.Button].onclick = _ => {
+      sendToWorker(Request.Continue())
+    }
+
     execWorker.onmessage = { (e: dom.MessageEvent) =>
       import Response._
 
