@@ -25,6 +25,7 @@ import ba.sake.flowrun.eval._
 
     var interpreter = Interpreter(programModel)
 
+    // run the program
     runBtn.onclick = _ => {
       cytoscapeFlowchart.clearErrors()
       outputElem.innerText = s"Started at: $getNowTime"
@@ -33,11 +34,13 @@ import ba.sake.flowrun.eval._
       interpreter.run()
     }
 
+    // append error
     dom.document.addEventListener("eval-error", (e: dom.CustomEvent) => {
-      outputElem.innerText += "\nRuntime error: " + e.detail.asDyn.msg
+      outputElem.innerText += "\nError: " + e.detail.asDyn.msg
       outputElem.classList.add("error")
     })
 
+    // append new output
     dom.document.addEventListener("eval-output", (e: dom.CustomEvent) => {
       val newOutput = dom.document.createElement("pre")
       newOutput.innerText = e.detail.asDyn.output.toString
@@ -65,9 +68,11 @@ import ba.sake.flowrun.eval._
         try {
           interpreter.symTab.set(nodeId, name, inputValue)
           interpreter.continue()
-          valueLabelElem.removeChild(valueBtnElem)
-          valueLabelElem.removeChild(valueInputElem)
-          valueLabelElem.innerText = valueLabelElem.innerText + " " + inputValue
+
+          val newOutput = dom.document.createElement("pre")
+          newOutput.innerText = s"Please enter value for '$name': $inputValue"
+          outputElem.removeChild(valueLabelElem)
+          outputElem.appendChild(newOutput)
         } catch {
           case (e: EvalException) =>
             EventUtils.dispatchEvent("eval-error",

@@ -115,12 +115,14 @@ class Interpreter(programModel: ProgramModel) {
     tmp
 
   private def eval(id: String, boolAndComparison: BoolAndComparison): Any =
-    var tmp1 = eval(id, boolAndComparison.numComparison)
-    if !tmp1.isInstanceOf[Boolean] then return tmp1
-    var tmp = tmp1.asInstanceOf[Boolean]
+    var tmp = eval(id, boolAndComparison.numComparison)
+    if boolAndComparison.numComparisons.isEmpty then
+      return tmp
+    //if !tmp1.isInstanceOf[Boolean] then return tmp1
+    //var tmp = tmp1// tmp1.asInstanceOf[Boolean]
 
     boolAndComparison.numComparisons.foreach { nextNumCompOpt =>
-      val nextVal = eval(id, nextNumCompOpt.numComparison).asInstanceOf[Boolean]
+      val nextVal = eval(id, nextNumCompOpt.numComparison)//.asInstanceOf[Boolean]
       nextNumCompOpt.op.tpe match
         case Token.Type.EqualsEquals  => tmp = tmp == nextVal
         case _                        => tmp = tmp != nextVal
@@ -205,7 +207,7 @@ class Interpreter(programModel: ProgramModel) {
   // adapted https://stackoverflow.com/a/46619347/4496364
   private def waitForContinue(): Future[Unit] = {
     val p = Promise[Unit]()
-    val pingHandle: js.timers.SetIntervalHandle = js.timers.setInterval(50) {
+    val pingHandle: js.timers.SetIntervalHandle = js.timers.setInterval(10) {
       //println("STATE: " + state)
       if state == State.RUNNING && !p.isCompleted then
         p.success(())

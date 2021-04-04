@@ -73,8 +73,10 @@ class CytoscapeFlowchart(
                   cy.asDyn.nodes(s"node[id = '$endId']").outgoers("node").first().data("id").toString
                 case None =>
                   target.outgoers("node").first().data("id").toString
+              
+              val isNextNodeEnd = target.outgoers("node").first().data("tpe").toString == Node.IfEnd
 
-              if prevEdgeLabel == "true" || prevEdgeLabel == "false" then
+              if (prevEdgeLabel == "true" || prevEdgeLabel == "false") && isNextNodeEnd then
                 val dummyNode = Node("", Node.Dummy, startId = prevId, endId = nextId)
                 cy.add(dummyNode.toLit)
                 cy.add(Edge(dummyNode.id, nextId, dir = "vert").toLit)
@@ -264,9 +266,7 @@ class CytoscapeFlowchart(
           programModel.updateAssign(Request.UpdateAssign(nodeId, name = Some(newName)))
         
         node.data("rawName", newName)
-        val newLabel = getLabel()
-        node.data("label", newLabel)
-        node.data("width", 55 max newLabel.length * 11)
+        setLabel()
       }
 
       exprInputElem.oninput = (event: dom.Event) => {
@@ -284,22 +284,24 @@ class CytoscapeFlowchart(
           programModel.updateOutput(Request.UpdateOutput(nodeId, newExpr.getOrElse(parseExpr(nodeId, "\"\""))))
 
         node.data("rawExpr", newExprText)
-        val newLabel = getLabel()
-        node.data("label", newLabel)
-        node.data("width", 55 max newLabel.length * 11)
+        setLabel()
       }
 
-      def getLabel(): String =
+      def setLabel(): Unit = {
         val maybeName = node.data("rawName").asInstanceOf[js.UndefOr[String]].toOption
         val maybeExpr = node.data("rawExpr").asInstanceOf[js.UndefOr[String]].toOption.filterNot(_.trim.isEmpty)
         val maybeExprText = maybeExpr.map(e => s" = $e").getOrElse("")
-        if nodeType == Node.Declare then
-          s"""${maybeName.get}: ${node.data("rawTpe")}$maybeExprText"""
+        val (newLabel, mul) = if nodeType == Node.Declare then
+          s"""${maybeName.get}: ${node.data("rawTpe")}$maybeExprText""" -> 8
         else if nodeType == Node.Assign then
-          s"""${maybeName.get}$maybeExprText"""
+          s"""${maybeName.get}$maybeExprText""" -> 8
         else if nodeType == Node.Input then
-          s"""${maybeName.get}"""
-        else maybeExpr.getOrElse("")
+          s"""${maybeName.get}""" -> 8
+        else maybeExpr.getOrElse("") -> 10
+        val newLabelLength = 65 max (newLabel.length * mul)
+        node.data("label", newLabel)
+        node.data("width", newLabelLength)
+      }
 
       editWrapperElem.innerText = "" // clear
 
