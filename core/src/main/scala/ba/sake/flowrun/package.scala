@@ -20,13 +20,11 @@ object TypeUtils:
   import Expression.Type
   // check if assignable, and optionally casts the type
   def getUpdateValue(nodeId: String, name: String, expectedType: Type, value: Any): Any = {
-    println(s"UPDATE: $expectedType, $value, ${value.getClass}")
     (expectedType, value) match {
       case (Type.Integer, _: Int) => value
       case (Type.Real, _: Double) => value
       case (Type.String, _: String) => value
       case (Type.Boolean, _: Boolean) => value
-      case (Type.Void, _) => ()
       case (expectedType, _) =>
         throw eval.EvalException(
           s"Cannot assign value of type '${value.getClass.getSimpleName}' to a variable of type '$expectedType'", nodeId)

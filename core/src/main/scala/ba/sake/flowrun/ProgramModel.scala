@@ -84,7 +84,7 @@ final class ProgramModel(
 
   /* HELPERS */
   private def doInsert(afterId: String, newStatement: Statement, blockId: String): Unit = {
-    println(s"INSERT: $afterId, $blockId, $newStatement")
+    //println(s"INSERT: $afterId, $blockId, $newStatement")
     val newStats = insert(ast.statements, afterId, newStatement, blockId)
     ast = ast.copy(statements = newStats)
     statementByIds += newStatement.id -> newStatement

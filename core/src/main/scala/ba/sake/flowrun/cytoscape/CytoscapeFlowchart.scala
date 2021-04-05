@@ -108,7 +108,7 @@ class CytoscapeFlowchart(
 
               val target = event.target.asDyn
 
-              val newNode = Node("\"TODO\"", Node.Output, rawExpr = "\"TODO\"")
+              val newNode = Node("\"output\"", Node.Output, rawExpr = "\"output\"")
               val (edge, nextNodeId, maybeDummy, dir) = getInsertData(target)
               cy.add(newNode.toLit)
               edge.move(js.Dynamic.literal(target = newNode.id))
@@ -130,7 +130,7 @@ class CytoscapeFlowchart(
 
               val target = event.target.asDyn
 
-              val newNode = Node("input", Node.Input, rawName = "⤵")
+              val newNode = Node("input", Node.Input, rawName = "input")
               val (edge, nextNodeId, maybeDummy, dir) = getInsertData(target)
               cy.add(newNode.toLit)
               edge.move(js.Dynamic.literal(target = newNode.id))

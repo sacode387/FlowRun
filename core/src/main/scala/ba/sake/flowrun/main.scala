@@ -8,6 +8,7 @@ import org.scalajs.dom.window.document
 import org.getshaka.nativeconverter.NativeConverter
 import ba.sake.flowrun.cytoscape.CytoscapeFlowchart
 import ba.sake.flowrun.eval._
+import ba.sake.flowrun.parse.parseExpr
 
 @JSExportTopLevel("start")
 @main def start(): Unit = {
@@ -79,9 +80,15 @@ import ba.sake.flowrun.eval._
 
       valueBtnElem.onclick = _ => {
         val inputValue = valueInputElem.value.trim
+        val sym = interpreter.symTab.symbols(name)
         try {
-          // TODO handle type!
-          interpreter.symTab.set(nodeId, name, inputValue.toInt)
+          
+          val value = sym.tpe match
+            case Expression.Type.Integer  => inputValue.toInt
+            case Expression.Type.Real     => inputValue.toDouble
+            case Expression.Type.Boolean  => inputValue.toBoolean
+            case Expression.Type.String   => inputValue
+          interpreter.symTab.set(nodeId, name, value)
           interpreter.continue()
 
           val newOutput = dom.document.createElement("pre")
@@ -89,9 +96,17 @@ import ba.sake.flowrun.eval._
           outputElem.removeChild(valueLabelElem)
           outputElem.appendChild(newOutput)
         } catch {
-          case (e: EvalException) =>
+          case (e: EvalException) => // from symbol table
             EventUtils.dispatchEvent("eval-error",
-              js.Dynamic.literal(msg = e.getMessage, nodeId = e.nodeId)
+              js.Dynamic.literal(msg = e.getMessage, nodeId = nodeId)
+            )
+          case (e: NumberFormatException) =>
+            EventUtils.dispatchEvent("eval-error",
+              js.Dynamic.literal(msg = s"Entered invalid ${sym.tpe}: '${inputValue}'", nodeId = nodeId)
+            )
+          case (e: IllegalArgumentException) =>
+            EventUtils.dispatchEvent("eval-error",
+              js.Dynamic.literal(msg = s"Entered invalid ${sym.tpe}: '${inputValue}'", nodeId = nodeId)
             )
         }
       }

@@ -120,7 +120,6 @@ final class Lexer(nodeId: String, input: String) {
 
   private def error(msg: String, pos: Int): Unit =
     val where = if pos >= input.length-1 then "end of input" else s"position $pos"
-    println((pos, input.length))
     throw LexException(s"$msg at $where", nodeId)
 }
 

@@ -28,7 +28,7 @@ object Expression:
     case Real
     case String
     case Boolean
-    case Void
+    //case Void
 
 case class BoolOrComparison(boolAndComparison: BoolAndComparison, boolAndComparisons: List[BoolAndComparison]) derives NativeConverter
 
