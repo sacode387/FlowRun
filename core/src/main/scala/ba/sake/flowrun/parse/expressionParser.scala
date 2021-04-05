@@ -18,7 +18,7 @@ final class ExpressionParser(nodeId: String, allTokens: List[Token]) {
   def parse(): Expression =
     val res = expression()
     if lookahead.tpe != Type.EOF then
-      throw ParseException(s"Unexpected symbol '$lookahead' found", nodeId)
+      error(s"Unexpected symbol '$lookahead' found")
     else res
   
   private def expression(): Expression =

@@ -25,10 +25,13 @@ import ba.sake.flowrun.eval._
 
     var interpreter = Interpreter(programModel)
 
+    var lastRun: String = ""
+
     // run the program
     runBtn.onclick = _ => {
       cytoscapeFlowchart.clearErrors()
-      outputElem.innerText = s"Started at: $getNowTime"
+      lastRun = getNowTime
+      outputElem.innerText = s"Started at: $lastRun"
 
       interpreter = Interpreter(programModel) // fresh SymTable etc
       interpreter.run()
@@ -36,9 +39,20 @@ import ba.sake.flowrun.eval._
 
     // append error
     dom.document.addEventListener("eval-error", (e: dom.CustomEvent) => {
+      outputElem.innerText = s"Started at: $lastRun"
       outputElem.innerText += "\nError: " + e.detail.asDyn.msg
       outputElem.classList.add("error")
     })
+    dom.document.addEventListener("syntax-error", (e: dom.CustomEvent) => {
+      outputElem.innerText = s"Started at: $lastRun"
+      outputElem.innerText += "\nError: " + e.detail.asDyn.msg
+      outputElem.classList.add("error")
+    })
+    dom.document.addEventListener("syntax-success", (e: dom.CustomEvent) => {
+      outputElem.innerText = ""
+      outputElem.classList.remove("error")
+    })
+    
 
     // append new output
     dom.document.addEventListener("eval-output", (e: dom.CustomEvent) => {

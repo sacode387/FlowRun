@@ -38,12 +38,18 @@ class CytoscapeFlowchart(
   setupEditPanel()
   doLayout()
 
+  cy.asDyn.on("unselect add remove", "node", (evt: js.Dynamic) => {
+    // node not selected anymore, hide the inputs...
+    editWrapperElem.innerText = ""
+    cy.asDyn.nodes().unselect()
+    // clear visual error on nodes
+    clearErrors()
+  })
+
   def clearErrors(): Unit =
     cy.asDyn.nodes().data("has-error", false)
 
   dom.document.addEventListener("eval-error", (e: dom.CustomEvent) => {
-    // TODO dodat i za syntaxne erore
-    // kad unese invalid expression
     val nodeId = e.detail.asDyn.nodeId
     cy.asDyn.nodes(s"node[id = '$nodeId']").data("has-error", true)
   })
@@ -270,21 +276,29 @@ class CytoscapeFlowchart(
       }
 
       exprInputElem.oninput = (event: dom.Event) => {
+        import scala.util.*
         val newExprText = exprInputElem.value.trim
-        val newExpr = if newExprText.isEmpty then None
-          else Some(parseExpr(nodeId, newExprText))
+        val maybeNewExpr = Try(parseExpr(nodeId, newExprText))
+        maybeNewExpr match {
+          case Failure(e) =>
+            EventUtils.dispatchEvent("syntax-error",
+              js.Dynamic.literal(msg = e.getMessage, nodeId = 123)
+            )
+          case Success(newExpr) =>
+            EventUtils.dispatchEvent("syntax-success", null)
+            if nodeType == Node.Declare then
+              programModel.updateDeclare(Request.UpdateDeclare(nodeId, expr = Some(Some(newExpr))))
+            else if nodeType == Node.Assign then
+              programModel.updateAssign(Request.UpdateAssign(nodeId, expr = Some(newExpr)))
+            else if nodeType == Node.If then
+              programModel.updateIf(Request.UpdateIf(nodeId, expr = newExpr))
+            else
+              programModel.updateOutput(Request.UpdateOutput(nodeId, newExpr))
 
-        if nodeType == Node.Declare then
-          programModel.updateDeclare(Request.UpdateDeclare(nodeId, expr = Some(newExpr)))
-        else if nodeType == Node.Assign then
-          programModel.updateAssign(Request.UpdateAssign(nodeId, expr = newExpr))
-        else if nodeType == Node.If then
-          programModel.updateIf(Request.UpdateIf(nodeId, expr = newExpr.getOrElse(parseExpr(nodeId, "true"))))
-        else
-          programModel.updateOutput(Request.UpdateOutput(nodeId, newExpr.getOrElse(parseExpr(nodeId, "\"\""))))
-
-        node.data("rawExpr", newExprText)
-        setLabel()
+            node.data("rawExpr", newExprText)
+            setLabel()
+        }
+        
       }
 
       def setLabel(): Unit = {
@@ -330,13 +344,7 @@ class CytoscapeFlowchart(
       else
         exprInputElem.focus()
         exprInputElem.select()
-    })
-
-    cy.asDyn.on("unselect add remove", "node", (evt: js.Dynamic) => {
-      editWrapperElem.innerText = "" // clear
-      cy.asDyn.nodes().unselect()
-      clearErrors()
-    })      
+    })    
   }
 
 
