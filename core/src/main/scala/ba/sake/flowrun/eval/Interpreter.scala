@@ -62,12 +62,17 @@ class Interpreter(programModel: ProgramModel) {
         symTab.add(id, name, tpe, Symbol.Kind.Var, maybeExprVal)
         Future.successful(())
       case Assign(id, name, expr) =>
+        if !symTab.isDeclared(name) then
+          throw EvalException(s"Variable '$name' is not declared.", id)
+        val sym = symTab.symbols(name)
         val exprValue = eval(id, expr)
+        if exprValue.toString.isEmpty && sym.tpe != Expression.Type.String then
+          throw EvalException(s"Assign expression cannot be empty.", id)
         symTab.set(id, name, exprValue)
         Future.successful(())
       case Input(id, name) =>
         if !symTab.isDeclared(name) then
-          throw EvalException(s"Not a valid name: '$name'", id)
+          throw EvalException(s"Variable '$name' is not declared.", id)
         state = State.PAUSED
         EventUtils.dispatchEvent("eval-input", js.Dynamic.literal(
           nodeId = id,

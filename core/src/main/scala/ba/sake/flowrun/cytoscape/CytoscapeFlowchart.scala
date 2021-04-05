@@ -48,6 +48,7 @@ class CytoscapeFlowchart(
 
   def clearErrors(): Unit =
     cy.asDyn.nodes().data("has-error", false)
+    EventUtils.dispatchEvent("syntax-success", null)
 
   dom.document.addEventListener("eval-error", (e: dom.CustomEvent) => {
     val nodeId = e.detail.asDyn.nodeId
@@ -306,9 +307,14 @@ class CytoscapeFlowchart(
         val maybeNewExpr = Try(parseExpr(nodeId, newExprText))
         maybeNewExpr match {
           case Failure(e) =>
-            EventUtils.dispatchEvent("syntax-error",
-              js.Dynamic.literal(msg = e.getMessage)
-            )
+            if nodeType == Node.Declare then
+              programModel.updateDeclare(Request.UpdateDeclare(nodeId, expr = Some(None)))
+              node.data("rawExpr", newExprText)
+              setLabel()
+            else
+              EventUtils.dispatchEvent("syntax-error",
+                js.Dynamic.literal(msg = e.getMessage)
+              )
           case Success(newExpr) =>
             EventUtils.dispatchEvent("syntax-success", null)
             if nodeType == Node.Declare then

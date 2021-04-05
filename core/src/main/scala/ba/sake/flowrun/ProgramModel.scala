@@ -18,7 +18,7 @@ final class ProgramModel(
   }
 
   def addAssign(req: AddAssign): Unit = {
-    val newStat = Statement.Assign(req.id, "", parseExpr(req.id, "null"))
+    val newStat = Statement.Assign(req.id, "", parseExpr(req.id, "\"\""))
     doInsert(req.afterId, newStat, req.blockId)
   }
 
