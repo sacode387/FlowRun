@@ -40,14 +40,14 @@ import ba.sake.flowrun.parse.parseExpr
 
     // append error
     dom.document.addEventListener("eval-error", (e: dom.CustomEvent) => {
-      outputElem.innerText = s"Started at: $lastRun"
-      outputElem.innerText += "\nError: " + e.detail.asDyn.msg
-      outputElem.classList.add("error")
+      var msg = s"Started at: $lastRun"
+      msg += "\nError: " + e.detail.asDyn.msg
+      displayError(msg)
     })
     dom.document.addEventListener("syntax-error", (e: dom.CustomEvent) => {
-      outputElem.innerText = s"Started at: $lastRun"
-      outputElem.innerText += "\nError: " + e.detail.asDyn.msg
-      outputElem.classList.add("error")
+      var msg = s"Started at: $lastRun"
+      msg += "\nError: " + e.detail.asDyn.msg
+      displayError(msg)
     })
     dom.document.addEventListener("syntax-success", (e: dom.CustomEvent) => {
       outputElem.innerText = ""
@@ -62,6 +62,12 @@ import ba.sake.flowrun.parse.parseExpr
       outputElem.appendChild(newOutput)
     })
 
+    // show variables, debug...
+    dom.document.addEventListener("eval-var-updated", (e: dom.CustomEvent) => {
+      showVariables()
+    })
+
+    // get input from user
     dom.document.addEventListener("eval-input", (e: dom.CustomEvent) => {
       val nodeId = e.detail.asDyn.nodeId.toString
       val name = e.detail.asDyn.name.toString
@@ -97,24 +103,18 @@ import ba.sake.flowrun.parse.parseExpr
           outputElem.appendChild(newOutput)
         } catch {
           case (e: EvalException) => // from symbol table
-            EventUtils.dispatchEvent("eval-error",
-              js.Dynamic.literal(msg = e.getMessage, nodeId = nodeId)
-            )
-          case (e: NumberFormatException) =>
-            EventUtils.dispatchEvent("eval-error",
-              js.Dynamic.literal(msg = s"Entered invalid ${sym.tpe}: '${inputValue}'", nodeId = nodeId)
-            )
-          case (e: IllegalArgumentException) =>
-            EventUtils.dispatchEvent("eval-error",
-              js.Dynamic.literal(msg = s"Entered invalid ${sym.tpe}: '${inputValue}'", nodeId = nodeId)
-            )
+            displayError(e.getMessage)
+          case e: (NumberFormatException | IllegalArgumentException) =>
+            displayError(s"Entered invalid ${sym.tpe}: '${inputValue}'")
         }
       }
     })
 
-    dom.document.addEventListener("eval-var-updated", (e: dom.CustomEvent) => {
-      showVariables()
-    })
+
+
+    def displayError(msg: String): Unit =
+      outputElem.innerText = msg
+      outputElem.classList.add("error")
 
     def showVariables(): Unit =
       variablesElem.innerText = ""
