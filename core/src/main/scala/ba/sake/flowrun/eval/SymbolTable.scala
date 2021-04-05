@@ -9,10 +9,11 @@ class SymbolTable() {
 
   var symbols: Map[String, Symbol] = Map()
 
+  // we assume type is good here
   def add(nodeId: String, name: String, tpe: Type, kind: Symbol.Kind, value: Option[Any]): Symbol = {
     if isDeclared(name) then
       error(s"Variable with name '$name' is already declared.", nodeId)
-    val newSymbol = Symbol(name, tpe, kind,  value)
+    val newSymbol = Symbol(name, tpe, kind, value)
     symbols += (name -> newSymbol)
     EventUtils.dispatchEvent("eval-var-updated", null)
     newSymbol
@@ -23,7 +24,8 @@ class SymbolTable() {
       case None =>
         error(s"Variable '$name' is not declared.", nodeId)
       case Some(sym) =>
-        val updatedSym = sym.copy(value = Some(value))
+        val updateValue = TypeUtils.getUpdateValue(nodeId, name, sym.tpe, value)
+        val updatedSym = sym.copy(value = Some(updateValue))
         symbols += (name -> updatedSym)
         EventUtils.dispatchEvent("eval-var-updated", null)
     }
@@ -38,7 +40,7 @@ class SymbolTable() {
   
   def isDeclared(name: String): Boolean =
     symbols.isDefinedAt(name)
-  
+
   private def error(msg: String, nodeId: String): Unit =
     throw EvalException(msg, nodeId)
 }

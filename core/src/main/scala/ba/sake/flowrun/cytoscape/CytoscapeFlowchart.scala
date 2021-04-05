@@ -4,7 +4,7 @@ package cytoscape
 import scalajs.js
 import org.scalajs.dom
 
-import ba.sake.flowrun.parse._, Expression.Type
+import ba.sake.flowrun.parse.*
 import ba.sake.flowrun.ProgramModel.Request
 
 class CytoscapeFlowchart(
@@ -153,7 +153,7 @@ class CytoscapeFlowchart(
 
               val target = event.target.asDyn
 
-              val newNode = Node("declare", Node.Declare, rawTpe = "Int")
+              val newNode = Node("declare", Node.Declare, rawTpe = "Integer")
               val (edge, nextNodeId, maybeDummy, dir) = getInsertData(target)
               cy.add(newNode.toLit)
               edge.move(js.Dynamic.literal(target = newNode.id))
@@ -162,7 +162,7 @@ class CytoscapeFlowchart(
 
               doLayout()
 
-              programModel.addDeclare(Request.AddDeclare(newNode.id, "", Type.Integer, edge.source().data("id").toString, edge.data("blockId").toString))
+              programModel.addDeclare(Request.AddDeclare(newNode.id, "", Expression.Type.Integer, edge.source().data("id").toString, edge.data("blockId").toString))
             }
           ),
           js.Dynamic.literal(
@@ -248,58 +248,7 @@ class CytoscapeFlowchart(
       val node = evt.target
       val nodeId = node.data("id").toString
       val nodeType = node.data("tpe").toString
-      
-      val nameLabelElem = dom.document.createElement("label").asInstanceOf[dom.html.Label]
-      val nameInputElem = dom.document.createElement("input").asInstanceOf[dom.html.Input]
-      nameLabelElem.appendChild(dom.document.createTextNode("Name: "))
-      nameLabelElem.appendChild(nameInputElem)
-      nameInputElem.value = node.data("rawName").asInstanceOf[js.UndefOr[String]].getOrElse("")
-      
-      val exprLabelElem = dom.document.createElement("label").asInstanceOf[dom.html.Label]
-      val exprInputElem = dom.document.createElement("input").asInstanceOf[dom.html.Input]
-      exprLabelElem.appendChild(dom.document.createTextNode("Expression: "))
-      exprLabelElem.appendChild(exprInputElem)
-      exprInputElem.value = node.data("rawExpr").asInstanceOf[js.UndefOr[String]].getOrElse("")
-
-      nameInputElem.oninput = (event: dom.Event) => {
-        val newName = nameInputElem.value
-
-        if nodeType == Node.Declare then
-          programModel.updateDeclare(Request.UpdateDeclare(nodeId, name = Some(newName)))
-        else if nodeType == Node.Input then
-          programModel.updateInput(Request.UpdateInput(nodeId, name = newName))
-        else
-          programModel.updateAssign(Request.UpdateAssign(nodeId, name = Some(newName)))
-        
-        node.data("rawName", newName)
-        setLabel()
-      }
-
-      exprInputElem.oninput = (event: dom.Event) => {
-        import scala.util.*
-        val newExprText = exprInputElem.value.trim
-        val maybeNewExpr = Try(parseExpr(nodeId, newExprText))
-        maybeNewExpr match {
-          case Failure(e) =>
-            EventUtils.dispatchEvent("syntax-error",
-              js.Dynamic.literal(msg = e.getMessage, nodeId = 123)
-            )
-          case Success(newExpr) =>
-            EventUtils.dispatchEvent("syntax-success", null)
-            if nodeType == Node.Declare then
-              programModel.updateDeclare(Request.UpdateDeclare(nodeId, expr = Some(Some(newExpr))))
-            else if nodeType == Node.Assign then
-              programModel.updateAssign(Request.UpdateAssign(nodeId, expr = Some(newExpr)))
-            else if nodeType == Node.If then
-              programModel.updateIf(Request.UpdateIf(nodeId, expr = newExpr))
-            else
-              programModel.updateOutput(Request.UpdateOutput(nodeId, newExpr))
-
-            node.data("rawExpr", newExprText)
-            setLabel()
-        }
-        
-      }
+      val varType = node.data("rawTpe").asInstanceOf[js.UndefOr[String]].toOption
 
       def setLabel(): Unit = {
         val maybeName = node.data("rawName").asInstanceOf[js.UndefOr[String]].toOption
@@ -316,8 +265,86 @@ class CytoscapeFlowchart(
         node.data("label", newLabel)
         node.data("width", newLabelLength)
       }
+      
+      val nameLabelElem = dom.document.createElement("label").asInstanceOf[dom.html.Label]
+      val nameInputElem = dom.document.createElement("input").asInstanceOf[dom.html.Input]
+      nameLabelElem.appendChild(dom.document.createTextNode("Name: "))
+      nameLabelElem.appendChild(nameInputElem)
+      nameInputElem.value = node.data("rawName").asInstanceOf[js.UndefOr[String]].getOrElse("")
+      nameInputElem.oninput = (_: dom.Event) => {
+        val newName = nameInputElem.value.trim
+        val errorMsg = if newName.isEmpty then None // noop when blank
+          else if !newName.head.isLetter then Some("Name must start with a letter.")
+          else if newName.matches(".*\\s.*") then Some("Name must not contain spaces.")
+          else if !newName.matches("[a-zA-Z0-9_]+") then Some("Name can contain only letters, numbers and underscore.")
+          else
+            if nodeType == Node.Declare then
+              programModel.updateDeclare(Request.UpdateDeclare(nodeId, name = Some(newName)))
+            else if nodeType == Node.Input then
+              programModel.updateInput(Request.UpdateInput(nodeId, name = newName))
+            else
+              programModel.updateAssign(Request.UpdateAssign(nodeId, name = Some(newName)))
+            node.data("rawName", newName)
+            setLabel()
+            None
+        
+        errorMsg match
+          case Some(msg) =>
+            EventUtils.dispatchEvent("syntax-error", js.Dynamic.literal(msg = msg))
+          case None =>
+            EventUtils.dispatchEvent("syntax-success", null)
+      }
+      
+      val exprLabelElem = dom.document.createElement("label").asInstanceOf[dom.html.Label]
+      val exprInputElem = dom.document.createElement("input").asInstanceOf[dom.html.Input]
+      exprLabelElem.appendChild(dom.document.createTextNode("Expression: "))
+      exprLabelElem.appendChild(exprInputElem)
+      exprInputElem.value = node.data("rawExpr").asInstanceOf[js.UndefOr[String]].getOrElse("")
+      exprInputElem.oninput = (_: dom.Event) => {
+        import scala.util.*
+        val newExprText = exprInputElem.value.trim
+        val maybeNewExpr = Try(parseExpr(nodeId, newExprText))
+        maybeNewExpr match {
+          case Failure(e) =>
+            EventUtils.dispatchEvent("syntax-error",
+              js.Dynamic.literal(msg = e.getMessage)
+            )
+          case Success(newExpr) =>
+            EventUtils.dispatchEvent("syntax-success", null)
+            if nodeType == Node.Declare then
+              programModel.updateDeclare(Request.UpdateDeclare(nodeId, expr = Some(Some(newExpr))))
+            else if nodeType == Node.Assign then
+              programModel.updateAssign(Request.UpdateAssign(nodeId, expr = Some(newExpr)))
+            else if nodeType == Node.If then
+              programModel.updateIf(Request.UpdateIf(nodeId, expr = newExpr))
+            else
+              programModel.updateOutput(Request.UpdateOutput(nodeId, newExpr))
 
-      editWrapperElem.innerText = "" // clear
+            node.data("rawExpr", newExprText)
+            setLabel()
+        }
+      }
+
+      val typeLabelElem = dom.document.createElement("label").asInstanceOf[dom.html.Label]
+      val typeSelectElem = dom.document.createElement("select").asInstanceOf[dom.html.Select]
+      typeLabelElem.innerText = "Type: "
+      typeLabelElem.appendChild(typeSelectElem)
+      Expression.Type.values.foreach { tpe =>
+        val typeOptionElem = dom.document.createElement("option").asInstanceOf[dom.html.Option]
+        typeOptionElem.text = tpe.toString
+        typeOptionElem.value = tpe.toString
+        typeSelectElem.appendChild(typeOptionElem)
+      }
+      typeSelectElem.onchange = (_: dom.Event) => {
+        val newType = Expression.Type.values(typeSelectElem.selectedIndex)
+        programModel.updateDeclare(Request.UpdateDeclare(nodeId, tpe = Some(newType)))
+        
+        node.data("rawTpe", newType.toString)
+        setLabel()
+      }
+
+      // clear first, prepare for new inputs
+      editWrapperElem.innerText = ""
 
       // append edit elements
       var hasName = false
@@ -336,6 +363,13 @@ class CytoscapeFlowchart(
         val editElem = dom.document.createElement("div")
         editElem.appendChild(exprLabelElem)
         editWrapperElem.appendChild(editElem)
+      }
+
+      if (Set(Node.Declare).contains(nodeType)) {
+        typeSelectElem.value = varType.get
+        val typeElem = dom.document.createElement("div")
+        typeElem.appendChild(typeLabelElem)
+        editWrapperElem.appendChild(typeElem)
       }
 
       if !hasExpr || (hasName && !filledName) then

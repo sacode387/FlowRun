@@ -57,6 +57,8 @@ class Interpreter(programModel: ProgramModel) {
         if name.trim.isEmpty then
           throw EvalException(s"Not a valid name: '$name'", id)
         val maybeExprVal = initValue.map(e => eval(id, e))
+        maybeExprVal.foreach(v => TypeUtils.getUpdateValue(id, name, tpe, v))
+        
         symTab.add(id, name, tpe, Symbol.Kind.Var, maybeExprVal)
         Future.successful(())
       case Assign(id, name, expr) =>
