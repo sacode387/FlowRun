@@ -23,7 +23,7 @@ final class ProgramModel(
   }
 
   def addOutput(req: AddOutput): Unit = {
-    val newStat = Statement.Output(req.id, parseExpr(req.id, "\"TODO\""))
+    val newStat = Statement.Output(req.id, parseExpr(req.id, "\"output\""))
     doInsert(req.afterId, newStat, req.blockId)
   }
 

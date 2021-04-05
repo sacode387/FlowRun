@@ -377,7 +377,9 @@ class CytoscapeFlowchart(
         nameInputElem.select()
       else
         exprInputElem.focus()
-        exprInputElem.select()
+        val exprStr = exprInputElem.value
+        if exprStr.length > 2 && exprStr.count(_ == '"') == 2 && exprStr.head == '"' && exprStr.last == '"' then
+          exprInputElem.setSelectionRange(1, exprStr.length - 1)
     })    
   }
 
