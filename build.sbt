@@ -21,7 +21,7 @@ lazy val core = (project in file("core"))
     ),
     (Compile / compile) := {
       WebKeys.assets.value // run assets
-      ( Compile / compile).value
+      (Compile / compile).value
     },
     scalaJSLinkerConfig ~= {
       _.withModuleKind(ModuleKind.ESModule)

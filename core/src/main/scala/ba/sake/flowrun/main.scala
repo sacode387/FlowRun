@@ -66,7 +66,8 @@ import ba.sake.flowrun.eval._
       valueBtnElem.onclick = _ => {
         val inputValue = valueInputElem.value.trim
         try {
-          interpreter.symTab.set(nodeId, name, inputValue)
+          // TODO handle type!
+          interpreter.symTab.set(nodeId, name, inputValue.toInt)
           interpreter.continue()
 
           val newOutput = dom.document.createElement("pre")

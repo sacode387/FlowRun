@@ -35,10 +35,12 @@ final class ProgramModel(
   def addIf(req: AddIf): Unit = {
     val condExpr = parseExpr(req.id, "\"\"")
     val newStat = Statement.If(req.id, condExpr, Statement.Block(req.trueId), Statement.Block(req.falseId))
-    val newEndStat = Statement.BlockEnd(req.endId)
-    
-    doInsert(req.afterId, newEndStat, req.blockId) // insert END marker, so we can insert/delete properly..
     doInsert(req.afterId, newStat, req.blockId)
+
+    // TODO remove ??
+    //val newEndStat = Statement.BlockEnd(req.endId)
+    //doInsert(req.afterId, newEndStat, req.blockId) // insert END marker, so we can insert/delete properly..
+    
   }
 
   def updateDeclare(req: UpdateDeclare): Unit = {
@@ -86,7 +88,7 @@ final class ProgramModel(
     val newStats = insert(ast.statements, afterId, newStatement, blockId)
     ast = ast.copy(statements = newStats)
     statementByIds += newStatement.id -> newStatement
-    println(statementByIds)
+    //println(statementByIds)
   }
 
   private def insert(

@@ -383,7 +383,7 @@ class CytoscapeFlowchart(
       name = "dagre",
       padding = 10,
       spacingFactor = 0.97,
-      nodeSep = 70,
+      nodeSep = 127,
       rankSep = 30,
       rankDir = "TB", // top -> bottom
       animate = true,

@@ -10,6 +10,10 @@ import org.scalajs.dom.window
 
 import ba.sake.flowrun.parse.Token
 
+/*
+TODO:
+- instead of events, fill a buffer? for easier testing...
+*/
 class Interpreter(programModel: ProgramModel) {
   import Interpreter._
 
@@ -20,16 +24,10 @@ class Interpreter(programModel: ProgramModel) {
   def run(): Unit = {
     import js.JSConverters._
     //pprint.pprintln(programModel.ast)
-    state = State.RUNNING
 
-    // run statements sequentually.
-    // start from empty future,
-    // wait for it -> then next, next...
-    // https://users.scala-lang.org/t/process-a-list-future-sequentially/3704/4
+    state = State.RUNNING
     val statements = programModel.ast.statements
-    val futureExec = statements.foldLeft(Future.unit){ (a, b) =>
-      a.flatMap(_ => interpret(b))
-    }
+    val futureExec = execSequentially(statements)
 
     futureExec.onComplete {
       case Success(_) =>
@@ -50,7 +48,7 @@ class Interpreter(programModel: ProgramModel) {
   def continue(): Unit =
     state = State.RUNNING
 
-  private def interpret(stmt: Statement): Future[Unit] = waitForContinue().map { _ =>
+  private def interpret(stmt: Statement): Future[Unit] = waitForContinue().flatMap { _ =>
     println(s"interpreting: $stmt")
     import Statement._
     
@@ -60,9 +58,11 @@ class Interpreter(programModel: ProgramModel) {
           throw EvalException(s"Not a valid name: '$name'", id)
         val maybeExprVal = initValue.map(e => eval(id, e))
         symTab.add(id, name, tpe, Symbol.Kind.Var, maybeExprVal)
+        Future.successful(())
       case Assign(id, name, expr) =>
         val exprValue = eval(id, expr)
         symTab.set(id, name, exprValue)
+        Future.successful(())
       case Input(id, name) =>
         if !symTab.isDeclared(name) then
           throw EvalException(s"Not a valid name: '$name'", id)
@@ -71,6 +71,7 @@ class Interpreter(programModel: ProgramModel) {
           nodeId = id,
           name = name
         ))
+        Future.successful(())
       case Output(id, expr) =>
         val outputValue = eval(id, expr)
         val newOutput = Option(outputValue).getOrElse("null").toString
@@ -79,6 +80,7 @@ class Interpreter(programModel: ProgramModel) {
             output = newOutput
           )
         )
+        Future.successful(())
       case If(id, condition, ifTrueStatements, ifFalseStatements) =>
         val condValue = eval(id, condition)
         condValue match {
@@ -88,10 +90,10 @@ class Interpreter(programModel: ProgramModel) {
           case _ => throw EvalException(s"Not a valid condition: '$condValue'", id)
         }
       case block: Block =>
-        block.statements.foreach(interpret)
+        execSequentially(block.statements)
       case Begin | End | BlockEnd(_) => // noop
+        Future.successful(())
     }
-    ()
   }
 
   private def eval(id: String, expr: Expression): Any =
@@ -116,11 +118,6 @@ class Interpreter(programModel: ProgramModel) {
 
   private def eval(id: String, boolAndComparison: BoolAndComparison): Any =
     var tmp = eval(id, boolAndComparison.numComparison)
-    if boolAndComparison.numComparisons.isEmpty then
-      return tmp
-    //if !tmp1.isInstanceOf[Boolean] then return tmp1
-    //var tmp = tmp1// tmp1.asInstanceOf[Boolean]
-
     boolAndComparison.numComparisons.foreach { nextNumCompOpt =>
       val nextVal = eval(id, nextNumCompOpt.numComparison)//.asInstanceOf[Boolean]
       nextNumCompOpt.op.tpe match
@@ -131,10 +128,10 @@ class Interpreter(programModel: ProgramModel) {
 
   private def eval(id: String, numComparison: NumComparison): Any =
     var tmp1 = eval(id, numComparison.term)
+    // TODO if ima VIŠE TERMOVA THROWWWWWW, nema smisla: 5>7>8
     if !tmp1.isInstanceOf[Double] then return tmp1
     var tmp = tmp1.asInstanceOf[Double]
 
-    // TODO if ima VIŠE TERMOVA, nema smisla: 5>7>8
     numComparison.terms.headOption match
       case Some(nextTermOpt) =>
         val nextVal = eval(id, nextTermOpt.term).asInstanceOf[Double]
@@ -152,7 +149,7 @@ class Interpreter(programModel: ProgramModel) {
     if isNum then
       var tmp = tmp1.asInstanceOf[Double]
       term.factors.foreach { nextFactorOpt =>
-        val nextVal = eval(id, nextFactorOpt.factor).asInstanceOf[Double] // TODO
+        val nextVal = eval(id, nextFactorOpt.factor).asInstanceOf[Double] // TODO Integer
         nextFactorOpt.op.tpe match
           case Token.Type.Plus  => tmp += nextVal
           case _                => tmp -= nextVal
@@ -211,7 +208,6 @@ class Interpreter(programModel: ProgramModel) {
       //println("STATE: " + state)
       if state == State.RUNNING && !p.isCompleted then
         p.success(())
-        
     }
     val f = p.future
     f.onComplete { _ => 
@@ -219,6 +215,15 @@ class Interpreter(programModel: ProgramModel) {
     }
     f
   }
+
+  // run futures sequentually.
+  // start from empty future,
+  // wait for it -> then next, next...
+  // https://users.scala-lang.org/t/process-a-list-future-sequentially/3704/4
+  private def execSequentially(statements: List[Statement]): Future[Unit] =
+    statements.foldLeft(Future.unit){ (a, b) =>
+      a.flatMap(_ => interpret(b))
+    }
 }
 
 object Interpreter:

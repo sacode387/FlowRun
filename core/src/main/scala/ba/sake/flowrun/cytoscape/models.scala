@@ -28,7 +28,7 @@ case class Node(
   id: String = UUID.randomUUID.toString
 ) {
   private val (ww: Int, hh: Int) =
-    if (tpe == Node.If) (label.length * 11 + 25, 30)
+    if (tpe == Node.If) (55, 30)
     else if (tpe == Node.Dummy) (20, 20)
     else if (tpe == Node.IfEnd) (10, 10)
     else {

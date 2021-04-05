@@ -34,6 +34,8 @@ case class BoolOrComparison(boolAndComparison: BoolAndComparison, boolAndCompari
 
 case class BoolAndComparison(numComparison: NumComparison, numComparisons: List[NumComparisonOpt]) derives NativeConverter
 
+// TODO Option[TermOpt] ???
+// ne može 1>2>3 ...
 case class NumComparison(term: Term, terms: List[TermOpt]) derives NativeConverter
 case class NumComparisonOpt(op: Token, numComparison: NumComparison) derives NativeConverter
 
