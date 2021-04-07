@@ -62,7 +62,7 @@ enum Atom derives NativeConverter:
 ///////////////////////////////////////////////
 /* AST, represented visually! */
 
-enum Statement(val id: String):
+enum Statement(val id: String) derives NativeConverter:
   case Begin extends Statement("beginId")
   case End extends Statement("endId")
   case Declare(override val id: String, name: String, tpe: Expression.Type, initValue: Option[Expression]) extends Statement(id)
@@ -78,8 +78,17 @@ enum Statement(val id: String):
     falseBlock: Block
   ) extends Statement(id)
 
-case class Program(
+case class Function(
+  name: String,
+  tpe: Option[Expression.Type] = None,
   statements: List[Statement] = List(
     Statement.Begin, Statement.End
   )
-)
+) derives NativeConverter
+
+ // first function is always "main"
+case class Program(
+  name: String,
+  main: Function,
+  functions: List[Function] = List.empty
+) derives NativeConverter

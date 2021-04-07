@@ -21,7 +21,9 @@ import ba.sake.flowrun.parse.parseExpr
     val runBtn = document.getElementById("run-btn").asInstanceOf[dom.html.Button]
     val editWrapperElem = document.getElementById("edit-wrapper")
 
-    val programModel = ProgramModel(Program())
+    val mainFunction = Function("main")
+    val program = Program("program", mainFunction)
+    val programModel = ProgramModel(program)
     val cytoscapeFlowchart = CytoscapeFlowchart(programModel, container, editWrapperElem)
 
     var interpreter = Interpreter(programModel)

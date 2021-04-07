@@ -24,9 +24,11 @@ class Interpreter(programModel: ProgramModel) {
   def run(): Unit = {
     import js.JSConverters._
     //pprint.pprintln(programModel.ast)
+    val json = js.JSON.stringify(programModel.ast.toNative)
+    println(json)
 
     state = State.RUNNING
-    val statements = programModel.ast.statements
+    val statements = programModel.ast.main.statements
     val futureExec = execSequentially(statements)
 
     futureExec.onComplete {
