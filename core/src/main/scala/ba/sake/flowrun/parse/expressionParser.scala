@@ -95,9 +95,6 @@ final class ExpressionParser(nodeId: String, allTokens: List[Token]) {
   private def atom(): Atom =
     import Atom._
     lookahead.tpe match
-      case Type.Null =>
-        eat(Type.Null)
-        NullLit
       case Type.True =>
         eat(Type.True)
         TrueLit

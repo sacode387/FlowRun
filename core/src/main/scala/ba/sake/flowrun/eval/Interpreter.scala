@@ -204,7 +204,6 @@ class Interpreter(programModel: ProgramModel) {
       case Identifier(name)   => symTab.get(id, name)
       case TrueLit            => true
       case FalseLit           => false
-      case NullLit            => null
       case Parens(expression) => eval(id, expression)
     
   

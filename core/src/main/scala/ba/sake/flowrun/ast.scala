@@ -57,7 +57,6 @@ enum Atom derives NativeConverter:
   case Identifier(name: String)
   case TrueLit
   case FalseLit
-  case NullLit // TODO remove ???
   case Parens(expression: Expression)
 
 ///////////////////////////////////////////////
