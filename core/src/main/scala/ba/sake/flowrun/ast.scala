@@ -86,7 +86,6 @@ case class Function(
   )
 ) derives NativeConverter
 
- // first function is always "main"
 case class Program(
   name: String,
   main: Function,

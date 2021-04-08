@@ -10,6 +10,7 @@ class ProgramModel(
 
   var ast = programAst
 
+  // I'm too lazy to make this a request parameter :/
   var currentFunctionName = "main"
 
   private def currentFunction: Function =
