@@ -28,8 +28,23 @@ def init(): Unit = {
 
   val variablesElem = document.querySelector("#variables-output")
 
+  val main = Function("main", None, List(
+    Statement.Begin, 
+    Statement.Declare("1", "x", Expression.Type.Integer, Option("7")),
+    Statement.Output("2", "x"),
+    Statement.Input("3", "x"),
+    Statement.Output("4", "x"),
+    Statement.Assign("5", "x", "5"),
+    Statement.Output("6", "x"),
 
-  val programModel = ProgramModel(Program("program", Function("main"), List(Function("fun1"))))
+    Statement.If("100", "true",
+      Statement.Block("101"),
+      Statement.Block("102"),
+    ),
+    Statement.End
+  ))
+
+  val programModel = ProgramModel(Program("program", main, List(Function("fun1"))))
   val cytoscapeFlowchart = CytoscapeFlowchart(programModel, container, editWrapperElem)
 
   var interpreter = Interpreter(programModel)

@@ -61,9 +61,34 @@ class CytoscapeFlowchart(
         println("TODO")
       case ifStat @ If(id, expr, trueBlock, falseBlock) =>
         println("TODO")
-        
+      case stmt: Input =>
+        val newNode = Node(stmt.label, Node.Input, id = stmt.id, rawName = stmt.name)
+        cy.add(newNode.toLit)
+        cy.add(Edge(prevNode.id, newNode.id).toLit)
+        prevNode = newNode
+        prevStmt = stmt
+      case stmt: Output =>
+        val newNode = Node(stmt.label, Node.Output, id = stmt.id, rawExpr = stmt.value)
+        cy.add(newNode.toLit)
+        cy.add(Edge(prevNode.id, newNode.id).toLit)
+        prevNode = newNode
+        prevStmt = stmt
+      case stmt: Declare =>
+        val newNode = Node(stmt.label, Node.Declare, id = stmt.id, rawName = stmt.name, rawTpe = stmt.tpe.toString)
+        cy.add(newNode.toLit)
+        cy.add(Edge(prevNode.id, newNode.id).toLit)
+        prevNode = newNode
+        prevStmt = stmt
+      case stmt: Assign =>
+        val newNode = Node(stmt.label, Node.Assign, id = stmt.id, rawName = stmt.name, rawExpr = stmt.value)
+        cy.add(newNode.toLit)
+        cy.add(Edge(prevNode.id, newNode.id).toLit)
+        prevNode = newNode
+        prevStmt = stmt
       case stmt =>
-        val newNode = Node(stmt.label, Node.End, id = stmt.id)
+        val nodeType = stmt.getClass.getSimpleName.reverse.dropWhile(_ == '$').reverse
+        println("tpe: " + nodeType)
+        val newNode = Node(stmt.label, nodeType, id = stmt.id)
         cy.add(newNode.toLit)
         cy.add(Edge(prevNode.id, newNode.id).toLit)
         prevNode = newNode
