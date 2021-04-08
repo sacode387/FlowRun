@@ -3,6 +3,7 @@ package cytoscape
 
 import scalajs.js
 import org.scalajs.dom
+import scalatags.JsDom.all._
 
 import ba.sake.flowrun.parse.*
 import ba.sake.flowrun.ProgramModel.Request
@@ -267,10 +268,11 @@ class CytoscapeFlowchart(
         node.data("width", newLabelLength)
       }
       
-      val nameLabelElem = dom.document.createElement("label").asInstanceOf[dom.html.Label]
-      val nameInputElem = dom.document.createElement("input").asInstanceOf[dom.html.Input]
-      nameLabelElem.appendChild(dom.document.createTextNode("Name: "))
-      nameLabelElem.appendChild(nameInputElem)
+      val nameInputElem = input().render
+      val nameLabelElem = label(
+        "Name: ",
+        nameInputElem
+      ).render
       nameInputElem.value = node.data("rawName").asInstanceOf[js.UndefOr[String]].getOrElse("")
       nameInputElem.oninput = (_: dom.Event) => {
         val newName = nameInputElem.value.trim
@@ -296,10 +298,11 @@ class CytoscapeFlowchart(
             EventUtils.dispatchEvent("syntax-success", null)
       }
       
-      val exprLabelElem = dom.document.createElement("label").asInstanceOf[dom.html.Label]
-      val exprInputElem = dom.document.createElement("input").asInstanceOf[dom.html.Input]
-      exprLabelElem.appendChild(dom.document.createTextNode("Expression: "))
-      exprLabelElem.appendChild(exprInputElem)
+      val exprInputElem = input().render
+      val exprLabelElem = label(
+        "Expression: ",
+        exprInputElem
+      ).render
       exprInputElem.value = node.data("rawExpr").asInstanceOf[js.UndefOr[String]].getOrElse("")
       exprInputElem.oninput = (_: dom.Event) => {
         import scala.util.*
@@ -331,23 +334,23 @@ class CytoscapeFlowchart(
         }
       }
 
-      val typeLabelElem = dom.document.createElement("label").asInstanceOf[dom.html.Label]
-      val typeSelectElem = dom.document.createElement("select").asInstanceOf[dom.html.Select]
-      typeLabelElem.innerText = "Type: "
-      typeLabelElem.appendChild(typeSelectElem)
-      Expression.Type.values.foreach { tpe =>
-        val typeOptionElem = dom.document.createElement("option").asInstanceOf[dom.html.Option]
-        typeOptionElem.text = tpe.toString
-        typeOptionElem.value = tpe.toString
-        typeSelectElem.appendChild(typeOptionElem)
-      }
-      typeSelectElem.onchange = (_: dom.Event) => {
-        val newType = Expression.Type.values(typeSelectElem.selectedIndex)
-        programModel.updateDeclare(Request.UpdateDeclare(nodeId, tpe = Some(newType)))
-        
-        node.data("rawTpe", newType.toString)
-        setLabel()
-      }
+      val typeSelectElem = select(
+        Expression.Type.values.map { tpe =>
+          option(value := tpe.toString)(tpe.toString)
+        },
+        onchange := { (e: dom.Event) =>
+          val thisElem = e.target.asInstanceOf[dom.html.Select]
+          val newType = Expression.Type.values(thisElem.selectedIndex)
+          programModel.updateDeclare(Request.UpdateDeclare(nodeId, tpe = Some(newType)))
+          
+          node.data("rawTpe", newType.toString)
+          setLabel()
+        }
+      ).render
+      val typeLabelElem = label(
+        "Type: ",
+        typeSelectElem
+      ).render
 
       // clear first, prepare for new inputs
       editWrapperElem.innerText = ""
@@ -358,23 +361,20 @@ class CytoscapeFlowchart(
       if (Set(Node.Declare, Node.Assign, Node.Input).contains(nodeType)) {
         hasName = true
         filledName = nameInputElem.value.nonEmpty
-        val editElem = dom.document.createElement("div")
-        editElem.appendChild(nameLabelElem)
+        val editElem = div(nameLabelElem).render
         editWrapperElem.appendChild(editElem)
       }
 
       var hasExpr = false
       if (Set(Node.Declare, Node.Assign, Node.Output, Node.If).contains(nodeType)) {
         hasExpr = true
-        val editElem = dom.document.createElement("div")
-        editElem.appendChild(exprLabelElem)
+        val editElem = div(exprLabelElem).render
         editWrapperElem.appendChild(editElem)
       }
 
       if (Set(Node.Declare).contains(nodeType)) {
         typeSelectElem.value = varType.get
-        val typeElem = dom.document.createElement("div")
-        typeElem.appendChild(typeLabelElem)
+        val typeElem = div(typeLabelElem).render
         editWrapperElem.appendChild(typeElem)
       }
 

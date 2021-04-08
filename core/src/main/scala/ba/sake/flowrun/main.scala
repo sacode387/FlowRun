@@ -61,8 +61,7 @@ def init(): Unit = {
 
   // append new output
   dom.document.addEventListener("eval-output", (e: dom.CustomEvent) => {
-    val newOutput = dom.document.createElement("pre")
-    newOutput.innerText = e.detail.asDyn.output.toString
+    val newOutput = pre(e.detail.asDyn.output.toString).render
     outputElem.appendChild(newOutput)
   })
 
@@ -76,16 +75,15 @@ def init(): Unit = {
     val nodeId = e.detail.asDyn.nodeId.toString
     val name = e.detail.asDyn.name.toString
 
-    val valueLabelElem = dom.document.createElement("label").asInstanceOf[dom.html.Label]
-    val valueInputElem = dom.document.createElement("input").asInstanceOf[dom.html.Input]
-
-    val valueBtnElem = dom.document.createElement("button").asInstanceOf[dom.html.Button]
-    valueBtnElem.innerHTML = "Enter"
-
-    valueLabelElem.innerText = s"Please enter value for '$name': "
-    valueLabelElem.appendChild(valueInputElem)
-    valueLabelElem.appendChild(valueBtnElem)
+    val valueInputElem = input().render
+    val valueBtnElem = button("Enter").render
+    val valueLabelElem = label(
+      s"Please enter value for '$name': ",
+      valueInputElem,
+      valueBtnElem
+    ).render
     outputElem.appendChild(valueLabelElem)
+
     valueInputElem.focus()
 
     valueBtnElem.onclick = _ => {
@@ -100,8 +98,7 @@ def init(): Unit = {
         interpreter.symTab.set(nodeId, name, value)
         interpreter.continue()
 
-        val newOutput = dom.document.createElement("pre")
-        newOutput.innerText = s"Please enter value for '$name': $inputValue"
+        val newOutput = pre(s"Please enter value for '$name': $inputValue").render
         outputElem.removeChild(valueLabelElem)
         outputElem.appendChild(newOutput)
       } catch {
@@ -120,8 +117,7 @@ def init(): Unit = {
   def showVariables(): Unit =
     variablesElem.innerText = ""
     interpreter.symTab.symbols.values.foreach { sym =>
-      val symElem = dom.document.createElement("div")
-      symElem.innerText = s"${sym.name}: ${sym.tpe} = ${sym.value.getOrElse("")}"
+      val symElem = div(s"${sym.name}: ${sym.tpe} = ${sym.value.getOrElse("")}").render
       variablesElem.appendChild(symElem)
     }
 }
