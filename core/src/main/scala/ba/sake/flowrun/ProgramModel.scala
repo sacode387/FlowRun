@@ -3,6 +3,7 @@ package ba.sake.flowrun
 import scala.scalajs.js
 import ba.sake.flowrun.parse.parseExpr
 
+// TODO rename to ProgramState
 class ProgramModel(
   programAst: Program
 ) {
@@ -13,14 +14,12 @@ class ProgramModel(
   // I'm too lazy to make this a request parameter :/
   var currentFunctionName = "main"
 
-  private def currentFunction: Function =
+  def currentFunction: Function =
     if currentFunctionName == "main" then ast.main
     else ast.functions.find(_.name == currentFunctionName).get
 
   private def update(transform: FunctionModel => FunctionModel): Unit = {
     val newFunction = transform(FunctionModel(currentFunction)).ast
-    println(currentFunction)
-    println(newFunction)
     if currentFunctionName == "main" then
       ast = ast.copy(main = newFunction)
     else
@@ -93,9 +92,9 @@ case class FunctionModel(
     val newStat = Statement.If(req.id, condExpr, Statement.Block(req.trueId), Statement.Block(req.falseId))
     doInsert(req.afterId, newStat, req.blockId)
 
-    // TODO remove ??
+    // insert END marker, so we can load AST to flowchart
     //val newEndStat = Statement.BlockEnd(req.endId)
-    //doInsert(req.afterId, newEndStat, req.blockId) // insert END marker, so we can insert/delete properly..
+   // doInsert(req.afterId, newEndStat, req.blockId)
 
   def updateDeclare(req: UpdateDeclare): FunctionModel =
     var updatedStat: Statement.Declare = doFind(req.id).asInstanceOf[Statement.Declare]
@@ -175,11 +174,10 @@ case class FunctionModel(
     }
   }
   
-  private def doUpdate(statementId: String, newStatement: Statement): FunctionModel = {
+  private def doUpdate(statementId: String, newStatement: Statement): FunctionModel =
     val newStats = update(ast.statements, statementId, newStatement)
-    println(s"OLD: ${ast.statements} \nNEW: $newStatement, \nNEW: $newStats")
+    //println(s"OLD: ${ast.statements} \nNEW: $newStatement, \nNEW: $newStats")
     this.copy(ast = ast.copy(statements = newStats))
-  }
 
   private def update(
     statements: List[Statement],
@@ -232,9 +230,7 @@ case class FunctionModel(
   }
 
   private def doFind(statementId: String): Statement =
-    val bla = findById(ast.statements, statementId)
-    println("FIND: "+  bla)
-    bla.get
+    findById(ast.statements, statementId).get
 
   private def findById(
     statements: List[Statement],

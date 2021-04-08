@@ -62,21 +62,42 @@ enum Atom derives NativeConverter:
 ///////////////////////////////////////////////
 /* AST, represented visually! */
 
-enum Statement(val id: String) derives NativeConverter:
-  case Begin extends Statement("beginId")
-  case End extends Statement("endId")
-  case Declare(override val id: String, name: String, tpe: Expression.Type, initValue: Option[Expression]) extends Statement(id)
-  case Assign(override val id: String, name: String, value: Expression) extends Statement(id)
-  case Input(override val id: String, name: String) extends Statement(id)
-  case Output(override val id: String, value: Expression) extends Statement(id)
-  case Block(override val id: String, statements: List[Statement] = List.empty) extends Statement(id)
-  case BlockEnd(override val id: String) extends Statement(id)
-  case If(
+sealed trait Statement(val id: String) derives NativeConverter:
+  def label: String
+
+object Statement:
+  case object Begin extends Statement("beginId"):
+    override def label = "begin"
+  case object End extends Statement("endId"):
+    override def label = "end"
+  case class Dummy(override val id: String) extends Statement(id):
+    override def label = ""
+  case class Declare(override val id: String, name: String, tpe: Expression.Type, initValue: Option[Expression]) extends Statement(id):
+    override def label = {
+      val maybeExprText = initValue.map(e => s" = $e").getOrElse("")
+      s"$name: $tpe$maybeExprText"
+    }
+  case class Assign(override val id: String, name: String, value: Expression) extends Statement(id):
+    override def label = {
+      val maybeExprText = value.toString
+      s"$name = $maybeExprText"
+    }
+  case class Input(override val id: String, name: String) extends Statement(id):
+    override def label = name
+  case class Output(override val id: String, value: Expression) extends Statement(id):
+    override def label = value.toString
+  case class Block(override val id: String, statements: List[Statement] = List.empty) extends Statement(id):
+    override def label = ""
+  case class BlockEnd(override val id: String) extends Statement(id):
+    override def label = ""
+  case class If(
     override val id: String,
     condition: Expression,
     trueBlock: Block,
     falseBlock: Block
-  ) extends Statement(id)
+  ) extends Statement(id):
+    override def label = condition.toString
+end Statement
 
 case class Function(
   name: String,

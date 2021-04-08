@@ -22,19 +22,11 @@ class CytoscapeFlowchart(
       boxSelectionEnabled = false,
       maxZoom = 1.3,
       autoungrabify = true,
-      style = utils.styleJson,
-      elements = js.Dynamic.literal(
-        nodes = js.Array(
-          Node("begin", Node.BeginEnd, 70, 30, id = "beginId").toLit,
-          Node("end", Node.BeginEnd, 70, 30, id = "endId").toLit
-        ),
-        edges = js.Array(
-          Edge("beginId", "endId").toLit
-        )
-      )
+      style = utils.styleJson
     )
   )
 
+  load(programModel.currentFunction)
   setupMenus()
   setupEditPanel()
   doLayout()
@@ -47,14 +39,37 @@ class CytoscapeFlowchart(
     clearErrors()
   })
 
-  def clearErrors(): Unit =
-    cy.asDyn.nodes().data("has-error", false)
-    EventUtils.dispatchEvent("syntax-success", null)
-
   dom.document.addEventListener("eval-error", (e: dom.CustomEvent) => {
     val nodeId = e.detail.asDyn.nodeId
     cy.asDyn.nodes(s"node[id = '$nodeId']").data("has-error", true)
   })
+
+  def clearErrors(): Unit =
+    cy.asDyn.nodes().data("has-error", false)
+    EventUtils.dispatchEvent("syntax-success", null)
+  
+  def load(fun: Function): Unit = {
+    import Statement._
+
+    val statements = fun.statements
+    var prevStmt = statements.head
+    var prevNode = Node(prevStmt.label, Node.Begin, id = prevStmt.id)
+    cy.add(prevNode.toLit)
+    
+    statements.tail.map {
+      case Block(_, blockStats) =>
+        println("TODO")
+      case ifStat @ If(id, expr, trueBlock, falseBlock) =>
+        println("TODO")
+        
+      case stmt =>
+        val newNode = Node(stmt.label, Node.End, id = stmt.id)
+        cy.add(newNode.toLit)
+        cy.add(Edge(prevNode.id, newNode.id).toLit)
+        prevNode = newNode
+        prevStmt = stmt
+    }
+  }
 
   private def setupMenus(): Unit = {
     cy.contextMenus(
@@ -66,7 +81,7 @@ class CytoscapeFlowchart(
             content = "remove",
             tooltipText = "Remove statement",
             image = js.Dynamic.literal(src = "images/delete.svg", width = 12, height = 12, x = 3, y = 4),
-            selector = "node.if, node.input, node.output, node.declare, node.assign",
+            selector = s"node.${Node.If}, node.${Node.Input}, node.${Node.Output}, node.${Node.Declare}, node.${Node.Assign}",
             onClickFunction = { (event: dom.Event) =>
               val target = event.target.asDyn
 
@@ -246,7 +261,7 @@ class CytoscapeFlowchart(
   }
 
   private def setupEditPanel(): Unit = {   
-    cy.asDyn.on("select", "node.editable", (evt: js.Dynamic) => {
+    cy.asDyn.on("select", s"node.${Node.Editable}", (evt: js.Dynamic) => {
       val node = evt.target
       val nodeId = node.data("id").toString
       val nodeType = node.data("tpe").toString

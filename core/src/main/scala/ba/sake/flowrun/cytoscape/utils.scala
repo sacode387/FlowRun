@@ -5,7 +5,7 @@ import org.scalajs.dom
 
 object utils {
 
-  val styleJson = js.JSON.parse("""[
+  val styleJson = js.JSON.parse(s"""[
     {
       "selector": "node",
       "style": {
@@ -23,7 +23,7 @@ object utils {
         "text-halign": "center"
       }
     }, {
-      "selector": "node.editable:selected[!has-error]",
+      "selector": "node.${Node.Editable}:selected[!has-error]",
       "style": {
         "border-width": "1px",
         "border-style": "dashed",
@@ -37,41 +37,41 @@ object utils {
         "border-color": "red"
       }
     }, {
-      "selector": "node.begin-end",
+      "selector": "node.${Node.Begin}, node.${Node.End}",
       "style": {
         "shape": "ellipse",
         "background-color": "#00bfff",
         "color": "white"
       }
     }, {
-      "selector": "node.declare",
+      "selector": "node.${Node.Declare}",
       "style": {
         "shape": "rectangle",
         "background-color": "#191970",
         "color": "white"
       }
     }, {
-      "selector": "node.assign",
+      "selector": "node.${Node.Assign}",
       "style": {
         "shape": "rectangle",
         "background-color": "#556b2f",
         "color": "white"
       }
     }, {
-      "selector": "node.if",
+      "selector": "node.${Node.If}",
       "style": {
         "shape": "diamond",
         "background-color": "#00ff00",
         "color": "black"
       }
     }, {
-      "selector": "node.if-end",
+      "selector": "node.${Node.IfEnd}",
       "style": {
         "shape": "ellipse",
         "background-color": "#000"
       }
     }, {
-      "selector": "node.output",
+      "selector": "node.${Node.Output}",
       "style": {
         "label": "data(rawExpr)",
         "background-color": "#0000ff",
@@ -80,7 +80,7 @@ object utils {
         "shape-polygon-points": [-0.63, -1, 0.63, -1, 1, 1, -1, 1, -0.63, -1]
       }
     }, {
-      "selector": "node.input",
+      "selector": "node.${Node.Input}",
       "style": {
         "label": "data(rawName)",
         "background-color": "#ffc266",
@@ -89,14 +89,14 @@ object utils {
         "shape-polygon-points": [-1, -1, 1, -1, 0.63, 1, -0.63, 1, -1, -1]
       }
     }, {
-      "selector": "node.loop",
+      "selector": "node.Loop",
       "style": {
         "shape": "diamond",
         "background-color": "#ff4500",
         "color": "white"
       }
     }, {
-      "selector": "node.dummy",
+      "selector": "node.${Node.Dummy}",
       "style": {
         "shape": "star",
         "background-color": "#fff",
