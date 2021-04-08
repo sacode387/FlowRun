@@ -60,43 +60,43 @@ enum Atom derives NativeConverter:
   case Parens(expression: Expression)
 
 ///////////////////////////////////////////////
-/* AST, represented visually! */
+/* AST, represented visually! 
+ * We just store exprs as String-s,
+ * they're small and interpreted anyway.
+ */
 
 sealed trait Statement(val id: String) derives NativeConverter:
   def label: String
 
 object Statement:
   case object Begin extends Statement("beginId"):
-    override def label = "begin"
+    def label = "begin"
   case object End extends Statement("endId"):
-    override def label = "end"
+    def label = "end"
   case class Dummy(override val id: String) extends Statement(id):
-    override def label = ""
-  case class Declare(override val id: String, name: String, tpe: Expression.Type, initValue: Option[Expression]) extends Statement(id):
-    override def label = {
+    def label = ""
+  case class Declare(override val id: String, name: String, tpe: Expression.Type, initValue: Option[String]) extends Statement(id):
+    def label = {
       val maybeExprText = initValue.map(e => s" = $e").getOrElse("")
       s"$name: $tpe$maybeExprText"
     }
-  case class Assign(override val id: String, name: String, value: Expression) extends Statement(id):
-    override def label = {
-      val maybeExprText = value.toString
-      s"$name = $maybeExprText"
-    }
+  case class Assign(override val id: String, name: String, value: String) extends Statement(id):
+    def label = s"$name = $value"
   case class Input(override val id: String, name: String) extends Statement(id):
-    override def label = name
-  case class Output(override val id: String, value: Expression) extends Statement(id):
-    override def label = value.toString
+    def label = name
+  case class Output(override val id: String, value: String) extends Statement(id):
+    def label = value.toString
   case class Block(override val id: String, statements: List[Statement] = List.empty) extends Statement(id):
-    override def label = ""
+    def label = ""
   case class BlockEnd(override val id: String) extends Statement(id):
-    override def label = ""
+    def label = ""
   case class If(
     override val id: String,
-    condition: Expression,
+    condition: String,
     trueBlock: Block,
     falseBlock: Block
   ) extends Statement(id):
-    override def label = condition.toString
+    def label = condition.toString
 end Statement
 
 case class Function(

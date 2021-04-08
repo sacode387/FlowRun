@@ -76,11 +76,11 @@ case class FunctionModel(
     doInsert(req.afterId, newStat, req.blockId)
 
   def addAssign(req: AddAssign): FunctionModel =
-    val newStat = Statement.Assign(req.id, "", parseExpr(req.id, "\"\""))
+    val newStat = Statement.Assign(req.id, "", "\"\"")
     doInsert(req.afterId, newStat, req.blockId)
 
   def addOutput(req: AddOutput): FunctionModel =
-    val newStat = Statement.Output(req.id, parseExpr(req.id, "\"output\""))
+    val newStat = Statement.Output(req.id, "\"output\"")
     doInsert(req.afterId, newStat, req.blockId)
 
   def addInput(req: AddInput): FunctionModel =
@@ -88,8 +88,7 @@ case class FunctionModel(
     doInsert(req.afterId, newStat, req.blockId)
 
   def addIf(req: AddIf): FunctionModel =
-    val condExpr = parseExpr(req.id, "\"\"")
-    val newStat = Statement.If(req.id, condExpr, Statement.Block(req.trueId), Statement.Block(req.falseId))
+    val newStat = Statement.If(req.id, "\"\"", Statement.Block(req.trueId), Statement.Block(req.falseId))
     doInsert(req.afterId, newStat, req.blockId)
 
     // insert END marker, so we can load AST to flowchart
@@ -251,9 +250,7 @@ case class FunctionModel(
 }
 
 object ProgramModel:
-  import ba.sake.flowrun.Expression
   import ba.sake.flowrun.Expression.Type
-
   enum Request:
     case Delete(id: String)
     case AddDeclare(id: String, name: String, tpe: Type, afterId: String, blockId: String)
@@ -261,8 +258,8 @@ object ProgramModel:
     case AddOutput(id: String, afterId: String, blockId: String)
     case AddInput(id: String, afterId: String, blockId: String)
     case AddIf(id: String, trueId: String, falseId: String, endId: String, afterId: String, blockId: String)
-    case UpdateDeclare(id: String, name: Option[String] = None, tpe: Option[Type] = None, expr: Option[Option[Expression]] = None)
-    case UpdateAssign(id: String, name: Option[String] = None, expr: Option[Expression] = None)
-    case UpdateOutput(id: String, expr: Expression)
+    case UpdateDeclare(id: String, name: Option[String] = None, tpe: Option[Type] = None, expr: Option[Option[String]] = None)
+    case UpdateAssign(id: String, name: Option[String] = None, expr: Option[String] = None)
+    case UpdateOutput(id: String, expr: String)
     case UpdateInput(id: String, name: String)
-    case UpdateIf(id: String, expr: Expression)
+    case UpdateIf(id: String, expr: String)

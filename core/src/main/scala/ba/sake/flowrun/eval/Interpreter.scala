@@ -1,14 +1,14 @@
 package ba.sake.flowrun
 package eval
 
-import scala.util._
+import scala.util.*
 import scala.concurrent.{ Future, Promise }
 import scala.concurrent.ExecutionContext.Implicits.global
 import scalajs.js
 import org.scalajs.dom
 import org.scalajs.dom.window
 
-import ba.sake.flowrun.parse.Token
+import ba.sake.flowrun.parse.{ Token, parseExpr }
 
 /*
 TODO:
@@ -58,7 +58,8 @@ class Interpreter(programModel: ProgramModel) {
       case Declare(id, name, tpe, initValue) =>
         if name.trim.isEmpty then
           throw EvalException(s"Not a valid name: '$name'", id)
-        val maybeExprVal = initValue.map(e => eval(id, e))
+        val initValueExpr = initValue.map(iv => parseExpr(id, iv))
+        val maybeExprVal = initValueExpr.map(e => eval(id, e))
         maybeExprVal.foreach(v => TypeUtils.getUpdateValue(id, name, tpe, v))
         
         symTab.add(id, name, tpe, Symbol.Kind.Var, maybeExprVal)
@@ -67,7 +68,7 @@ class Interpreter(programModel: ProgramModel) {
         if !symTab.isDeclared(name) then
           throw EvalException(s"Variable '$name' is not declared.", id)
         val sym = symTab.symbols(name)
-        val exprValue = eval(id, expr)
+        val exprValue = eval(id, parseExpr(id, expr))
         if exprValue.toString.isEmpty && sym.tpe != Expression.Type.String then
           throw EvalException(s"Assign expression cannot be empty.", id)
         symTab.set(id, name, exprValue)
@@ -82,7 +83,7 @@ class Interpreter(programModel: ProgramModel) {
         ))
         Future.successful(())
       case Output(id, expr) =>
-        val outputValue = eval(id, expr)
+        val outputValue = eval(id, parseExpr(id, expr))
         val newOutput = Option(outputValue).getOrElse("null").toString
         EventUtils.dispatchEvent("eval-output",
           js.Dynamic.literal(
@@ -91,7 +92,7 @@ class Interpreter(programModel: ProgramModel) {
         )
         Future.successful(())
       case If(id, condition, ifTrueStatements, ifFalseStatements) =>
-        val condValue = eval(id, condition)
+        val condValue = eval(id, parseExpr(id, condition))
         condValue match {
           case condition: Boolean =>
             if (condition) interpret(ifTrueStatements)
@@ -100,7 +101,7 @@ class Interpreter(programModel: ProgramModel) {
         }
       case block: Block =>
         execSequentially(block.statements)
-      case Begin | End | BlockEnd(_) => // noop
+      case Begin | End | BlockEnd(_) | Dummy(_) => // noop
         Future.successful(())
     }
   }

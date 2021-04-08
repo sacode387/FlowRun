@@ -3,7 +3,7 @@ package cytoscape
 
 import scalajs.js
 import org.scalajs.dom
-import scalatags.JsDom.all._
+import scalatags.JsDom.all.*
 
 import ba.sake.flowrun.parse.*
 import ba.sake.flowrun.ProgramModel.Request
@@ -333,16 +333,16 @@ class CytoscapeFlowchart(
               EventUtils.dispatchEvent("syntax-error",
                 js.Dynamic.literal(msg = e.getMessage)
               )
-          case Success(newExpr) =>
+          case Success(_) =>
             EventUtils.dispatchEvent("syntax-success", null)
             if nodeType == Node.Declare then
-              programModel.updateDeclare(Request.UpdateDeclare(nodeId, expr = Some(Some(newExpr))))
+              programModel.updateDeclare(Request.UpdateDeclare(nodeId, expr = Some(Some(newExprText))))
             else if nodeType == Node.Assign then
-              programModel.updateAssign(Request.UpdateAssign(nodeId, expr = Some(newExpr)))
+              programModel.updateAssign(Request.UpdateAssign(nodeId, expr = Some(newExprText)))
             else if nodeType == Node.If then
-              programModel.updateIf(Request.UpdateIf(nodeId, expr = newExpr))
+              programModel.updateIf(Request.UpdateIf(nodeId, expr = newExprText))
             else
-              programModel.updateOutput(Request.UpdateOutput(nodeId, newExpr))
+              programModel.updateOutput(Request.UpdateOutput(nodeId, newExprText))
 
             node.data("rawExpr", newExprText)
             setLabel()
