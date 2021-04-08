@@ -17,20 +17,51 @@ import ba.sake.flowrun.parse.parseExpr
   window.onload = _ => init()
 
 def init(): Unit = {
-  val container = document.getElementById("cy")
-  val outputElem = document.getElementById("run-output")
-  val variablesElem = document.getElementById("variables-output")
-  val runBtn = document.getElementById("run-btn").asInstanceOf[dom.html.Button]
-  val editWrapperElem = document.getElementById("edit-wrapper")
+  val container = document.querySelector("#program-wrapper #cy")
+  
+  val editWrapperElem = document.querySelector("#edit-wrapper")
 
-  val mainFunction = Function("main")
-  val program = Program("program", mainFunction)
-  val programModel = ProgramModel(program)
+  val runBtn = document.querySelector("#actions-wrapper #run-btn").asInstanceOf[dom.html.Button]
+  val functionsElem = document.querySelector("#actions-wrapper #function-chooser")
+
+  val outputElem = document.querySelector("#run-output")
+
+  val variablesElem = document.querySelector("#variables-output")
+
+
+  val programModel = ProgramModel(Program("program", Function("main"), List(Function("fun1"))))
   val cytoscapeFlowchart = CytoscapeFlowchart(programModel, container, editWrapperElem)
 
   var interpreter = Interpreter(programModel)
 
   var lastRun: String = ""
+
+  populateFunctions()
+
+  def populateFunctions(): Unit =
+    val allFunctions = List(programModel.ast.main) ++ programModel.ast.functions
+    val selectElem = div(
+      allFunctions.map { f =>
+        val maybeSelected = Option.when(f.name == "main")(checked)
+        val maybeDelete = Option.when(f.name != "main") {
+          button("Delete")
+        }
+        div(
+          label(
+            input(
+              tpe := "radio", name := "currentFunction", value := f.name, maybeSelected,
+              onchange := { (e: dom.Event) =>
+                println(e.target.asInstanceOf[dom.html.Input].value)
+              }
+            ),
+            f.name,
+            maybeDelete
+          )
+        )
+      }
+    )
+    functionsElem.innerText = ""
+    functionsElem.appendChild(selectElem.render)
 
   // run the program
   runBtn.onclick = _ => {
@@ -77,12 +108,14 @@ def init(): Unit = {
 
     val valueInputElem = input().render
     val valueBtnElem = button("Enter").render
-    val valueLabelElem = label(
-      s"Please enter value for '$name': ",
-      valueInputElem,
-      valueBtnElem
+    val enterValueDiv = div(
+      label(
+        s"Please enter value for '$name': ",
+        valueInputElem,
+        valueBtnElem
+      )
     ).render
-    outputElem.appendChild(valueLabelElem)
+    outputElem.appendChild(enterValueDiv)
 
     valueInputElem.focus()
 
@@ -99,7 +132,7 @@ def init(): Unit = {
         interpreter.continue()
 
         val newOutput = pre(s"Please enter value for '$name': $inputValue").render
-        outputElem.removeChild(valueLabelElem)
+        outputElem.removeChild(enterValueDiv)
         outputElem.appendChild(newOutput)
       } catch {
         case (e: EvalException) => // from symbol table

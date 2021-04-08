@@ -1,19 +1,17 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="user-scalable=no, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, minimal-ui">
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <title>FlowRun</title>
 
-    <link rel="stylesheet"
-        href="https://cdn.jsdelivr.net/npm/cytoscape-context-menus@4.0.0/cytoscape-context-menus.css">
-    <link href="https://fonts.googleapis.com/css2?family=Ubuntu+Mono&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://unpkg.com/sakura.css/css/sakura.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cytoscape-context-menus@4.0.0/cytoscape-context-menus.css">
     <style>
         body {
-            max-width: 60em;
+            width: 90%;
+            margin: 10px auto;
         }
         pre {
             padding: 5px;
@@ -23,13 +21,11 @@
             border: 1px solid black;
         }
         #content {
-            height: 90vh;
             display: grid;
             grid-template-columns: 50% 30% 20%;
             grid-gap: 10px;
         }
         #edit-wrapper {
-            height: 40%;
             padding: 7px;
         }
         #buttons-wrapper {
@@ -42,18 +38,28 @@
         #run-output-wrapper .error {
             color: red;
         }
+        #program-wrapper #cy {
+            min-height: 400px;
+            display: grid;
+            grid-template-rows: 10% 90%;
+        }
     </style>
 </head>
 
 <body>
 
     <div id="content">
-        <div id="cy" class="wrapper"></div>
+        <div id="program-wrapper" class="wrapper">
+            
+            <div id="cy"></div>
+        </div>
 
         <div class="wrapper">
             <div id="edit-wrapper"></div>
-            <div id="buttons-wrapper">
+
+            <div id="actions-wrapper">
                 <button id="run-btn">Run</button>
+                <div id="function-chooser"></div>
             </div>
             
             <div id="run-output-wrapper">
@@ -62,20 +68,17 @@
         </div>
 
         <div id="variables-output" class="wrapper"></div>
-        
     </div>
     
     
     <script src="https://cdn.jsdelivr.net/npm/cytoscape@3.17.1/dist/cytoscape.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/cytoscape-context-menus@4.0.0/cytoscape-context-menus.min.js"></script>
-
     <script src="https://cdn.jsdelivr.net/npm/dagre@0.8.5/dist/dagre.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/cytoscape-dagre@2.3.2/cytoscape-dagre.js"></script>
     
     <script type="module" src="scripts/main.js"></script>
     <script type="module">
-        import { start } from '/scripts/main.js'
-
+        import { start } from './scripts/main.js'
         start();
     </script>
 </body>
