@@ -6,15 +6,15 @@ import org.scalajs.dom
 import org.scalajs.dom.window
 import org.scalajs.dom.window.document
 import org.getshaka.nativeconverter.NativeConverter
+import scalatags.JsDom.all._
+
 import ba.sake.flowrun.cytoscape.CytoscapeFlowchart
 import ba.sake.flowrun.eval._
 import ba.sake.flowrun.parse.parseExpr
 
 @JSExportTopLevel("start")
-@main def start(): Unit = {
-
+@main def start(): Unit =
   window.onload = _ => init()
-}
 
 def init(): Unit = {
   val container = document.getElementById("cy")
@@ -92,7 +92,6 @@ def init(): Unit = {
       val inputValue = valueInputElem.value.trim
       val sym = interpreter.symTab.symbols(name)
       try {
-        
         val value = sym.tpe match
           case Expression.Type.Integer  => inputValue.toInt
           case Expression.Type.Real     => inputValue.toDouble
