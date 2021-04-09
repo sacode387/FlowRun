@@ -26,7 +26,7 @@ class CytoscapeFlowchart(
     )
   )
 
-  load(programModel.currentFunction)
+  doLoad(programModel.currentFunction)
   setupMenus()
   setupEditPanel()
   doLayout()
@@ -47,53 +47,95 @@ class CytoscapeFlowchart(
   def clearErrors(): Unit =
     cy.asDyn.nodes().data("has-error", false)
     EventUtils.dispatchEvent("syntax-success", null)
+
+  def doLoad(fun: Function): Unit = {
+    val statements = fun.statements
+    val firstStmt = statements.head
+    val firstNode = Node(firstStmt.label, Node.Begin, id = firstStmt.id)
+    cy.add(firstNode.toLit)
+    val firstEdge = cy.add(Edge(firstNode.id, firstNode.id).toLit)
+    load(statements.tail, firstNode, firstEdge)
+  }
   
-  def load(fun: Function): Unit = {
+  def load(statements: List[Statement], lastNode: Node, lastEdge: js.Dynamic): (Node, js.Dynamic) = {
     import Statement._
 
-    val statements = fun.statements
-    var prevStmt = statements.head
-    var prevNode = Node(prevStmt.label, Node.Begin, id = prevStmt.id)
-    cy.add(prevNode.toLit)
-    
-    statements.tail.map {
-      case Block(_, blockStats) =>
-        println("TODO")
-      case ifStat @ If(id, expr, trueBlock, falseBlock) =>
-        println("TODO")
+    var prevNode = lastNode
+    var prevEdge = lastEdge
+
+    statements.foreach {
       case stmt: Input =>
         val newNode = Node(stmt.label, Node.Input, id = stmt.id, rawName = stmt.name)
         cy.add(newNode.toLit)
         cy.add(Edge(prevNode.id, newNode.id).toLit)
+        prevEdge.move(js.Dynamic.literal(target = newNode.id))
         prevNode = newNode
-        prevStmt = stmt
+        prevEdge = cy.add(Edge(newNode.id, newNode.id).toLit)
       case stmt: Output =>
         val newNode = Node(stmt.label, Node.Output, id = stmt.id, rawExpr = stmt.value)
         cy.add(newNode.toLit)
-        cy.add(Edge(prevNode.id, newNode.id).toLit)
+        prevEdge.move(js.Dynamic.literal(target = newNode.id))
         prevNode = newNode
-        prevStmt = stmt
+        prevEdge = cy.add(Edge(newNode.id, newNode.id).toLit)
       case stmt: Declare =>
         val newNode = Node(stmt.label, Node.Declare, id = stmt.id, rawName = stmt.name, rawTpe = stmt.tpe.toString)
         cy.add(newNode.toLit)
-        cy.add(Edge(prevNode.id, newNode.id).toLit)
+        prevEdge.move(js.Dynamic.literal(target = newNode.id))
         prevNode = newNode
-        prevStmt = stmt
+        prevEdge = cy.add(Edge(newNode.id, newNode.id).toLit)
       case stmt: Assign =>
         val newNode = Node(stmt.label, Node.Assign, id = stmt.id, rawName = stmt.name, rawExpr = stmt.value)
         cy.add(newNode.toLit)
-        cy.add(Edge(prevNode.id, newNode.id).toLit)
+        prevEdge.move(js.Dynamic.literal(target = newNode.id))
         prevNode = newNode
-        prevStmt = stmt
-      case stmt =>
+        prevEdge = cy.add(Edge(newNode.id, newNode.id).toLit)
+      case Block(_, blockStats) =>
+        println("TODO")
+      case stmt @ If(id, expr, trueBlock, falseBlock) =>
+        val ifEndNode = Node("", Node.IfEnd)
+        val ifNode = Node(stmt.condition, Node.If, endId = ifEndNode.id)
+        cy.add(ifNode.toLit)
+        cy.add(ifEndNode.toLit)
+        prevEdge.move(js.Dynamic.literal(target = ifNode.id))
+        val trueEdge = cy.add(Edge(ifNode.id, ifNode.id, "true").toLit)
+        val falseEdge = cy.add(Edge(ifNode.id, ifEndNode.id, "false").toLit)
+        
+        val lastTrueEdge = if trueBlock.statements.isEmpty then
+          val trueNode = Node("", Node.Dummy, startId = ifNode.id, endId = ifEndNode.id)
+          cy.add(trueNode.toLit)
+          trueEdge.move(js.Dynamic.literal(target = trueNode.id))
+          cy.add(Edge(trueNode.id, trueNode.id).toLit)
+        else
+          val res = load(trueBlock.statements, ifNode, trueEdge)
+          //prevNode = res._1
+          res._2
+        
+        val lastFalseEdge = if falseBlock.statements.isEmpty then
+          val falseNode = Node("", Node.Dummy, startId = ifNode.id, endId = ifEndNode.id)
+          cy.add(falseNode.toLit)
+          falseEdge.move(js.Dynamic.literal(target = falseNode.id))
+          cy.add(Edge(falseNode.id, falseNode.id).toLit)
+        else
+          val res = load(falseBlock.statements, ifNode, falseEdge)
+          //prevNode = res._1
+          res._2
+
+        lastTrueEdge.move(js.Dynamic.literal(target = ifEndNode.id))
+        lastFalseEdge.move(js.Dynamic.literal(target = ifEndNode.id))
+
+        prevEdge = cy.add(Edge(ifEndNode.id, ifEndNode.id, dir = "vert", blockId = trueBlock.id).toLit)
+        prevNode = ifEndNode
+
+      case stmt @ (Begin | End | _: Dummy | _: BlockEnd) =>
         val nodeType = stmt.getClass.getSimpleName.reverse.dropWhile(_ == '$').reverse
         println("tpe: " + nodeType)
         val newNode = Node(stmt.label, nodeType, id = stmt.id)
         cy.add(newNode.toLit)
-        cy.add(Edge(prevNode.id, newNode.id).toLit)
+        prevEdge.move(js.Dynamic.literal(target = newNode.id))
         prevNode = newNode
-        prevStmt = stmt
+       // prevEdge = cy.add(Edge(newNode.id, newNode.id).toLit)
     }
+    (prevNode, prevEdge)
   }
 
   private def setupMenus(): Unit = {
@@ -145,7 +187,7 @@ class CytoscapeFlowchart(
             content = "output",
             tooltipText = "Add output statement",
             image = js.Dynamic.literal(src = "images/output.svg", width = 12, height = 12, x = 3, y = 4),
-            selector = "edge, node.dummy",
+            selector = s"edge, node.${Node.Dummy}",
             onClickFunction = { (event: dom.Event) =>
 
               val target = event.target.asDyn
@@ -167,7 +209,7 @@ class CytoscapeFlowchart(
             content = "input",
             tooltipText = "Add input statement",
             image = js.Dynamic.literal(src = "images/input.svg", width = 12, height = 12, x = 3, y = 4),
-            selector = "edge, node.dummy",
+            selector = s"edge, node.${Node.Dummy}",
             onClickFunction = { (event: dom.Event) =>
 
               val target = event.target.asDyn
@@ -190,7 +232,7 @@ class CytoscapeFlowchart(
             content = "declare",
             tooltipText = "Add declare statement",
             image = js.Dynamic.literal(src = "images/declare.svg", width = 12, height = 12, x = 3, y = 4),
-            selector = "edge, node.dummy",
+            selector = s"edge, node.${Node.Dummy}",
             onClickFunction = { (event: dom.Event) =>
 
               val target = event.target.asDyn
@@ -212,7 +254,7 @@ class CytoscapeFlowchart(
             content = "assign",
             tooltipText = "Add assign statement",
             image = js.Dynamic.literal(src = "images/assign.svg", width = 12, height = 12, x = 3, y = 4),
-            selector = "edge, node.dummy",
+            selector = s"edge, node.${Node.Dummy}",
             onClickFunction = { (event: dom.Event) =>
 
               val target = event.target.asDyn
@@ -235,7 +277,7 @@ class CytoscapeFlowchart(
             content = "if",
             tooltipText = "Add if statement",
             image = js.Dynamic.literal(src = "images/if.svg", width = 12, height = 12, x = 3, y = 4),
-            selector = "edge, node.dummy",
+            selector = s"edge, node.${Node.Dummy}",
             onClickFunction = { (event: dom.Event) =>
 
               val target = event.target.asDyn

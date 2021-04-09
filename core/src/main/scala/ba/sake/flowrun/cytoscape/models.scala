@@ -9,7 +9,7 @@ import org.scalajs.dom
 @JSGlobal
 class cytoscape(props: js.Object) extends js.Object {
   def contextMenus(props: js.Object): Unit = js.native
-  def add(item: js.Object): js.Object = js.native
+  def add(item: js.Object): js.Dynamic = js.native
   def remove(selector: String): js.Object = js.native
 }
 

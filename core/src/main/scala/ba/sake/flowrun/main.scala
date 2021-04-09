@@ -30,17 +30,21 @@ def init(): Unit = {
 
   val main = Function("main", None, List(
     Statement.Begin, 
-    Statement.Declare("1", "x", Expression.Type.Integer, Option("7")),
-    Statement.Output("2", "x"),
-    Statement.Input("3", "x"),
-    Statement.Output("4", "x"),
-    Statement.Assign("5", "x", "5"),
-    Statement.Output("6", "x"),
-
+ //   Statement.Declare("1", "x", Expression.Type.Integer, Option("7")),
+ //   Statement.Output("2", "555"),
+ //   Statement.Input("3", "x"),
+ //   Statement.Output("4", "x"),
+    
     Statement.If("100", "true",
-      Statement.Block("101"),
-      Statement.Block("102"),
+      Statement.Block("101", List(Statement.Output("101-1", "9"))),
+      Statement.Block("102", List(
+        Statement.If("200", "true",
+          Statement.Block("201", List(Statement.Output("201-1", "9"))),
+          Statement.Block("202", List(Statement.Output("202-1", "9"))),
+        ),
+      )),
     ),
+
     Statement.End
   ))
 
