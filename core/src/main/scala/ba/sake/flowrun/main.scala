@@ -70,7 +70,7 @@ def init(): Unit = {
     val allFunctions = List(programModel.ast.main) ++ programModel.ast.functions
     val selectElem = div(
       allFunctions.map { f =>
-        val maybeSelected = Option.when(f.name == "main")(checked)
+        val maybeSelected = Option.when(f.name == programModel.currentFunctionName)(checked)
         val maybeDelete = Option.when(f.name != "main") {
           button("Delete", onclick := { (e: dom.Event) =>
             programModel.deleteFunction(f.name)
@@ -93,7 +93,15 @@ def init(): Unit = {
             maybeDelete
           )
         )
-      }
+      },
+      button("Add", onclick := { (e: dom.Event) =>
+        val newFunName = "fun123"
+        val newFun = Function(newFunName)
+        programModel.addFunction(newFun)
+        programModel.currentFunctionName = newFunName
+        cytoscapeFlowchart.loadCurrentFunction()
+        populateFunctions()
+      })
     )
     functionsElem.innerText = ""
     functionsElem.appendChild(selectElem.render)

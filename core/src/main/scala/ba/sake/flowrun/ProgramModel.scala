@@ -18,10 +18,15 @@ class ProgramModel(
     if currentFunctionName == "main" then ast.main
     else ast.functions.find(_.name == currentFunctionName).get
 
+  def addFunction(fun: Function): Unit =
+    val newFunctions = ast.functions.appended(fun)
+    ast = ast.copy(functions = newFunctions)
+  
   def deleteFunction(name: String): Unit =
     val newFunctions = ast.functions.filterNot(_.name == name)
     ast = ast.copy(functions = newFunctions)
 
+  /* per-function */
   def addDeclare(req: AddDeclare): Unit =
     update(_.addDeclare(req))
 
