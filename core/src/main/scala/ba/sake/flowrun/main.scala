@@ -72,7 +72,12 @@ def init(): Unit = {
       allFunctions.map { f =>
         val maybeSelected = Option.when(f.name == "main")(checked)
         val maybeDelete = Option.when(f.name != "main") {
-          button("Delete")
+          button("Delete", onclick := { (e: dom.Event) =>
+            programModel.deleteFunction(f.name)
+            programModel.currentFunctionName = "main"
+            cytoscapeFlowchart.loadCurrentFunction()
+            populateFunctions()
+          })
         }
         div(
           label(

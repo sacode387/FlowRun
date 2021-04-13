@@ -18,18 +18,9 @@ class ProgramModel(
     if currentFunctionName == "main" then ast.main
     else ast.functions.find(_.name == currentFunctionName).get
 
-  private def update(transform: FunctionModel => FunctionModel): Unit = {
-    val newFunction = transform(FunctionModel(currentFunction)).ast
-    if currentFunctionName == "main" then
-      ast = ast.copy(main = newFunction)
-    else
-      ast.functions.indexWhere(_.name == currentFunctionName) match
-        case -1 =>
-          println(s"Oops, function $currentFunctionName does not exist...")
-        case idx =>
-          val newFunctions = ast.functions.updated(idx, newFunction)
-          ast = ast.copy(functions = newFunctions)
-  }
+  def deleteFunction(name: String): Unit =
+    val newFunctions = ast.functions.filterNot(_.name == name)
+    ast = ast.copy(functions = newFunctions)
 
   def addDeclare(req: AddDeclare): Unit =
     update(_.addDeclare(req))
@@ -63,6 +54,19 @@ class ProgramModel(
 
   def delete(req: Delete): Unit =
     update(_.delete(req))
+  
+  private def update(transform: FunctionModel => FunctionModel): Unit = {
+    val newFunction = transform(FunctionModel(currentFunction)).ast
+    if currentFunctionName == "main" then
+      ast = ast.copy(main = newFunction)
+    else
+      ast.functions.indexWhere(_.name == currentFunctionName) match
+        case -1 =>
+          println(s"Oops, function $currentFunctionName does not exist...")
+        case idx =>
+          val newFunctions = ast.functions.updated(idx, newFunction)
+          ast = ast.copy(functions = newFunctions)
+  }
 }
 
 // TODO refactor to be immutable... :/
