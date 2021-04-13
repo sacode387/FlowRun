@@ -26,10 +26,10 @@ class CytoscapeFlowchart(
     )
   )
 
-  doLoad(programModel.currentFunction)
+  loadCurrentFunction()
   setupMenus()
   setupEditPanel()
-  doLayout()
+  
 
   cy.asDyn.on("unselect add remove", "node", (evt: js.Dynamic) => {
     // node not selected anymore, hide the inputs...
@@ -48,13 +48,16 @@ class CytoscapeFlowchart(
     cy.asDyn.nodes().data("has-error", false)
     EventUtils.dispatchEvent("syntax-success", null)
 
-  def doLoad(fun: Function): Unit = {
-    val statements = fun.statements
+  def loadCurrentFunction(): Unit = {
+    //println("BEFORE: " + js.JSON.stringify(cy.asDyn.elements().jsons()))
+    cy.remove("*")
+    val statements = programModel.currentFunction.statements
     val firstStmt = statements.head
     val firstNode = Node(firstStmt.label, Node.Begin, id = firstStmt.id)
     cy.add(firstNode.toLit)
     val firstEdge = cy.add(Edge(firstNode.id, firstNode.id).toLit)
     load(statements.tail, firstNode, firstEdge)
+    doLayout()
   }
   
   def load(statements: List[Statement], lastNode: Node, lastEdge: js.Dynamic): (Node, js.Dynamic) = {

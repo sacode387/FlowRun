@@ -30,12 +30,12 @@ def init(): Unit = {
 
   val main = Function("main", None, List(
     Statement.Begin, 
- //   Statement.Declare("1", "x", Expression.Type.Integer, Option("7")),
+    Statement.Declare("1", "x", Expression.Type.Integer, Option("7")),
  //   Statement.Output("2", "555"),
  //   Statement.Input("3", "x"),
  //   Statement.Output("4", "x"),
     
-    Statement.If("100", "true",
+  /*  Statement.If("100", "true",
       Statement.Block("101", List(Statement.Output("101-1", "9"))),
       Statement.Block("102", List(
         Statement.If("200", "true",
@@ -43,12 +43,21 @@ def init(): Unit = {
           Statement.Block("202", List(Statement.Output("202-1", "9"))),
         ),
       )),
-    ),
+    ),*/
 
     Statement.End
   ))
 
-  val programModel = ProgramModel(Program("program", main, List(Function("fun1"))))
+  val fun1 = Function("fun1", None, List(
+    Statement.Begin, 
+   // Statement.Declare("1", "z", Expression.Type.Integer, Option("7")),
+   // Statement.Input("3", "z"),
+    Statement.Output("4", "z"),
+
+    Statement.End
+  ))
+
+  val programModel = ProgramModel(Program("program", main, List(fun1)))
   val cytoscapeFlowchart = CytoscapeFlowchart(programModel, container, editWrapperElem)
 
   var interpreter = Interpreter(programModel)
@@ -70,7 +79,9 @@ def init(): Unit = {
             input(
               tpe := "radio", name := "currentFunction", value := f.name, maybeSelected,
               onchange := { (e: dom.Event) =>
-                println(e.target.asInstanceOf[dom.html.Input].value)
+                val selectedFunName = e.target.asInstanceOf[dom.html.Input].value
+                programModel.currentFunctionName = selectedFunName
+                cytoscapeFlowchart.loadCurrentFunction()
               }
             ),
             f.name,
