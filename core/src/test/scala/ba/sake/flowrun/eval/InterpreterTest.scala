@@ -37,9 +37,9 @@ object InterpreterTests extends TestSuite {
       val symTab = interpreter.symTab
 
       interpreter.run().map { _ =>
-        assert(symTab.isDeclared("x"))
-        assert(symTab.isDeclared("y"))
-        symTab.get("123", "y") ==> 5
+        assert(symTab.isDeclaredVar("x"))
+        assert(symTab.isDeclaredVar("y"))
+        symTab.getValue("123", "y") ==> 5
       }
     }
 
@@ -57,8 +57,8 @@ object InterpreterTests extends TestSuite {
       val symTab = interpreter.symTab
 
       interpreter.run().map { _ =>
-        assert(symTab.isDeclared("x"))
-        symTab.get("123", "x") ==> 5
+        assert(symTab.isDeclaredVar("x"))
+        symTab.getValue("123", "x") ==> 5
       }
     }
 
@@ -77,9 +77,9 @@ object InterpreterTests extends TestSuite {
       val symTab = interpreter.symTab
 
       interpreter.run().map { _ =>
-        symTab.get("123", "x") ==> 11
-        symTab.get("123", "y") ==> 3
-        symTab.get("123", "z") ==> 3
+        symTab.getValue("123", "x") ==> 11
+        symTab.getValue("123", "y") ==> 3
+        symTab.getValue("123", "z") ==> 3
       }
     }
 
@@ -100,7 +100,7 @@ object InterpreterTests extends TestSuite {
       val symTab = interpreter.symTab
 
       interpreter.run().map { _ =>
-        symTab.get("123", "x") ==> 1
+        symTab.getValue("123", "x") ==> 1
       }
     }
   }

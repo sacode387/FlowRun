@@ -52,7 +52,7 @@ def init(): Unit = {
     Statement.Begin, 
    // Statement.Declare("1", "z", Expression.Type.Integer, Option("7")),
    // Statement.Input("3", "z"),
-    Statement.Output("4", "z"),
+    Statement.Output("4", "\"fun1 hello!\""),
 
     Statement.End
   ))
@@ -167,7 +167,7 @@ def init(): Unit = {
       val key = SymbolKey(name, Symbol.Kind.Variable)
       val sym = interpreter.symTab.symbols(key)
       try {
-        val value = sym.tpe match
+        val value = sym.tpe.get match
           case Expression.Type.Integer  => inputValue.toInt
           case Expression.Type.Real     => inputValue.toDouble
           case Expression.Type.Boolean  => inputValue.toBoolean
@@ -182,7 +182,7 @@ def init(): Unit = {
         case (e: EvalException) => // from symbol table
           displayError(e.getMessage)
         case e: (NumberFormatException | IllegalArgumentException) =>
-          displayError(s"Entered invalid ${sym.tpe}: '${inputValue}'")
+          displayError(s"Entered invalid ${sym.tpe.get}: '${inputValue}'")
       }
     }
   })
@@ -193,8 +193,11 @@ def init(): Unit = {
 
   def showVariables(): Unit =
     variablesElem.innerText = ""
-    interpreter.symTab.symbols.values.foreach { sym =>
-      val symElem = div(s"${sym.key.name}: ${sym.tpe} = ${sym.value.getOrElse("")}").render
+    println(interpreter.symTab.symbols)
+    // TODO only current function vars
+    val varValues = interpreter.symTab.symbols.values.filter(_.key.kind == Symbol.Kind.Variable)
+    varValues.foreach { sym =>
+      val symElem = div(s"${sym.key.name}: ${sym.tpe.get} = ${sym.value.getOrElse("")}").render
       variablesElem.appendChild(symElem)
     }
 }

@@ -27,12 +27,11 @@ object TypeUtils:
       case "Boolean"                              => "Boolean"
       case _ =>                                   value.getClass.getSimpleName
     (expectedType, valueType) match {
-      case (Type.Integer, "Integer") => value
-      case (Type.Real, "Real" | "Integer") => value
-      case (Type.String, "String") => value
-      case (Type.Boolean, "Boolean") => value
+      case (Type.Integer, "Integer")        => value
+      case (Type.Real, "Real" | "Integer")  => value
+      case (Type.String, "String")          => value
+      case (Type.Boolean, "Boolean")        => value
       case (expectedType, _) =>
-        println("NOT ASSIGNABLE: " + value)
         throw eval.EvalException(
           s"Cannot assign value of type '$valueType' to a variable of type '$expectedType'", nodeId)
     }
