@@ -112,7 +112,21 @@ final class ExpressionParser(nodeId: String, allTokens: List[Token]) {
         StringLit(str.text)
       case Type.Identifier =>
         val id = eat(Type.Identifier)
-        Identifier(id.text)
+        // maybe a function call
+        if lookahead.tpe == Type.LeftParen then
+          eat(Type.LeftParen)
+          if lookahead.tpe == Type.RightParen then
+            eat(Type.RightParen)
+            FunctionCall(id.text, List.empty)
+          else
+            val arguments = mutable.ListBuffer(expression())
+            while lookahead.tpe == Type.Comma do
+              eat(Type.Comma)
+              arguments += expression()
+            eat(Type.RightParen)
+            FunctionCall(id.text, arguments.toList)
+        else
+          Identifier(id.text)
       case Type.LeftParen =>
         eat(Type.LeftParen)
         val res = Parens(expression())

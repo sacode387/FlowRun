@@ -20,6 +20,9 @@ final class Lexer(nodeId: String, input: String) {
       else if lookahead == ')' then
         i += 1
         tokens += Token(Type.RightParen, lookahead.toString, pos)
+      else if lookahead == ',' then
+        i += 1
+        tokens += Token(Type.Comma, lookahead.toString, pos)
       else if lookahead == '+' then
         i += 1
         tokens += Token(Type.Plus, lookahead.toString, pos)
@@ -157,6 +160,8 @@ object Token {
 
     case LeftParen
     case RightParen
+
+    case Comma
 
     case EOF
   }

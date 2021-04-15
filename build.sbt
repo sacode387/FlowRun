@@ -1,5 +1,5 @@
 
-import org.scalajs.linker.interface.ModuleSplitStyle
+import org.scalajs.linker.interface.OutputPatterns
 
 inThisBuild(
   List(
@@ -15,22 +15,27 @@ lazy val core = (project in file("core"))
       "com.lihaoyi" %%% "scalatags" % "0.9.4"
     ).map(_.cross(CrossVersion.for3Use2_13)),
     libraryDependencies ++= Seq(
-      //TODO RC2"org.getshaka" %%% "native-converter" % "0.4.0",
-      //"com.lihaoyi" %%% "pprint" % "0.6.4",
-      
+      //"org.getshaka" %%% "native-converter" % "0.4.0",
+      //"com.lihaoyi" %%% "pprint" % "0.6.4"
     ),
     scalacOptions ++= Seq(
       "-Xmax-inlines", "64",
       "-Ycheck-init"
     ),
+    scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.ESModule) },
     (Compile / compile) := {
       WebKeys.assets.value // run assets
       (Compile / compile).value
     },
-    scalaJSLinkerConfig ~= {
-      _.withModuleKind(ModuleKind.ESModule)
-    },
-    scalaJSLinkerOutputDirectory in (Compile, fastLinkJS) :=
-      (Assets / WebKeys.public).value / "scripts"
+    Compile / fastLinkJS / scalaJSLinkerOutputDirectory :=
+      (Assets / WebKeys.public).value / "scripts",
+
+    // tests stuff
+    libraryDependencies ++= Seq(
+      "com.lihaoyi" %%% "utest" % "0.7.8" % Test
+    ),
+    testFrameworks += new TestFramework("utest.runner.Framework"),
+    Test / scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.NoModule) },
+    Test / jsEnv := new org.scalajs.jsenv.jsdomnodejs.JSDOMNodeJSEnv()
   )
   .enablePlugins(ScalaJSPlugin, SbtWeb)

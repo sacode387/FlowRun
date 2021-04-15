@@ -21,7 +21,7 @@ class Interpreter(programModel: ProgramModel) {
 
   private var state = State.INITIALIZED
 
-  def run(): Unit = {
+  def run(): Future[Unit] = {
     import js.JSConverters._
     //pprint.pprintln(programModel.ast)
     //val json = js.JSON.stringify(programModel.ast.toNative)
@@ -45,13 +45,14 @@ class Interpreter(programModel: ProgramModel) {
       case Failure(e) =>
         println(s"Unexpected error: $e")
     }
+    futureExec
   }
 
   def continue(): Unit =
     state = State.RUNNING
 
   private def interpret(stmt: Statement): Future[Unit] = waitForContinue().flatMap { _ =>
-    println(s"interpreting: $stmt")
+    //println(s"interpreting: $stmt")
     import Statement._
     
     stmt match {

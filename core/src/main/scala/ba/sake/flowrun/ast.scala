@@ -58,6 +58,7 @@ enum Atom derives NativeConverter:
   case TrueLit
   case FalseLit
   case Parens(expression: Expression)
+  case FunctionCall(name: String, arguments: Seq[Expression])
 
 ///////////////////////////////////////////////
 /* AST, represented visually! 
@@ -77,10 +78,9 @@ object Statement:
   case class Dummy(override val id: String) extends Statement(id):
     def label = ""
   case class Declare(override val id: String, name: String, tpe: Expression.Type, initValue: Option[String]) extends Statement(id):
-    def label = {
+    def label =
       val maybeExprText = initValue.map(e => s" = $e").getOrElse("")
       s"$name: $tpe$maybeExprText"
-    }
   case class Assign(override val id: String, name: String, value: String) extends Statement(id):
     def label = s"$name = $value"
   case class Input(override val id: String, name: String) extends Statement(id):

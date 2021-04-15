@@ -395,7 +395,7 @@ class CytoscapeFlowchart(
         val maybeNewExpr = Try(parseExpr(nodeId, newExprText))
         maybeNewExpr match {
           case Failure(e) =>
-            if nodeType == Node.Declare then
+            if nodeType == Node.Declare && newExprText.isEmpty then
               programModel.updateDeclare(Request.UpdateDeclare(nodeId, expr = Some(None)))
               node.data("rawExpr", newExprText)
               setLabel()
