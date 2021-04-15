@@ -23,7 +23,7 @@ class Interpreter(programModel: ProgramModel) {
 
   def run(): Future[Unit] = {
     import js.JSConverters._
-    //pprint.pprintln(programModel.ast)
+    pprint.pprintln(programModel.ast)
     //val json = js.JSON.stringify(programModel.ast.toNative)
     //println(json)
 
@@ -63,19 +63,22 @@ class Interpreter(programModel: ProgramModel) {
         val maybeExprVal = initValueExpr.map(e => eval(id, e))
         maybeExprVal.foreach(v => TypeUtils.getUpdateValue(id, name, tpe, v))
         
-        symTab.add(id, name, tpe, Symbol.Kind.Var, maybeExprVal)
+        val key = SymbolKey(name, Symbol.Kind.Variable)
+        symTab.add(id, key, tpe, maybeExprVal)
         Future.successful(())
       case Assign(id, name, expr) =>
-        if !symTab.isDeclared(name) then
+        val key = SymbolKey(name, Symbol.Kind.Variable)
+        if !symTab.isDeclared(key) then
           throw EvalException(s"Variable '$name' is not declared.", id)
-        val sym = symTab.symbols(name)
+        val sym = symTab.symbols(key)
         val exprValue = eval(id, parseExpr(id, expr))
         if exprValue.toString.isEmpty && sym.tpe != Expression.Type.String then
           throw EvalException(s"Assign expression cannot be empty.", id)
         symTab.set(id, name, exprValue)
         Future.successful(())
       case Input(id, name) =>
-        if !symTab.isDeclared(name) then
+        val key = SymbolKey(name, Symbol.Kind.Variable)
+        if !symTab.isDeclared(key) then
           throw EvalException(s"Variable '$name' is not declared.", id)
         state = State.PAUSED
         EventUtils.dispatchEvent("eval-input", js.Dynamic.literal(
@@ -209,6 +212,8 @@ class Interpreter(programModel: ProgramModel) {
       case TrueLit            => true
       case FalseLit           => false
       case Parens(expression) => eval(id, expression)
+      case FunctionCall(name, argumentExprs) =>
+
     
   
   // adapted https://stackoverflow.com/a/46619347/4496364

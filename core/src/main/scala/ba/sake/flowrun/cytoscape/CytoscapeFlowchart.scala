@@ -81,7 +81,7 @@ class CytoscapeFlowchart(
         prevNode = newNode
         prevEdge = cy.add(Edge(newNode.id, newNode.id).toLit)
       case stmt: Declare =>
-        val newNode = Node(stmt.label, Node.Declare, id = stmt.id, rawName = stmt.name, rawTpe = stmt.tpe.toString)
+        val newNode = Node(stmt.label, Node.Declare, id = stmt.id, rawName = stmt.name, rawTpe = stmt.tpe.toString, rawExpr = stmt.initValue.getOrElse(""))
         cy.add(newNode.toLit)
         prevEdge.move(js.Dynamic.literal(target = newNode.id))
         prevNode = newNode

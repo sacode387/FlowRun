@@ -164,7 +164,8 @@ def init(): Unit = {
 
     valueBtnElem.onclick = _ => {
       val inputValue = valueInputElem.value.trim
-      val sym = interpreter.symTab.symbols(name)
+      val key = SymbolKey(name, Symbol.Kind.Variable)
+      val sym = interpreter.symTab.symbols(key)
       try {
         val value = sym.tpe match
           case Expression.Type.Integer  => inputValue.toInt
@@ -193,7 +194,7 @@ def init(): Unit = {
   def showVariables(): Unit =
     variablesElem.innerText = ""
     interpreter.symTab.symbols.values.foreach { sym =>
-      val symElem = div(s"${sym.name}: ${sym.tpe} = ${sym.value.getOrElse("")}").render
+      val symElem = div(s"${sym.key.name}: ${sym.tpe} = ${sym.value.getOrElse("")}").render
       variablesElem.appendChild(symElem)
     }
 }
