@@ -11,7 +11,10 @@ import scalatags.JsDom.all._
 import ba.sake.flowrun.cytoscape.CytoscapeFlowchart
 import ba.sake.flowrun.eval._
 import ba.sake.flowrun.parse.parseExpr
-
+/*
+@JSExportTopLevel("FlowRun")
+class FlowRun() {
+*/
 @JSExportTopLevel("start")
 @main def start(): Unit =
   window.onload = _ => init()
@@ -32,7 +35,7 @@ def init(): Unit = {
     Statement.Begin, 
     Statement.Declare("1", "x", Expression.Type.Integer, Option("1")),
     Statement.Call("2", "fun1()"),
-    Statement.Output("3", "x"),
+    Statement.Output("3", """ "X in main: "+x """),
  //   Statement.Output("4", "x"),
     
   /*  Statement.If("100", "true",
@@ -52,7 +55,7 @@ def init(): Unit = {
     Statement.Begin, 
     Statement.Declare("1", "x", Expression.Type.Integer, Option("2")),
     Statement.Output("4", "\"fun1 hello!\""),
-    Statement.Output("5", "x"),
+    Statement.Output("5", """ "X in fun1: "+x """),
     Statement.End
   ))
 

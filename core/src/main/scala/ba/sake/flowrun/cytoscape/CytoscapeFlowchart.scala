@@ -528,7 +528,7 @@ class CytoscapeFlowchart(
       rankSep = 30,
       rankDir = "TB", // top -> bottom
       animate = true,
-      animationDuration = 133
+      animationDuration = 155
     )
     cy.asDyn.layout(layoutOpts).run()
   }

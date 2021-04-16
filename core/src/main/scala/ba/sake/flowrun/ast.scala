@@ -58,7 +58,7 @@ enum Atom derives NativeConverter:
   case TrueLit
   case FalseLit
   case Parens(expression: Expression)
-  case FunctionCall(name: String, arguments: Seq[Expression])
+  case FunctionCall(name: String, arguments: List[Expression]) extends Atom
 
 ///////////////////////////////////////////////
 /* AST, represented visually! 
@@ -67,7 +67,6 @@ enum Atom derives NativeConverter:
  */
 
 sealed trait Statement(val id: String) derives NativeConverter:
-  // TODO REMOVE ...
   def label: String
 
 object Statement:
@@ -91,6 +90,7 @@ object Statement:
     def label = value
   case class Block(override val id: String, statements: List[Statement] = List.empty) extends Statement(id):
     def label = ""
+  // TODO remove ?
   case class BlockEnd(override val id: String) extends Statement(id):
     def label = ""
   case class If(

@@ -3,7 +3,7 @@ package ba.sake.flowrun
 import scala.scalajs.js
 import ba.sake.flowrun.parse.parseExpr
 
-// TODO rename to ProgramState
+// TODO rename to ProgramState?
 class ProgramModel(
   programAst: Program
 ) {
@@ -74,7 +74,6 @@ class ProgramModel(
   }
 }
 
-// TODO refactor to be immutable... :/
 case class FunctionModel(
   ast: Function
 ) {
@@ -130,7 +129,6 @@ case class FunctionModel(
     updatedStat = updatedStat.copy(condition = req.expr)
     doUpdate(req.id, updatedStat)
 
-  // TODO
   def delete(req: Delete): FunctionModel =
     val newStats = delete(ast.statements, req.id)
     this.copy(ast = ast.copy(statements = newStats))

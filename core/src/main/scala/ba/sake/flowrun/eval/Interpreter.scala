@@ -26,8 +26,7 @@ class Interpreter(programModel: ProgramModel) {
   def run(): Future[Unit] = {
     //import js.JSConverters._
     //pprint.pprintln(programModel.ast)
-    //val json = js.JSON.stringify(programModel.ast.toNative)
-    //println(json)
+    println(js.JSON.stringify(programModel.ast.toNative))
 
     state = State.RUNNING
 
@@ -80,7 +79,7 @@ class Interpreter(programModel: ProgramModel) {
             Future.successful(())
           case Some(expr) =>
             eval(id, expr).map { v =>
-              //TypeUtils.getUpdateValue(id, name, tpe, v) // validate
+              TypeUtils.getUpdateValue(id, name, tpe, v) // validate
               val key = SymbolKey(name, Symbol.Kind.Variable)
               symTab.add(id, key, Some(tpe), Some(v))
               ()
@@ -204,7 +203,7 @@ class Interpreter(programModel: ProgramModel) {
         val first = tmp1.asInstanceOf[String]
         execSequentially(first, term.factors, (acc, nextFactorOpt) => {
           eval(id, nextFactorOpt.factor).map { v =>
-            val nextVal = v.asInstanceOf[String]
+            val nextVal = v.toString
             nextFactorOpt.op.tpe match
               case Token.Type.Plus => acc + nextVal
               case _               => throw EvalException("Cannot subtract Strings", id)

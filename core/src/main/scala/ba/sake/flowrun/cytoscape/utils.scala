@@ -58,6 +58,13 @@ object utils {
         "color": "white"
       }
     }, {
+      "selector": "node.${Node.Call}",
+      "style": {
+        "shape": "rectangle",
+        "background-color": "#ff8303",
+        "color": "white"
+      }
+    }, {
       "selector": "node.${Node.If}",
       "style": {
         "shape": "diamond",

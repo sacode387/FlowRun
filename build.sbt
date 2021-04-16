@@ -3,7 +3,7 @@ import org.scalajs.linker.interface.OutputPatterns
 
 inThisBuild(
   List(
-    scalaVersion := "3.0.0-RC2"
+    scalaVersion := "3.0.0-RC1"
   )
 )
 
@@ -16,8 +16,7 @@ lazy val core = (project in file("core"))
       "com.lihaoyi" %%% "pprint" % "0.6.4"
     ).map(_.cross(CrossVersion.for3Use2_13)),
     libraryDependencies ++= Seq(
-      //"org.getshaka" %%% "native-converter" % "0.4.0",
-      
+      "org.getshaka" %%% "native-converter" % "0.4.0",
     ),
     scalacOptions ++= Seq(
       "-Xmax-inlines", "64",
@@ -33,7 +32,7 @@ lazy val core = (project in file("core"))
 
     // tests stuff
     libraryDependencies ++= Seq(
-      "com.lihaoyi" %%% "utest" % "0.7.8" % Test
+      "com.lihaoyi" %%% "utest" % "0.7.7" % Test
     ),
     testFrameworks += new TestFramework("utest.runner.Framework"),
     Test / parallelExecution := false,
