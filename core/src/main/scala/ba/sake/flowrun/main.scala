@@ -30,9 +30,9 @@ def init(): Unit = {
 
   val main = Function("main", None, List(
     Statement.Begin, 
-    Statement.Declare("1", "x", Expression.Type.Integer, Option("7")),
- //   Statement.Output("2", "555"),
- //   Statement.Input("3", "x"),
+    Statement.Declare("1", "x", Expression.Type.Integer, Option("1")),
+    Statement.Call("2", "fun1()"),
+    Statement.Output("3", "x"),
  //   Statement.Output("4", "x"),
     
   /*  Statement.If("100", "true",
@@ -50,10 +50,9 @@ def init(): Unit = {
 
   val fun1 = Function("fun1", None, List(
     Statement.Begin, 
-   // Statement.Declare("1", "z", Expression.Type.Integer, Option("7")),
-   // Statement.Input("3", "z"),
+    Statement.Declare("1", "x", Expression.Type.Integer, Option("2")),
     Statement.Output("4", "\"fun1 hello!\""),
-
+    Statement.Output("5", "x"),
     Statement.End
   ))
 
@@ -165,14 +164,14 @@ def init(): Unit = {
     valueBtnElem.onclick = _ => {
       val inputValue = valueInputElem.value.trim
       val key = SymbolKey(name, Symbol.Kind.Variable)
-      val sym = interpreter.symTab.symbols(key)
+      val sym = interpreter.symTab.getSymbol(null, key)
       try {
         val value = sym.tpe.get match
           case Expression.Type.Integer  => inputValue.toInt
           case Expression.Type.Real     => inputValue.toDouble
           case Expression.Type.Boolean  => inputValue.toBoolean
           case Expression.Type.String   => inputValue
-        interpreter.symTab.set(nodeId, name, value)
+        interpreter.symTab.setValue(nodeId, name, value)
         interpreter.continue()
 
         val newOutput = pre(s"Please enter value for '$name': $inputValue").render
@@ -193,9 +192,7 @@ def init(): Unit = {
 
   def showVariables(): Unit =
     variablesElem.innerText = ""
-    println(interpreter.symTab.symbols)
-    // TODO only current function vars
-    val varValues = interpreter.symTab.symbols.values.filter(_.key.kind == Symbol.Kind.Variable)
+    val varValues = interpreter.symTab.varSymbols
     varValues.foreach { sym =>
       val symElem = div(s"${sym.key.name}: ${sym.tpe.get} = ${sym.value.getOrElse("")}").render
       variablesElem.appendChild(symElem)

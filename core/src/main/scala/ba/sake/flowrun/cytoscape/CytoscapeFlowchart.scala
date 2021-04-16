@@ -92,6 +92,12 @@ class CytoscapeFlowchart(
         prevEdge.move(js.Dynamic.literal(target = newNode.id))
         prevNode = newNode
         prevEdge = cy.add(Edge(newNode.id, newNode.id).toLit)
+      case stmt: Call =>
+        val newNode = Node(stmt.label, Node.Call, id = stmt.id, rawExpr = stmt.value)
+        cy.add(newNode.toLit)
+        prevEdge.move(js.Dynamic.literal(target = newNode.id))
+        prevNode = newNode
+        prevEdge = cy.add(Edge(newNode.id, newNode.id).toLit)
       case Block(_, blockStats) =>
         println("TODO")
       case stmt @ If(id, expr, trueBlock, falseBlock) =>
@@ -451,7 +457,7 @@ class CytoscapeFlowchart(
       }
 
       var hasExpr = false
-      if (Set(Node.Declare, Node.Assign, Node.Output, Node.If).contains(nodeType)) {
+      if (Set(Node.Declare, Node.Assign, Node.Output, Node.Call, Node.If).contains(nodeType)) {
         hasExpr = true
         val editElem = div(exprLabelElem).render
         editWrapperElem.appendChild(editElem)

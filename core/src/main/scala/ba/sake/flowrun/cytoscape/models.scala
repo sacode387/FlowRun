@@ -70,6 +70,7 @@ object Node {
   val Dummy = "Dummy" // empty node used just for layout dirty-fix
   val Declare = "Declare"
   val Assign = "Assign"
+  val Call = "Call"
 
   val Editable = "Editable"
 }

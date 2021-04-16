@@ -83,6 +83,8 @@ object Statement:
       s"$name: $tpe$maybeExprText"
   case class Assign(override val id: String, name: String, value: String) extends Statement(id):
     def label = s"$name = $value"
+  case class Call(override val id: String, value: String) extends Statement(id):
+    def label = value
   case class Input(override val id: String, name: String) extends Statement(id):
     def label = name
   case class Output(override val id: String, value: String) extends Statement(id):

@@ -59,7 +59,10 @@ class Interpreter(programModel: ProgramModel) {
     state = State.RUNNING
 
   private def interpret(fun: Function): Future[Unit] =
-    execSequentially((), fun.statements, (_, s) => interpret(s))
+    symTab.enterScope()
+    execSequentially((), fun.statements, (_, s) => interpret(s)).map { _ =>
+      symTab.exitScope()
+    }
 
   private def interpret(stmt: Statement): Future[Unit] = waitForContinue().flatMap { _ =>
     //println(s"interpreting: $stmt")
@@ -77,7 +80,7 @@ class Interpreter(programModel: ProgramModel) {
             Future.successful(())
           case Some(expr) =>
             eval(id, expr).map { v =>
-              TypeUtils.getUpdateValue(id, name, tpe, v) // validate
+              //TypeUtils.getUpdateValue(id, name, tpe, v) // validate
               val key = SymbolKey(name, Symbol.Kind.Variable)
               symTab.add(id, key, Some(tpe), Some(v))
               ()
@@ -86,12 +89,14 @@ class Interpreter(programModel: ProgramModel) {
         if !symTab.isDeclaredVar(name) then
           throw EvalException(s"Variable '$name' is not declared.", id)
         val key = SymbolKey(name, Symbol.Kind.Variable)
-        val sym = symTab.symbols(key)
+        val sym = symTab.getSymbol(id, key)
         eval(id, parseExpr(id, expr)).map { exprValue =>
           if exprValue.toString.isEmpty && sym.tpe != Expression.Type.String then
             throw EvalException(s"Assign expression cannot be empty.", id)
-          symTab.set(id, name, exprValue)
+          symTab.setValue(id, name, exprValue)
         }
+      case Call(id, expr) =>
+        eval(id, parseExpr(id, expr)).map(_ =>())
       case Input(id, name) =>
         if !symTab.isDeclaredVar(name) then
           throw EvalException(s"Variable '$name' is not declared.", id)
@@ -246,7 +251,7 @@ class Interpreter(programModel: ProgramModel) {
       case FunctionCall(name, argumentExprs) =>
         // TODO handle predefined functions: abs, sin, cos...
         val key = SymbolKey(name, Symbol.Kind.Function)
-        val funSym = symTab.get(id, key) // check if defined
+        val funSym = symTab.getSymbol(id, key) // check if defined
         val fun = allFunctions.find(_.name == name).get
         interpret(fun)
   
@@ -267,9 +272,8 @@ class Interpreter(programModel: ProgramModel) {
 
   // run futures sequentually.
   // start from empty future,
-  // wait for it -> then next, next...
+  // wait for it -> then next, then next...
   // https://users.scala-lang.org/t/process-a-list-future-sequentially/3704/4
-  // TODO init and accumulate...
   private def execSequentially[T, Res](init: Res, values: List[T], f: (Res, T) => Future[Res]): Future[Res] =
     val initF = Future.successful(init)
     values.foldLeft(initF) { case (a, next) =>
