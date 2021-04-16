@@ -36,6 +36,7 @@ lazy val core = (project in file("core"))
       "com.lihaoyi" %%% "utest" % "0.7.8" % Test
     ),
     testFrameworks += new TestFramework("utest.runner.Framework"),
+    Test / parallelExecution := false,
     Test / scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.NoModule) },
     Test / jsEnv := new org.scalajs.jsenv.jsdomnodejs.JSDOMNodeJSEnv()
   )

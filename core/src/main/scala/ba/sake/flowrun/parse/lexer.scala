@@ -121,7 +121,7 @@ final class Lexer(nodeId: String, input: String) {
     tokens.toList
   end lex
 
-  private def error(msg: String, pos: Int): Unit =
+  private def error(msg: String, pos: Int) =
     val where = if pos >= input.length-1 then "end of input" else s"position $pos"
     throw LexException(s"$msg at $where", nodeId)
 }

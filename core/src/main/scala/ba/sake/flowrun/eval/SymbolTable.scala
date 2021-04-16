@@ -1,37 +1,87 @@
 package ba.sake.flowrun
 package eval
 
+import scala.collection.mutable
 import scala.scalajs.js
 
 import ba.sake.flowrun.Expression.Type
 
-// TODO function scoped
 class SymbolTable() {
-  private var scopes = List(Scope())
 
-  private def currentScope =
-    scopes.head
+  val globalScope = Scope("GLOBAL", None)
+  
+  private var currentScope = globalScope
 
-  def enterScope(): Unit =
-    scopes = scopes.prepended(Scope())
+  def enterScope(name: String): Unit =
+    val newScope = Scope(name, Some(currentScope))
+    currentScope.childScopes = currentScope.childScopes.appended(newScope)
+    currentScope = newScope
     EventUtils.dispatchEvent("eval-var-updated", null)
   
   def exitScope(): Unit =
-    scopes = scopes.tail
+    currentScope = currentScope.parentScope.getOrElse(throw new RuntimeException(s"Cannot exit scope ${currentScope.name}"))
     EventUtils.dispatchEvent("eval-var-updated", null)
 
   def varSymbols: List[Symbol] =
-    currentScope.symbols.values.filter(_.key.kind == Symbol.Kind.Variable).toList
+    currentScope.allSymbols.values.filter(_.key.kind == Symbol.Kind.Variable).toList
 
   def add(nodeId: String, key: SymbolKey, tpe: Option[Type], value: Option[Any]): Symbol =
     currentScope.add(nodeId, key, tpe, value)
 
   def setValue(nodeId: String, name: String, value: Any): Unit =
+    currentScope.setValue(nodeId, name, value)
+
+  def getValue(nodeId: String, name: String): Any =
+    currentScope.getValue(nodeId, name)
+
+  def isDeclaredVar(name: String): Boolean =
+    currentScope.isDeclaredVar(name)
+  
+  def isDeclaredFun(name: String): Boolean =
+    currentScope.isDeclaredFun(name)
+
+  def getSymbol(nodeId: String, key: SymbolKey): Symbol =
+    currentScope.getSymbol(nodeId, key)
+
+  private def error(msg: String, nodeId: String) =
+    throw EvalException(msg, nodeId)
+}
+
+/** One scope level:
+ * - global
+ * - function
+ * - block (for loop, while loop)
+ */
+class Scope(val name: String, val parentScope: Option[Scope]):
+
+  private var symbols: Map[SymbolKey, Symbol] = Map()
+
+  // for easier testing...
+  var childScopes = List.empty[Scope]
+
+  def allSymbols: Map[SymbolKey, Symbol] = symbols
+
+  // we assume type is good here
+  def add(nodeId: String, key: SymbolKey, tpe: Option[Type], value: Option[Any]): Symbol =
+    if symbols.isDefinedAt(key) then
+      error(s"${key.kind.toString} with name '${key.name}' is already declared.", nodeId)
+    val newSymbol = Symbol(key, tpe, value, this)
+    symbols += (key -> newSymbol)
+    EventUtils.dispatchEvent("eval-var-updated", null)
+    newSymbol
+  
+  def set(key: SymbolKey, newSymbol: Symbol): Unit =
+    symbols += (key -> newSymbol)
+  
+  def get(key: SymbolKey): Option[Symbol] =
+    symbols.get(key)
+  
+  def setValue(nodeId: String, name: String, value: Any): Unit =
     val key = SymbolKey(name, Symbol.Kind.Variable)
     val sym = getSymbol(nodeId, key)
     val updateValue = TypeUtils.getUpdateValue(nodeId, name, sym.tpe.get, value)
     val updatedSym = sym.copy(value = Some(updateValue))
-    sym.scope.symbols += (key -> updatedSym)
+    sym.scope.set(key, updatedSym)
     EventUtils.dispatchEvent("eval-var-updated", null)
 
   def getValue(nodeId: String, name: String): Any =
@@ -55,32 +105,21 @@ class SymbolTable() {
         sym
 
   private def maybeSymbol(key: SymbolKey): Option[Symbol] =
-    maybeScope(key).map(_.symbols(key))
+    val scopesChain = mutable.ListBuffer(this)
+    var tmpScope = this
+    while tmpScope.parentScope.isDefined do
+      scopesChain += tmpScope.parentScope.get
+      tmpScope = tmpScope.parentScope.get
+    scopesChain.foldLeft(this.get(key)) { (maybeSym, scope) =>
+      maybeSym.orElse(scope.get(key))
+    }
 
-  private def maybeScope(key: SymbolKey): Option[Scope] =
-    scopes.find(s => s.symbols.get(key).isDefined)
-
-  private def error(msg: String, nodeId: String): Nothing =
+  private def error(msg: String, nodeId: String) =
     throw EvalException(msg, nodeId)
-}
-
-
-class Scope() {
-
-  var symbols: Map[SymbolKey, Symbol] = Map()
-
-  // we assume type is good here
-  def add(nodeId: String, key: SymbolKey, tpe: Option[Type], value: Option[Any]): Symbol =
-    if symbols.isDefinedAt(key) then
-      error(s"${key.kind.toString} with name '${key.name}' is already declared.", nodeId)
-    val newSymbol = Symbol(key, tpe, value, this)
-    symbols += (key -> newSymbol)
-    EventUtils.dispatchEvent("eval-var-updated", null)
-    newSymbol
-
-  private def error(msg: String, nodeId: String): Nothing =
-    throw EvalException(msg, nodeId)
-}
+  
+  override def toString =
+    s"$name ; $symbols ; $childScopes"
+end Scope
 
 case class SymbolKey(name: String, kind: Symbol.Kind)
 case class Symbol(key: SymbolKey, tpe: Option[Type], value: Option[Any] = None, scope: Scope)

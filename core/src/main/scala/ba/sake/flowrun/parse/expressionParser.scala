@@ -142,7 +142,7 @@ final class ExpressionParser(nodeId: String, allTokens: List[Token]) {
     lookahead = tokens.head
     res
 
-  private def error(msg: String): Nothing =
+  private def error(msg: String) =
     throw ParseException(msg, nodeId)
 
 }

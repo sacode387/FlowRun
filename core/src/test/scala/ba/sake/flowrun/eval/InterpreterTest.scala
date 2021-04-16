@@ -2,6 +2,8 @@ package ba.sake.flowrun
 package eval
 
 import scala.concurrent.ExecutionContext
+
+import org.scalajs.dom
 import utest._
 
 object InterpreterTests extends TestSuite {
@@ -11,7 +13,7 @@ object InterpreterTests extends TestSuite {
 
   def getId(): String =
     stmtCount += 1
-    "stmt-" + stmtCount
+    s"stmt-$stmtCount"
 
   val tests = Tests {
     test("dry run") {
@@ -34,12 +36,12 @@ object InterpreterTests extends TestSuite {
       )
       val programModel = ProgramModel(Program("program", main))
       val interpreter = Interpreter(programModel)
-      val symTab = interpreter.symTab
 
       interpreter.run().map { _ =>
-        assert(symTab.isDeclaredVar("x"))
-        assert(symTab.isDeclaredVar("y"))
-        symTab.getValue("123", "y") ==> 5
+        val scope = interpreter.symTab.globalScope.childScopes.head
+        assert(scope.isDeclaredVar("x"))
+        assert(scope.isDeclaredVar("y"))
+        scope.getValue("123", "y") ==> 5
       }
     }
 
@@ -48,17 +50,18 @@ object InterpreterTests extends TestSuite {
         List(
           Statement.Begin,
           Statement.Declare(getId(), "x", Expression.Type.Integer, None),
-          Statement.Assign(getId(), "x", "5"),
+          Statement.Assign(getId(), "x", "6"),
+          Statement.Output(getId(), "x"),
           Statement.End
         )
       )
       val programModel = ProgramModel(Program("program", main))
       val interpreter = Interpreter(programModel)
-      val symTab = interpreter.symTab
 
       interpreter.run().map { _ =>
-        assert(symTab.isDeclaredVar("x"))
-        symTab.getValue("123", "x") ==> 5
+        val scope = interpreter.symTab.globalScope.childScopes.head
+        assert(scope.isDeclaredVar("x"))
+        scope.getValue("123", "x") ==> 6
       }
     }
 
@@ -74,12 +77,12 @@ object InterpreterTests extends TestSuite {
       )
       val programModel = ProgramModel(Program("program", main))
       val interpreter = Interpreter(programModel)
-      val symTab = interpreter.symTab
 
       interpreter.run().map { _ =>
-        symTab.getValue("123", "x") ==> 11
-        symTab.getValue("123", "y") ==> 3
-        symTab.getValue("123", "z") ==> 3
+        val scope = interpreter.symTab.globalScope.childScopes.head
+        scope.getValue("123", "x") ==> 11
+        scope.getValue("123", "y") ==> 3
+        scope.getValue("123", "z") ==> 3
       }
     }
 
@@ -97,10 +100,10 @@ object InterpreterTests extends TestSuite {
       )
       val programModel = ProgramModel(Program("program", main))
       val interpreter = Interpreter(programModel)
-      val symTab = interpreter.symTab
 
       interpreter.run().map { _ =>
-        symTab.getValue("123", "x") ==> 1
+        val scope = interpreter.symTab.globalScope.childScopes.head
+        scope.getValue("123", "x") ==> 1
       }
     }
   }

@@ -59,7 +59,7 @@ class Interpreter(programModel: ProgramModel) {
     state = State.RUNNING
 
   private def interpret(fun: Function): Future[Unit] =
-    symTab.enterScope()
+    symTab.enterScope(fun.name)
     execSequentially((), fun.statements, (_, s) => interpret(s)).map { _ =>
       symTab.exitScope()
     }
