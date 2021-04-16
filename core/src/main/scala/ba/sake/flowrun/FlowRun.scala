@@ -5,21 +5,38 @@ import scala.scalajs.js.annotation.JSExportTopLevel
 import org.scalajs.dom
 import org.scalajs.dom.window
 import org.scalajs.dom.window.document
-import org.getshaka.nativeconverter.NativeConverter
+
 import scalatags.JsDom.all._
+import reactify._
 
 import ba.sake.flowrun.cytoscape.CytoscapeFlowchart
 import ba.sake.flowrun.eval._
 import ba.sake.flowrun.parse.parseExpr
-/*
+
 @JSExportTopLevel("FlowRun")
 class FlowRun() {
-*/
+}
+
+object FlowRun {
+  enum Event:
+    case SyntaxError(msg: String)
+    case EvalError(nodeId: String, msg: String)
+    case SyntaxSuccess
+    case EvalOutput(msg: String)
+    case EvalInput(nodeId: String, name: String)
+    case SymbolTableUpdated
+}
+
+
+
+
 @JSExportTopLevel("start")
 @main def start(): Unit =
   window.onload = _ => init()
 
 def init(): Unit = {
+  val flowrunChannel = Channel[FlowRun.Event]
+
   val container = document.querySelector("#program-wrapper #cy")
   
   val editWrapperElem = document.querySelector("#edit-wrapper")
@@ -60,9 +77,9 @@ def init(): Unit = {
   ))
 
   val programModel = ProgramModel(Program("program", main, List(fun1)))
-  val cytoscapeFlowchart = CytoscapeFlowchart(programModel, container, editWrapperElem)
+  val cytoscapeFlowchart = CytoscapeFlowchart(programModel, flowrunChannel, container, editWrapperElem)
 
-  var interpreter = Interpreter(programModel)
+  var interpreter = Interpreter(programModel, flowrunChannel)
 
   var lastRun: String = ""
 
@@ -114,43 +131,34 @@ def init(): Unit = {
     lastRun = getNowTime
     outputElem.innerText = s"Started at: $lastRun"
 
-    interpreter = Interpreter(programModel) // fresh SymTable etc
+    interpreter = Interpreter(programModel, flowrunChannel) // fresh SymTable etc
     interpreter.run()
   }
 
-  // append error
-  dom.document.addEventListener("eval-error", (e: dom.CustomEvent) => {
-    var msg = s"Started at: $lastRun"
-    msg += "\nError: " + e.detail.asDyn.msg
-    displayError(msg)
-  })
-  dom.document.addEventListener("syntax-error", (e: dom.CustomEvent) => {
-    var msg = s"Started at: $lastRun"
-    msg += "\nError: " + e.detail.asDyn.msg
-    displayError(msg)
-  })
-  dom.document.addEventListener("syntax-success", (e: dom.CustomEvent) => {
-    outputElem.innerText = ""
-    outputElem.classList.remove("error")
-  })
-  
+  import FlowRun.Event.*
+  flowrunChannel.attach {
+    case SyntaxError(msg) =>
+      var output = s"Started at: $lastRun"
+      output += "\nError: " + msg
+      displayError(output)
+    case EvalError(_, msg) =>
+      var output = s"Started at: $lastRun"
+      output += "\nError: " + msg
+      displayError(output)
+    case SyntaxSuccess =>
+      outputElem.innerText = ""
+      outputElem.classList.remove("error")
+    case EvalOutput(output) =>
+      val newOutput = pre(output).render
+      outputElem.appendChild(newOutput)
+    case EvalInput(nodeId, name) =>
+      evalInput(nodeId, name)
+    case SymbolTableUpdated =>
+      showVariables()
+  }
 
-  // append new output
-  dom.document.addEventListener("eval-output", (e: dom.CustomEvent) => {
-    val newOutput = pre(e.detail.asDyn.output.toString).render
-    outputElem.appendChild(newOutput)
-  })
-
-  // show variables, debug...
-  dom.document.addEventListener("eval-var-updated", (e: dom.CustomEvent) => {
-    showVariables()
-  })
-
-  // get input from user
-  dom.document.addEventListener("eval-input", (e: dom.CustomEvent) => {
-    val nodeId = e.detail.asDyn.nodeId.toString
-    val name = e.detail.asDyn.name.toString
-
+  def evalInput(nodeId: String, name: String) = {
+    
     val valueInputElem = input().render
     val valueBtnElem = button("Enter").render
     val enterValueDiv = div(
@@ -187,7 +195,7 @@ def init(): Unit = {
           displayError(s"Entered invalid ${sym.tpe.get}: '${inputValue}'")
       }
     }
-  })
+  }
 
   def displayError(msg: String): Unit =
     outputElem.innerText = msg

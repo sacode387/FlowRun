@@ -2,8 +2,7 @@ package ba.sake.flowrun
 package eval
 
 import scala.concurrent.ExecutionContext
-
-import org.scalajs.dom
+import reactify._
 import utest._
 
 object InterpreterTests extends TestSuite {
@@ -19,7 +18,8 @@ object InterpreterTests extends TestSuite {
     test("dry run") {
       val main = Function("main", None, List(Statement.Begin, Statement.End))
       val programModel = ProgramModel(Program("program", main))
-      val interpreter = Interpreter(programModel)
+      val flowrunChannel = Channel[FlowRun.Event]
+      val interpreter = Interpreter(programModel, flowrunChannel)
       interpreter.run().map { _ =>
         assert(1 == 1)
       }
@@ -35,7 +35,8 @@ object InterpreterTests extends TestSuite {
         )
       )
       val programModel = ProgramModel(Program("program", main))
-      val interpreter = Interpreter(programModel)
+      val flowrunChannel = Channel[FlowRun.Event]
+      val interpreter = Interpreter(programModel, flowrunChannel)
 
       interpreter.run().map { _ =>
         val scope = interpreter.symTab.globalScope.childScopes.head
@@ -56,7 +57,8 @@ object InterpreterTests extends TestSuite {
         )
       )
       val programModel = ProgramModel(Program("program", main))
-      val interpreter = Interpreter(programModel)
+      val flowrunChannel = Channel[FlowRun.Event]
+      val interpreter = Interpreter(programModel, flowrunChannel)
 
       interpreter.run().map { _ =>
         val scope = interpreter.symTab.globalScope.childScopes.head
@@ -76,7 +78,8 @@ object InterpreterTests extends TestSuite {
         )
       )
       val programModel = ProgramModel(Program("program", main))
-      val interpreter = Interpreter(programModel)
+      val flowrunChannel = Channel[FlowRun.Event]
+      val interpreter = Interpreter(programModel, flowrunChannel)
 
       interpreter.run().map { _ =>
         val scope = interpreter.symTab.globalScope.childScopes.head
@@ -99,7 +102,8 @@ object InterpreterTests extends TestSuite {
         )
       )
       val programModel = ProgramModel(Program("program", main))
-      val interpreter = Interpreter(programModel)
+      val flowrunChannel = Channel[FlowRun.Event]
+      val interpreter = Interpreter(programModel, flowrunChannel)
 
       interpreter.run().map { _ =>
         val scope = interpreter.symTab.globalScope.childScopes.head

@@ -4,12 +4,13 @@ package cytoscape
 import scalajs.js
 import org.scalajs.dom
 import scalatags.JsDom.all.*
-
+import reactify.*
 import ba.sake.flowrun.parse.*
 import ba.sake.flowrun.ProgramModel.Request
 
 class CytoscapeFlowchart(
   programModel: ProgramModel,
+  flowrunChannel: Channel[FlowRun.Event],
   container: dom.Element,
   editWrapperElem: dom.Element
 ) {
@@ -39,14 +40,15 @@ class CytoscapeFlowchart(
     clearErrors()
   })
 
-  dom.document.addEventListener("eval-error", (e: dom.CustomEvent) => {
-    val nodeId = e.detail.asDyn.nodeId
-    cy.asDyn.nodes(s"node[id = '$nodeId']").data("has-error", true)
-  })
+  flowrunChannel.attach {
+    case FlowRun.Event.EvalError(nodeId, msg) =>
+      cy.asDyn.nodes(s"node[id = '$nodeId']").data("has-error", true)
+    case _ =>
+  }
 
   def clearErrors(): Unit =
     cy.asDyn.nodes().data("has-error", false)
-    EventUtils.dispatchEvent("syntax-success", null)
+    flowrunChannel := FlowRun.Event.SyntaxSuccess
 
   def loadCurrentFunction(): Unit = {
     //println("BEFORE: " + js.JSON.stringify(cy.asDyn.elements().jsons()))
@@ -384,9 +386,9 @@ class CytoscapeFlowchart(
         
         errorMsg match
           case Some(msg) =>
-            EventUtils.dispatchEvent("syntax-error", js.Dynamic.literal(msg = msg))
+            flowrunChannel := FlowRun.Event.SyntaxError(msg)
           case None =>
-            EventUtils.dispatchEvent("syntax-success", null)
+            flowrunChannel := FlowRun.Event.SyntaxSuccess
       }
       
       val exprInputElem = input().render
@@ -406,11 +408,9 @@ class CytoscapeFlowchart(
               node.data("rawExpr", newExprText)
               setLabel()
             else
-              EventUtils.dispatchEvent("syntax-error",
-                js.Dynamic.literal(msg = e.getMessage)
-              )
+              flowrunChannel := FlowRun.Event.SyntaxError(e.getMessage)
           case Success(_) =>
-            EventUtils.dispatchEvent("syntax-success", null)
+            flowrunChannel := FlowRun.Event.SyntaxSuccess
             if nodeType == Node.Declare then
               programModel.updateDeclare(Request.UpdateDeclare(nodeId, expr = Some(Some(newExprText))))
             else if nodeType == Node.Assign then

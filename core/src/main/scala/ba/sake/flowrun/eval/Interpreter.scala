@@ -5,19 +5,17 @@ import scala.util.*
 import scala.concurrent.{ Future, Promise }
 import scala.concurrent.ExecutionContext.Implicits.global
 import scalajs.js
-import org.scalajs.dom
-import org.scalajs.dom.window
-
+import reactify._
 import ba.sake.flowrun.parse.{ Token, parseExpr }
 
 /*
 TODO:
 - instead of events, fill a buffer? for easier testing...
 */
-class Interpreter(programModel: ProgramModel) {
+class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[FlowRun.Event]) {
   import Interpreter._
 
-  val symTab = SymbolTable()
+  val symTab = SymbolTable(flowrunChannel)
 
   private var state = State.INITIALIZED
 
@@ -42,12 +40,7 @@ class Interpreter(programModel: ProgramModel) {
         state = State.FINISHED
       case Failure(e: EvalException) =>
         state = State.FAILED
-        EventUtils.dispatchEvent("eval-error",
-          js.Dynamic.literal(
-            msg = e.getMessage,
-            nodeId = e.nodeId
-          )
-        )
+        flowrunChannel := FlowRun.Event.EvalError(e.nodeId, e.getMessage)
       case Failure(e) =>
         println(s"Unexpected error: $e")
     }
@@ -100,19 +93,12 @@ class Interpreter(programModel: ProgramModel) {
         if !symTab.isDeclaredVar(name) then
           throw EvalException(s"Variable '$name' is not declared.", id)
         state = State.PAUSED
-        EventUtils.dispatchEvent("eval-input", js.Dynamic.literal(
-          nodeId = id,
-          name = name
-        ))
+        flowrunChannel := FlowRun.Event.EvalInput(id, name)
         Future.successful(())
       case Output(id, expr) =>
         eval(id, parseExpr(id, expr)).map { outputValue =>
           val newOutput = Option(outputValue).getOrElse("null").toString
-          EventUtils.dispatchEvent("eval-output",
-            js.Dynamic.literal(
-              output = newOutput
-            )
-          )
+          flowrunChannel := FlowRun.Event.EvalOutput(newOutput)
           ()
         }
       case If(id, condition, ifTrueStatements, ifFalseStatements) =>

@@ -13,6 +13,7 @@ lazy val core = (project in file("core"))
     libraryDependencies ++= Seq(
       "org.scala-js" %%% "scalajs-dom" % "1.1.0",
       "com.lihaoyi" %%% "scalatags" % "0.9.4",
+      "com.outr" %%% "reactify" % "4.0.4",
       "com.lihaoyi" %%% "pprint" % "0.6.4"
     ).map(_.cross(CrossVersion.for3Use2_13)),
     libraryDependencies ++= Seq(

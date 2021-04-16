@@ -2,25 +2,24 @@ package ba.sake.flowrun
 package eval
 
 import scala.collection.mutable
-import scala.scalajs.js
-
+import reactify._
 import ba.sake.flowrun.Expression.Type
 
-class SymbolTable() {
+class SymbolTable(flowrunChannel: Channel[FlowRun.Event]) {
 
-  val globalScope = Scope("GLOBAL", None)
+  val globalScope = Scope("GLOBAL", None, flowrunChannel)
   
   private var currentScope = globalScope
 
   def enterScope(name: String): Unit =
-    val newScope = Scope(name, Some(currentScope))
+    val newScope = Scope(name, Some(currentScope), flowrunChannel)
     currentScope.childScopes = currentScope.childScopes.appended(newScope)
     currentScope = newScope
-    EventUtils.dispatchEvent("eval-var-updated", null)
+    flowrunChannel := FlowRun.Event.SymbolTableUpdated
   
   def exitScope(): Unit =
     currentScope = currentScope.parentScope.getOrElse(throw new RuntimeException(s"Cannot exit scope ${currentScope.name}"))
-    EventUtils.dispatchEvent("eval-var-updated", null)
+    flowrunChannel := FlowRun.Event.SymbolTableUpdated
 
   def varSymbols: List[Symbol] =
     currentScope.allSymbols.values.filter(_.key.kind == Symbol.Kind.Variable).toList
@@ -52,7 +51,7 @@ class SymbolTable() {
  * - function
  * - block (for loop, while loop)
  */
-class Scope(val name: String, val parentScope: Option[Scope]):
+class Scope(val name: String, val parentScope: Option[Scope], flowrunChannel: Channel[FlowRun.Event]):
 
   private var symbols: Map[SymbolKey, Symbol] = Map()
 
@@ -67,7 +66,7 @@ class Scope(val name: String, val parentScope: Option[Scope]):
       error(s"${key.kind.toString} with name '${key.name}' is already declared.", nodeId)
     val newSymbol = Symbol(key, tpe, value, this)
     symbols += (key -> newSymbol)
-    EventUtils.dispatchEvent("eval-var-updated", null)
+    flowrunChannel := FlowRun.Event.SymbolTableUpdated
     newSymbol
   
   def set(key: SymbolKey, newSymbol: Symbol): Unit =
@@ -82,7 +81,7 @@ class Scope(val name: String, val parentScope: Option[Scope]):
     val updateValue = TypeUtils.getUpdateValue(nodeId, name, sym.tpe.get, value)
     val updatedSym = sym.copy(value = Some(updateValue))
     sym.scope.set(key, updatedSym)
-    EventUtils.dispatchEvent("eval-var-updated", null)
+    flowrunChannel := FlowRun.Event.SymbolTableUpdated
 
   def getValue(nodeId: String, name: String): Any =
     val key = SymbolKey(name, Symbol.Kind.Variable)
