@@ -22,16 +22,20 @@
             border: 1px solid black;
             margin: 15px;
         }
-        .FlowRun-editor .FlowRun-content {
+        .FlowRun-content {
             width: 100%;
             min-height: 400px;
+            padding: 15px;
             margin: auto;
             display: grid;
             grid-template-columns: 50% 20% 20% 10%;
         }
-        .FlowRun-editor .FlowRun-meta {
+        .FlowRun-meta {
             border-bottom: 1px solid grey;
             text-align: center;
+            text-transform: uppercase;
+            font-weight: bold;
+            font-size: 1.2em;
         }
     </style>
 </head>
@@ -55,11 +59,11 @@
     <div class="FlowRun-editor"></div>
 
     <div class="FlowRun-editor">
-        {"name":"Example","main":{"name":"main","tpe":null,"statements":[{"@type":"Begin"},{"id":"aaa35665-03e5-44d0-a4a2-6e590fcd1b76","name":"x","tpe":"Integer","initValue":"5","@type":"Declare"},{"id":"908fc23d-4417-4904-a12f-e2002e78367c","value":"\"X is: \" + x","@type":"Output"},{"@type":"End"}]},"functions":[]}
+        {"name":"Output","main":{"name":"main","tpe":null,"statements":[{"@type":"Begin"},{"id":"aaa35665-03e5-44d0-a4a2-6e590fcd1b76","name":"x","tpe":"Integer","initValue":"5","@type":"Declare"},{"id":"908fc23d-4417-4904-a12f-e2002e78367c","value":"\"X is: \" + x","@type":"Output"},{"@type":"End"}]},"functions":[]}
     </div>
 
     <div class="FlowRun-editor">
-        {"name":"program","main":{"name":"main","tpe":null,"statements":[{"@type":"Begin"},{"id":"a432371a-b441-445d-ab99-6ed5eb766ee5","value":"fun123()","@type":"Call"},{"@type":"End"}]},"functions":[{"name":"fun123","tpe":null,"statements":[{"@type":"Begin"},{"id":"186aa5af-6854-4a6d-a716-faa3539cb490","value":"\"funnnnnn\"","@type":"Output"},{"@type":"End"}]}]}
+        {"name":"Function","main":{"name":"main","tpe":null,"statements":[{"@type":"Begin"},{"id":"a432371a-b441-445d-ab99-6ed5eb766ee5","value":"fun123()","@type":"Call"},{"@type":"End"}]},"functions":[{"name":"fun123","tpe":null,"statements":[{"@type":"Begin"},{"id":"186aa5af-6854-4a6d-a716-faa3539cb490","value":"\"funnnnnn\"","@type":"Output"},{"@type":"End"}]}]}
     </div>
 
     

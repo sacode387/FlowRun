@@ -16,7 +16,7 @@ class FlowRun(mountElem: dom.Element, programJson: Option[String] = None) {
   private val mountElemText = mountElem.innerText.trim
 
   private val maybeTemplate = dom.document.getElementById("FlowRun-template")
-  private val flowRunElements = if js.isUndefined(maybeTemplate) then makeFlowRunElements else getFlowRunElements
+  private val flowRunElements = if maybeTemplate == null then makeFlowRunElements else getFlowRunElements
   mountElem.innerHTML = ""
   mountElem.appendChild(flowRunElements.content)
 
@@ -184,7 +184,7 @@ class FlowRun(mountElem: dom.Element, programJson: Option[String] = None) {
     val runButton = button("Run").render
     val addFunButton = button("Add").render
     val functionsChooser = div().render
-    val functionItem = label(
+    val functionItem = label(display := "block")(
       input(tpe := "radio"),
       span(), // label goes here
       button("Delete")
