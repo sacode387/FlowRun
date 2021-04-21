@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>FlowRun</title>
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cytoscape-context-menus@4.0.0/cytoscape-context-menus.css">
+    <style>
+        body {
+            width: 90%;
+            margin: 10px auto;
+        }
+        pre {
+            padding: 5px;
+            margin: 3px;
+        }
+        .FlowRun-editor {
+            border: 1px solid black;
+            margin: 15px;
+        }
+        .FlowRun-editor .FlowRun-content {
+            width: 100%;
+            min-height: 400px;
+            margin: auto;
+            display: grid;
+            grid-template-columns: 50% 20% 20% 10%;
+        }
+        .FlowRun-editor .FlowRun-meta {
+            border-bottom: 1px solid grey;
+            text-align: center;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="FlowRun-editor"></div>
+
+    <div class="FlowRun-editor">
+        {"name":"Example","main":{"name":"main","tpe":null,"statements":[{"@type":"Begin"},{"id":"aaa35665-03e5-44d0-a4a2-6e590fcd1b76","name":"x","tpe":"Integer","initValue":"5","@type":"Declare"},{"id":"908fc23d-4417-4904-a12f-e2002e78367c","value":"\"X is: \" + x","@type":"Output"},{"@type":"End"}]},"functions":[]}
+    </div>
+
+    <div class="FlowRun-editor">
+        {"name":"program","main":{"name":"main","tpe":null,"statements":[{"@type":"Begin"},{"id":"a432371a-b441-445d-ab99-6ed5eb766ee5","value":"fun123()","@type":"Call"},{"@type":"End"}]},"functions":[{"name":"fun123","tpe":null,"statements":[{"@type":"Begin"},{"id":"186aa5af-6854-4a6d-a716-faa3539cb490","value":"\"funnnnnn\"","@type":"Output"},{"@type":"End"}]}]}
+    </div>
+
+    
+    <script src="https://cdn.jsdelivr.net/npm/cytoscape@3.17.1/dist/cytoscape.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/cytoscape-context-menus@4.0.0/cytoscape-context-menus.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dagre@0.8.5/dist/dagre.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/cytoscape-dagre@2.3.2/cytoscape-dagre.js"></script>
+    
+    <script type="module">
+        import { FlowRun } from './scripts/main.js';
+        window.onload = function() {
+            let flowRunMounts = document.querySelectorAll(".FlowRun-editor");
+            let flowRunMountsArr = [...flowRunMounts];
+            flowRunMountsArr.forEach(flowRunMount => {
+                new FlowRun(flowRunMount);
+            });
+        }
+    </script>
+</body>
+
+</html>
