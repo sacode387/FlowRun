@@ -11,7 +11,11 @@ import ba.sake.flowrun.eval._
 import ba.sake.flowrun.parse.parseExpr
 
 @JSExportTopLevel("FlowRun")
-class FlowRun(flowRunElements: FlowRunElements, programJson: Option[String] = None) {
+class FlowRun(mountElem: dom.Element, programJson: Option[String] = None) {
+
+  private val flowRunElements = makeFlowRunElements
+  mountElem.innerHTML = ""
+  mountElem.appendChild(flowRunElements.defaultElements)
 
   private val program = programJson match
     case Some(json) => NativeConverter[Program].fromNative(js.JSON.parse(json))
@@ -152,6 +156,16 @@ class FlowRun(flowRunElements: FlowRunElements, programJson: Option[String] = No
       val symElem = div(s"${sym.key.name}: ${sym.tpe.get} = ${sym.value.getOrElse("")}").render
       flowRunElements.debugVariables.appendChild(symElem)
     }
+  
+  private def makeFlowRunElements: FlowRunElements = {
+    val drawArea = div(width := "100%", height := "100%").render
+    val editStatement = div().render
+    val runButton = button("Run").render
+    val functionsChooser = div().render
+    val output = div().render
+    val debugVariables = div().render
+    FlowRunElements(drawArea,  editStatement, runButton, functionsChooser,  output, debugVariables)
+  }
 }
 
 object FlowRun:
@@ -173,7 +187,14 @@ case class FlowRunElements(
   functionsChooser: dom.Element,
   output: dom.Element,
   debugVariables: dom.Element
-)
+) {
+  def defaultElements: dom.Node = frag(
+    div(cls := "FlowRun-draw")(drawArea),
+    div(cls := "FlowRun-edit")(functionsChooser, editStatement),
+    div(cls := "FlowRun-output")(runButton, output),
+    div(cls := "FlowRun-debug")(debugVariables)
+  ).render
+}
 
 def getNowTime: String =
   val now = new js.Date()

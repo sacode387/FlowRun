@@ -17,61 +17,21 @@
             padding: 5px;
             margin: 3px;
         }
-        .wrapper {
-            border: 1px solid black;
-        }
-        #content {
-            display: grid;
-            grid-template-columns: 50% 30% 20%;
-            grid-gap: 10px;
-        }
-        #edit-wrapper {
-            padding: 7px;
-        }
-        #buttons-wrapper {
-            padding: 7px;
-            border-width: 0 1px 0 1px;
-        }
-        #run-output-wrapper {
-            padding: 7px;
-        }
-        #run-output-wrapper .error {
-            color: red;
-        }
-        #program-wrapper #cy {
+        .FlowRun {
+            width: 100%;
             min-height: 400px;
+            margin: auto;
             display: grid;
-            grid-template-rows: 10% 90%;
+            grid-template-columns: 50% 20% 20% 10%;
         }
     </style>
 </head>
 
 <body>
 
-    <div id="content">
-        <div id="program-wrapper" class="wrapper">
-            
-            <div id="cy"></div>
-        </div>
-
-        <div class="wrapper">
-            <div id="edit-wrapper"></div>
-
-            <div id="actions-wrapper">
-                <hr>
-                <div id="function-chooser"></div>
-                <hr>
-                <button id="run-btn">Run</button>
-                <hr>
-            </div>
-            
-            <div id="run-output-wrapper">
-                <div id="run-output"></div>
-            </div>
-        </div>
-
-        <div id="variables-output" class="wrapper"></div>
-    </div>
+    <div class="FlowRun"></div>
+    <hr>
+    <div class="FlowRun"></div>
     
     
     <script src="https://cdn.jsdelivr.net/npm/cytoscape@3.17.1/dist/cytoscape.min.js"></script>
@@ -80,11 +40,6 @@
     <script src="https://cdn.jsdelivr.net/npm/cytoscape-dagre@2.3.2/cytoscape-dagre.js"></script>
     
     <script type="module" src="scripts/main.js"></script>
-    <script type="module">
-        import { start } from './scripts/main.js'
-        //import { FlowRun } from './scripts/main.js'
-        start();
-    </script>
 </body>
 
 </html>

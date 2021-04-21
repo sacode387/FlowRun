@@ -38,7 +38,7 @@ lazy val core = (project in file("core"))
 
 lazy val demo = (project in file("demo"))
   .settings(
-    scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.ESModule) },
+    scalaJSUseMainModuleInitializer := true,
     (Compile / compile) := {
       WebKeys.assets.value
       (Compile / compile).value
