@@ -386,7 +386,7 @@ class CytoscapeFlowchart(
       
       val nameInputElem = input().render
       val nameLabelElem = label(
-        "Name: ",
+        "Name: ", br,
         nameInputElem
       ).render
       nameInputElem.value = node.data("rawName").asInstanceOf[js.UndefOr[String]].getOrElse("")
@@ -416,7 +416,7 @@ class CytoscapeFlowchart(
       
       val exprInputElem = input().render
       val exprLabelElem = label(
-        "Expression: ",
+        "Expression: ", br,
         exprInputElem
       ).render
       exprInputElem.value = node.data("rawExpr").asInstanceOf[js.UndefOr[String]].getOrElse("")
@@ -464,7 +464,7 @@ class CytoscapeFlowchart(
         }
       ).render
       val typeLabelElem = label(
-        "Type: ",
+        "Type: ", br,
         typeSelectElem
       ).render
 

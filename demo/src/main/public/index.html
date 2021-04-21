@@ -8,15 +8,16 @@
     <title>FlowRun</title>
 
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cytoscape-context-menus@4.0.0/cytoscape-context-menus.css">
+    <link rel="stylesheet" href="https://unpkg.com/spectre.css/dist/spectre.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/spectre.css/dist/spectre-exp.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/spectre.css/dist/spectre-icons.min.css">
+
     <style>
         body {
             width: 90%;
             margin: 10px auto;
         }
-        pre {
-            padding: 5px;
-            margin: 3px;
-        }
+
         .FlowRun-editor {
             border: 1px solid black;
             margin: 15px;
@@ -36,6 +37,20 @@
 </head>
 
 <body>
+
+    <div id="FlowRun-template">
+        <button class="FlowRun-run btn btn-primary">Run</button>
+
+        <!-- Functions -->
+        <button class="FlowRun-add-function btn btn-sm">Add</button>
+
+        <label class="FlowRun-function-item form-radio">
+            <input type="radio" name="gender" checked>
+            <i class="form-icon"></i> <span></span> 
+            <button class="btn btn-sm btn-error">Delete</button>
+        </label>
+        
+    </div>
 
     <div class="FlowRun-editor"></div>
 

@@ -15,9 +15,10 @@ class FlowRun(mountElem: dom.Element, programJson: Option[String] = None) {
 
   private val mountElemText = mountElem.innerText.trim
 
-  private val flowRunElements = makeFlowRunElements
+  private val maybeTemplate = dom.document.getElementById("FlowRun-template")
+  private val flowRunElements = if js.isUndefined(maybeTemplate) then makeFlowRunElements else getFlowRunElements
   mountElem.innerHTML = ""
-  mountElem.appendChild(flowRunElements.defaultElements)
+  mountElem.appendChild(flowRunElements.content)
 
   private val maybeJson = programJson.orElse(Option.when(mountElemText.nonEmpty)(mountElemText))
   private val program = maybeJson match
@@ -40,46 +41,47 @@ class FlowRun(mountElem: dom.Element, programJson: Option[String] = None) {
 
   private def populateFunctions(): Unit =
     val allFunctions = List(programModel.ast.main) ++ programModel.ast.functions
+    flowRunElements.addFunButton.onclick = { (e: dom.Event) =>
+      val newFunName = "fun123"
+      val newFun = Function(newFunName)
+      programModel.addFunction(newFun)
+      programModel.currentFunctionName = newFunName
+      cytoscapeFlowchart.loadCurrentFunction()
+      populateFunctions()
+    }
     val selectElem = div(
+      b("Functions"),
       allFunctions.map { f =>
-        val maybeSelected = Option.when(f.name == programModel.currentFunctionName)(checked)
-        val maybeDelete = Option.when(f.name != "main") {
-          button("Delete", onclick := { (e: dom.Event) =>
-            programModel.deleteFunction(f.name)
-            programModel.currentFunctionName = "main"
-            cytoscapeFlowchart.loadCurrentFunction()
-            populateFunctions()
-          })
+        val funItem = flowRunElements.functionItem.cloneNode(true).asInstanceOf[dom.html.Element]
+        val funRadio = funItem.querySelector("input").asInstanceOf[dom.html.Input]
+        funRadio.name = "currentFunction"
+        funRadio.value = f.name
+        funRadio.checked = f.name == programModel.currentFunctionName
+        funRadio.onchange = { (e: dom.Event) =>
+          val selectedFunName = e.target.asInstanceOf[dom.html.Input].value
+          programModel.currentFunctionName = selectedFunName
+          cytoscapeFlowchart.loadCurrentFunction()
         }
-        div(
-          label(
-            input(
-              tpe := "radio", name := "currentFunction", value := f.name, maybeSelected,
-              onchange := { (e: dom.Event) =>
-                val selectedFunName = e.target.asInstanceOf[dom.html.Input].value
-                programModel.currentFunctionName = selectedFunName
-                cytoscapeFlowchart.loadCurrentFunction()
-              }
-            ),
-            f.name,
-            maybeDelete
-          )
-        )
+        val funLabel = funItem.querySelector("span")
+        funLabel.innerText = f.name
+        val funDeleteBtn = funItem.querySelector("button").asInstanceOf[dom.html.Element]
+        funDeleteBtn.onclick = { (e: dom.Event) =>
+          programModel.deleteFunction(f.name)
+          programModel.currentFunctionName = "main"
+          cytoscapeFlowchart.loadCurrentFunction()
+          populateFunctions()
+        }
+        if f.name == "main" then funItem.removeChild(funDeleteBtn)
+        funItem
       },
-      button("Add", onclick := { (e: dom.Event) =>
-        val newFunName = "fun123"
-        val newFun = Function(newFunName)
-        programModel.addFunction(newFun)
-        programModel.currentFunctionName = newFunName
-        cytoscapeFlowchart.loadCurrentFunction()
-        populateFunctions()
-      })
+      flowRunElements.addFunButton
+      
     )
     flowRunElements.functionsChooser.innerText = ""
     flowRunElements.functionsChooser.appendChild(selectElem.render)
 
   // run the program
-  flowRunElements.runButton.asInstanceOf[dom.html.Button].onclick = _ => {
+  flowRunElements.runButton.onclick = _ => {
     cytoscapeFlowchart.clearErrors()
     lastRun = getNowTime
     flowRunElements.output.innerText = s"Started at: $lastRun"
@@ -162,15 +164,34 @@ class FlowRun(mountElem: dom.Element, programJson: Option[String] = None) {
       flowRunElements.debugVariables.appendChild(symElem)
     }
   
+  private def getFlowRunElements: FlowRunElements = {
+    val metaData = label().render
+    val drawArea = div(width := "100%", height := "100%").render
+    val editStatement = div().render
+    val runButton = dom.document.querySelector("#FlowRun-template .FlowRun-run").cloneNode(true).asInstanceOf[dom.html.Element]
+    val addFunButton = dom.document.querySelector("#FlowRun-template .FlowRun-add-function").cloneNode(true).asInstanceOf[dom.html.Element]
+    val functionItem = dom.document.querySelector("#FlowRun-template .FlowRun-function-item").cloneNode(true).asInstanceOf[dom.Element]
+    val functionsChooser = div().render
+    val output = div().render
+    val debugVariables = div().render
+    FlowRunElements(metaData, drawArea,  editStatement, runButton, addFunButton, functionsChooser, functionItem, output, debugVariables)
+  }
+
   private def makeFlowRunElements: FlowRunElements = {
     val metaData = label().render
     val drawArea = div(width := "100%", height := "100%").render
     val editStatement = div().render
     val runButton = button("Run").render
+    val addFunButton = button("Add").render
     val functionsChooser = div().render
+    val functionItem = label(
+      input(tpe := "radio"),
+      span(), // label goes here
+      button("Delete")
+    ).render
     val output = div().render
     val debugVariables = div().render
-    FlowRunElements(metaData, drawArea,  editStatement, runButton, functionsChooser,  output, debugVariables)
+    FlowRunElements(metaData, drawArea,  editStatement, runButton, addFunButton, functionsChooser, functionItem, output, debugVariables)
   }
 }
 
@@ -190,16 +211,20 @@ case class FlowRunElements(
   metaData: dom.Element,
   drawArea: dom.Element,
   editStatement: dom.Element,
-  runButton: dom.Element,
+  runButton: dom.html.Element,
+  // functions
+  addFunButton: dom.html.Element,
   functionsChooser: dom.Element,
+  functionItem: dom.Element,
+  // other
   output: dom.Element,
   debugVariables: dom.Element
 ) {
-  def defaultElements: dom.Node = frag(
+  def content: dom.Node = frag(
     div(cls := "FlowRun-meta")(metaData),
     div(cls := "FlowRun-content")(
       div(cls := "FlowRun-draw")(drawArea),
-      div(cls := "FlowRun-edit")(functionsChooser, editStatement),
+      div(cls := "FlowRun-edit")(functionsChooser, hr, editStatement),
       div(cls := "FlowRun-output")(runButton, output),
       div(cls := "FlowRun-debug")(debugVariables)
     )
