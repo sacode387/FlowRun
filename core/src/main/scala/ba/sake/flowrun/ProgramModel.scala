@@ -38,6 +38,9 @@ class ProgramModel(
 
   def addInput(req: AddInput): Unit =
     update(_.addInput(req))
+  
+  def addCall(req: AddCall): Unit =
+    update(_.addCall(req))
 
   def addIf(req: AddIf): Unit =
     update(_.addIf(req))
@@ -53,6 +56,9 @@ class ProgramModel(
 
   def updateInput(req: UpdateInput): Unit =
     update(_.updateInput(req))
+  
+  def updateCall(req: UpdateCall): Unit =
+    update(_.updateCall(req))
 
   def updateIf(req: UpdateIf): Unit =
     update(_.updateIf(req))
@@ -95,6 +101,10 @@ case class FunctionModel(
     val newStat = Statement.Input(req.id, "")
     doInsert(req.afterId, newStat, req.blockId)
 
+  def addCall(req: AddCall): FunctionModel =
+    val newStat = Statement.Call(req.id, "")
+    doInsert(req.afterId, newStat, req.blockId)
+
   def addIf(req: AddIf): FunctionModel =
     val newStat = Statement.If(req.id, "\"\"", Statement.Block(req.trueId), Statement.Block(req.falseId))
     doInsert(req.afterId, newStat, req.blockId)
@@ -122,6 +132,10 @@ case class FunctionModel(
 
   def updateInput(req: UpdateInput): FunctionModel =
     val newStat = Statement.Input(req.id, req.name)
+    doUpdate(req.id, newStat)
+  
+  def updateCall(req: UpdateCall): FunctionModel =
+    val newStat = Statement.Call(req.id, req.expr)
     doUpdate(req.id, newStat)
 
   def updateIf(req: UpdateIf): FunctionModel =
@@ -264,9 +278,11 @@ object ProgramModel:
     case AddAssign(id: String, afterId: String, blockId: String)
     case AddOutput(id: String, afterId: String, blockId: String)
     case AddInput(id: String, afterId: String, blockId: String)
+    case AddCall(id: String, afterId: String, blockId: String)
     case AddIf(id: String, trueId: String, falseId: String, endId: String, afterId: String, blockId: String)
     case UpdateDeclare(id: String, name: Option[String] = None, tpe: Option[Type] = None, expr: Option[Option[String]] = None)
     case UpdateAssign(id: String, name: Option[String] = None, expr: Option[String] = None)
     case UpdateOutput(id: String, expr: String)
     case UpdateInput(id: String, name: String)
+    case UpdateCall(id: String, expr: String)
     case UpdateIf(id: String, expr: String)

@@ -159,7 +159,7 @@ class CytoscapeFlowchart(
             content = "remove",
             tooltipText = "Remove statement",
             image = js.Dynamic.literal(src = "images/delete.svg", width = 12, height = 12, x = 3, y = 4),
-            selector = s"node.${Node.If}, node.${Node.Input}, node.${Node.Output}, node.${Node.Declare}, node.${Node.Assign}",
+            selector = s"node.${Node.Editable}",
             onClickFunction = { (event: dom.Event) =>
               val target = event.target.asDyn
 
@@ -280,6 +280,29 @@ class CytoscapeFlowchart(
               doLayout()
 
               programModel.addAssign(Request.AddAssign(newNode.id, edge.source().data("id").toString, edge.data("blockId").toString))
+            },
+            hasTrailingDivider = true
+          ),
+          js.Dynamic.literal(
+            id = "add-call",
+            content = "call",
+            tooltipText = "Add call statement",
+            image = js.Dynamic.literal(src = "images/assign.svg", width = 12, height = 12, x = 3, y = 4),
+            selector = s"edge, node.${Node.Dummy}",
+            onClickFunction = { (event: dom.Event) =>
+
+              val target = event.target.asDyn
+
+              val newNode = Node("call", Node.Call)
+              val (edge, nextNodeId, maybeDummy, dir) = getInsertData(target)
+              cy.add(newNode.toLit)
+              edge.move(js.Dynamic.literal(target = newNode.id))
+              cy.add(Edge(newNode.id, nextNodeId, dir = dir, blockId = edge.data("blockId").toString).toLit)
+              maybeDummy.foreach(dummyId => cy.remove(s"node[id = '$dummyId']"))
+
+              doLayout()
+
+              programModel.addCall(Request.AddCall(newNode.id, edge.source().data("id").toString, edge.data("blockId").toString))
             },
             hasTrailingDivider = true
           ),
@@ -417,6 +440,8 @@ class CytoscapeFlowchart(
               programModel.updateAssign(Request.UpdateAssign(nodeId, expr = Some(newExprText)))
             else if nodeType == Node.If then
               programModel.updateIf(Request.UpdateIf(nodeId, expr = newExprText))
+            else if nodeType == Node.Call then
+              programModel.updateCall(Request.UpdateCall(nodeId, expr = newExprText))
             else
               programModel.updateOutput(Request.UpdateOutput(nodeId, newExprText))
 
