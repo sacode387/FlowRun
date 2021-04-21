@@ -24,12 +24,6 @@ lazy val core = (project in file("core"))
       "-Ycheck-init"
     ),
     scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.ESModule) },
-    (Compile / compile) := {
-      WebKeys.assets.value // run assets
-      (Compile / compile).value
-    },
-    Compile / fastLinkJS / scalaJSLinkerOutputDirectory :=
-      (Assets / WebKeys.public).value / "scripts",
 
     // tests stuff
     libraryDependencies ++= Seq(
@@ -40,4 +34,17 @@ lazy val core = (project in file("core"))
     Test / scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.NoModule) },
     Test / jsEnv := new org.scalajs.jsenv.jsdomnodejs.JSDOMNodeJSEnv()
   )
+  .enablePlugins(ScalaJSPlugin)
+
+lazy val demo = (project in file("demo"))
+  .settings(
+    scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.ESModule) },
+    (Compile / compile) := {
+      WebKeys.assets.value
+      (Compile / compile).value
+    },
+    Compile / fastLinkJS / scalaJSLinkerOutputDirectory :=
+      (Assets / WebKeys.public).value / "scripts"
+  )
+  .dependsOn(core)
   .enablePlugins(ScalaJSPlugin, SbtWeb)

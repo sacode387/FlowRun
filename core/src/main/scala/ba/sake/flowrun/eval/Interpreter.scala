@@ -255,8 +255,8 @@ class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[FlowRun.Ev
     f
   }
 
-  // run futures sequentually.
-  // start from empty future,
+  // run futures sequentually, starting with init.
+  // Start from Future.successful(init),
   // wait for it -> then next, then next...
   // https://users.scala-lang.org/t/process-a-list-future-sequentially/3704/4
   private def execSequentially[T, Res](init: Res, values: List[T], f: (Res, T) => Future[Res]): Future[Res] =

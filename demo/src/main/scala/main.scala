@@ -1,9 +1,10 @@
-package ba.sake.flowrun
 
 import scala.scalajs.js
 import scala.scalajs.js.annotation.JSExportTopLevel
 import org.scalajs.dom
 import org.scalajs.dom.document
+import ba.sake.flowrun.FlowRun
+import ba.sake.flowrun.FlowRunElements
 
 @JSExportTopLevel("start")
 @main def start(): Unit =
@@ -16,7 +17,7 @@ import org.scalajs.dom.document
     val variablesElem = document.querySelector("#variables-output")
 
     val flowRunElements = FlowRunElements(container, editWrapperElem,runBtn,functionsElem,outputElem,variablesElem)
-    val program = locally {
+   /* val program = locally {
       val main = Function("main", None, List(
         Statement.Begin, 
         Statement.Declare("1", "x", Expression.Type.Integer, Option("1")),
@@ -46,9 +47,13 @@ import org.scalajs.dom.document
       ))
 
       Program("program", main, List(fun1))
-    }
+    }*/
 
-    val flowRun = FlowRun(program, flowRunElements)
+    val programJson = """
+    
+    """
+
+    val flowRun = FlowRun(flowRunElements)
     println(js.JSON.stringify(flowRun.json()))
   }
 

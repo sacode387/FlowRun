@@ -11,7 +11,11 @@ import ba.sake.flowrun.eval._
 import ba.sake.flowrun.parse.parseExpr
 
 @JSExportTopLevel("FlowRun")
-class FlowRun(program: Program, flowRunElements: FlowRunElements) {
+class FlowRun(flowRunElements: FlowRunElements, programJson: Option[String] = None) {
+
+  private val program = programJson match
+    case Some(json) => NativeConverter[Program].fromNative(js.JSON.parse(json))
+    case None => Program("program", Function("main"))
 
   private val flowrunChannel = Channel[FlowRun.Event]
   private val programModel = ProgramModel(program)
