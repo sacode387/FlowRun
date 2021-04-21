@@ -28,6 +28,8 @@ class FlowRun(mountElem: dom.Element, programJson: Option[String] = None) {
 
   private var lastRun: String = ""
 
+  flowRunElements.metaData.innerText = program.name
+
   populateFunctions()
 
   def json(): js.Any =
@@ -158,13 +160,14 @@ class FlowRun(mountElem: dom.Element, programJson: Option[String] = None) {
     }
   
   private def makeFlowRunElements: FlowRunElements = {
+    val metaData = label().render
     val drawArea = div(width := "100%", height := "100%").render
     val editStatement = div().render
     val runButton = button("Run").render
     val functionsChooser = div().render
     val output = div().render
     val debugVariables = div().render
-    FlowRunElements(drawArea,  editStatement, runButton, functionsChooser,  output, debugVariables)
+    FlowRunElements(metaData, drawArea,  editStatement, runButton, functionsChooser,  output, debugVariables)
   }
 }
 
@@ -181,6 +184,7 @@ object FlowRun:
     case SymbolTableUpdated
 
 case class FlowRunElements(
+  metaData: dom.Element,
   drawArea: dom.Element,
   editStatement: dom.Element,
   runButton: dom.Element,
@@ -189,10 +193,13 @@ case class FlowRunElements(
   debugVariables: dom.Element
 ) {
   def defaultElements: dom.Node = frag(
-    div(cls := "FlowRun-draw")(drawArea),
-    div(cls := "FlowRun-edit")(functionsChooser, editStatement),
-    div(cls := "FlowRun-output")(runButton, output),
-    div(cls := "FlowRun-debug")(debugVariables)
+    div(cls := "FlowRun-meta")(metaData),
+    div(cls := "FlowRun-content")(
+      div(cls := "FlowRun-draw")(drawArea),
+      div(cls := "FlowRun-edit")(functionsChooser, editStatement),
+      div(cls := "FlowRun-output")(runButton, output),
+      div(cls := "FlowRun-debug")(debugVariables)
+    )
   ).render
 }
 
