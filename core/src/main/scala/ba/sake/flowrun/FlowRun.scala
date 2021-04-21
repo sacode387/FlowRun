@@ -13,11 +13,14 @@ import ba.sake.flowrun.parse.parseExpr
 @JSExportTopLevel("FlowRun")
 class FlowRun(mountElem: dom.Element, programJson: Option[String] = None) {
 
+  private val mountElemText = mountElem.innerText.trim
+
   private val flowRunElements = makeFlowRunElements
   mountElem.innerHTML = ""
   mountElem.appendChild(flowRunElements.defaultElements)
 
-  private val program = programJson match
+  private val maybeJson = programJson.orElse(Option.when(mountElemText.nonEmpty)(mountElemText))
+  private val program = maybeJson match
     case Some(json) => NativeConverter[Program].fromNative(js.JSON.parse(json))
     case None => Program("program", Function("main"))
 
