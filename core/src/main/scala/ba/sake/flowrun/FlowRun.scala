@@ -7,7 +7,6 @@ import org.scalajs.dom
 import org.getshaka.nativeconverter.NativeConverter
 import scalatags.JsDom.all.*
 import reactify.*
-import ba.sake.flowrun.cytoscape.CytoscapeFlowchart
 import ba.sake.flowrun.eval.*
 import ba.sake.flowrun.parse.parseExpr
 
@@ -29,7 +28,7 @@ class FlowRun(mountElem: dom.Element, programJson: Option[String] = None) {
 
   private val flowrunChannel = Channel[FlowRun.Event]
   private val programModel = ProgramModel(program)
-  private val cytoscapeFlowchart = CytoscapeFlowchart(programModel, flowrunChannel, flowRunElements.drawArea, flowRunElements.editStatement)
+  private val functionEditor = FunctionEditor(programModel, flowrunChannel, flowRunElements)
   private var interpreter = Interpreter(programModel, flowrunChannel)
 
   private var lastRun: String = ""
@@ -48,7 +47,7 @@ class FlowRun(mountElem: dom.Element, programJson: Option[String] = None) {
       val newFun = Function(newFunName)
       programModel.addFunction(newFun)
       programModel.currentFunctionName = newFunName
-      cytoscapeFlowchart.loadCurrentFunction()
+      functionEditor.loadCurrentFunction()
       populateFunctions()
     }
     val selectElem = div(
@@ -62,7 +61,7 @@ class FlowRun(mountElem: dom.Element, programJson: Option[String] = None) {
         funRadio.onchange = { (e: dom.Event) =>
           val selectedFunName = e.target.asInstanceOf[dom.html.Input].value
           programModel.currentFunctionName = selectedFunName
-          cytoscapeFlowchart.loadCurrentFunction()
+          functionEditor.loadCurrentFunction()
         }
         val funLabel = funItem.querySelector("span")
         funLabel.innerText = f.name
@@ -70,7 +69,7 @@ class FlowRun(mountElem: dom.Element, programJson: Option[String] = None) {
         funDeleteBtn.onclick = { (e: dom.Event) =>
           programModel.deleteFunction(f.name)
           programModel.currentFunctionName = "main"
-          cytoscapeFlowchart.loadCurrentFunction()
+          functionEditor.loadCurrentFunction()
           populateFunctions()
         }
         if f.name == "main" then funItem.removeChild(funDeleteBtn)
@@ -83,7 +82,7 @@ class FlowRun(mountElem: dom.Element, programJson: Option[String] = None) {
 
   // run the program
   flowRunElements.runButton.onclick = _ => {
-    cytoscapeFlowchart.clearErrors()
+    functionEditor.clearErrors()
     lastRun = getNowTime
     flowRunElements.output.innerText = s"Started at: $lastRun"
 
@@ -169,13 +168,19 @@ class FlowRun(mountElem: dom.Element, programJson: Option[String] = None) {
     val metaData = label().render
     val drawArea = div(width := "100%", height := "100%").render
     val editStatement = div().render
-    val runButton = template.querySelector("#FlowRun-template .FlowRun-run").cloneNode(true).asInstanceOf[dom.html.Element]
-    val addFunButton = template.querySelector("#FlowRun-template .FlowRun-add-function").cloneNode(true).asInstanceOf[dom.html.Element]
-    val functionItem = template.querySelector("#FlowRun-template .FlowRun-function-item").cloneNode(true).asInstanceOf[dom.Element]
-    val functionsChooser = div().render
     val output = div().render
     val debugVariables = div().render
-    FlowRunElements(metaData, drawArea, editStatement, runButton, addFunButton, functionsChooser, functionItem, output, debugVariables, Some(template))
+
+    val addFunButton = template.querySelector(".FlowRun-add-function").cloneNode(true).asInstanceOf[dom.html.Element]
+    val functionItem = template.querySelector(".FlowRun-function-item").cloneNode(true).asInstanceOf[dom.Element]
+    val functionsChooser = div().render
+
+    val runButton = template.querySelector(".FlowRun-run").cloneNode(true).asInstanceOf[dom.html.Element]
+    val inputText = template.querySelector(".FlowRun-input-text").cloneNode(true).asInstanceOf[dom.html.Input]
+    
+    FlowRunElements(metaData, drawArea, editStatement, output, debugVariables,
+      addFunButton, functionsChooser, functionItem,
+      runButton, inputText, Some(template))
   }
 
   private def defaultFlowRunElements: FlowRunElements = {
@@ -192,7 +197,10 @@ class FlowRun(mountElem: dom.Element, programJson: Option[String] = None) {
     ).render
     val output = div().render
     val debugVariables = div().render
-    FlowRunElements(metaData, drawArea,  editStatement, runButton, addFunButton, functionsChooser, functionItem, output, debugVariables, None)
+    val inputText = input(tpe := "text").render
+    FlowRunElements(metaData, drawArea, editStatement, output, debugVariables,
+      addFunButton, functionsChooser, functionItem,
+      runButton, inputText, None)
   }
 }
 
@@ -209,19 +217,24 @@ object FlowRun:
     case SymbolTableUpdated
 
 case class FlowRunElements(
+  // sections
   metaData: dom.Element,
   drawArea: dom.Element,
   editStatement: dom.Element,
-  runButton: dom.html.Element,
+  output: dom.Element,
+  debugVariables: dom.Element,
   // functions
   addFunButton: dom.html.Element,
   functionsChooser: dom.Element,
   functionItem: dom.Element,
   // other
-  output: dom.Element,
-  debugVariables: dom.Element,
+  runButton: dom.html.Element,
+  inputText: dom.html.Input,
   maybeTemplate: Option[dom.Element]
 ) {
+
+  def newInputText: dom.html.Input =
+    inputText.cloneNode(true).asInstanceOf[dom.html.Input]
 
   def content: dom.Node = maybeTemplate match
     case None => frag(

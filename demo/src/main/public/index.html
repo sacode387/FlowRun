@@ -46,7 +46,8 @@
     <div id="FlowRun-template">
         <div class="FlowRun-meta"></div> <!-- program title etc -->
         <div class="FlowRun-content">
-            
+            <div class="FlowRun-draw"></div>  <!-- visual editor -->
+
             <div class="FlowRun-edit"> <!-- statement editor -->
                 <input class="FlowRun-input-text form-input" type="text">
 
@@ -57,10 +58,11 @@
                     <button class="btn btn-sm btn-error">Delete</button>
                 </label>
             </div>
-            <div class="FlowRun-draw"></div>  <!-- visual editor -->
-            <div class="FlowRun-output">
+            
+            <div class="FlowRun-output"> <!-- output of program -->
                 <button class="FlowRun-run btn btn-primary">Run</button>
             </div>
+
             <div class="FlowRun-debug"></div> <!-- debug variables -->
         </div>
     </div>
