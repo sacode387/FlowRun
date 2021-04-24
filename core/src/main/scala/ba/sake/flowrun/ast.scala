@@ -111,6 +111,7 @@ case class Function(
 ) derives NativeConverter
 
 case class Program(
+  id: String,
   name: String,
   main: Function,
   functions: List[Function] = List.empty

@@ -1,5 +1,6 @@
 package ba.sake.flowrun
 
+import java.util.UUID
 import scala.scalajs.js
 import scala.scalajs.js.annotation.JSExportTopLevel
 import org.scalajs.dom
@@ -23,7 +24,7 @@ class FlowRun(mountElem: dom.Element, programJson: Option[String] = None) {
   private val maybeJson = programJson.orElse(Option.when(mountElemText.nonEmpty)(mountElemText))
   private val program = maybeJson match
     case Some(json) => NativeConverter[Program].fromNative(js.JSON.parse(json))
-    case None => Program("program", Function("main"))
+    case None => Program(UUID.randomUUID.toString, "program", Function("main"), List.empty)
 
   private val flowrunChannel = Channel[FlowRun.Event]
   private val programModel = ProgramModel(program)
@@ -54,7 +55,7 @@ class FlowRun(mountElem: dom.Element, programJson: Option[String] = None) {
       allFunctions.map { f =>
         val funItem = flowRunElements.functionItem.cloneNode(true).asInstanceOf[dom.html.Element]
         val funRadio = funItem.querySelector("input").asInstanceOf[dom.html.Input]
-        funRadio.name = "currentFunction"
+        funRadio.name = s"${program.name}-currentFunction"
         funRadio.value = f.name
         funRadio.checked = f.name == programModel.currentFunctionName
         funRadio.onchange = { (e: dom.Event) =>
@@ -75,7 +76,6 @@ class FlowRun(mountElem: dom.Element, programJson: Option[String] = None) {
         funItem
       },
       flowRunElements.addFunButton
-      
     )
     flowRunElements.functionsChooser.innerText = ""
     flowRunElements.functionsChooser.appendChild(selectElem.render)

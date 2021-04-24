@@ -17,7 +17,7 @@ object InterpreterTests extends TestSuite {
   val tests = Tests {
     test("dry run") {
       val main = Function("main", None, List(Statement.Begin, Statement.End))
-      val programModel = ProgramModel(Program("program", main))
+      val programModel = ProgramModel(Program("p1", "program", main))
       val flowrunChannel = Channel[FlowRun.Event]
       val interpreter = Interpreter(programModel, flowrunChannel)
       interpreter.run().map { _ =>
@@ -34,7 +34,7 @@ object InterpreterTests extends TestSuite {
           Statement.End
         )
       )
-      val programModel = ProgramModel(Program("program", main))
+      val programModel = ProgramModel(Program("p2", "program", main))
       val flowrunChannel = Channel[FlowRun.Event]
       val interpreter = Interpreter(programModel, flowrunChannel)
 
@@ -56,7 +56,7 @@ object InterpreterTests extends TestSuite {
           Statement.End
         )
       )
-      val programModel = ProgramModel(Program("program", main))
+      val programModel = ProgramModel(Program("p3", "program", main))
       val flowrunChannel = Channel[FlowRun.Event]
       val interpreter = Interpreter(programModel, flowrunChannel)
 
@@ -77,7 +77,7 @@ object InterpreterTests extends TestSuite {
           Statement.End
         )
       )
-      val programModel = ProgramModel(Program("program", main))
+      val programModel = ProgramModel(Program("p4", "program", main))
       val flowrunChannel = Channel[FlowRun.Event]
       val interpreter = Interpreter(programModel, flowrunChannel)
 
@@ -101,7 +101,7 @@ object InterpreterTests extends TestSuite {
           Statement.End
         )
       )
-      val programModel = ProgramModel(Program("program", main))
+      val programModel = ProgramModel(Program("p5", "program", main))
       val flowrunChannel = Channel[FlowRun.Event]
       val interpreter = Interpreter(programModel, flowrunChannel)
 
