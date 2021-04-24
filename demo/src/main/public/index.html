@@ -18,16 +18,6 @@
             margin: 10px auto;
         }
 
-        .FlowRun-editor {
-            border: 1px solid black;
-            margin: 15px;
-        }
-        .FlowRun-draw {
-            width: 100%;
-            min-height: 400px;
-            padding: 15px;
-            margin: auto;
-        }
         .FlowRun-meta {
             border-bottom: 1px solid grey;
             text-align: center;
@@ -35,8 +25,52 @@
             font-weight: bold;
             font-size: 1.2em;
         }
-        .FlowRun-input-select {
-            width: 11em;
+
+        .FlowRun-content {
+            padding: 15px;
+            margin: auto;
+        }
+        .FlowRun-editor {
+            border: 1px solid black;
+            margin: 15px;
+            background-color: azure;
+        }
+        
+        .FlowRun-function * {
+            margin-left: .3em;
+        }
+        .FlowRun-draw {
+            width: 100%;
+            min-height: 400px;
+        }
+
+        .FlowRun-output {
+            padding: 1em;
+            margin-top: 20px;
+            background-color: palegreen;
+        }
+        .FlowRun-output.error {
+            background-color: rgb(223, 41, 41);
+        }
+        .FlowRun-output:empty {
+            display: none;
+        }
+
+        .FlowRun-debug {
+            position: absolute;
+            bottom: 0;
+        }
+        
+        *[class^="FlowRun-input"] {
+            display: inline;
+            width: auto;
+            vertical-align: top;
+        }
+        .FlowRun-edit span {
+            vertical-align: middle;
+        }
+        .FlowRun-edit * {
+            margin-left: .3em;
         }
     </style>
 </head>
@@ -46,30 +80,33 @@
     <div id="FlowRun-template">
         <div class="FlowRun-meta"></div>        <!-- program title etc -->
         
-
         <div class="FlowRun-content columns">
-            <div class="column col-6">
-                <div class="FlowRun-function"></div>    <!-- function chooser -->
+            <div class="column col-6" style="background-color: aliceblue; padding: 10px;">
+                <div class="columns">
+                    <div class="FlowRun-function column col-9"></div>    <!-- function chooser -->
+                    <div class="column col-3">
+                        <button class="FlowRun-btn-run btn btn-primary">Run</button>
+                    </div>
+                </div>
+                
                 <div class="FlowRun-draw"></div> <!-- visual editor -->
             </div>
 
-            <div class="column col-6">
-                <div class="columns">
-                    <div class="FlowRun-edit column col-6"> <!-- statement editor -->
-                        <input class="FlowRun-input-text form-input" type="text">
-        
-                        <select class="FlowRun-input-select form-select" type="text"></select>
-        
-                        <button class="FlowRun-add-function btn">Add</button>
-                        <button class="FlowRun-delete-function btn btn-error">Delete</button>
-                    </div>
+            <div class="column col-6" style="position: relative;">
+                <div class="FlowRun-edit"> <!-- statement editor -->
+                    <input class="FlowRun-input-text form-input" type="text" size="10">
     
-                    <div class="FlowRun-debug column col-6"></div> <!-- debug variables -->
+                    <select class="FlowRun-input-select form-select"></select>
+    
+                    <button class="FlowRun-add-function btn">Add</button>
+                    <button class="FlowRun-delete-function btn btn-error">Delete</button>
                 </div>
-                
+
                 <div class="FlowRun-output"> <!-- output of program -->
-                    <button class="FlowRun-run btn btn-primary">Run</button>
+                    <button class="FlowRun-btn-enter btn btn-success">Enter</button>
                 </div>
+
+                <div class="FlowRun-debug"></div> <!-- debug variables -->
             </div>
         </div>
     </div>

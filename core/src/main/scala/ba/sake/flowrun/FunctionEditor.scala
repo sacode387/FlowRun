@@ -380,11 +380,8 @@ class FunctionEditor(
       }
       
       val nameInputElem = flowRunElements.newInputText
-      val nameLabelElem = label(
-        "Name: ", br,
-        nameInputElem
-      ).render
       nameInputElem.value = node.data("rawName").asInstanceOf[js.UndefOr[String]].getOrElse("")
+      nameInputElem.placeholder = "x"
       nameInputElem.oninput = (_: dom.Event) => {
         val newName = nameInputElem.value.trim
         val errorMsg = if newName.isEmpty then None // noop when blank
@@ -410,11 +407,8 @@ class FunctionEditor(
       }
       
       val exprInputElem = flowRunElements.newInputText
-      val exprLabelElem = label(
-        "Expression: ", br,
-        exprInputElem
-      ).render
       exprInputElem.value = node.data("rawExpr").asInstanceOf[js.UndefOr[String]].getOrElse("")
+      exprInputElem.placeholder = if nodeType == Node.Output then "\"Hello!\"" else "x + 1"
       exprInputElem.oninput = (_: dom.Event) => {
         import scala.util.*
         val newExprText = exprInputElem.value.trim
@@ -445,23 +439,19 @@ class FunctionEditor(
         }
       }
 
-      val typeSelectElem = select(
-        Expression.Type.values.map { tpe =>
-          option(value := tpe.toString)(tpe.toString)
-        },
-        onchange := { (e: dom.Event) =>
-          val thisElem = e.target.asInstanceOf[dom.html.Select]
-          val newType = Expression.Type.values(thisElem.selectedIndex)
-          programModel.updateDeclare(Request.UpdateDeclare(nodeId, tpe = Some(newType)))
-          
-          node.data("rawTpe", newType.toString)
-          setLabel()
-        }
-      ).render
-      val typeLabelElem = label(
-        "Type: ", br,
-        typeSelectElem
-      ).render
+      val typeSelectElem = flowRunElements.newInputSelect
+      Expression.Type.values.foreach { tpe =>
+        val typeItem = option(value := tpe.toString)(tpe.toString).render
+        typeSelectElem.add(typeItem)
+      }
+      typeSelectElem.onchange = { (e: dom.Event) =>
+        val thisElem = e.target.asInstanceOf[dom.html.Select]
+        val newType = Expression.Type.values(thisElem.selectedIndex)
+        programModel.updateDeclare(Request.UpdateDeclare(nodeId, tpe = Some(newType)))
+        
+        node.data("rawTpe", newType.toString)
+        setLabel()
+      }
 
       // clear first, prepare for new inputs
       flowRunElements.editStatement.innerText = ""
@@ -472,21 +462,21 @@ class FunctionEditor(
       if (Set(Node.Declare, Node.Assign, Node.Input).contains(nodeType)) {
         hasName = true
         filledName = nameInputElem.value.nonEmpty
-        val editElem = div(nameLabelElem).render
-        flowRunElements.editStatement.appendChild(editElem)
+        flowRunElements.editStatement.appendChild(nameInputElem)
+      }
+
+      if (Set(Node.Declare).contains(nodeType)) {
+        typeSelectElem.value = varType.get // select appropriate type
+        flowRunElements.editStatement.appendChild(span(": ").render)
+        flowRunElements.editStatement.appendChild(typeSelectElem)
       }
 
       var hasExpr = false
       if (Set(Node.Declare, Node.Assign, Node.Output, Node.Call, Node.If).contains(nodeType)) {
         hasExpr = true
-        val editElem = div(exprLabelElem).render
-        flowRunElements.editStatement.appendChild(editElem)
-      }
-
-      if (Set(Node.Declare).contains(nodeType)) {
-        typeSelectElem.value = varType.get
-        val typeElem = div(typeLabelElem).render
-        flowRunElements.editStatement.appendChild(typeElem)
+        if Set(Node.Declare, Node.Assign).contains(nodeType) then
+          flowRunElements.editStatement.appendChild(span(" = ").render)
+        flowRunElements.editStatement.appendChild(exprInputElem)
       }
 
       if !hasExpr || (hasName && !filledName) then

@@ -25,9 +25,9 @@ object utils {
     }, {
       "selector": "node.${Node.Editable}:selected[!has-error]",
       "style": {
-        "border-width": "1px",
+        "border-width": "2px",
         "border-style": "dashed",
-        "border-opacity": 0.5
+        "border-opacity": 0.8
       }
     }, {
       "selector": "node[?has-error]",
