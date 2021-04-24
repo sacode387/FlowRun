@@ -44,17 +44,25 @@
 <body>
 
     <div id="FlowRun-template">
-        <button class="FlowRun-run btn btn-primary">Run</button>
+        <div class="FlowRun-meta"></div> <!-- program title etc -->
+        <div class="FlowRun-content">
+            
+            <div class="FlowRun-edit"> <!-- statement editor -->
+                <input class="FlowRun-input-text form-input" type="text">
 
-        <!-- Functions -->
-        <button class="FlowRun-add-function btn btn-sm">Add</button>
-
-        <label class="FlowRun-function-item form-radio">
-            <input type="radio" name="gender">
-            <i class="form-icon"></i> <span></span> 
-            <button class="btn btn-sm btn-error">Delete</button>
-        </label>
-        
+                <button class="FlowRun-add-function btn btn-sm">Add</button>
+                <label class="FlowRun-function-item form-radio">
+                    <input type="radio" name="gender">
+                    <i class="form-icon"></i> <span></span> 
+                    <button class="btn btn-sm btn-error">Delete</button>
+                </label>
+            </div>
+            <div class="FlowRun-draw"></div>  <!-- visual editor -->
+            <div class="FlowRun-output">
+                <button class="FlowRun-run btn btn-primary">Run</button>
+            </div>
+            <div class="FlowRun-debug"></div> <!-- debug variables -->
+        </div>
     </div>
 
     <div class="FlowRun-editor"></div>

@@ -17,7 +17,8 @@ class FlowRun(mountElem: dom.Element, programJson: Option[String] = None) {
   private val mountElemText = mountElem.innerText.trim
 
   private val maybeTemplate = dom.document.getElementById("FlowRun-template")
-  private val flowRunElements = if maybeTemplate == null then makeFlowRunElements else getFlowRunElements
+  private val flowRunElements = if maybeTemplate == null then defaultFlowRunElements
+    else getFlowRunElements(maybeTemplate)
   mountElem.innerHTML = ""
   mountElem.appendChild(flowRunElements.content)
 
@@ -164,20 +165,20 @@ class FlowRun(mountElem: dom.Element, programJson: Option[String] = None) {
       flowRunElements.debugVariables.appendChild(symElem)
     }
   
-  private def getFlowRunElements: FlowRunElements = {
+  private def getFlowRunElements(template: dom.Element): FlowRunElements = {
     val metaData = label().render
     val drawArea = div(width := "100%", height := "100%").render
     val editStatement = div().render
-    val runButton = dom.document.querySelector("#FlowRun-template .FlowRun-run").cloneNode(true).asInstanceOf[dom.html.Element]
-    val addFunButton = dom.document.querySelector("#FlowRun-template .FlowRun-add-function").cloneNode(true).asInstanceOf[dom.html.Element]
-    val functionItem = dom.document.querySelector("#FlowRun-template .FlowRun-function-item").cloneNode(true).asInstanceOf[dom.Element]
+    val runButton = template.querySelector("#FlowRun-template .FlowRun-run").cloneNode(true).asInstanceOf[dom.html.Element]
+    val addFunButton = template.querySelector("#FlowRun-template .FlowRun-add-function").cloneNode(true).asInstanceOf[dom.html.Element]
+    val functionItem = template.querySelector("#FlowRun-template .FlowRun-function-item").cloneNode(true).asInstanceOf[dom.Element]
     val functionsChooser = div().render
     val output = div().render
     val debugVariables = div().render
-    FlowRunElements(metaData, drawArea,  editStatement, runButton, addFunButton, functionsChooser, functionItem, output, debugVariables)
+    FlowRunElements(metaData, drawArea, editStatement, runButton, addFunButton, functionsChooser, functionItem, output, debugVariables, Some(template))
   }
 
-  private def makeFlowRunElements: FlowRunElements = {
+  private def defaultFlowRunElements: FlowRunElements = {
     val metaData = label().render
     val drawArea = div(width := "100%", height := "100%").render
     val editStatement = div().render
@@ -191,7 +192,7 @@ class FlowRun(mountElem: dom.Element, programJson: Option[String] = None) {
     ).render
     val output = div().render
     val debugVariables = div().render
-    FlowRunElements(metaData, drawArea,  editStatement, runButton, addFunButton, functionsChooser, functionItem, output, debugVariables)
+    FlowRunElements(metaData, drawArea,  editStatement, runButton, addFunButton, functionsChooser, functionItem, output, debugVariables, None)
   }
 }
 
@@ -218,17 +219,35 @@ case class FlowRunElements(
   functionItem: dom.Element,
   // other
   output: dom.Element,
-  debugVariables: dom.Element
+  debugVariables: dom.Element,
+  maybeTemplate: Option[dom.Element]
 ) {
-  def content: dom.Node = frag(
-    div(cls := "FlowRun-meta")(metaData),
-    div(cls := "FlowRun-content")(
-      div(cls := "FlowRun-draw")(drawArea),
-      div(cls := "FlowRun-edit")(functionsChooser, hr, editStatement),
-      div(cls := "FlowRun-output")(runButton, output),
-      div(cls := "FlowRun-debug")(debugVariables)
-    )
-  ).render
+
+  def content: dom.Node = maybeTemplate match
+    case None => frag(
+        div(cls := "FlowRun-meta")(metaData),
+        div(cls := "FlowRun-content")(
+          div(cls := "FlowRun-draw")(drawArea),
+          div(cls := "FlowRun-edit")(functionsChooser, hr, editStatement),
+          div(cls := "FlowRun-output")(runButton, output),
+          div(cls := "FlowRun-debug")(debugVariables)
+        )
+      ).render
+    case Some(tmpl) =>
+      val template = tmpl.cloneNode(true).asInstanceOf[dom.Element]
+      template.querySelector(".FlowRun-meta").innerText = ""  
+      template.querySelector(".FlowRun-draw").innerText = ""  
+      template.querySelector(".FlowRun-edit").innerText = ""  
+      template.querySelector(".FlowRun-output").innerText = ""  
+      template.querySelector(".FlowRun-debug").innerText = ""  
+      template.querySelector(".FlowRun-meta").appendChild(metaData)
+      template.querySelector(".FlowRun-draw").appendChild(drawArea)
+      template.querySelector(".FlowRun-edit").appendChild(functionsChooser)
+      template.querySelector(".FlowRun-edit").appendChild(editStatement)
+      template.querySelector(".FlowRun-output").appendChild(runButton)
+      template.querySelector(".FlowRun-output").appendChild(output)
+      template.querySelector(".FlowRun-debug").appendChild(debugVariables)
+      template
 }
 
 def getNowTime: String =
