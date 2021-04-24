@@ -38,20 +38,28 @@
             font-weight: bold;
             font-size: 1.2em;
         }
+        .FlowRun-input-select {
+            width: 11em;
+        }
     </style>
 </head>
 
 <body>
 
     <div id="FlowRun-template">
-        <div class="FlowRun-meta"></div> <!-- program title etc -->
+        <div class="FlowRun-meta"></div>        <!-- program title etc -->
+        <div class="FlowRun-function"></div>    <!-- function chooser -->
+
         <div class="FlowRun-content">
             <div class="FlowRun-draw"></div>  <!-- visual editor -->
 
             <div class="FlowRun-edit"> <!-- statement editor -->
                 <input class="FlowRun-input-text form-input" type="text">
 
-                <button class="FlowRun-add-function btn btn-sm">Add</button>
+                <select class="FlowRun-input-select form-select" type="text">
+                </select>
+
+                <button class="FlowRun-add-function btn">Add</button>
                 <label class="FlowRun-function-item form-radio">
                     <input type="radio" name="gender">
                     <i class="form-icon"></i> <span></span> 
