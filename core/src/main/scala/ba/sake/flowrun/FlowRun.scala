@@ -237,23 +237,18 @@ case class FlowRunElements(
 ) {
 
   val metaData: dom.Element = template.querySelector(".FlowRun-meta")
-  metaData.innerText = ""
-
-  val functionsChooser: dom.Element = template.querySelector(".FlowRun-function") 
-  functionsChooser.innerText = ""
-
+  val functionsChooser: dom.Element = template.querySelector(".FlowRun-function")
   val runButton = template.querySelector(".FlowRun-btn-run").asInstanceOf[dom.html.Element]
-
   val drawArea: dom.Element = template.querySelector(".FlowRun-draw")
-  drawArea.innerText = ""
-
   val editStatement: dom.Element = template.querySelector(".FlowRun-edit")
-  editStatement.innerText = ""
-
   val output: dom.Element = template.querySelector(".FlowRun-output")
-  output.innerText = ""
-
   val debugVariables: dom.Element = template.querySelector(".FlowRun-debug")
+
+  metaData.innerText = ""
+  functionsChooser.innerText = ""  
+  drawArea.innerText = ""
+  editStatement.innerText = ""
+  output.innerText = ""
   debugVariables.innerText = ""
 
   def newInputText: dom.html.Input =
