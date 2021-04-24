@@ -222,6 +222,7 @@ object FlowRun:
     case EvalInput(nodeId: String, name: String)
     case SymbolTableUpdated
 
+/* UI sections and elements */
 case class FlowRunElements(
   template: dom.Element,
   // functions

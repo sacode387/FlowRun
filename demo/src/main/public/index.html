@@ -22,14 +22,11 @@
             border: 1px solid black;
             margin: 15px;
         }
-        .FlowRun-content {
+        .FlowRun-draw {
             width: 100%;
             min-height: 400px;
             padding: 15px;
             margin: auto;
-            display: grid;
-            grid-template-columns: 50% 20% 20% 10%; /* this one is more compact */
-            /*grid-template-columns: 50% 50%;*/
         }
         .FlowRun-meta {
             border-bottom: 1px solid grey;
@@ -48,25 +45,32 @@
 
     <div id="FlowRun-template">
         <div class="FlowRun-meta"></div>        <!-- program title etc -->
-        <div class="FlowRun-function"></div>    <!-- function chooser -->
+        
 
-        <div class="FlowRun-content">
-            <div class="FlowRun-draw"></div>  <!-- visual editor -->
-
-            <div class="FlowRun-edit"> <!-- statement editor -->
-                <input class="FlowRun-input-text form-input" type="text">
-
-                <select class="FlowRun-input-select form-select" type="text"></select>
-
-                <button class="FlowRun-add-function btn">Add</button>
-                <button class="FlowRun-delete-function btn-error">Delete</button>
-            </div>
-            
-            <div class="FlowRun-output"> <!-- output of program -->
-                <button class="FlowRun-run btn btn-primary">Run</button>
+        <div class="FlowRun-content columns">
+            <div class="column col-6">
+                <div class="FlowRun-function"></div>    <!-- function chooser -->
+                <div class="FlowRun-draw"></div> <!-- visual editor -->
             </div>
 
-            <div class="FlowRun-debug"></div> <!-- debug variables -->
+            <div class="column col-6">
+                <div class="columns">
+                    <div class="FlowRun-edit column col-6"> <!-- statement editor -->
+                        <input class="FlowRun-input-text form-input" type="text">
+        
+                        <select class="FlowRun-input-select form-select" type="text"></select>
+        
+                        <button class="FlowRun-add-function btn">Add</button>
+                        <button class="FlowRun-delete-function btn btn-error">Delete</button>
+                    </div>
+    
+                    <div class="FlowRun-debug column col-6"></div> <!-- debug variables -->
+                </div>
+                
+                <div class="FlowRun-output"> <!-- output of program -->
+                    <button class="FlowRun-run btn btn-primary">Run</button>
+                </div>
+            </div>
         </div>
     </div>
 
