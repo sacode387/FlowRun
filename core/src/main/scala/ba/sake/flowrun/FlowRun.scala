@@ -4,10 +4,10 @@ import scala.scalajs.js
 import scala.scalajs.js.annotation.JSExportTopLevel
 import org.scalajs.dom
 import org.getshaka.nativeconverter.NativeConverter
-import scalatags.JsDom.all._
-import reactify._
+import scalatags.JsDom.all.*
+import reactify.*
 import ba.sake.flowrun.cytoscape.CytoscapeFlowchart
-import ba.sake.flowrun.eval._
+import ba.sake.flowrun.eval.*
 import ba.sake.flowrun.parse.parseExpr
 
 @JSExportTopLevel("FlowRun")

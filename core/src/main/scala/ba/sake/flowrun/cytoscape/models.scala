@@ -2,7 +2,7 @@ package ba.sake.flowrun.cytoscape
 
 import java.util.UUID
 import scalajs.js
-import js.annotation._
+import js.annotation.*
 import org.scalajs.dom
 
 @js.native

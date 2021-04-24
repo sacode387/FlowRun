@@ -5,7 +5,7 @@ import scala.util.*
 import scala.concurrent.{ Future, Promise }
 import scala.concurrent.ExecutionContext.Implicits.global
 import scalajs.js
-import reactify._
+import reactify.*
 import ba.sake.flowrun.parse.{ Token, parseExpr }
 
 /*
@@ -13,7 +13,7 @@ TODO:
 - instead of events, fill a buffer? for easier testing...
 */
 class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[FlowRun.Event]) {
-  import Interpreter._
+  import Interpreter.*
 
   val symTab = SymbolTable(flowrunChannel)
 
@@ -22,7 +22,7 @@ class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[FlowRun.Ev
   private val allFunctions = List(programModel.ast.main) ++ programModel.ast.functions
 
   def run(): Future[Unit] = {
-    //import js.JSConverters._
+    //import js.JSConverters.*
     //pprint.pprintln(programModel.ast)
     println(js.JSON.stringify(programModel.ast.toNative))
 
@@ -58,7 +58,7 @@ class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[FlowRun.Ev
 
   private def interpret(stmt: Statement): Future[Unit] = waitForContinue().flatMap { _ =>
     //println(s"interpreting: $stmt")
-    import Statement._
+    import Statement.*
     
     stmt match {
       case Declare(id, name, tpe, initValue) =>
@@ -225,7 +225,7 @@ class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[FlowRun.Ev
       case Unary.Simple(atom)        => eval(id, atom)
 
   private def eval(id: String, atom: Atom): Future[Any] =
-    import Atom._
+    import Atom.*
     atom match
       case NumberLit(value)   => Future.successful(value)
       case StringLit(value)   => Future.successful(value)

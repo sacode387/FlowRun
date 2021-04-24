@@ -1,6 +1,6 @@
 
 import scala.scalajs.js
-import org.scalajs.dom.ext._
+import org.scalajs.dom.ext.*
 import org.scalajs.dom
 import org.scalajs.dom.document
 import ba.sake.flowrun.FlowRun

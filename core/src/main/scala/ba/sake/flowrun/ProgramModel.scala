@@ -7,7 +7,7 @@ import ba.sake.flowrun.parse.parseExpr
 class ProgramModel(
   programAst: Program
 ) {
-  import ProgramModel.Request._
+  import ProgramModel.Request.*
 
   var ast = programAst
 
@@ -83,7 +83,7 @@ class ProgramModel(
 case class FunctionModel(
   ast: Function
 ) {
-  import ProgramModel.Request._
+  import ProgramModel.Request.*
 
   def addDeclare(req: AddDeclare): FunctionModel =
     val newStat = Statement.Declare(req.id, req.name, req.tpe, None)
@@ -208,7 +208,7 @@ case class FunctionModel(
     if (statementIdx >= 0) {
       val existingStatement = statements(statementIdx)
       if (existingStatement.getClass != newStatement.getClass) {
-        throw new RuntimeException(s"Statement type mismatch. Existing: ${existingStatement.getClass} New: ${newStatement.getClass}")
+        throw RuntimeException(s"Statement type mismatch. Existing: ${existingStatement.getClass} New: ${newStatement.getClass}")
       }
       statements.updated(statementIdx, newStatement)
     } else {
@@ -233,7 +233,7 @@ case class FunctionModel(
     statements: List[Statement],
     statementId: String
   ): List[Statement] = {
-    import Statement._
+    import Statement.*
     statements.flatMap {
       case Block(_, blockStats) =>
         delete(blockStats, statementId)
@@ -256,7 +256,7 @@ case class FunctionModel(
     statements: List[Statement],
     statementId: String
   ): Option[Statement] =
-    import Statement._
+    import Statement.*
     statements.flatMap {
       case Block(_, blockStats) =>
         findById(blockStats, statementId)

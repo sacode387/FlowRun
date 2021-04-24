@@ -1,6 +1,6 @@
 package ba.sake.flowrun.parse
 
-import utest._
+import utest.*
 
 object LexerTests extends TestSuite {
 

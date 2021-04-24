@@ -62,8 +62,8 @@ class CytoscapeFlowchart(
     doLayout()
   }
   
-  def load(statements: List[Statement], lastNode: Node, lastEdge: js.Dynamic): (Node, js.Dynamic) = {
-    import Statement._
+  def load(statements: List[Statement], lastNode: Node, lastEdge: js.Dynamic): js.Dynamic = {
+    import Statement.*
 
     var prevNode = lastNode
     var prevEdge = lastEdge
@@ -117,9 +117,7 @@ class CytoscapeFlowchart(
           trueEdge.move(js.Dynamic.literal(target = trueNode.id))
           cy.add(Edge(trueNode.id, trueNode.id).toLit)
         else
-          val res = load(trueBlock.statements, ifNode, trueEdge)
-          //prevNode = res._1
-          res._2
+          load(trueBlock.statements, ifNode, trueEdge)
         
         val lastFalseEdge = if falseBlock.statements.isEmpty then
           val falseNode = Node("", Node.Dummy, startId = ifNode.id, endId = ifEndNode.id)
@@ -127,9 +125,7 @@ class CytoscapeFlowchart(
           falseEdge.move(js.Dynamic.literal(target = falseNode.id))
           cy.add(Edge(falseNode.id, falseNode.id).toLit)
         else
-          val res = load(falseBlock.statements, ifNode, falseEdge)
-          //prevNode = res._1
-          res._2
+          load(falseBlock.statements, ifNode, falseEdge)
 
         lastTrueEdge.move(js.Dynamic.literal(target = ifEndNode.id))
         lastFalseEdge.move(js.Dynamic.literal(target = ifEndNode.id))
@@ -146,7 +142,7 @@ class CytoscapeFlowchart(
         prevNode = newNode
        // prevEdge = cy.add(Edge(newNode.id, newNode.id).toLit)
     }
-    (prevNode, prevEdge)
+    prevEdge
   }
 
   private def setupMenus(): Unit = {
@@ -384,6 +380,7 @@ class CytoscapeFlowchart(
         node.data("width", newLabelLength)
       }
       
+      // TODO templateable
       val nameInputElem = input().render
       val nameLabelElem = label(
         "Name: ", br,

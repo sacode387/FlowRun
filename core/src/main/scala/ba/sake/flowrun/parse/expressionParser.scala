@@ -93,7 +93,7 @@ final class ExpressionParser(nodeId: String, allTokens: List[Token]) {
         Unary.Simple(atom())
   
   private def atom(): Atom =
-    import Atom._
+    import Atom.*
     lookahead.tpe match
       case Type.True =>
         eat(Type.True)

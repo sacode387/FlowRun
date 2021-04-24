@@ -2,8 +2,8 @@ package ba.sake.flowrun
 package eval
 
 import scala.concurrent.ExecutionContext
-import reactify._
-import utest._
+import reactify.*
+import utest.*
 
 object InterpreterTests extends TestSuite {
   given ExecutionContext = scala.concurrent.ExecutionContext.global

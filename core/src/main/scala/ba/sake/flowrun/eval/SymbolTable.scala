@@ -2,7 +2,7 @@ package ba.sake.flowrun
 package eval
 
 import scala.collection.mutable
-import reactify._
+import reactify.*
 import ba.sake.flowrun.Expression.Type
 
 class SymbolTable(flowrunChannel: Channel[FlowRun.Event]) {
@@ -18,7 +18,7 @@ class SymbolTable(flowrunChannel: Channel[FlowRun.Event]) {
     flowrunChannel := FlowRun.Event.SymbolTableUpdated
   
   def exitScope(): Unit =
-    currentScope = currentScope.parentScope.getOrElse(throw new RuntimeException(s"Cannot exit scope ${currentScope.name}"))
+    currentScope = currentScope.parentScope.getOrElse(throw RuntimeException(s"Cannot exit scope ${currentScope.name}"))
     flowrunChannel := FlowRun.Event.SymbolTableUpdated
 
   def varSymbols: List[Symbol] =
