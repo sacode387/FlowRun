@@ -171,7 +171,9 @@ class FlowRun(mountElem: dom.Element, programJson: Option[String] = None) {
   
   private def getFlowRunElements(tmpl: dom.Element): FlowRunElements = {
 
-    val template = tmpl.cloneNode(true).asInstanceOf[dom.Element]
+    val template = tmpl.cloneNode(true).asInstanceOf[dom.html.Element]
+    template.id = ""
+    template.style = "display: block;"
 
     val addFunButton = template.querySelector(".FlowRun-add-function").cloneNode(true).asInstanceOf[dom.html.Element]
     val deleteFunButton = template.querySelector(".FlowRun-delete-function").cloneNode(true).asInstanceOf[dom.html.Element]

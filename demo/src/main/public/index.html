@@ -19,34 +19,33 @@
         }
 
         .FlowRun-meta {
-            border-bottom: 1px solid grey;
             text-align: center;
             text-transform: uppercase;
             font-weight: bold;
             font-size: 1.2em;
         }
 
-        .FlowRun-content {
-            padding: 15px;
-            margin: auto;
-        }
         .FlowRun-editor {
             border: 1px solid black;
             margin: 15px;
             background-color: azure;
+        }
+
+        .FlowRun-content {
+            padding: 15px;
+            display: grid;
+            grid-template-columns: 50% 50%;
         }
         
         .FlowRun-function * {
             margin-left: .3em;
         }
         .FlowRun-draw {
-            width: 100%;
             min-height: 400px;
         }
 
         .FlowRun-output {
             padding: 1em;
-            margin-top: 20px;
             background-color: palegreen;
         }
         .FlowRun-output.error {
@@ -55,16 +54,18 @@
         .FlowRun-output:empty {
             display: none;
         }
-
-        .FlowRun-debug {
-            position: absolute;
-            bottom: 0;
-        }
         
         *[class^="FlowRun-input"] {
             display: inline;
             width: auto;
             vertical-align: top;
+        }
+
+        .FlowRun-edit {
+            margin-bottom: 1em;
+        }
+        .FlowRun-edit:empty {
+            display: none;
         }
         .FlowRun-edit span {
             vertical-align: middle;
@@ -72,27 +73,37 @@
         .FlowRun-edit * {
             margin-left: .3em;
         }
+
+        .function-chooser {
+            display: grid;
+            grid-template-columns: 80% auto;
+        }
+
+        .edit-output-debug {
+            display: grid;
+            grid-template-rows: 50px 5fr 1fr;
+        }
+        
     </style>
 </head>
 
 <body>
 
-    <div id="FlowRun-template">
+    <div id="FlowRun-template" style="display: none;">
         <div class="FlowRun-meta"></div>        <!-- program title etc -->
         
-        <div class="FlowRun-content columns">
-            <div class="column col-6" style="background-color: aliceblue; padding: 10px;">
-                <div class="columns">
-                    <div class="FlowRun-function column col-9"></div>    <!-- function chooser -->
-                    <div class="column col-3">
-                        <button class="FlowRun-btn-run btn btn-primary">Run</button>
-                    </div>
+        <div class="FlowRun-content">
+            <div style="background-color: aliceblue; padding: 10px;">
+
+                <div class="function-chooser">
+                    <div class="FlowRun-function"></div>    <!-- function chooser -->
+                    <div><button class="FlowRun-btn-run btn btn-primary">Run</button></div>
                 </div>
                 
                 <div class="FlowRun-draw"></div> <!-- visual editor -->
             </div>
 
-            <div class="column col-6" style="position: relative;">
+            <div class="edit-output-debug">
                 <div class="FlowRun-edit"> <!-- statement editor -->
                     <input class="FlowRun-input-text form-input" type="text" size="10">
     
