@@ -28,7 +28,7 @@ case class Node(
   id: String = UUID.randomUUID.toString
 ) {
   private val (ww: Int, hh: Int) =
-    if (tpe == Node.Begin || tpe == Node.End) (70, 30)
+    if (Set(Node.Begin, Node.End, Node.Start, Node.Return).contains(tpe)) (70, 30)
     else if (tpe == Node.If) (55, 30)
     else if (tpe == Node.Dummy) (20, 20)
     else if (tpe == Node.IfEnd) (10, 10)
@@ -38,9 +38,11 @@ case class Node(
       (www, hhh)
     }
 
-  private val maybeEditable = Option.when(
-    !Set(Node.Begin, Node.End, Node.Dummy, Node.IfEnd).contains(tpe)
+  private val maybeEditable = Option.unless(
+    Set(Node.Begin, Node.End, Node.Dummy, Node.IfEnd).contains(tpe)
   )(" " + Node.Editable)
+
+  println(s"$tpe -> $maybeEditable")
 
   def toLit: js.Object = js.Dynamic.literal(
     group = "nodes",
@@ -63,6 +65,8 @@ case class Node(
 object Node {
   val Begin = "Begin"
   val End = "End"
+  val Start = "Start"
+  val Return = "Return"
   val Output = "Output"
   val Input = "Input"
   val If = "If"

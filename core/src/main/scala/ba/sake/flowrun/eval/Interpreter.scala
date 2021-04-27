@@ -112,6 +112,8 @@ class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[FlowRun.Ev
         execSequentially((), block.statements, (_, s) => interpret(s))
       case Begin | End | BlockEnd(_) | Dummy(_) => // noop
         Future.successful(())
+      case _: Start | _: Return => // noop
+        Future.successful(())
     }
   }
 
@@ -255,7 +257,7 @@ class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[FlowRun.Ev
     f
   }
 
-  // run futures sequentually, starting with init.
+  // Run futures sequentually, starting with init.
   // Start from Future.successful(init),
   // wait for it -> then next, then next...
   // https://users.scala-lang.org/t/process-a-list-future-sequentially/3704/4

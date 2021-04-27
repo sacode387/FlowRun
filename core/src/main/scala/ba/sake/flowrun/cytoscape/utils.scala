@@ -37,7 +37,7 @@ object utils {
         "border-color": "red"
       }
     }, {
-      "selector": "node.${Node.Begin}, node.${Node.End}",
+      "selector": "node.${Node.Begin}, node.${Node.End}, node.${Node.Start}, node.${Node.Return}",
       "style": {
         "shape": "ellipse",
         "background-color": "#00bfff",

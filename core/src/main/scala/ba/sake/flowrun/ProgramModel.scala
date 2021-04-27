@@ -67,7 +67,7 @@ class ProgramModel(
   
   private def update(transform: FunctionModel => FunctionModel): Unit = {
     val newFunction = transform(FunctionModel(currentFunction)).ast
-    if currentFunctionName == "main" then
+    if currentFunction.isMain then
       ast = ast.copy(main = newFunction)
     else
       ast.functions.indexWhere(_.name == currentFunctionName) match

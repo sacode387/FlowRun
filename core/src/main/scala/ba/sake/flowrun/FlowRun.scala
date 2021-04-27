@@ -62,7 +62,9 @@ class FlowRun(mountElem: dom.Element, programJson: Option[String] = None) {
       val lastFunNum =  allFunctions.map(_.name).filter(_.startsWith("fun")).map(_.substring(3)).filter(_.toIntOption.isDefined)
         .map(_.toInt).maxOption.getOrElse(0)
       val newFunName = "fun" + (lastFunNum+1)
-      val newFun = Function(newFunName)
+      val newFun = Function(newFunName, List.empty, None,
+        List(Statement.Start(UUID.randomUUID.toString, newFunName), Statement.Return(UUID.randomUUID.toString))
+      )
       programModel.addFunction(newFun)
       programModel.currentFunctionName = newFunName
       functionEditor.loadCurrentFunction()
@@ -80,7 +82,7 @@ class FlowRun(mountElem: dom.Element, programJson: Option[String] = None) {
     val selectElem = frag(
       label("Function: "),
       functionSelector,
-      Option.when(programModel.currentFunctionName != "main")(deleteFunButton),
+      Option.unless(programModel.currentFunction.isMain)(deleteFunButton),
       addFunButton
     )
     flowRunElements.functionsChooser.innerText = ""
