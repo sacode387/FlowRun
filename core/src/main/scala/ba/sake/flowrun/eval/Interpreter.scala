@@ -44,19 +44,20 @@ class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[FlowRun.Ev
       case Failure(e) =>
         println(s"Unexpected error: $e")
     }
-    futureExec
+    futureExec.map(_ => ())
   }
 
   def continue(): Unit =
     state = State.RUNNING
 
-  private def interpret(fun: Function): Future[Unit] =
+  private def interpret(fun: Function): Future[Any] =
     symTab.enterScope(fun.name)
-    execSequentially((), fun.statements, (_, s) => interpret(s)).map { _ =>
+    execSequentially((): Any, fun.statements, (_, s) => interpret(s)).map { result =>
       symTab.exitScope()
+      result
     }
 
-  private def interpret(stmt: Statement): Future[Unit] = waitForContinue().flatMap { _ =>
+  private def interpret(stmt: Statement): Future[Any] = waitForContinue().flatMap { _ =>
     //println(s"interpreting: $stmt")
     import Statement.*
     
@@ -109,10 +110,14 @@ class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[FlowRun.Ev
           case condValue => throw EvalException(s"Not a valid condition: '$condValue'", id)
         }
       case block: Block =>
-        execSequentially((), block.statements, (_, s) => interpret(s))
+        execSequentially((): Any, block.statements, (_, s) => interpret(s))
+      case Return(id, maybeExpr) => // noop
+        maybeExpr match
+          case None => Future.successful(())
+          case Some(expr) => eval(id, parseExpr(id, expr))
       case Begin | End | BlockEnd(_) | Dummy(_) => // noop
         Future.successful(())
-      case _: Start | _: Return => // noop
+      case _: Start => // noop
         Future.successful(())
     }
   }

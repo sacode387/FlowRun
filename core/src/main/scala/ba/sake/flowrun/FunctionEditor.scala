@@ -140,7 +140,7 @@ class FunctionEditor(
         prevNode = newNode
       
       case stmt: Return =>
-        val newNode = Node(stmt.label, Node.Return, id = stmt.id)
+        val newNode = Node(stmt.label, Node.Return, id = stmt.id, rawExpr = stmt.maybeValue.getOrElse(""))
         cy.add(newNode.toLit)
         prevEdge.move(js.Dynamic.literal(target = newNode.id))
         prevNode = newNode
@@ -380,10 +380,13 @@ class FunctionEditor(
         val maybeName = node.data("rawName").asInstanceOf[js.UndefOr[String]].toOption
         val maybeExpr = node.data("rawExpr").asInstanceOf[js.UndefOr[String]].toOption.filterNot(_.trim.isEmpty)
         val maybeExprText = maybeExpr.map(e => s" = $e").getOrElse("")
+        val maybeRetExprText = maybeExpr.map(e => s" $e").getOrElse("")
         val (newLabel, mul) = if nodeType == Node.Declare then
           s"""${maybeName.get}: ${node.data("rawTpe")}$maybeExprText""" -> 8
         else if nodeType == Node.Assign then
           s"""${maybeName.get}$maybeExprText""" -> 8
+        else if nodeType == Node.Return then
+          s"""return$maybeRetExprText""" -> 10
         else if nodeType == Node.Input then
           s"""${maybeName.get}""" -> 8
         else maybeExpr.getOrElse("") -> 10
@@ -432,6 +435,10 @@ class FunctionEditor(
               programModel.updateDeclare(Request.UpdateDeclare(nodeId, expr = Some(None)))
               node.data("rawExpr", newExprText)
               setLabel()
+            else if nodeType == Node.Return && newExprText.isEmpty then
+              programModel.updateReturn(Request.UpdateReturn(nodeId, expr = Some(None)))
+              node.data("rawExpr", newExprText)
+              setLabel()
             else
               flowrunChannel := FlowRun.Event.SyntaxError(e.getMessage)
           case Success(_) =>
@@ -444,6 +451,8 @@ class FunctionEditor(
               programModel.updateIf(Request.UpdateIf(nodeId, expr = newExprText))
             else if nodeType == Node.Call then
               programModel.updateCall(Request.UpdateCall(nodeId, expr = newExprText))
+            else if nodeType == Node.Return then
+              programModel.updateReturn(Request.UpdateReturn(nodeId, expr = Some(Some(newExprText))))
             else
               programModel.updateOutput(Request.UpdateOutput(nodeId, newExprText))
 
@@ -485,7 +494,7 @@ class FunctionEditor(
       }
 
       var hasExpr = false
-      if (Set(Node.Declare, Node.Assign, Node.Output, Node.Call, Node.If).contains(nodeType)) {
+      if (Set(Node.Declare, Node.Assign, Node.Output, Node.Call, Node.Return, Node.If).contains(nodeType)) {
         hasExpr = true
         if Set(Node.Declare, Node.Assign).contains(nodeType) then
           flowRunElements.editStatement.appendChild(span(" = ").render)

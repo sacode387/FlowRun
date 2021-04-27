@@ -27,6 +27,8 @@ case class Node(
   rawTpe: String = "",
   id: String = UUID.randomUUID.toString
 ) {
+  // TODO sredit malo finije...
+  // u suštini i ne treba w/h ???
   private val (ww: Int, hh: Int) =
     if (Set(Node.Begin, Node.End, Node.Start, Node.Return).contains(tpe)) (70, 30)
     else if (tpe == Node.If) (55, 30)

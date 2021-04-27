@@ -80,7 +80,6 @@ object utils {
     }, {
       "selector": "node.${Node.Output}",
       "style": {
-        "label": "data(rawExpr)",
         "background-color": "#0000ff",
         "color": "white",
         "shape": "polygon",

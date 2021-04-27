@@ -58,6 +58,9 @@ class ProgramModel(
   
   def updateCall(req: UpdateCall): Unit =
     update(_.updateCall(req))
+  
+  def updateReturn(req: UpdateReturn): Unit =
+    update(_.updateReturn(req))
 
   def updateIf(req: UpdateIf): Unit =
     update(_.updateIf(req))
@@ -120,7 +123,7 @@ case class FunctionModel(
     doUpdate(req.id, updatedStat)
 
   def updateAssign(req: UpdateAssign): FunctionModel =
-    var updatedStat: Statement.Assign = doFind(req.id).asInstanceOf[Statement.Assign]
+    var updatedStat = doFind(req.id).asInstanceOf[Statement.Assign]
     req.name.foreach(n => updatedStat = updatedStat.copy(name = n))
     req.expr.foreach(e => updatedStat = updatedStat.copy(value = e))
     doUpdate(req.id, updatedStat)
@@ -136,6 +139,11 @@ case class FunctionModel(
   def updateCall(req: UpdateCall): FunctionModel =
     val newStat = Statement.Call(req.id, req.expr)
     doUpdate(req.id, newStat)
+  
+  def updateReturn(req: UpdateReturn): FunctionModel =
+    var updatedStat = doFind(req.id).asInstanceOf[Statement.Return]
+    req.expr.foreach(e => updatedStat = updatedStat.copy(maybeValue = e))
+    doUpdate(req.id, updatedStat)
 
   def updateIf(req: UpdateIf): FunctionModel =
     var updatedStat: Statement.If = doFind(req.id).asInstanceOf[Statement.If]
@@ -284,4 +292,5 @@ object ProgramModel:
     case UpdateOutput(id: String, expr: String)
     case UpdateInput(id: String, name: String)
     case UpdateCall(id: String, expr: String)
+    case UpdateReturn(id: String, expr: Option[Option[String]] = None)
     case UpdateIf(id: String, expr: String)
