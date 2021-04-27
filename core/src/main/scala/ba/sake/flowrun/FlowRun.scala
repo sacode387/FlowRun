@@ -59,7 +59,9 @@ class FlowRun(mountElem: dom.Element, programJson: Option[String] = None) {
 
     val addFunButton = flowRunElements.addFunButton
     addFunButton.onclick = { (e: dom.Event) =>
-      val newFunName = "fun123" // TODO parse longest, add 1..
+      val lastFunNum =  allFunctions.map(_.name).filter(_.startsWith("fun")).map(_.substring(3)).filter(_.toIntOption.isDefined)
+        .map(_.toInt).maxOption.getOrElse(0)
+      val newFunName = "fun" + (lastFunNum+1)
       val newFun = Function(newFunName)
       programModel.addFunction(newFun)
       programModel.currentFunctionName = newFunName

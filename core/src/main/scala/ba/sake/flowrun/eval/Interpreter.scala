@@ -15,7 +15,7 @@ class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[FlowRun.Ev
 
   private var state = State.INITIALIZED
 
-  private val allFunctions = List(programModel.ast.main) ++ programModel.ast.functions
+  private def allFunctions = List(programModel.ast.main) ++ programModel.ast.functions
 
   def run(): Future[Unit] = {
     //import js.JSConverters.*
@@ -24,12 +24,16 @@ class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[FlowRun.Ev
 
     state = State.RUNNING
 
-    allFunctions.foreach { fun =>
-      val key = SymbolKey(fun.name, Symbol.Kind.Function)
-      symTab.add(null, key, fun.tpe, None)
+    val futureValidateFuncs = Future {
+      allFunctions.foreach { fun =>
+        val key = SymbolKey(fun.name, Symbol.Kind.Function)
+        symTab.add(null, key, fun.tpe, None)
+      }
     }
 
-    val futureExec = interpret(programModel.ast.main)
+    val futureExec = futureValidateFuncs.flatMap { _ =>
+      interpret(programModel.ast.main)
+    }
 
     futureExec.onComplete {
       case Success(_) =>
