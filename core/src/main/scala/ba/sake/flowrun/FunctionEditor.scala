@@ -100,7 +100,7 @@ class FunctionEditor(
         prevNode = newNode
         prevEdge = cy.add(Edge(newNode.id, newNode.id).toLit)
       case Block(_, blockStats) =>
-        println("TODO")
+        // noop
       case stmt @ If(id, expr, trueBlock, falseBlock) =>
         val ifEndNode = Node("", Node.IfEnd)
         val ifNode = Node(stmt.condition, Node.If, endId = ifEndNode.id)

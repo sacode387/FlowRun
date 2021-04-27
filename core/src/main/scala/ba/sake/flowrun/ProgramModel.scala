@@ -3,7 +3,6 @@ package ba.sake.flowrun
 import scala.scalajs.js
 import ba.sake.flowrun.parse.parseExpr
 
-// TODO rename to ProgramState?
 class ProgramModel(
   programAst: Program
 ) {
@@ -244,7 +243,7 @@ case class FunctionModel(
             .copy(trueBlock = trueBlock.copy(statements = delete(trueBlock.statements, statementId)))
             .copy(falseBlock = falseBlock.copy(statements = delete(falseBlock.statements, statementId)))
           List(newIfStat)
-      case st => // TODO: [minor] remove BlockEnd..
+      case st => // TODO: [minor] remove BlockEnd..?
         Option.unless(st.id == statementId)(st)
     }
   }

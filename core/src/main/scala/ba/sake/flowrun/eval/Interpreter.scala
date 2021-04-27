@@ -8,10 +8,6 @@ import scalajs.js
 import reactify.*
 import ba.sake.flowrun.parse.{ Token, parseExpr }
 
-/*
-TODO:
-- instead of events, fill a buffer? for easier testing...
-*/
 class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[FlowRun.Event]) {
   import Interpreter.*
 

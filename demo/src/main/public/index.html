@@ -44,15 +44,12 @@
             min-height: 400px;
         }
 
-        .FlowRun-output {
+        .FlowRun-output:not(:empty) {
             padding: 1em;
             background-color: palegreen;
         }
         .FlowRun-output.error {
             background-color: rgb(223, 41, 41);
-        }
-        .FlowRun-output:empty {
-            display: none;
         }
         
         *[class^="FlowRun-input"] {
@@ -63,9 +60,6 @@
 
         .FlowRun-edit {
             margin-bottom: 1em;
-        }
-        .FlowRun-edit:empty {
-            display: none;
         }
         .FlowRun-edit span {
             vertical-align: middle;
@@ -96,7 +90,10 @@
             <div style="background-color: aliceblue; padding: 10px;">
 
                 <div class="function-chooser">
-                    <div class="FlowRun-function"></div>    <!-- function chooser -->
+                    <div class="FlowRun-function">
+                        <button class="FlowRun-add-function btn">Add</button>
+                        <button class="FlowRun-delete-function btn">Delete</button>
+                    </div>
                     <div><button class="FlowRun-btn-run btn btn-primary">Run</button></div>
                 </div>
                 
@@ -109,8 +106,7 @@
     
                     <select class="FlowRun-input-select form-select"></select>
     
-                    <button class="FlowRun-add-function btn">Add</button>
-                    <button class="FlowRun-delete-function btn btn-error">Delete</button>
+                    
                 </div>
 
                 <div class="FlowRun-output"> <!-- output of program -->
