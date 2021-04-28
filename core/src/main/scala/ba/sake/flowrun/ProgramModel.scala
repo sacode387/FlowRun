@@ -123,10 +123,6 @@ case class FunctionModel(
     val newStat = Statement.If(req.id, "\"\"", Statement.Block(req.trueId), Statement.Block(req.falseId))
     doInsert(req.afterId, newStat, req.blockId)
 
-    // insert END marker, so we can load AST to flowchart
-    //val newEndStat = Statement.BlockEnd(req.endId)
-   // doInsert(req.afterId, newEndStat, req.blockId)
-
   def updateDeclare(req: UpdateDeclare): FunctionModel =
     var updatedStat: Statement.Declare = doFind(req.id).asInstanceOf[Statement.Declare]
     req.name.foreach(n => updatedStat = updatedStat.copy(name = n))
@@ -265,7 +261,7 @@ case class FunctionModel(
             .copy(trueBlock = trueBlock.copy(statements = delete(trueBlock.statements, statementId)))
             .copy(falseBlock = falseBlock.copy(statements = delete(falseBlock.statements, statementId)))
           List(newIfStat)
-      case st => // TODO: [minor] remove BlockEnd..?
+      case st =>
         Option.unless(st.id == statementId)(st)
     }
   }

@@ -84,9 +84,6 @@ object Statement:
     def label = value
   case class Block(override val id: String, statements: List[Statement] = List.empty) extends Statement(id):
     def label = ""
-  // TODO remove ?
-  case class BlockEnd(override val id: String) extends Statement(id):
-    def label = ""
   
   case class Return(
     override val id: String,

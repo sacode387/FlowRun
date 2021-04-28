@@ -144,7 +144,7 @@ class FunctionEditor(
         prevEdge = cy.add(Edge(ifEndNode.id, nextNode.id, dir = "vert", blockId = trueBlock.id).toLit)
         prevNode = ifEndNode
 
-      case stmt @ (_: Dummy | _: BlockEnd) =>
+      case stmt @ (_: Dummy) =>
         val nodeType = stmt.getClass.getSimpleName.reverse.dropWhile(_ == '$').reverse
         println("tpe: " + nodeType)
         val newNode = Node(stmt.label, nodeType, id = stmt.id)
