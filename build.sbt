@@ -18,17 +18,16 @@ lazy val core = (project in file("core"))
     ).map(_.cross(CrossVersion.for3Use2_13)),
     libraryDependencies ++= Seq(
       "org.getshaka" %%% "native-converter" % "0.4.1",
+      "com.lihaoyi" %%% "utest" % "0.7.9" % Test
     ),
     scalacOptions ++= Seq(
       "-Xmax-inlines", "64",
-      "-Ycheck-init"
+      "-Ysafe-init",
+      "-deprecation"
     ),
     scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.ESModule) },
 
-    // tests stuff
-    libraryDependencies ++= Seq(
-      "com.lihaoyi" %%% "utest" % "0.7.9" % Test
-    ),
+    // tests
     testFrameworks += new TestFramework("utest.runner.Framework"),
     Test / parallelExecution := false,
     Test / scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.NoModule) },
