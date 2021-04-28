@@ -80,10 +80,6 @@ class FunctionEditor(
     var prevNode = lastNode
     var prevEdge = lastEdge
 
-    /*
-    TODO popravit prevezivanje edgesa
-    */
-
     statements.foreach {
       case stmt: Input =>
         val newNode = Node(stmt.label, Node.Input, id = stmt.id, rawName = stmt.name)

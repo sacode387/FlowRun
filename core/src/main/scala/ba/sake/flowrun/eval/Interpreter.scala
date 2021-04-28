@@ -159,21 +159,20 @@ class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[FlowRun.Ev
 
   private def eval(id: String, numComparison: NumComparison): Future[Any] =
     eval(id, numComparison.term).flatMap { tmp1 =>
-      // TODO if ima VIŠE TERMOVA THROWWWWWW, nema smisla: 5>7>8
       if !tmp1.isInstanceOf[Double] then Future.successful(tmp1)
       else
         val tmp = tmp1.asInstanceOf[Double]
-        numComparison.terms.headOption match
-        case Some(nextTermOpt) =>
-          eval(id, nextTermOpt.term).map { v =>
-            val nextVal = v.asInstanceOf[Double]
-            nextTermOpt.op.tpe match
-            case Token.Type.Lt    => tmp < nextVal
-            case Token.Type.LtEq  => tmp <= nextVal
-            case Token.Type.Gt    => tmp > nextVal
-            case _                => tmp >= nextVal
-        }
-        case None => Future.successful(tmp)
+        numComparison.terms match
+          case Some(nextTermOpt) =>
+            eval(id, nextTermOpt.term).map { v =>
+              val nextVal = v.asInstanceOf[Double]
+              nextTermOpt.op.tpe match
+              case Token.Type.Lt    => tmp < nextVal
+              case Token.Type.LtEq  => tmp <= nextVal
+              case Token.Type.Gt    => tmp > nextVal
+              case _                => tmp >= nextVal
+          }
+          case None => Future.successful(tmp)
     }
 
   private def eval(id: String, term: Term): Future[Any] =

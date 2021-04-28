@@ -57,12 +57,11 @@ final class ExpressionParser(nodeId: String, allTokens: List[Token]) {
   private def term(): Term =
     Term(factor(), factors())
   
-  private def terms(): List[TermOpt] =
-    val opts = mutable.ArrayBuffer.empty[TermOpt]
-    while Set(Type.Gt, Type.GtEq, Type.Lt, Type.LtEq).contains(lookahead.tpe) do
+  private def terms(): Option[TermOpt] =
+    if Set(Type.Gt, Type.GtEq, Type.Lt, Type.LtEq).contains(lookahead.tpe) then
       val op = eat(lookahead.tpe)
-      opts += TermOpt(op, term())
-    opts.toList
+      Some(TermOpt(op, term()))
+    else None
   
   private def factor(): Factor =
     Factor(unary(), unaries())
