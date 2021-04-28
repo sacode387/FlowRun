@@ -117,8 +117,6 @@ class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[FlowRun.Ev
           case Some(expr) => eval(id, parseExpr(id, expr))
       case BlockEnd(_) | Dummy(_) => // noop
         Future.successful(())
-      case _: Start => // noop
-        Future.successful(())
     }
   }
 

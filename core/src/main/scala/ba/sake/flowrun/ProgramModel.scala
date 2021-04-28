@@ -65,9 +65,6 @@ class ProgramModel(
   def updateIf(req: UpdateIf): Unit =
     update(_.updateIf(req))
 
-  def updateStart(req: UpdateStart): Unit =
-    update(_.updateStart(req))
-
   def delete(req: Delete): Unit =
     update(_.delete(req))
   
@@ -153,11 +150,7 @@ case class FunctionModel(
     updatedStat = updatedStat.copy(condition = req.expr)
     doUpdate(req.id, updatedStat)
   
-  def updateStart(req: UpdateStart): FunctionModel =
-    var updatedStat = doFind(req.id).asInstanceOf[Statement.Start]
-    req.name.foreach(n => updatedStat = updatedStat.copy(name = n))
-    req.tpe.foreach(t => updatedStat = updatedStat.copy(tpe = t))
-    doUpdate(req.id, updatedStat)
+  def updateFunction(req: UpdateStart) = () // TODO
   
 
   def delete(req: Delete): FunctionModel =
@@ -168,6 +161,7 @@ case class FunctionModel(
   private def doInsert(afterId: String, newStatement: Statement, blockId: String): FunctionModel =
     
     val newStats = if ast.statements.isEmpty then List(newStatement)
+      else if afterId == "beginId" || afterId == "startId" then ast.statements.prepended(newStatement)
       else insert(ast.statements, afterId, newStatement, blockId)
     this.copy(ast = ast.copy(statements = newStats))
 

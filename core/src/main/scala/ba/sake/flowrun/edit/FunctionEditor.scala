@@ -51,15 +51,26 @@ class FunctionEditor(
   def loadCurrentFunction(): Unit = {
     //println("BEFORE: " + js.JSON.stringify(cy.asDyn.elements().jsons()))
     cy.remove("*")
-    val statements = programModel.currentFunction.statements
+    val currentFun = programModel.currentFunction
+    val statements = currentFun.statements
 
-    val firstNode = Node("begin", Node.Begin, id = "beginId")
-    val lastNode = Node("end", Node.End, id = "endId")
-    cy.add(firstNode.toLit)
-    cy.add(lastNode.toLit)
-    val firstEdge = cy.add(Edge(firstNode.id, lastNode.id).toLit)
-
-    load(statements, firstNode, firstEdge)
+    if currentFun.isMain then
+      val firstNode = Node("begin", Node.Begin, id = "beginId")
+      val lastNode = Node("end", Node.End, id = "endId")
+      cy.add(firstNode.toLit)
+      cy.add(lastNode.toLit)
+      val firstEdge = cy.add(Edge(firstNode.id, lastNode.id).toLit)
+      load(statements, firstNode, firstEdge)
+    else
+      val rawParams = currentFun.parameters.map(_._1).mkString(",")
+      val firstNode = Node(currentFun.label, Node.Start, id = "startId", rawName = currentFun.name, rawParams = rawParams)
+      val retStmt = statements.last.asInstanceOf[Statement.Return]
+      val lastNode = Node(retStmt.label, Node.Return, id = retStmt.id, rawExpr = retStmt.maybeValue.getOrElse(""))
+      cy.add(firstNode.toLit)
+      cy.add(lastNode.toLit)
+      val firstEdge = cy.add(Edge(firstNode.id, lastNode.id).toLit)
+      load(statements.init, firstNode, firstEdge)
+    
     doLayout(cy)
   }
   
@@ -69,14 +80,11 @@ class FunctionEditor(
     var prevNode = lastNode
     var prevEdge = lastEdge
 
+    /*
+    TODO popravit prevezivanje edgesa
+    */
+
     statements.foreach {
-      case stmt: Start =>
-        val rawParams = stmt.parameters.map(_._1).mkString(",")
-        val newNode = Node(stmt.label, Node.Start, id = stmt.id, rawName = stmt.name, rawParams = rawParams)
-        cy.add(newNode.toLit)
-        prevEdge = cy.add(Edge(newNode.id, newNode.id).toLit)
-        prevNode = newNode
-        
       case stmt: Input =>
         val newNode = Node(stmt.label, Node.Input, id = stmt.id, rawName = stmt.name)
         cy.add(newNode.toLit)
@@ -108,8 +116,7 @@ class FunctionEditor(
         prevEdge.move(js.Dynamic.literal(target = newNode.id))
         prevNode = newNode
         prevEdge = cy.add(Edge(newNode.id, newNode.id).toLit)
-      case Block(_, blockStats) =>
-        // noop
+      
       case stmt @ If(id, expr, trueBlock, falseBlock) =>
         val ifEndNode = Node("", Node.IfEnd)
         val ifNode = Node(stmt.condition, Node.If, endId = ifEndNode.id)
@@ -141,18 +148,15 @@ class FunctionEditor(
         prevEdge = cy.add(Edge(ifEndNode.id, ifEndNode.id, dir = "vert", blockId = trueBlock.id).toLit)
         prevNode = ifEndNode
 
-      case stmt: Return =>
-        val newNode = Node(stmt.label, Node.Return, id = stmt.id, rawExpr = stmt.maybeValue.getOrElse(""))
-        cy.add(newNode.toLit)
-        prevEdge.move(js.Dynamic.literal(target = newNode.id))
-        prevNode = newNode
-
       case stmt @ (_: Dummy | _: BlockEnd) =>
         val nodeType = stmt.getClass.getSimpleName.reverse.dropWhile(_ == '$').reverse
         println("tpe: " + nodeType)
         val newNode = Node(stmt.label, nodeType, id = stmt.id)
         cy.add(newNode.toLit)
         prevEdge.move(js.Dynamic.literal(target = newNode.id))
+      
+      case _: Block => // noop
+      case _: Statement.Return => // noop
     }
     prevEdge
   }

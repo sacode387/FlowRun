@@ -19,21 +19,22 @@ class EditPanel(programModel: ProgramModel, flowRunElements: FlowRunElements, fl
       val varType = node.data("rawTpe").asInstanceOf[js.UndefOr[String]].toOption
 
       def setLabel(): Unit = {
-        val maybeName = node.data("rawName").asInstanceOf[js.UndefOr[String]].toOption
+        val maybeName = node.data("rawName").asInstanceOf[js.UndefOr[String]].toOption.getOrElse("")
+        val maybeTpe = node.data("rawTpe").asInstanceOf[js.UndefOr[String]].toOption.getOrElse("")
         val maybeExpr = node.data("rawExpr").asInstanceOf[js.UndefOr[String]].toOption.filterNot(_.trim.isEmpty)
         val maybeParams = node.data("rawParams").asInstanceOf[js.UndefOr[String]].toOption.getOrElse("")
         val maybeExprText = maybeExpr.map(e => s" = $e").getOrElse("")
         val maybeRetExprText = maybeExpr.map(e => s" $e").getOrElse("")
         val (newLabel, mul) = if nodeType == Node.Declare then
-          s"""${maybeName.get}: ${node.data("rawTpe")}$maybeExprText""" -> 8
+          s"""$maybeName: $maybeTpe$maybeExprText""" -> 8
         else if nodeType == Node.Assign then
-          s"""${maybeName.get}$maybeExprText""" -> 8
+          s"""$maybeName$maybeExprText""" -> 8
         else if nodeType == Node.Start then
-          s"""${maybeName.get}(${maybeParams})""" -> 10
+          s"""$maybeName($maybeParams)""" -> 10
         else if nodeType == Node.Return then
           s"""return$maybeRetExprText""" -> 10
         else if nodeType == Node.Input then
-          s"""${maybeName.get}""" -> 8
+          s"""$maybeName""" -> 8
         else maybeExpr.getOrElse("") -> 10
         val newLabelLength = 65 max (newLabel.length * mul)
         node.data("label", newLabel)
@@ -54,8 +55,8 @@ class EditPanel(programModel: ProgramModel, flowRunElements: FlowRunElements, fl
               programModel.updateDeclare(Request.UpdateDeclare(nodeId, name = Some(newName)))
             else if nodeType == Node.Input then
               programModel.updateInput(Request.UpdateInput(nodeId, name = newName))
-            else if nodeType == Node.Start then
-              programModel.updateStart(Request.UpdateStart(nodeId, name = Some(newName)))
+            else if nodeType == Node.Start then ()
+             // programModel.updateStart(Request.UpdateStart(nodeId, name = Some(newName)))
             else if nodeType == Node.Assign then
               programModel.updateAssign(Request.UpdateAssign(nodeId, name = Some(newName)))
             node.data("rawName", newName)

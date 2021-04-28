@@ -63,7 +63,7 @@ class FlowRun(mountElem: dom.Element, programJson: Option[String] = None) {
         .map(_.toInt).maxOption.getOrElse(0)
       val newFunName = "fun" + (lastFunNum+1)
       val newFun = Function(newFunName, List.empty, None,
-        List(Statement.Start(UUID.randomUUID.toString, newFunName), Statement.Return(UUID.randomUUID.toString))
+        List(Statement.Return(UUID.randomUUID.toString))
       )
       programModel.addFunction(newFun)
       programModel.currentFunctionName = newFunName

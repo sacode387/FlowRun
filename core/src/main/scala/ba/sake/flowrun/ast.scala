@@ -69,28 +69,7 @@ enum Atom derives NativeConverter:
 sealed trait Statement(val id: String) derives NativeConverter:
   def label: String
 
-object Statement:
-
-  case class Start(
-    override val id: String,
-    name: String,
-    parameters: List[(String, Expression.Type)] = List.empty,
-    tpe: Option[Expression.Type] = None
-  ) extends Statement(id):
-    def label =
-      val title = if name == "main" then "begin" else name
-      val params = if name == "main" then "" else s"(${parameters.map(_._1).mkString(",")})"
-      val maybeRetTpe = tpe.map(t => s": $t").getOrElse("")
-      s"$title$params$maybeRetTpe"
-  
-  case class Return(
-    override val id: String,
-    maybeValue: Option[String] = None
-  ) extends Statement(id):
-    def label =
-      val maybeExprText = maybeValue.map(e => s" = $e").getOrElse("")
-      s"return$maybeExprText"
-  
+object Statement:  
   case class Dummy(override val id: String) extends Statement(id):
     def label = ""
   case class Declare(override val id: String, name: String, tpe: Expression.Type, initValue: Option[String]) extends Statement(id):
@@ -110,6 +89,14 @@ object Statement:
   // TODO remove ?
   case class BlockEnd(override val id: String) extends Statement(id):
     def label = ""
+  
+  case class Return(
+    override val id: String,
+    maybeValue: Option[String] = None
+  ) extends Statement(id):
+    def label =
+      val maybeExprText = maybeValue.map(e => s" $e").getOrElse("")
+      s"return$maybeExprText"
   case class If(
     override val id: String,
     condition: String,
@@ -125,8 +112,14 @@ case class Function(
   tpe: Option[Expression.Type] = None,
   statements: List[Statement] = List.empty
 ) derives NativeConverter:
-  def isMain: Boolean =
-    name == "main"
+
+  def isMain: Boolean = name == "main"
+  
+  def label: String =
+    val title = if isMain then "begin" else name
+    val params = if isMain then "" else s"(${parameters.map(_._1).mkString(",")})"
+    val maybeRetTpe = tpe.map(t => s": $t").getOrElse("")
+    s"$title$params$maybeRetTpe"
 
 case class Program(
   id: String,
