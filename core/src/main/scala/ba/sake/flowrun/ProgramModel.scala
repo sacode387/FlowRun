@@ -11,10 +11,10 @@ class ProgramModel(
   var ast = programAst
 
   // I'm too lazy to make this a request parameter :/
-  var currentFunctionId = "main"
+  var currentFunctionId = "fun-main"
 
   def currentFunction: Function =
-    if currentFunctionId == "main" then ast.main
+    if currentFunctionId == "fun-main" then ast.main
     else ast.functions.find(_.id == currentFunctionId).get
 
   def addFunction(fun: Function): Unit =
@@ -168,9 +168,8 @@ case class FunctionModel(
 
   /* HELPERS */
   private def doInsert(afterId: String, newStatement: Statement, blockId: String): FunctionModel =
-    /// TODO skontat je li početak f-je
     val newStats = if ast.statements.isEmpty then List(newStatement)
-      else if afterId == "beginId" || afterId == "startId" then ast.statements.prepended(newStatement)
+      else if afterId == "beginId" || afterId.startsWith("fun-") then ast.statements.prepended(newStatement)
       else insert(ast.statements, afterId, newStatement, blockId)
     this.copy(ast = ast.copy(statements = newStats))
 

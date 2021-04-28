@@ -63,7 +63,7 @@ class FlowRun(mountElem: dom.Element, programJson: Option[String] = None) {
     val deleteFunButton = flowRunElements.deleteFunButton
     deleteFunButton.onclick = { (e: dom.Event) =>
       programModel.deleteFunction(programModel.currentFunctionId)
-      programModel.currentFunctionId = "main"
+      programModel.currentFunctionId = "fun-main"
       functionEditor.loadCurrentFunction()
       populateFunctions()
     }

@@ -107,14 +107,16 @@ object Statement:
 end Statement
 
 case class Function(
-  id: String,
+  rawId: String,
   name: String,
   parameters: List[Expression] = List.empty,
   tpe: Option[Expression.Type] = None,
   statements: List[Statement] = List.empty
 ) derives NativeConverter:
 
-  def isMain: Boolean = name == "main"
+  val id = s"fun-$rawId"
+
+  def isMain: Boolean = rawId == "main"
   
   def label: String =
     val title = if isMain then "begin" else name
