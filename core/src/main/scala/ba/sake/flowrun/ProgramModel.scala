@@ -65,6 +65,9 @@ class ProgramModel(
   def updateIf(req: UpdateIf): Unit =
     update(_.updateIf(req))
 
+  def updateStart(req: UpdateStart): Unit =
+    update(_.updateStart(req))
+
   def delete(req: Delete): Unit =
     update(_.delete(req))
   
@@ -149,6 +152,13 @@ case class FunctionModel(
     var updatedStat: Statement.If = doFind(req.id).asInstanceOf[Statement.If]
     updatedStat = updatedStat.copy(condition = req.expr)
     doUpdate(req.id, updatedStat)
+  
+  def updateStart(req: UpdateStart): FunctionModel =
+    var updatedStat = doFind(req.id).asInstanceOf[Statement.Start]
+    req.name.foreach(n => updatedStat = updatedStat.copy(name = n))
+    req.tpe.foreach(t => updatedStat = updatedStat.copy(tpe = t))
+    doUpdate(req.id, updatedStat)
+  
 
   def delete(req: Delete): FunctionModel =
     val newStats = delete(ast.statements, req.id)
@@ -294,3 +304,6 @@ object ProgramModel:
     case UpdateCall(id: String, expr: String)
     case UpdateReturn(id: String, expr: Option[Option[String]] = None)
     case UpdateIf(id: String, expr: String)
+    case UpdateStart(id: String, name: Option[String] = None, tpe: Option[Option[Type]] = None)
+    // TODO parameters: List[(String, Expression.Type)] = List.empty,
+    

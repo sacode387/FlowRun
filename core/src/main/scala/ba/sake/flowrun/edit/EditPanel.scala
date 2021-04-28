@@ -21,12 +21,15 @@ class EditPanel(programModel: ProgramModel, flowRunElements: FlowRunElements, fl
       def setLabel(): Unit = {
         val maybeName = node.data("rawName").asInstanceOf[js.UndefOr[String]].toOption
         val maybeExpr = node.data("rawExpr").asInstanceOf[js.UndefOr[String]].toOption.filterNot(_.trim.isEmpty)
+        val maybeParams = node.data("rawParams").asInstanceOf[js.UndefOr[String]].toOption.getOrElse("")
         val maybeExprText = maybeExpr.map(e => s" = $e").getOrElse("")
         val maybeRetExprText = maybeExpr.map(e => s" $e").getOrElse("")
         val (newLabel, mul) = if nodeType == Node.Declare then
           s"""${maybeName.get}: ${node.data("rawTpe")}$maybeExprText""" -> 8
         else if nodeType == Node.Assign then
           s"""${maybeName.get}$maybeExprText""" -> 8
+        else if nodeType == Node.Start then
+          s"""${maybeName.get}(${maybeParams})""" -> 10
         else if nodeType == Node.Return then
           s"""return$maybeRetExprText""" -> 10
         else if nodeType == Node.Input then
@@ -51,7 +54,9 @@ class EditPanel(programModel: ProgramModel, flowRunElements: FlowRunElements, fl
               programModel.updateDeclare(Request.UpdateDeclare(nodeId, name = Some(newName)))
             else if nodeType == Node.Input then
               programModel.updateInput(Request.UpdateInput(nodeId, name = newName))
-            else
+            else if nodeType == Node.Start then
+              programModel.updateStart(Request.UpdateStart(nodeId, name = Some(newName)))
+            else if nodeType == Node.Assign then
               programModel.updateAssign(Request.UpdateAssign(nodeId, name = Some(newName)))
             node.data("rawName", newName)
             setLabel()
@@ -123,7 +128,7 @@ class EditPanel(programModel: ProgramModel, flowRunElements: FlowRunElements, fl
       // append edit elements
       var hasName = false
       var filledName = false
-      if (Set(Node.Declare, Node.Assign, Node.Input).contains(nodeType)) {
+      if (Set(Node.Declare, Node.Start, Node.Assign, Node.Input).contains(nodeType)) {
         hasName = true
         filledName = nameInputElem.value.nonEmpty
         flowRunElements.editStatement.appendChild(nameInputElem)

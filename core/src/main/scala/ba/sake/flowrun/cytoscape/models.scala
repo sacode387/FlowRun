@@ -25,6 +25,7 @@ case class Node(
   rawExpr: String = "",
   rawName: String = "",
   rawTpe: String = "",
+  rawParams: String = "",
   id: String = UUID.randomUUID.toString
 ) {
   // TODO sredit malo finije...
@@ -44,8 +45,6 @@ case class Node(
     Set(Node.Begin, Node.End, Node.Dummy, Node.IfEnd).contains(tpe)
   )(" " + Node.Editable)
 
-  println(s"$tpe -> $maybeEditable")
-
   def toLit: js.Object = js.Dynamic.literal(
     group = "nodes",
     data = js.Dynamic.literal(
@@ -58,7 +57,8 @@ case class Node(
       endId = endId,
       rawExpr = rawExpr,
       rawName = rawName,
-      rawTpe = rawTpe
+      rawTpe = rawTpe,
+      rawParams = rawParams
     ),
     classes = tpe + maybeEditable.getOrElse("")
   )
