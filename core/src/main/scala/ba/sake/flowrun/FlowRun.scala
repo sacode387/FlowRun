@@ -8,6 +8,7 @@ import org.getshaka.nativeconverter.NativeConverter
 import scalatags.JsDom.all.*
 import reactify.*
 import ba.sake.flowrun.eval.*
+import ba.sake.flowrun.edit.FunctionEditor
 import ba.sake.flowrun.parse.parseExpr
 
 @JSExportTopLevel("FlowRun")
