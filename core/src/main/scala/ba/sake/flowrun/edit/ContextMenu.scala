@@ -182,9 +182,10 @@ class ContextMenu(programModel: ProgramModel, cy: cytoscape) {
               val falseNode = Node("", Node.Dummy, startId = ifNode.id, endId = ifEndNode.id)
               
               cy.add(ifNode.toLit)
+              cy.add(ifEndNode.toLit)
               cy.add(trueNode.toLit)
               cy.add(falseNode.toLit)
-              cy.add(ifEndNode.toLit)
+              
               edge.move(js.Dynamic.literal(target = ifNode.id))
               val falseEdge = Edge(ifNode.id, falseNode.id, "false")
               val trueEdge = Edge(ifNode.id, trueNode.id, "true")

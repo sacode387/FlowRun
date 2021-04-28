@@ -115,12 +115,20 @@ class FunctionEditor(
       
       case stmt @ If(id, expr, trueBlock, falseBlock) =>
         val ifEndNode = Node("", Node.IfEnd)
-        val ifNode = Node(stmt.condition, Node.If, endId = ifEndNode.id)
+        val ifNode = Node(stmt.condition, Node.If, id = stmt.id, endId = ifEndNode.id, rawExpr = stmt.condition)
         cy.add(ifNode.toLit)
         cy.add(ifEndNode.toLit)
         prevEdge.move(js.Dynamic.literal(target = ifNode.id))
         val trueEdge = cy.add(Edge(ifNode.id, ifNode.id, "true").toLit)
         val falseEdge = cy.add(Edge(ifNode.id, ifEndNode.id, "false").toLit)
+
+        val lastFalseEdge = if falseBlock.statements.isEmpty then
+          val falseNode = Node("", Node.Dummy, startId = ifNode.id, endId = ifEndNode.id)
+          cy.add(falseNode.toLit)
+          falseEdge.move(js.Dynamic.literal(target = falseNode.id))
+          cy.add(Edge(falseNode.id, falseNode.id).toLit)
+        else
+          load(falseBlock.statements, ifNode, ifEndNode, falseEdge)
         
         val lastTrueEdge = if trueBlock.statements.isEmpty then
           val trueNode = Node("", Node.Dummy, startId = ifNode.id, endId = ifEndNode.id)
@@ -130,16 +138,15 @@ class FunctionEditor(
         else
           load(trueBlock.statements, ifNode, ifEndNode, trueEdge)
         
-        val lastFalseEdge = if falseBlock.statements.isEmpty then
-          val falseNode = Node("", Node.Dummy, startId = ifNode.id, endId = ifEndNode.id)
-          cy.add(falseNode.toLit)
-          falseEdge.move(js.Dynamic.literal(target = falseNode.id))
-          cy.add(Edge(falseNode.id, falseNode.id).toLit)
-        else
-          load(falseBlock.statements, ifNode, ifEndNode, falseEdge)
+        
 
+        
+        
         lastTrueEdge.move(js.Dynamic.literal(target = ifEndNode.id))
         lastFalseEdge.move(js.Dynamic.literal(target = ifEndNode.id))
+        
+        lastFalseEdge.data("dir", "vert")
+        lastTrueEdge.data("dir", "vert")
 
         prevEdge = cy.add(Edge(ifEndNode.id, nextNode.id, dir = "vert", blockId = trueBlock.id).toLit)
         prevNode = ifEndNode
