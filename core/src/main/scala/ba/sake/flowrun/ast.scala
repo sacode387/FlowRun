@@ -70,12 +70,7 @@ sealed trait Statement(val id: String) derives NativeConverter:
   def label: String
 
 object Statement:
-  // not editable
-  case object Begin extends Statement("beginId"):
-    def label = "begin"
-  case object End extends Statement("endId"):
-    def label = "end"
-  
+
   case class Start(
     override val id: String,
     name: String,
@@ -128,9 +123,7 @@ case class Function(
   name: String,
   parameters: List[Expression] = List.empty,
   tpe: Option[Expression.Type] = None,
-  statements: List[Statement] = List(
-    Statement.Begin, Statement.End
-  )
+  statements: List[Statement] = List.empty
 ) derives NativeConverter:
   def isMain: Boolean =
     name == "main"

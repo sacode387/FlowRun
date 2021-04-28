@@ -52,7 +52,14 @@ class FunctionEditor(
     //println("BEFORE: " + js.JSON.stringify(cy.asDyn.elements().jsons()))
     cy.remove("*")
     val statements = programModel.currentFunction.statements
-    load(statements, null, null)
+
+    val firstNode = Node("begin", Node.Begin, id = "beginId")
+    val lastNode = Node("end", Node.End, id = "endId")
+    cy.add(firstNode.toLit)
+    cy.add(lastNode.toLit)
+    val firstEdge = cy.add(Edge(firstNode.id, lastNode.id).toLit)
+
+    load(statements, firstNode, firstEdge)
     doLayout(cy)
   }
   
@@ -63,11 +70,6 @@ class FunctionEditor(
     var prevEdge = lastEdge
 
     statements.foreach {
-      case stmt @ Begin =>
-        val newNode = Node(stmt.label, Node.Begin, id = stmt.id)
-        cy.add(newNode.toLit)
-        prevEdge = cy.add(Edge(newNode.id, newNode.id).toLit)
-        prevNode = newNode
       case stmt: Start =>
         val rawParams = stmt.parameters.map(_._1).mkString(",")
         val newNode = Node(stmt.label, Node.Start, id = stmt.id, rawName = stmt.name, rawParams = rawParams)
@@ -145,7 +147,7 @@ class FunctionEditor(
         prevEdge.move(js.Dynamic.literal(target = newNode.id))
         prevNode = newNode
 
-      case stmt @ (End | _: Dummy | _: BlockEnd) =>
+      case stmt @ (_: Dummy | _: BlockEnd) =>
         val nodeType = stmt.getClass.getSimpleName.reverse.dropWhile(_ == '$').reverse
         println("tpe: " + nodeType)
         val newNode = Node(stmt.label, nodeType, id = stmt.id)

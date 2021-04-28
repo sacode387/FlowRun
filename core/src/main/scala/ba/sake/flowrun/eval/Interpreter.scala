@@ -115,7 +115,7 @@ class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[FlowRun.Ev
         maybeExpr match
           case None => Future.successful(())
           case Some(expr) => eval(id, parseExpr(id, expr))
-      case Begin | End | BlockEnd(_) | Dummy(_) => // noop
+      case BlockEnd(_) | Dummy(_) => // noop
         Future.successful(())
       case _: Start => // noop
         Future.successful(())
