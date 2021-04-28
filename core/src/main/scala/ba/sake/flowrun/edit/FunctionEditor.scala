@@ -63,7 +63,7 @@ class FunctionEditor(
       load(statements, firstNode, lastNode, firstEdge)
     else
       val rawParams = currentFun.parameters.map(_._1).mkString(",")
-      val firstNode = Node(currentFun.label, Node.Start, id = "startId", rawName = currentFun.name, rawParams = rawParams)
+      val firstNode = Node(currentFun.label, Node.Start, id = currentFun.id, rawName = currentFun.name, rawParams = rawParams)
       val retStmt = statements.last.asInstanceOf[Statement.Return]
       val lastNode = Node(retStmt.label, Node.Return, id = retStmt.id, rawExpr = retStmt.maybeValue.getOrElse(""))
       cy.add(firstNode.toLit)

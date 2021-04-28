@@ -107,6 +107,7 @@ object Statement:
 end Statement
 
 case class Function(
+  id: String,
   name: String,
   parameters: List[Expression] = List.empty,
   tpe: Option[Expression.Type] = None,

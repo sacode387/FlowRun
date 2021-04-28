@@ -55,8 +55,9 @@ class EditPanel(programModel: ProgramModel, flowRunElements: FlowRunElements, fl
               programModel.updateDeclare(Request.UpdateDeclare(nodeId, name = Some(newName)))
             else if nodeType == Node.Input then
               programModel.updateInput(Request.UpdateInput(nodeId, name = newName))
-            else if nodeType == Node.Start then ()
-             // programModel.updateStart(Request.UpdateStart(nodeId, name = Some(newName)))
+            else if nodeType == Node.Start then
+              programModel.updateFunction(Request.UpdateFunction(nodeId, name = Some(newName)))
+              flowrunChannel := FlowRun.Event.FunctionUpdated
             else if nodeType == Node.Assign then
               programModel.updateAssign(Request.UpdateAssign(nodeId, name = Some(newName)))
             node.data("rawName", newName)

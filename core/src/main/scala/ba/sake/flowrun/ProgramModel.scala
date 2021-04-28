@@ -11,18 +11,30 @@ class ProgramModel(
   var ast = programAst
 
   // I'm too lazy to make this a request parameter :/
-  var currentFunctionName = "main"
+  var currentFunctionId = "main"
 
   def currentFunction: Function =
-    if currentFunctionName == "main" then ast.main
-    else ast.functions.find(_.name == currentFunctionName).get
+    if currentFunctionId == "main" then ast.main
+    else ast.functions.find(_.id == currentFunctionId).get
 
   def addFunction(fun: Function): Unit =
     val newFunctions = ast.functions.appended(fun)
     ast = ast.copy(functions = newFunctions)
   
-  def deleteFunction(name: String): Unit =
-    val newFunctions = ast.functions.filterNot(_.name == name)
+  def deleteFunction(id: String): Unit =
+    val newFunctions = ast.functions.filterNot(_.id == id)
+    ast = ast.copy(functions = newFunctions)
+  
+  def updateFunction(req: UpdateFunction) =
+    val newFunctions = ast.functions.map { f =>
+      if f.id == currentFunction.id then
+        var updatedFun = f
+        req.name.foreach(n => updatedFun = updatedFun.copy(name = n))
+        req.tpe.foreach(t => updatedFun = updatedFun.copy(tpe = t))
+        req.name.foreach(n => updatedFun = updatedFun.copy(name = n))
+        updatedFun
+      else f
+    }
     ast = ast.copy(functions = newFunctions)
 
   /* per-function */
@@ -73,9 +85,9 @@ class ProgramModel(
     if currentFunction.isMain then
       ast = ast.copy(main = newFunction)
     else
-      ast.functions.indexWhere(_.name == currentFunctionName) match
+      ast.functions.indexWhere(_.id == currentFunctionId) match
         case -1 =>
-          println(s"Oops, function $currentFunctionName does not exist...")
+          println(s"Oops, function $currentFunctionId does not exist...")
         case idx =>
           val newFunctions = ast.functions.updated(idx, newFunction)
           ast = ast.copy(functions = newFunctions)
@@ -149,9 +161,6 @@ case class FunctionModel(
     var updatedStat: Statement.If = doFind(req.id).asInstanceOf[Statement.If]
     updatedStat = updatedStat.copy(condition = req.expr)
     doUpdate(req.id, updatedStat)
-  
-  def updateFunction(req: UpdateStart) = () // TODO
-  
 
   def delete(req: Delete): FunctionModel =
     val newStats = delete(ast.statements, req.id)
@@ -159,7 +168,7 @@ case class FunctionModel(
 
   /* HELPERS */
   private def doInsert(afterId: String, newStatement: Statement, blockId: String): FunctionModel =
-    
+    /// TODO skontat je li početak f-je
     val newStats = if ast.statements.isEmpty then List(newStatement)
       else if afterId == "beginId" || afterId == "startId" then ast.statements.prepended(newStatement)
       else insert(ast.statements, afterId, newStatement, blockId)
@@ -300,6 +309,6 @@ object ProgramModel:
     case UpdateCall(id: String, expr: String)
     case UpdateReturn(id: String, expr: Option[Option[String]] = None)
     case UpdateIf(id: String, expr: String)
-    case UpdateStart(id: String, name: Option[String] = None, tpe: Option[Option[Type]] = None)
+    case UpdateFunction(id: String, name: Option[String] = None, tpe: Option[Option[Type]] = None)
     // TODO parameters: List[(String, Expression.Type)] = List.empty,
     
