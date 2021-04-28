@@ -60,7 +60,7 @@ class FunctionEditor(
       cy.add(firstNode.toLit)
       cy.add(lastNode.toLit)
       val firstEdge = cy.add(Edge(firstNode.id, lastNode.id).toLit)
-      load(statements, firstNode, firstEdge)
+      load(statements, firstNode, lastNode, firstEdge)
     else
       val rawParams = currentFun.parameters.map(_._1).mkString(",")
       val firstNode = Node(currentFun.label, Node.Start, id = "startId", rawName = currentFun.name, rawParams = rawParams)
@@ -69,12 +69,12 @@ class FunctionEditor(
       cy.add(firstNode.toLit)
       cy.add(lastNode.toLit)
       val firstEdge = cy.add(Edge(firstNode.id, lastNode.id).toLit)
-      load(statements.init, firstNode, firstEdge)
+      load(statements.init, firstNode, lastNode, firstEdge)
     
     doLayout(cy)
   }
   
-  private def load(statements: List[Statement], lastNode: Node, lastEdge: js.Dynamic): js.Dynamic = {
+  private def load(statements: List[Statement], lastNode: Node, nextNode: Node, lastEdge: js.Dynamic): js.Dynamic = {
     import Statement.*
 
     var prevNode = lastNode
@@ -91,31 +91,31 @@ class FunctionEditor(
         cy.add(Edge(prevNode.id, newNode.id).toLit)
         prevEdge.move(js.Dynamic.literal(target = newNode.id))
         prevNode = newNode
-        prevEdge = cy.add(Edge(newNode.id, newNode.id).toLit)
+        prevEdge = cy.add(Edge(newNode.id, nextNode.id).toLit)
       case stmt: Output =>
         val newNode = Node(stmt.label, Node.Output, id = stmt.id, rawExpr = stmt.value)
         cy.add(newNode.toLit)
         prevEdge.move(js.Dynamic.literal(target = newNode.id))
         prevNode = newNode
-        prevEdge = cy.add(Edge(newNode.id, newNode.id).toLit)
+        prevEdge = cy.add(Edge(newNode.id, nextNode.id).toLit)
       case stmt: Declare =>
         val newNode = Node(stmt.label, Node.Declare, id = stmt.id, rawName = stmt.name, rawTpe = stmt.tpe.toString, rawExpr = stmt.initValue.getOrElse(""))
         cy.add(newNode.toLit)
         prevEdge.move(js.Dynamic.literal(target = newNode.id))
         prevNode = newNode
-        prevEdge = cy.add(Edge(newNode.id, newNode.id).toLit)
+        prevEdge = cy.add(Edge(newNode.id, nextNode.id).toLit)
       case stmt: Assign =>
         val newNode = Node(stmt.label, Node.Assign, id = stmt.id, rawName = stmt.name, rawExpr = stmt.value)
         cy.add(newNode.toLit)
         prevEdge.move(js.Dynamic.literal(target = newNode.id))
         prevNode = newNode
-        prevEdge = cy.add(Edge(newNode.id, newNode.id).toLit)
+        prevEdge = cy.add(Edge(newNode.id, nextNode.id).toLit)
       case stmt: Call =>
         val newNode = Node(stmt.label, Node.Call, id = stmt.id, rawExpr = stmt.value)
         cy.add(newNode.toLit)
         prevEdge.move(js.Dynamic.literal(target = newNode.id))
         prevNode = newNode
-        prevEdge = cy.add(Edge(newNode.id, newNode.id).toLit)
+        prevEdge = cy.add(Edge(newNode.id, nextNode.id).toLit)
       
       case stmt @ If(id, expr, trueBlock, falseBlock) =>
         val ifEndNode = Node("", Node.IfEnd)
@@ -132,7 +132,7 @@ class FunctionEditor(
           trueEdge.move(js.Dynamic.literal(target = trueNode.id))
           cy.add(Edge(trueNode.id, trueNode.id).toLit)
         else
-          load(trueBlock.statements, ifNode, trueEdge)
+          load(trueBlock.statements, ifNode, ifEndNode, trueEdge)
         
         val lastFalseEdge = if falseBlock.statements.isEmpty then
           val falseNode = Node("", Node.Dummy, startId = ifNode.id, endId = ifEndNode.id)
@@ -140,12 +140,12 @@ class FunctionEditor(
           falseEdge.move(js.Dynamic.literal(target = falseNode.id))
           cy.add(Edge(falseNode.id, falseNode.id).toLit)
         else
-          load(falseBlock.statements, ifNode, falseEdge)
+          load(falseBlock.statements, ifNode, ifEndNode, falseEdge)
 
         lastTrueEdge.move(js.Dynamic.literal(target = ifEndNode.id))
         lastFalseEdge.move(js.Dynamic.literal(target = ifEndNode.id))
 
-        prevEdge = cy.add(Edge(ifEndNode.id, ifEndNode.id, dir = "vert", blockId = trueBlock.id).toLit)
+        prevEdge = cy.add(Edge(ifEndNode.id, nextNode.id, dir = "vert", blockId = trueBlock.id).toLit)
         prevNode = ifEndNode
 
       case stmt @ (_: Dummy | _: BlockEnd) =>

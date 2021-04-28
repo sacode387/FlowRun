@@ -18,8 +18,6 @@ class cytoscape(props: js.Object) extends js.Object {
 case class Node(
   label: String,
   tpe: String,
-  w: Integer = null,
-  h: Integer = null,
   startId: String = "", // if-metadata
   endId: String = "", // if-metadata
   rawExpr: String = "",
@@ -28,18 +26,15 @@ case class Node(
   rawParams: String = "",
   id: String = UUID.randomUUID.toString
 ) {
-  // TODO sredit malo finije...
-  // u suštini i ne treba w/h ???
+
   private val (ww: Int, hh: Int) =
-    if (Set(Node.Begin, Node.End, Node.Start, Node.Return).contains(tpe)) (70, 30)
+    if (Set(Node.Begin, Node.End).contains(tpe)) (70, 30)
     else if (tpe == Node.If) (55, 30)
     else if (tpe == Node.Dummy) (20, 20)
     else if (tpe == Node.IfEnd) (10, 10)
-    else {
-      val www = if (w == null) 35 max label.length * 11 else w
-      val hhh = if (h == null) 25 else h
-      (www, hhh)
-    }
+    else if (tpe == Node.Start) (35 max label.length * 11, 30)
+    else if (tpe == Node.Return) (35 max label.length * 11, 30)
+    else (35 max label.length * 11, 25)
 
   private val maybeEditable = Option.unless(
     Set(Node.Begin, Node.End, Node.Dummy, Node.IfEnd).contains(tpe)
