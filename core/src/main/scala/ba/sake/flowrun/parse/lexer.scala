@@ -167,4 +167,4 @@ object Token {
   }
 }
 
-class LexException(msg: String, nodeId: String) extends RuntimeException(msg)
+class LexException(msg: String, val nodeId: String) extends RuntimeException(msg)

@@ -138,11 +138,7 @@ class FunctionEditor(
           cy.add(Edge(trueNode.id, trueNode.id).toLit)
         else
           load(trueBlock.statements, ifNode, ifEndNode, trueEdge)
-        
-        
 
-        
-        
         lastTrueEdge.move(js.Dynamic.literal(target = ifEndNode.id))
         lastFalseEdge.move(js.Dynamic.literal(target = ifEndNode.id))
         
@@ -153,9 +149,7 @@ class FunctionEditor(
         prevNode = ifEndNode
 
       case stmt @ (_: Dummy) =>
-        val nodeType = stmt.getClass.getSimpleName.reverse.dropWhile(_ == '$').reverse
-        println("tpe: " + nodeType)
-        val newNode = Node(stmt.label, nodeType, id = stmt.id)
+        val newNode = Node(stmt.label, "Dummy", id = stmt.id)
         cy.add(newNode.toLit)
         prevEdge.move(js.Dynamic.literal(target = newNode.id))
       

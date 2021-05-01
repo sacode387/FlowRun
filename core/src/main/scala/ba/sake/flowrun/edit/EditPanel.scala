@@ -74,7 +74,7 @@ class EditPanel(programModel: ProgramModel, flowRunElements: FlowRunElements, fl
       val exprInputElem = flowRunElements.newInputText
       exprInputElem.value = node.data("rawExpr").asInstanceOf[js.UndefOr[String]].getOrElse("")
       exprInputElem.placeholder = if nodeType == Node.Output then "\"Hello!\"" else "x + 1"
-      exprInputElem.oninput = (_: dom.Event) => {
+      exprInputElem.oninput = _ => {
         import scala.util.*
         val newExprText = exprInputElem.value.trim
         val maybeNewExpr = Try(parseExpr(nodeId, newExprText))

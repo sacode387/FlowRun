@@ -6,7 +6,7 @@ import scala.concurrent.{ Future, Promise }
 import scala.concurrent.ExecutionContext.Implicits.global
 import scalajs.js
 import reactify.*
-import ba.sake.flowrun.parse.{ Token, parseExpr }
+import ba.sake.flowrun.parse.{ Token, parseExpr, ParseException, LexException }
 
 class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[FlowRun.Event]) {
   import Interpreter.*
@@ -39,6 +39,12 @@ class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[FlowRun.Ev
       case Success(_) =>
         state = State.FINISHED
       case Failure(e: EvalException) =>
+        state = State.FAILED
+        flowrunChannel := FlowRun.Event.EvalError(e.nodeId, e.getMessage)
+      case Failure(e: ParseException) =>
+        state = State.FAILED
+        flowrunChannel := FlowRun.Event.EvalError(e.nodeId, e.getMessage)
+      case Failure(e: LexException) =>
         state = State.FAILED
         flowrunChannel := FlowRun.Event.EvalError(e.nodeId, e.getMessage)
       case Failure(e) =>

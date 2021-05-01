@@ -104,7 +104,7 @@ case class FunctionModel(
     doInsert(req.afterId, newStat, req.blockId)
 
   def addAssign(req: AddAssign): FunctionModel =
-    val newStat = Statement.Assign(req.id, "", "\"\"")
+    val newStat = Statement.Assign(req.id, "", "")
     doInsert(req.afterId, newStat, req.blockId)
 
   def addOutput(req: AddOutput): FunctionModel =
@@ -120,7 +120,7 @@ case class FunctionModel(
     doInsert(req.afterId, newStat, req.blockId)
 
   def addIf(req: AddIf): FunctionModel =
-    val newStat = Statement.If(req.id, "\"\"", Statement.Block(req.trueId), Statement.Block(req.falseId))
+    val newStat = Statement.If(req.id, "", Statement.Block(req.trueId), Statement.Block(req.falseId))
     doInsert(req.afterId, newStat, req.blockId)
 
   def updateDeclare(req: UpdateDeclare): FunctionModel =
