@@ -15,6 +15,7 @@ object InterpreterTests extends TestSuite {
     s"stmt-$stmtCount"
 
   val tests = Tests {
+    
     test("dry run") {
       val main = Function("main", "main", List.empty, None, List())
       val programModel = ProgramModel(Program("p1", "program", main))

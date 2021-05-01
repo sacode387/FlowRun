@@ -24,7 +24,7 @@ class SymbolTable(flowrunChannel: Channel[FlowRun.Event]) {
   def varSymbols: List[Symbol] =
     currentScope.allSymbols.values.filter(_.key.kind == Symbol.Kind.Variable).toList
 
-  def add(nodeId: String, key: SymbolKey, tpe: Option[Type], value: Option[Any]): Symbol =
+  def add(nodeId: String, key: SymbolKey, tpe: Type, value: Option[Any]): Symbol =
     currentScope.add(nodeId, key, tpe, value)
 
   def setValue(nodeId: String, name: String, value: Any): Unit =
@@ -61,7 +61,7 @@ class Scope(val name: String, val parentScope: Option[Scope], flowrunChannel: Ch
   def allSymbols: Map[SymbolKey, Symbol] = symbols
 
   // we assume type is good here
-  def add(nodeId: String, key: SymbolKey, tpe: Option[Type], value: Option[Any]): Symbol =
+  def add(nodeId: String, key: SymbolKey, tpe: Type, value: Option[Any]): Symbol =
     if symbols.isDefinedAt(key) then
       error(s"${key.kind.toString} with name '${key.name}' is already declared.", nodeId)
     val newSymbol = Symbol(key, tpe, value, this)
@@ -78,7 +78,7 @@ class Scope(val name: String, val parentScope: Option[Scope], flowrunChannel: Ch
   def setValue(nodeId: String, name: String, value: Any): Unit =
     val key = SymbolKey(name, Symbol.Kind.Variable)
     val sym = getSymbol(nodeId, key)
-    val updateValue = TypeUtils.getUpdateValue(nodeId, name, sym.tpe.get, value)
+    val updateValue = TypeUtils.getUpdateValue(nodeId, name, sym.tpe, value)
     val updatedSym = sym.copy(value = Some(updateValue))
     sym.scope.set(key, updatedSym)
     flowrunChannel := FlowRun.Event.SymbolTableUpdated
@@ -121,7 +121,7 @@ class Scope(val name: String, val parentScope: Option[Scope], flowrunChannel: Ch
 end Scope
 
 case class SymbolKey(name: String, kind: Symbol.Kind)
-case class Symbol(key: SymbolKey, tpe: Option[Type], value: Option[Any] = None, scope: Scope)
+case class Symbol(key: SymbolKey, tpe: Type, value: Option[Any] = None, scope: Scope)
 
 object Symbol:
   enum Kind:

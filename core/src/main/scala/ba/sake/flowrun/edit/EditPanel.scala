@@ -30,7 +30,7 @@ class EditPanel(programModel: ProgramModel, flowRunElements: FlowRunElements, fl
         else if nodeType == Node.Assign then
           s"""$maybeName$maybeExprText""" -> 8
         else if nodeType == Node.Start then
-          s"""$maybeName($maybeParams)""" -> 10
+          s"""$maybeName($maybeParams): $maybeTpe""" -> 10
         else if nodeType == Node.Return then
           s"""return$maybeRetExprText""" -> 10
         else if nodeType == Node.Input then
@@ -118,7 +118,10 @@ class EditPanel(programModel: ProgramModel, flowRunElements: FlowRunElements, fl
       typeSelectElem.onchange = { (e: dom.Event) =>
         val thisElem = e.target.asInstanceOf[dom.html.Select]
         val newType = Expression.Type.values(thisElem.selectedIndex)
-        programModel.updateDeclare(Request.UpdateDeclare(nodeId, tpe = Some(newType)))
+        if nodeType == Node.Declare then
+          programModel.updateDeclare(Request.UpdateDeclare(nodeId, tpe = Some(newType)))
+        else
+          programModel.updateFunction(Request.UpdateFunction(nodeId, tpe = Some(newType)))
         
         node.data("rawTpe", newType.toString)
         setLabel()
@@ -126,6 +129,7 @@ class EditPanel(programModel: ProgramModel, flowRunElements: FlowRunElements, fl
 
       // clear first, prepare for new inputs
       flowRunElements.editStatement.innerText = ""
+      flowRunElements.editStatement.appendChild(div(s"Editing $nodeType:").render)
 
       // append edit elements
       var hasName = false
@@ -136,7 +140,7 @@ class EditPanel(programModel: ProgramModel, flowRunElements: FlowRunElements, fl
         flowRunElements.editStatement.appendChild(nameInputElem)
       }
 
-      if (Set(Node.Declare).contains(nodeType)) {
+      if (Set(Node.Declare, Node.Start).contains(nodeType)) {
         typeSelectElem.value = varType.get // select appropriate type
         flowRunElements.editStatement.appendChild(span(": ").render)
         flowRunElements.editStatement.appendChild(typeSelectElem)

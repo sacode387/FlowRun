@@ -304,6 +304,6 @@ object ProgramModel:
     case UpdateCall(id: String, expr: String)
     case UpdateReturn(id: String, expr: Option[Option[String]] = None)
     case UpdateIf(id: String, expr: String)
-    case UpdateFunction(id: String, name: Option[String] = None, tpe: Option[Option[Type]] = None)
+    case UpdateFunction(id: String, name: Option[String] = None, tpe: Option[Type] = None)
     // TODO parameters: List[(String, Expression.Type)] = List.empty,
     

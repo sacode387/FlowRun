@@ -18,7 +18,7 @@ class FlowRun(mountElem: dom.Element, programJson: Option[String] = None) {
 
   private val maybeTemplate = dom.document.getElementById("FlowRun-template")
   private val flowRunElements = FlowRunElements.resolve(maybeTemplate)
-  mountElem.innerHTML = ""
+  mountElem.innerText = ""
   mountElem.appendChild(flowRunElements.template)
 
   private val maybeJson = programJson.orElse(Option.when(mountElemText.nonEmpty)(mountElemText))
@@ -94,8 +94,8 @@ class FlowRun(mountElem: dom.Element, programJson: Option[String] = None) {
       .filter(_.toIntOption.isDefined)
       .map(_.toInt).maxOption.getOrElse(0)
     val newFunName = "fun" + (lastFunNum+1)
-    val newFun = Function(UUID.randomUUID.toString, newFunName, List.empty, None,
-      List(Statement.Return(UUID.randomUUID.toString))
+    val newFun = Function(UUID.randomUUID.toString, newFunName,
+      statements = List(Statement.Return(UUID.randomUUID.toString))
     )
     programModel.addFunction(newFun)
     programModel.currentFunctionId = newFun.id
@@ -147,11 +147,12 @@ class FlowRun(mountElem: dom.Element, programJson: Option[String] = None) {
       val key = SymbolKey(name, Symbol.Kind.Variable)
       val sym = interpreter.symTab.getSymbol(null, key)
       try {
-        val value = sym.tpe.get match
+        val value = sym.tpe match
           case Expression.Type.Integer  => inputValue.toInt
           case Expression.Type.Real     => inputValue.toDouble
           case Expression.Type.Boolean  => inputValue.toBoolean
           case Expression.Type.String   => inputValue
+          case Expression.Type.Void     => ()
         interpreter.symTab.setValue(nodeId, name, value)
         interpreter.continue()
 
@@ -162,7 +163,7 @@ class FlowRun(mountElem: dom.Element, programJson: Option[String] = None) {
         case (e: EvalException) => // from symbol table
           displayError(e.getMessage)
         case e: (NumberFormatException | IllegalArgumentException) =>
-          displayError(s"Entered invalid ${sym.tpe.get}: '${inputValue}'")
+          displayError(s"Entered invalid ${sym.tpe}: '${inputValue}'")
       }
     }
   }
@@ -175,7 +176,7 @@ class FlowRun(mountElem: dom.Element, programJson: Option[String] = None) {
     flowRunElements.debugVariables.innerText = ""
     val varValues = interpreter.symTab.varSymbols
     varValues.foreach { sym =>
-      val symElem = div(s"${sym.key.name}: ${sym.tpe.get} = ${sym.value.getOrElse("")}").render
+      val symElem = div(s"${sym.key.name}: ${sym.tpe} = ${sym.value.getOrElse("")}").render
       flowRunElements.debugVariables.appendChild(symElem)
     }
 }

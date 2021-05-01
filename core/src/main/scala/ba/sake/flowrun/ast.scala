@@ -24,11 +24,11 @@ case class Expression(boolOrComparison: BoolOrComparison, boolOrComparisons: Lis
 
 object Expression:
   enum Type derives NativeConverter:
+    case Void
     case Integer
     case Real
     case String
     case Boolean
-    //case Void
 
 case class BoolOrComparison(boolAndComparison: BoolAndComparison, boolAndComparisons: List[BoolAndComparison]) derives NativeConverter
 
@@ -105,7 +105,7 @@ case class Function(
   rawId: String,
   name: String,
   parameters: List[Expression] = List.empty,
-  tpe: Option[Expression.Type] = None,
+  tpe: Expression.Type = Expression.Type.Void,
   statements: List[Statement] = List.empty
 ) derives NativeConverter:
 
@@ -116,8 +116,7 @@ case class Function(
   def label: String =
     val title = if isMain then "begin" else name
     val params = if isMain then "" else s"(${parameters.map(_._1).mkString(",")})"
-    val maybeRetTpe = tpe.map(t => s": $t").getOrElse("")
-    s"$title$params$maybeRetTpe"
+    s"$title$params: $tpe"
 
 case class Program(
   id: String,

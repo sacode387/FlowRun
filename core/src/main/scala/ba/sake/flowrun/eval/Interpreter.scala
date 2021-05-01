@@ -69,13 +69,13 @@ class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[FlowRun.Ev
         maybeInitValueExpr match
           case None =>
             val key = SymbolKey(name, Symbol.Kind.Variable)
-            symTab.add(id, key, Some(tpe), None)
+            symTab.add(id, key, tpe, None)
             Future.successful(())
           case Some(expr) =>
             eval(id, expr).map { v =>
               TypeUtils.getUpdateValue(id, name, tpe, v) // validate
               val key = SymbolKey(name, Symbol.Kind.Variable)
-              symTab.add(id, key, Some(tpe), Some(v))
+              symTab.add(id, key, tpe, Some(v))
               ()
             }
       case Assign(id, name, expr) =>

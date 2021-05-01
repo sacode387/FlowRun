@@ -62,7 +62,7 @@ case class Node(
 object Node {
   val Begin = "Begin"
   val End = "End"
-  val Start = "Start"
+  val Start = "Function"
   val Return = "Return"
   val Output = "Output"
   val Input = "Input"
