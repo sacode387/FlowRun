@@ -116,7 +116,7 @@ class FunctionEditor(
       
       case stmt @ If(id, expr, trueBlock, falseBlock) =>
         val ifEndNode = Node("", Node.IfEnd)
-        val ifNode = Node(stmt.condition, Node.If, id = stmt.id, endId = ifEndNode.id, rawExpr = stmt.condition)
+        val ifNode = Node(stmt.condition, Node.If, id = stmt.id, endId = ifEndNode.id, rawExpr = expr)
         cy.add(ifNode.toLit)
         cy.add(ifEndNode.toLit)
         prevEdge.move(js.Dynamic.literal(target = ifNode.id))

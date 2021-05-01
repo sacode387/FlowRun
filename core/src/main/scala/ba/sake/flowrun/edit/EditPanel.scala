@@ -43,7 +43,7 @@ class EditPanel(programModel: ProgramModel, flowRunElements: FlowRunElements, fl
       
       val nameInputElem = flowRunElements.newInputText
       nameInputElem.value = node.data("rawName").asInstanceOf[js.UndefOr[String]].getOrElse("")
-      nameInputElem.placeholder = "x"
+      nameInputElem.placeholder = if nodeType == Node.Start then "myFun" else "x"
       nameInputElem.oninput = (_: dom.Event) => {
         val newName = nameInputElem.value.trim
         val errorMsg = if newName.isEmpty then None // noop when blank
@@ -73,7 +73,9 @@ class EditPanel(programModel: ProgramModel, flowRunElements: FlowRunElements, fl
       
       val exprInputElem = flowRunElements.newInputText
       exprInputElem.value = node.data("rawExpr").asInstanceOf[js.UndefOr[String]].getOrElse("")
-      exprInputElem.placeholder = if nodeType == Node.Output then "\"Hello!\"" else "x + 1"
+      exprInputElem.placeholder = if nodeType == Node.Output then "\"Hello!\""
+        else if nodeType == Node.Call then "myFun(x)"
+        else "x + 1"
       exprInputElem.oninput = _ => {
         import scala.util.*
         val newExprText = exprInputElem.value.trim

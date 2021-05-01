@@ -113,7 +113,7 @@ object utils {
       "style": {
         "overlay-opacity": 0,
         "font-family": "Ubuntu Mono, monospace",
-        "font-size": "12px",
+        "font-size": "11px",
         "label": "data(label)",
         "text-margin-y": -10,
         "width": 2,

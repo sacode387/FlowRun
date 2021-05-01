@@ -177,7 +177,7 @@ class ContextMenu(programModel: ProgramModel, cy: cytoscape) {
               val (edge, nextNodeId, maybeDummy, dir) = getInsertData(target)
 
               val ifEndNode = Node("", Node.IfEnd)
-              val ifNode = Node("if", Node.If, endId = ifEndNode.id)
+              val ifNode = Node("true", Node.If, endId = ifEndNode.id, rawExpr = "true")
               val trueNode = Node("", Node.Dummy, startId = ifNode.id, endId = ifEndNode.id)
               val falseNode = Node("", Node.Dummy, startId = ifNode.id, endId = ifEndNode.id)
               
