@@ -17,7 +17,7 @@ class ContextMenu(programModel: ProgramModel, cy: cytoscape) {
             content = "remove",
             tooltipText = "Remove statement",
             image = js.Dynamic.literal(src = "images/delete.svg", width = 12, height = 12, x = 3, y = 4),
-            selector = s"node.${Node.Editable}",
+            selector = s"node.${Node.Removable}",
             onClickFunction = { (event: dom.Event) =>
               val target = event.target.asDyn
 

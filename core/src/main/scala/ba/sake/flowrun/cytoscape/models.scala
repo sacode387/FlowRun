@@ -36,9 +36,13 @@ case class Node(
     else if (tpe == Node.Return) (35 max label.length * 11, 30)
     else (35 max label.length * 11, 25)
 
-  private val maybeEditable = Option.unless(
-    Set(Node.Begin, Node.End, Node.Dummy, Node.IfEnd).contains(tpe)
+  private val maybeEditable = Option.when(
+    Set(Node.Start, Node.Return, Node.Output, Node.Input, Node.If, Node.Declare, Node.Assign, Node.Call).contains(tpe)
   )(" " + Node.Editable)
+
+  private val maybeRemovable = Option.when(
+    Set(Node.Output, Node.Input, Node.If, Node.Declare, Node.Assign, Node.Call).contains(tpe)
+  )(" " + Node.Removable)
 
   def toLit: js.Object = js.Dynamic.literal(
     group = "nodes",
@@ -55,7 +59,7 @@ case class Node(
       rawTpe = rawTpe,
       rawParams = rawParams
     ),
-    classes = tpe + maybeEditable.getOrElse("")
+    classes = tpe + maybeEditable.getOrElse("") + maybeRemovable.getOrElse("")
   )
 }
 
@@ -74,6 +78,7 @@ object Node {
   val Call = "Call"
 
   val Editable = "Editable"
+  val Removable = "Removable"
 }
 
 /* EDGEs */
