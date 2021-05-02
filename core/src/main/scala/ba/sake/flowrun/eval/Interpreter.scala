@@ -271,7 +271,7 @@ class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[FlowRun.Ev
   // https://users.scala-lang.org/t/process-a-list-future-sequentially/3704/4
   private def execSequentially[T, Res](init: Res, values: List[T], f: (Res, T) => Future[Res]): Future[Res] =
     val initF = Future.successful(init)
-    values.foldLeft(initF) { case (a, next) =>
+    values.foldLeft(initF) { (a, next) =>
       a.flatMap(acc => f(acc, next))
     }
 }

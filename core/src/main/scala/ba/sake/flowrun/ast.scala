@@ -104,7 +104,7 @@ end Statement
 case class Function(
   rawId: String,
   name: String,
-  parameters: List[Expression] = List.empty,
+  parameters: List[(String, Expression.Type)] = List.empty,
   tpe: Expression.Type = Expression.Type.Void,
   statements: List[Statement] = List.empty
 ) derives NativeConverter:

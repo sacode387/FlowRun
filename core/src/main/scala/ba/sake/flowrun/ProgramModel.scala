@@ -31,7 +31,10 @@ class ProgramModel(
         var updatedFun = f
         req.name.foreach(n => updatedFun = updatedFun.copy(name = n))
         req.tpe.foreach(t => updatedFun = updatedFun.copy(tpe = t))
-        req.name.foreach(n => updatedFun = updatedFun.copy(name = n))
+        req.parameters.foreach { params =>
+          val newParams = params.map((n,t) => (n, Expression.Type.valueOf(t)))
+          updatedFun = updatedFun.copy(parameters = newParams)
+        }
         updatedFun
       else f
     }
@@ -304,6 +307,7 @@ object ProgramModel:
     case UpdateCall(id: String, expr: String)
     case UpdateReturn(id: String, expr: Option[Option[String]] = None)
     case UpdateIf(id: String, expr: String)
-    case UpdateFunction(id: String, name: Option[String] = None, tpe: Option[Type] = None)
-    // TODO parameters: List[(String, Expression.Type)] = List.empty,
+    case UpdateFunction(id: String, name: Option[String] = None, tpe: Option[Type] = None,
+      parameters: Option[List[(String, String)]] = None
+    )
     

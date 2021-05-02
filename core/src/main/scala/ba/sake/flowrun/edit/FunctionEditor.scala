@@ -2,6 +2,7 @@ package ba.sake.flowrun
 package edit
 
 import scalajs.js
+import scalajs.js.JSConverters._
 import org.scalajs.dom
 import reactify.*
 import ba.sake.flowrun.cytoscape.*
@@ -49,6 +50,7 @@ class FunctionEditor(
     flowrunChannel := FlowRun.Event.SyntaxSuccess
 
   def loadCurrentFunction(): Unit = {
+   ///import scalajs.js.JSConverters.*
     //println("BEFORE: " + js.JSON.stringify(cy.asDyn.elements().jsons()))
     cy.remove("*")
     val currentFun = programModel.currentFunction
@@ -62,7 +64,7 @@ class FunctionEditor(
       val firstEdge = cy.add(Edge(firstNode.id, lastNode.id).toLit)
       load(statements, firstNode, lastNode, firstEdge)
     else
-      val rawParams = currentFun.parameters.map(_._1).mkString(",")
+      val rawParams = currentFun.parameters.map((n,t) => s"$n: $t").mkString(",")
       val firstNode = Node(currentFun.label, Node.Start, id = currentFun.id,
         rawName = currentFun.name, rawParams = rawParams, rawTpe = currentFun.tpe.toString)
       val retStmt = statements.last.asInstanceOf[Statement.Return]

@@ -11,6 +11,8 @@ case class FlowRunElements(
   // functions
   addFunButton: dom.html.Element,
   deleteFunButton: dom.html.Element,
+  addParamButton: dom.html.Element,
+  deleteParamButton: dom.html.Element,
   // other
   enterButton: dom.html.Element,
   inputText: dom.html.Input,
@@ -40,6 +42,9 @@ case class FlowRunElements(
   
   def newEnterButton: dom.html.Element =
     enterButton.cloneNode(true).asInstanceOf[dom.html.Element]
+  
+  def newDeleteParamButton: dom.html.Element =
+    deleteParamButton.cloneNode(true).asInstanceOf[dom.html.Element]
 }
 
 object FlowRunElements {
@@ -58,12 +63,16 @@ object FlowRunElements {
     val addFunButton = template.querySelector(".FlowRun-add-function").cloneNode(true).asInstanceOf[dom.html.Element]
     val deleteFunButton = template.querySelector(".FlowRun-delete-function").cloneNode(true).asInstanceOf[dom.html.Element]
 
+    val addParamButton = template.querySelector(".FlowRun-add-param").cloneNode(true).asInstanceOf[dom.html.Element]
+    val deleteParamButton = template.querySelector(".FlowRun-delete-param").cloneNode(true).asInstanceOf[dom.html.Element]
+
     val enterButton = template.querySelector(".FlowRun-btn-enter").cloneNode(true).asInstanceOf[dom.html.Element]
     val inputText = template.querySelector(".FlowRun-input-text").cloneNode(true).asInstanceOf[dom.html.Input]
     val inputSelect = template.querySelector(".FlowRun-input-select").cloneNode(true).asInstanceOf[dom.html.Select]
     
     FlowRunElements(template,
       addFunButton, deleteFunButton,
+      addParamButton, deleteParamButton,
       enterButton, inputText, inputSelect)
   }
 
@@ -71,6 +80,9 @@ object FlowRunElements {
 
     val addFunButton = button("Add").render
     val deleteFunButton = button("Delete").render
+
+    val addParamButton = button("+").render
+    val deleteParamButton = button("-").render
 
     val runButton = button("Run").render
     val enterButton = button("Run").render
@@ -90,6 +102,7 @@ object FlowRunElements {
       ).render
     FlowRunElements(template,
       addFunButton, deleteFunButton,
+      addParamButton, deleteParamButton,
       enterButton, inputText, inputSelect)
   }
 }

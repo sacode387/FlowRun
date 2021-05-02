@@ -18,29 +18,11 @@ class EditPanel(programModel: ProgramModel, flowRunElements: FlowRunElements, fl
       val nodeType = node.data("tpe").toString
       val varType = node.data("rawTpe").asInstanceOf[js.UndefOr[String]].toOption
 
-      def setLabel(): Unit = {
-        val maybeName = node.data("rawName").asInstanceOf[js.UndefOr[String]].toOption.getOrElse("")
-        val maybeTpe = node.data("rawTpe").asInstanceOf[js.UndefOr[String]].toOption.getOrElse("")
-        val maybeExpr = node.data("rawExpr").asInstanceOf[js.UndefOr[String]].toOption.filterNot(_.trim.isEmpty)
-        val maybeParams = node.data("rawParams").asInstanceOf[js.UndefOr[String]].toOption.getOrElse("")
-        val maybeExprText = maybeExpr.map(e => s" = $e").getOrElse("")
-        val maybeRetExprText = maybeExpr.map(e => s" $e").getOrElse("")
-        val (newLabel, mul) = if nodeType == Node.Declare then
-          s"""$maybeName: $maybeTpe$maybeExprText""" -> 8
-        else if nodeType == Node.Assign then
-          s"""$maybeName$maybeExprText""" -> 8
-        else if nodeType == Node.Start then
-          s"""$maybeName($maybeParams): $maybeTpe""" -> 10
-        else if nodeType == Node.Return then
-          s"""return$maybeRetExprText""" -> 10
-        else if nodeType == Node.Input then
-          s"""$maybeName""" -> 8
-        else maybeExpr.getOrElse("") -> 10
-        val newLabelLength = 65 max (newLabel.length * mul)
-        node.data("label", newLabel)
-        node.data("width", newLabelLength)
-      }
-      
+      // clear first, prepare for new inputs
+      flowRunElements.editStatement.innerText = ""
+      flowRunElements.editStatement.appendChild(div(s"Editing $nodeType:").render)
+
+      // name input
       val nameInputElem = flowRunElements.newInputText
       nameInputElem.value = node.data("rawName").asInstanceOf[js.UndefOr[String]].getOrElse("")
       nameInputElem.placeholder = if nodeType == Node.Start then "myFun" else "x"
@@ -61,7 +43,7 @@ class EditPanel(programModel: ProgramModel, flowRunElements: FlowRunElements, fl
             else if nodeType == Node.Assign then
               programModel.updateAssign(Request.UpdateAssign(nodeId, name = Some(newName)))
             node.data("rawName", newName)
-            setLabel()
+            setLabel(node, nodeType)
             None
         
         errorMsg match
@@ -70,7 +52,15 @@ class EditPanel(programModel: ProgramModel, flowRunElements: FlowRunElements, fl
           case None =>
             flowrunChannel := FlowRun.Event.SyntaxSuccess
       }
+
+      var hasName = false
+      var filledName = false
+      if Set(Node.Declare, Node.Start, Node.Assign, Node.Input).contains(nodeType) then
+        hasName = true
+        filledName = nameInputElem.value.nonEmpty
+        flowRunElements.editStatement.appendChild(nameInputElem)
       
+      // expression input
       val exprInputElem = flowRunElements.newInputText
       exprInputElem.value = node.data("rawExpr").asInstanceOf[js.UndefOr[String]].getOrElse("")
       exprInputElem.placeholder = if nodeType == Node.Output then "\"Hello!\""
@@ -85,11 +75,11 @@ class EditPanel(programModel: ProgramModel, flowRunElements: FlowRunElements, fl
             if nodeType == Node.Declare && newExprText.isEmpty then
               programModel.updateDeclare(Request.UpdateDeclare(nodeId, expr = Some(None)))
               node.data("rawExpr", newExprText)
-              setLabel()
+              setLabel(node, nodeType)
             else if nodeType == Node.Return && newExprText.isEmpty then
               programModel.updateReturn(Request.UpdateReturn(nodeId, expr = Some(None)))
               node.data("rawExpr", newExprText)
-              setLabel()
+              setLabel(node, nodeType)
             else
               flowrunChannel := FlowRun.Event.SyntaxError(e.getMessage)
           case Success(_) =>
@@ -108,54 +98,74 @@ class EditPanel(programModel: ProgramModel, flowRunElements: FlowRunElements, fl
               programModel.updateOutput(Request.UpdateOutput(nodeId, newExprText))
 
             node.data("rawExpr", newExprText)
-            setLabel()
+            setLabel(node, nodeType)
         }
       }
 
+      var hasExpr = false
+      if Set(Node.Declare, Node.Assign, Node.Output, Node.Call, Node.Return, Node.If).contains(nodeType) then
+        hasExpr = true
+        if Set(Node.Declare, Node.Assign).contains(nodeType) then
+          flowRunElements.editStatement.appendChild(span(" = ").render)
+        flowRunElements.editStatement.appendChild(exprInputElem)
+
+      // type input
       val typeSelectElem = flowRunElements.newInputSelect
-      Expression.Type.values.foreach { tpe =>
+      val types = if nodeType == Node.Start then Expression.Type.values
+        else Expression.Type.values.filterNot(_ == Expression.Type.Void)
+      types.foreach { tpe =>
         val typeItem = option(value := tpe.toString)(tpe.toString).render
         typeSelectElem.add(typeItem)
       }
       typeSelectElem.onchange = { (e: dom.Event) =>
         val thisElem = e.target.asInstanceOf[dom.html.Select]
-        val newType = Expression.Type.values(thisElem.selectedIndex)
+        val newType = Expression.Type.valueOf(thisElem.value)
         if nodeType == Node.Declare then
           programModel.updateDeclare(Request.UpdateDeclare(nodeId, tpe = Some(newType)))
         else
           programModel.updateFunction(Request.UpdateFunction(nodeId, tpe = Some(newType)))
         
         node.data("rawTpe", newType.toString)
-        setLabel()
+        setLabel(node, nodeType)
       }
 
-      // clear first, prepare for new inputs
-      flowRunElements.editStatement.innerText = ""
-      flowRunElements.editStatement.appendChild(div(s"Editing $nodeType:").render)
-
-      // append edit elements
-      var hasName = false
-      var filledName = false
-      if (Set(Node.Declare, Node.Start, Node.Assign, Node.Input).contains(nodeType)) {
-        hasName = true
-        filledName = nameInputElem.value.nonEmpty
-        flowRunElements.editStatement.appendChild(nameInputElem)
-      }
-
-      if (Set(Node.Declare, Node.Start).contains(nodeType)) {
+      if Set(Node.Declare, Node.Start).contains(nodeType) then
         typeSelectElem.value = varType.get // select appropriate type
         flowRunElements.editStatement.appendChild(span(": ").render)
         flowRunElements.editStatement.appendChild(typeSelectElem)
-      }
 
-      var hasExpr = false
-      if (Set(Node.Declare, Node.Assign, Node.Output, Node.Call, Node.Return, Node.If).contains(nodeType)) {
-        hasExpr = true
-        if Set(Node.Declare, Node.Assign).contains(nodeType) then
-          flowRunElements.editStatement.appendChild(span(" = ").render)
-        flowRunElements.editStatement.appendChild(exprInputElem)
-      }
+      // params inputs
+      if nodeType == Node.Start then
+        val addParamElem = flowRunElements.addParamButton
+        addParamElem.onclick = _ => {
+          val name = ""
+          val tpe = Expression.Type.Integer.toString
+          val params = getParams(node)
+          val idx = params.length
+          val newParams = params ++ List(name -> tpe)
+          val paramNameInput = getParamNameInput(node, nodeId, nodeType, name, idx)
+          val paramTpeInput = getParamTpeInput(node, nodeId, nodeType, tpe, idx)
+          flowRunElements.editStatement.appendChild(
+            div(paramNameInput, paramTpeInput).render
+          )
+          paramNameInput.focus()
+          programModel.updateFunction(Request.UpdateFunction(nodeId, parameters = Some(newParams)))
+          node.data("rawParams", newParams.map((n,t) => s"$n: $t").mkString(","))
+          setLabel(node, nodeType)  
+        }
+        flowRunElements.editStatement.appendChild(div(addParamElem).render)
 
+        val params = getParams(node)
+        params.zipWithIndex.foreach { case ((name, tpe), idx) =>
+          val paramNameInput = getParamNameInput(node, nodeId, nodeType, name, idx)
+          val paramTpeInput = getParamTpeInput(node, nodeId, nodeType, tpe, idx)
+          flowRunElements.editStatement.appendChild(
+            div(paramNameInput, paramTpeInput).render
+          )
+        }
+      end if
+
+      // focus
       if !hasExpr || (hasName && !filledName) then
         nameInputElem.focus()
         nameInputElem.select()
@@ -165,5 +175,67 @@ class EditPanel(programModel: ProgramModel, flowRunElements: FlowRunElements, fl
         if exprStr.length > 2 && exprStr.count(_ == '"') == 2 && exprStr.head == '"' && exprStr.last == '"' then
           exprInputElem.setSelectionRange(1, exprStr.length - 1)
     })    
+  }
+
+  private def setLabel(node: js.Dynamic, nodeType: String): Unit = {
+    val maybeName = node.data("rawName").asInstanceOf[js.UndefOr[String]].toOption.getOrElse("")
+    val maybeTpe = node.data("rawTpe").asInstanceOf[js.UndefOr[String]].toOption.getOrElse("")
+    val maybeExpr = node.data("rawExpr").asInstanceOf[js.UndefOr[String]].toOption.filterNot(_.trim.isEmpty)
+    val params = node.data("rawParams").asInstanceOf[js.UndefOr[String]].toOption.getOrElse("")
+    val maybeExprText = maybeExpr.map(e => s" = $e").getOrElse("")
+    val maybeRetExprText = maybeExpr.map(e => s" $e").getOrElse("")
+    val (newLabel, mul) = if nodeType == Node.Declare then
+      s"""$maybeName: $maybeTpe$maybeExprText""" -> 8
+    else if nodeType == Node.Assign then
+      s"""$maybeName$maybeExprText""" -> 8
+    else if nodeType == Node.Start then
+      s"""$maybeName($params): $maybeTpe""" -> 10
+    else if nodeType == Node.Return then
+      s"""return$maybeRetExprText""" -> 10
+    else if nodeType == Node.Input then
+      s"""$maybeName""" -> 8
+    else maybeExpr.getOrElse("") -> 10
+    val newLabelLength = 65 max (newLabel.length * mul)
+    node.data("label", newLabel)
+    node.data("width", newLabelLength)
+  }
+
+  private def getParams(node: js.Dynamic): List[(String, String)] = {
+    val paramsStr = node.data("rawParams").asInstanceOf[js.UndefOr[String]].toOption.getOrElse("")
+    if paramsStr.trim.isEmpty then List.empty
+    else
+      paramsStr.split(",").map { p =>
+        val parts = p.split(":")
+        parts(0).trim -> parts(1).trim
+      }.toList
+  }
+
+  private def getParamNameInput(node: js.Dynamic, nodeId: String, nodeType: String, name: String, idx: Int) = {
+    val paramNameInput = flowRunElements.newInputText
+    paramNameInput.value = name
+    paramNameInput.oninput = _ => {
+      println("PARAM NAMEEEEEEEEEE")
+      val params = getParams(node)
+      val newParam = params(idx).copy(_1 = paramNameInput.value)
+      val newParams = params.patch(idx, List(newParam), 1)
+      programModel.updateFunction(Request.UpdateFunction(nodeId, parameters = Some(newParams)))
+      node.data("rawParams", newParams.map((n,t) => s"$n: $t").mkString(","))
+      setLabel(node, nodeType)
+    }
+    paramNameInput
+  }
+
+  private def getParamTpeInput(node: js.Dynamic, nodeType: String, nodeId: String, value: String, idx: Int) = {
+    val paramTpeInput = flowRunElements.newInputText
+    paramTpeInput.value = value
+    paramTpeInput.oninput = _ => {
+      val params = getParams(node)
+      val newParam = params(idx).copy(_2 = paramTpeInput.value)
+      val newParams = params.patch(idx, List(newParam), 1)
+      programModel.updateFunction(Request.UpdateFunction(nodeId, parameters = Some(newParams)))
+      node.data("rawParams", newParams.map((n,t) => s"$n: $t").mkString(","))
+      setLabel(node, nodeType)
+    }
+    paramTpeInput
   }
 }

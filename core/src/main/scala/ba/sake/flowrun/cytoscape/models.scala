@@ -26,6 +26,7 @@ case class Node(
   rawParams: String = "",
   id: String = UUID.randomUUID.toString
 ) {
+  import scalajs.js.JSConverters.*
 
   private val (ww: Int, hh: Int) =
     if (Set(Node.Begin, Node.End).contains(tpe)) (70, 30)
