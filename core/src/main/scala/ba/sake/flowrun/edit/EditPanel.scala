@@ -112,7 +112,7 @@ class EditPanel(programModel: ProgramModel, flowRunElements: FlowRunElements, fl
       // type input
       val typeSelectElem = flowRunElements.newInputSelect
       val types = if nodeType == Node.Start then Expression.Type.values
-        else Expression.Type.values.filterNot(_ == Expression.Type.Void)
+        else Expression.Type.VarTypes
       types.foreach { tpe =>
         val typeItem = option(value := tpe.toString)(tpe.toString).render
         typeSelectElem.add(typeItem)
@@ -143,8 +143,8 @@ class EditPanel(programModel: ProgramModel, flowRunElements: FlowRunElements, fl
           val params = getParams(node)
           val idx = params.length
           val newParams = params ++ List(name -> tpe)
-          val paramNameInput = getParamNameInput(node, nodeId, nodeType, name, idx)
-          val paramTpeInput = getParamTpeInput(node, nodeId, nodeType, tpe, idx)
+          val paramNameInput = getParamNameInput(node, nodeType, nodeId, name, idx)
+          val paramTpeInput = getParamTpeInput(node, nodeType, nodeId, tpe, idx)
           flowRunElements.editStatement.appendChild(
             div(paramNameInput, paramTpeInput).render
           )
@@ -157,8 +157,8 @@ class EditPanel(programModel: ProgramModel, flowRunElements: FlowRunElements, fl
 
         val params = getParams(node)
         params.zipWithIndex.foreach { case ((name, tpe), idx) =>
-          val paramNameInput = getParamNameInput(node, nodeId, nodeType, name, idx)
-          val paramTpeInput = getParamTpeInput(node, nodeId, nodeType, tpe, idx)
+          val paramNameInput = getParamNameInput(node, nodeType, nodeId, name, idx)
+          val paramTpeInput = getParamTpeInput(node, nodeType, nodeId, tpe, idx)
           flowRunElements.editStatement.appendChild(
             div(paramNameInput, paramTpeInput).render
           )
@@ -210,11 +210,10 @@ class EditPanel(programModel: ProgramModel, flowRunElements: FlowRunElements, fl
       }.toList
   }
 
-  private def getParamNameInput(node: js.Dynamic, nodeId: String, nodeType: String, name: String, idx: Int) = {
+  private def getParamNameInput(node: js.Dynamic, nodeType: String, nodeId: String, name: String, idx: Int) = {
     val paramNameInput = flowRunElements.newInputText
     paramNameInput.value = name
     paramNameInput.oninput = _ => {
-      println("PARAM NAMEEEEEEEEEE")
       val params = getParams(node)
       val newParam = params(idx).copy(_1 = paramNameInput.value)
       val newParams = params.patch(idx, List(newParam), 1)
@@ -225,10 +224,14 @@ class EditPanel(programModel: ProgramModel, flowRunElements: FlowRunElements, fl
     paramNameInput
   }
 
-  private def getParamTpeInput(node: js.Dynamic, nodeType: String, nodeId: String, value: String, idx: Int) = {
-    val paramTpeInput = flowRunElements.newInputText
-    paramTpeInput.value = value
-    paramTpeInput.oninput = _ => {
+  private def getParamTpeInput(node: js.Dynamic, nodeType: String, nodeId: String, selValue: String, idx: Int) = {
+    val paramTpeInput = flowRunElements.newInputSelect
+    Expression.Type.VarTypes.foreach { tpe =>
+      val typeItem = option(value := tpe.toString)(tpe.toString).render
+      paramTpeInput.add(typeItem)
+    }
+    paramTpeInput.value = selValue
+    paramTpeInput.onchange = (e: dom.Event) => {
       val params = getParams(node)
       val newParam = params(idx).copy(_2 = paramTpeInput.value)
       val newParams = params.patch(idx, List(newParam), 1)

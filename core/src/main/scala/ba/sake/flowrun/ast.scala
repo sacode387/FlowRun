@@ -29,6 +29,8 @@ object Expression:
     case Real
     case String
     case Boolean
+  object Type:
+    val VarTypes = Type.values.filterNot(_ == Type.Void)
 
 case class BoolOrComparison(boolAndComparison: BoolAndComparison, boolAndComparisons: List[BoolAndComparison]) derives NativeConverter
 
@@ -115,7 +117,7 @@ case class Function(
   
   def label: String =
     val title = if isMain then "begin" else name
-    val params = if isMain then "" else s"(${parameters.map(_._1).mkString(",")})"
+    val params = if isMain then "" else s"(${parameters.map((n,t) => s"$n: $t").mkString(",")})"
     s"$title$params: $tpe"
 
 case class Program(
