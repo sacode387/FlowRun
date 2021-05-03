@@ -115,14 +115,14 @@ final class Lexer(nodeId: String, input: String) {
         else tokens += Token(Type.String, text, pos)
         i += 1 // once more for closing "
       else
-        error(s"Unknown character '$lookahead'", pos)
+        error(s"Unknown symbol '$lookahead'", pos)
 
     tokens += Token(Type.EOF, "<EOF>", i) // special end marker
     tokens.toList
   end lex
 
   private def error(msg: String, pos: Int) =
-    val where = if pos >= input.length-1 then "end of input" else s"position $pos"
+    val where = if pos >= input.length-1 then "end of input" else s"index $pos"
     throw LexException(s"$msg at $where", nodeId)
 }
 

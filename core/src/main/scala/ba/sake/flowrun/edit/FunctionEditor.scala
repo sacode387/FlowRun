@@ -30,6 +30,12 @@ class FunctionEditor(
   ContextMenu(programModel, cy).setup()
   EditPanel(programModel, flowRunElements, flowrunChannel, cy).setup()
   
+  def disable(): Unit =
+    cy.asDyn.autounselectify(true)
+
+  def enable(): Unit =
+    cy.asDyn.autounselectify(false)
+
 
   cy.asDyn.on("unselect add remove", "node", (evt: js.Dynamic) => {
     // node not selected anymore, hide the inputs...

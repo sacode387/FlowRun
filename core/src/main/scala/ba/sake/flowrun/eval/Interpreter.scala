@@ -38,6 +38,7 @@ class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[FlowRun.Ev
     futureExec.onComplete {
       case Success(_) =>
         state = State.FINISHED
+        flowrunChannel := FlowRun.Event.EvalSuccess
       case Failure(e: EvalException) =>
         state = State.FAILED
         flowrunChannel := FlowRun.Event.EvalError(e.nodeId, e.getMessage)
@@ -255,7 +256,7 @@ class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[FlowRun.Ev
         val futureArgs = execSequentially(List.empty, argumentExprs, (acc, nextExpr) => {
           eval(id, nextExpr).map(arg => acc.appended(arg))
         })
-        futureArgs.flatMap{ args =>
+        futureArgs.flatMap { args =>
           val argsWithTypes = args.zip(fun.parameters).map { case (arg, (paramName, paramTpe)) =>
             (paramName, paramTpe, arg)
           }

@@ -58,7 +58,6 @@ class FlowRun(mountElem: dom.Element, programJson: Option[String] = None) {
       functionSelector.add(funItem)
     }
 
-    
 
     val deleteFunButton = flowRunElements.deleteFunButton
     deleteFunButton.onclick = { (e: dom.Event) =>
@@ -87,6 +86,7 @@ class FlowRun(mountElem: dom.Element, programJson: Option[String] = None) {
 
     interpreter = Interpreter(programModel, flowrunChannel) // fresh SymTable etc
     interpreter.run()
+    functionEditor.disable()
   }
 
   flowRunElements.addFunButton.onclick = { (e: dom.Event) =>
@@ -105,17 +105,24 @@ class FlowRun(mountElem: dom.Element, programJson: Option[String] = None) {
 
   import FlowRun.Event.*
   flowrunChannel.attach {
+    case EvalSuccess =>
+      val newOutput = pre("Program finished.").render
+      flowRunElements.output.appendChild(newOutput)
+      functionEditor.enable()
+    case SyntaxSuccess =>
+      // TODO REMOVE SAMO SYNTAX ERORE !!!!!!!!!
+      flowRunElements.output.innerText = ""
+      flowRunElements.output.classList.remove("error")
     case SyntaxError(msg) =>
       var output = s"Started at: $lastRun"
       output += "\nError: " + msg
       displayError(output)
+      functionEditor.enable()
     case EvalError(_, msg) =>
       var output = s"Started at: $lastRun"
       output += "\nError: " + msg
       displayError(output)
-    case SyntaxSuccess =>
-      flowRunElements.output.innerText = ""
-      flowRunElements.output.classList.remove("error")
+      functionEditor.enable()
     case EvalOutput(output) =>
       val newOutput = pre(output).render
       flowRunElements.output.appendChild(newOutput)
@@ -186,11 +193,12 @@ object FlowRun:
     NativeConverter[Program].fromNative(js.JSON.parse(jsonString))
 
   enum Event:
-    case SyntaxError(msg: String)
+    case EvalSuccess
     case EvalError(nodeId: String, msg: String)
-    case SyntaxSuccess
     case EvalOutput(msg: String)
     case EvalInput(nodeId: String, name: String)
+    case SyntaxSuccess
+    case SyntaxError(msg: String)
     case SymbolTableUpdated
     case FunctionUpdated
 
