@@ -32,7 +32,7 @@ class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[FlowRun.Ev
     }
 
     val futureExec = futureValidateFuncs.flatMap { _ =>
-      interpret(programModel.ast.main)
+      interpret(programModel.ast.main, List.empty)
     }
 
     futureExec.onComplete {
@@ -56,8 +56,12 @@ class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[FlowRun.Ev
   def continue(): Unit =
     state = State.RUNNING
 
-  private def interpret(fun: Function): Future[Any] =
+  private def interpret(fun: Function, arguments: List[(String, Expression.Type, Any)]): Future[Any] =
     symTab.enterScope(fun.name)
+    arguments.foreach { (name, tpe, value) =>
+      val key = SymbolKey(name, Symbol.Kind.Variable)
+      symTab.add(null, key, tpe, Some(value))
+    }
     execSequentially((): Any, fun.statements, (_, s) => interpret(s)).map { result =>
       symTab.exitScope()
       result
@@ -95,7 +99,7 @@ class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[FlowRun.Ev
           symTab.setValue(id, name, exprValue)
         }
       case Call(id, expr) =>
-        eval(id, parseExpr(id, expr)).map(_ =>())
+        eval(id, parseExpr(id, expr)).map(_ => ())
       case Input(id, name) =>
         if !symTab.isDeclaredVar(name) then
           throw EvalException(s"Variable '$name' is not declared.", id)
@@ -248,7 +252,16 @@ class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[FlowRun.Ev
         val key = SymbolKey(name, Symbol.Kind.Function)
         val funSym = symTab.getSymbol(id, key) // check if defined
         val fun = allFunctions.find(_.name == name).get
-        interpret(fun)
+        val futureArgs = execSequentially(List.empty, argumentExprs, (acc, nextExpr) => {
+          eval(id, nextExpr).map(arg => acc.appended(arg))
+        })
+        futureArgs.flatMap{ args =>
+          val argsWithTypes = args.zip(fun.parameters).map { case (arg, (paramName, paramTpe)) =>
+            (paramName, paramTpe, arg)
+          }
+          interpret(fun, argsWithTypes)
+        }
+        
   
   // adapted https://stackoverflow.com/a/46619347/4496364
   private def waitForContinue(): Future[Unit] = {

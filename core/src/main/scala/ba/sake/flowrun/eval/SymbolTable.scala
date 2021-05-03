@@ -114,7 +114,9 @@ class Scope(val name: String, val parentScope: Option[Scope], flowrunChannel: Ch
     }
 
   private def error(msg: String, nodeId: String) =
-    throw EvalException(msg, nodeId)
+    // TODO val maybeFun = if name.startsWith("fun-") then s" [in function '$name']" else ""
+    val maybeFun = s" [in function '$name']"
+    throw EvalException(msg + maybeFun, nodeId)
   
   override def toString =
     s"$name ; $symbols ; $childScopes"
