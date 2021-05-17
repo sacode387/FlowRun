@@ -11,6 +11,7 @@ unary               -> ("!" | "-") unary
                     | atom ;
 atom                -> NUMBER | STRING | "true" | "false"
                     | ID
+                    | ID "(" expression? ( "," expression)* ")"
                     | "(" expression ")" ;
 
 ID                  -> [a-zA-Z] [a-zA-Z0-9]*

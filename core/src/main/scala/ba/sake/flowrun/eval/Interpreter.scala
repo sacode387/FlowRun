@@ -257,6 +257,7 @@ class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[FlowRun.Ev
           eval(id, nextExpr).map(arg => acc.appended(arg))
         })
         futureArgs.flatMap { args =>
+          // TODO validate zip
           val argsWithTypes = args.zip(fun.parameters).map { case (arg, (paramName, paramTpe)) =>
             (paramName, paramTpe, arg)
           }
