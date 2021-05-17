@@ -104,26 +104,26 @@ class Scope(val name: String, val parentScope: Option[Scope], flowrunChannel: Ch
         sym
 
   private def maybeSymbol(key: SymbolKey): Option[Symbol] =
-    val scopesChain = mutable.ListBuffer(this)
+    val scopesChain = mutable.ListBuffer.empty[Scope]
     var tmpScope = this
     while tmpScope.parentScope.isDefined do
       scopesChain += tmpScope.parentScope.get
       tmpScope = tmpScope.parentScope.get
-    scopesChain.foldLeft(this.get(key)) { (maybeSym, scope) =>
-      maybeSym.orElse(scope.get(key))
+    scopesChain.foldLeft(this.get(key)) { (maybeSym, parentScope) =>
+      maybeSym.orElse(parentScope.allSymbols.get(key))
     }
 
   private def error(msg: String, nodeId: String) =
     // TODO val maybeFun = if name.startsWith("fun-") then s" [in function '$name']" else ""
     val maybeFun = s" [in function '$name']"
     throw EvalException(msg + maybeFun, nodeId)
-  
-  override def toString =
-    s"$name ; $symbols ; $childScopes"
 end Scope
 
 case class SymbolKey(name: String, kind: Symbol.Kind)
-case class Symbol(key: SymbolKey, tpe: Type, value: Option[Any] = None, scope: Scope)
+
+case class Symbol(key: SymbolKey, tpe: Type, value: Option[Any] = None, scope: Scope):
+  override def toString: String =
+    s"${key}: ${tpe}"
 
 object Symbol:
   enum Kind:

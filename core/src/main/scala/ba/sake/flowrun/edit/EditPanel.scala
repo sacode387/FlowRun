@@ -59,7 +59,32 @@ class EditPanel(programModel: ProgramModel, flowRunElements: FlowRunElements, fl
         hasName = true
         filledName = nameInputElem.value.nonEmpty
         flowRunElements.editStatement.appendChild(nameInputElem)
-      
+
+      // type input
+      val typeSelectElem = flowRunElements.newInputSelect
+      val types = if nodeType == Node.Start then Expression.Type.values
+        else Expression.Type.VarTypes
+      types.foreach { tpe =>
+        val typeItem = option(value := tpe.toString)(tpe.toString).render
+        typeSelectElem.add(typeItem)
+      }
+      typeSelectElem.onchange = { (e: dom.Event) =>
+        val thisElem = e.target.asInstanceOf[dom.html.Select]
+        val newType = Expression.Type.valueOf(thisElem.value)
+        if nodeType == Node.Declare then
+          programModel.updateDeclare(Request.UpdateDeclare(nodeId, tpe = Some(newType)))
+        else
+          programModel.updateFunction(Request.UpdateFunction(nodeId, tpe = Some(newType)))
+        
+        node.data("rawTpe", newType.toString)
+        setLabel(node, nodeType)
+      }
+
+      if Set(Node.Declare, Node.Start).contains(nodeType) then
+        typeSelectElem.value = varType.get // select appropriate type
+        flowRunElements.editStatement.appendChild(span(": ").render)
+        flowRunElements.editStatement.appendChild(typeSelectElem)
+
       // expression input
       val exprInputElem = flowRunElements.newInputText
       exprInputElem.value = node.data("rawExpr").asInstanceOf[js.UndefOr[String]].getOrElse("")
@@ -108,31 +133,6 @@ class EditPanel(programModel: ProgramModel, flowRunElements: FlowRunElements, fl
         if Set(Node.Declare, Node.Assign).contains(nodeType) then
           flowRunElements.editStatement.appendChild(span(" = ").render)
         flowRunElements.editStatement.appendChild(exprInputElem)
-
-      // type input
-      val typeSelectElem = flowRunElements.newInputSelect
-      val types = if nodeType == Node.Start then Expression.Type.values
-        else Expression.Type.VarTypes
-      types.foreach { tpe =>
-        val typeItem = option(value := tpe.toString)(tpe.toString).render
-        typeSelectElem.add(typeItem)
-      }
-      typeSelectElem.onchange = { (e: dom.Event) =>
-        val thisElem = e.target.asInstanceOf[dom.html.Select]
-        val newType = Expression.Type.valueOf(thisElem.value)
-        if nodeType == Node.Declare then
-          programModel.updateDeclare(Request.UpdateDeclare(nodeId, tpe = Some(newType)))
-        else
-          programModel.updateFunction(Request.UpdateFunction(nodeId, tpe = Some(newType)))
-        
-        node.data("rawTpe", newType.toString)
-        setLabel(node, nodeType)
-      }
-
-      if Set(Node.Declare, Node.Start).contains(nodeType) then
-        typeSelectElem.value = varType.get // select appropriate type
-        flowRunElements.editStatement.appendChild(span(": ").render)
-        flowRunElements.editStatement.appendChild(typeSelectElem)
 
       // params inputs
       if nodeType == Node.Start then

@@ -24,14 +24,14 @@ class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[FlowRun.Ev
 
     state = State.RUNNING
 
-    val futureValidateFuncs = Future {
+    val futureDeclareFuncs = Future.successful {
       allFunctions.foreach { fun =>
         val key = SymbolKey(fun.name, Symbol.Kind.Function)
         symTab.add(null, key, fun.tpe, None)
       }
     }
 
-    val futureExec = futureValidateFuncs.flatMap { _ =>
+    val futureExec = futureDeclareFuncs.flatMap { _ =>
       interpret(programModel.ast.main, List.empty)
     }
 
@@ -106,7 +106,7 @@ class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[FlowRun.Ev
           throw EvalException(s"Variable '$name' is not declared.", id)
         state = State.PAUSED
         flowrunChannel := FlowRun.Event.EvalInput(id, name)
-        Future.successful(())
+        waitForContinue()
       case Output(id, expr) =>
         eval(id, parseExpr(id, expr)).map { outputValue =>
           val newOutput = Option(outputValue).getOrElse("null").toString
@@ -269,7 +269,6 @@ class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[FlowRun.Ev
   private def waitForContinue(): Future[Unit] = {
     val p = Promise[Unit]()
     val pingHandle: js.timers.SetIntervalHandle = js.timers.setInterval(10) {
-      //println("STATE: " + state)
       if state == State.RUNNING && !p.isCompleted then
         p.success(())
     }
