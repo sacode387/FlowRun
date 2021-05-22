@@ -1,5 +1,6 @@
 package ba.sake.flowrun
 
+import scala.util.Try
 import scalajs.js
 import org.scalajs.dom
 import org.scalajs.dom.window
@@ -11,7 +12,7 @@ extension (any: Any) {
 object TypeUtils:
   import Expression.Type
   // check if assignable, and optionally casts the type
-  def getUpdateValue(nodeId: String, name: String, expectedType: Type, value: Any): Any = {
+  def getUpdateValue(nodeId: String, name: String, expectedType: Type, value: Any): Try[Any] = Try {
     // prevent small numbers to be shown as Byte,Short etc
     val valueType = value.getClass.getSimpleName match
       case "Byte" | "Short" | "Integer" | "Long"  => "Integer"
@@ -25,6 +26,6 @@ object TypeUtils:
       case (Type.Boolean, "Boolean")        => value
       case (expectedType, _) =>
         throw eval.EvalException(
-          s"Cannot assign value of type '$valueType' to a variable of type '$expectedType'", nodeId)
+          s"Expected type: '$expectedType', got type: '$valueType' for value ${value} ", nodeId)
     }
   }

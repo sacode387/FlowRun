@@ -76,6 +76,9 @@ class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[FlowRun.Ev
       case Declare(id, name, tpe, initValue) =>
         if name.trim.isEmpty then
           throw EvalException(s"Not a valid name: '$name'", id)
+
+      // TODO validate reserved identifiers
+
         val maybeInitValueExpr = initValue.map(iv => parseExpr(id, iv))
         maybeInitValueExpr match
           case None =>
@@ -84,7 +87,7 @@ class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[FlowRun.Ev
             Future.successful(())
           case Some(expr) =>
             eval(id, expr).map { v =>
-              TypeUtils.getUpdateValue(id, name, tpe, v) // validate
+              TypeUtils.getUpdateValue(id, name, tpe, v).get // validate
               val key = SymbolKey(name, Symbol.Kind.Variable)
               symTab.add(id, key, tpe, Some(v))
               ()
@@ -249,19 +252,29 @@ class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[FlowRun.Ev
       case FalseLit           => Future.successful(false)
       case Parens(expression) => eval(id, expression)
       case FunctionCall(name, argumentExprs) =>
-        // TODO handle predefined functions: abs, sin, cos...
         val key = SymbolKey(name, Symbol.Kind.Function)
         val funSym = symTab.getSymbol(id, key) // check if defined
-        val fun = allFunctions.find(_.name == name).get
+
         val futureArgs = execSequentially(List.empty, argumentExprs, (acc, nextExpr) => {
           eval(id, nextExpr).map(arg => acc.appended(arg))
         })
+        
         futureArgs.flatMap { args =>
-          // TODO validate zip
-          val argsWithTypes = args.zip(fun.parameters).map { case (arg, (paramName, paramTpe)) =>
-            (paramName, paramTpe, arg)
-          }
-          interpret(fun, argsWithTypes)
+          if name == "abs" then
+            // TODO handle all predefined functions
+            Future.successful(Math.abs(args.head.asInstanceOf[Int]))
+          else
+            val fun = allFunctions.find(_.name == name).get
+            if args.size != fun.parameters.size then
+              throw EvalException(s"Wrong number of parameters. Expected: ${fun.parameters.size}, got ${args.size}", id)
+            val argsWithTypes = args.zip(fun.parameters).zipWithIndex.map { case ((arg, (paramName, paramTpe)), idx) =>
+              // validate expected type
+              println("FFFFF " + fun)
+              if TypeUtils.getUpdateValue(id, paramName, paramTpe, arg).isFailure then
+                throw EvalException(s"Expected: '${paramName}: ${paramTpe}' at index $idx, got value '$arg'", id)
+              (paramName, paramTpe, arg)
+            }
+            interpret(fun, argsWithTypes)
         }
         
   

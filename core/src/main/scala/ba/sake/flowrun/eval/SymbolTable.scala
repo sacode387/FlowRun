@@ -8,6 +8,10 @@ import ba.sake.flowrun.Expression.Type
 class SymbolTable(flowrunChannel: Channel[FlowRun.Event]) {
 
   val globalScope = Scope("GLOBAL", None, flowrunChannel)
+  locally {
+    val key = SymbolKey("abs", Symbol.Kind.Function)
+    globalScope.add(null, key, Type.Integer, None)
+  }
   
   private var currentScope = globalScope
 
@@ -78,7 +82,7 @@ class Scope(val name: String, val parentScope: Option[Scope], flowrunChannel: Ch
   def setValue(nodeId: String, name: String, value: Any): Unit =
     val key = SymbolKey(name, Symbol.Kind.Variable)
     val sym = getSymbol(nodeId, key)
-    val updateValue = TypeUtils.getUpdateValue(nodeId, name, sym.tpe, value)
+    val updateValue = TypeUtils.getUpdateValue(nodeId, name, sym.tpe, value).get
     val updatedSym = sym.copy(value = Some(updateValue))
     sym.scope.set(key, updatedSym)
     flowrunChannel := FlowRun.Event.SymbolTableUpdated

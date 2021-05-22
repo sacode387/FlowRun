@@ -98,7 +98,6 @@ final class Lexer(nodeId: String, input: String) {
         while i < input.length && input(i).isLetterOrDigit do
           text += input(i)
           i += 1
-        // TODO validate identifierrrrrrrrrrrrrr
         val token = text match
           case "true"   => Token(Type.True, "true", pos)
           case "false"  => Token(Type.False, "false", pos)
