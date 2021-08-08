@@ -15,6 +15,8 @@ class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[FlowRun.Ev
 
   private var state = State.INITIALIZED
 
+  // TODO add predefined functions also.. :)
+  // more general solution I guess...
   private def allFunctions = List(programModel.ast.main) ++ programModel.ast.functions
 
   def run(): Future[Unit] = {
@@ -262,14 +264,14 @@ class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[FlowRun.Ev
         futureArgs.flatMap { args =>
           if name == "abs" then
             // TODO handle all predefined functions
-            Future.successful(Math.abs(args.head.asInstanceOf[Int]))
+            // TODO validate args..........
+            Future.successful(Math.abs(args.head.asInstanceOf[Double]))
           else
             val fun = allFunctions.find(_.name == name).get
             if args.size != fun.parameters.size then
               throw EvalException(s"Wrong number of parameters. Expected: ${fun.parameters.size}, got ${args.size}", id)
             val argsWithTypes = args.zip(fun.parameters).zipWithIndex.map { case ((arg, (paramName, paramTpe)), idx) =>
               // validate expected type
-              println("FFFFF " + fun)
               if TypeUtils.getUpdateValue(id, paramName, paramTpe, arg).isFailure then
                 throw EvalException(s"Expected: '${paramName}: ${paramTpe}' at index $idx, got value '$arg'", id)
               (paramName, paramTpe, arg)

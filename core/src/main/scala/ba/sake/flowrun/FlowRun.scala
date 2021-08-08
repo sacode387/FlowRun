@@ -37,6 +37,12 @@ class FlowRun(mountElem: dom.Element, programJson: Option[String] = None) {
 
   populateFunctions()
 
+
+  dom.document.getElementById("gencode").asInstanceOf[dom.html.Button].onclick = _ => {
+    val generator = new ba.sake.flowrun.codegen.ScalaGenerator(programModel.ast)
+    println(generator.generate)
+  }
+
   def json(): js.Any =
     programModel.ast.toNative
   
