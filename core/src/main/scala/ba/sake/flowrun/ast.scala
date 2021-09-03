@@ -106,9 +106,9 @@ end Statement
 case class Function(
   rawId: String,
   name: String,
-  parameters: List[(String, Expression.Type)] = List.empty,
+  parameters: List[(String, Expression.Type)] = List.empty[(String, Expression.Type)],
   tpe: Expression.Type = Expression.Type.Void,
-  statements: List[Statement] = List.empty
+  statements: List[Statement] = List.empty[Statement]// java.lang.AssertionError: cannot merge Constraint(...
 ) derives NativeConverter:
 
   val id = s"fun-$rawId"

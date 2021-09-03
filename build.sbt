@@ -1,9 +1,11 @@
 
 import org.scalajs.linker.interface.OutputPatterns
+ 
 
 inThisBuild(
   List(
-    scalaVersion := "3.0.0-RC3"
+    scalaVersion := "3.0.2",
+    evictionErrorLevel := Level.Warn
   )
 )
 
@@ -17,8 +19,8 @@ lazy val core = (project in file("core"))
       "com.lihaoyi" %%% "pprint" % "0.6.4"
     ).map(_.cross(CrossVersion.for3Use2_13)),
     libraryDependencies ++= Seq(
-      "org.getshaka" %%% "native-converter" % "0.4.1",
-      "com.lihaoyi" %%% "utest" % "0.7.9" % Test
+      "org.getshaka" %%% "native-converter" % "0.5.2",
+      "com.lihaoyi" %%% "utest" % "0.7.10" % Test
     ),
     scalacOptions ++= Seq(
       "-Xmax-inlines", "64",
@@ -27,6 +29,12 @@ lazy val core = (project in file("core"))
     ),
     scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.ESModule) },
 
+   // Compile / npmDependencies ++= Seq(
+   //   "cytoscape" -> "3.19.0",
+   //   "@types/cytoscape" -> "3.19.0"
+   // ),
+   // useYarn := true,
+
     // tests
     testFrameworks += new TestFramework("utest.runner.Framework"),
     Test / parallelExecution := false,
@@ -34,6 +42,7 @@ lazy val core = (project in file("core"))
     Test / jsEnv := new org.scalajs.jsenv.jsdomnodejs.JSDOMNodeJSEnv()
   )
   .enablePlugins(ScalaJSPlugin)
+//  .enablePlugins(ScalablyTypedConverterPlugin)
 
 lazy val demo = (project in file("demo"))
   .settings(

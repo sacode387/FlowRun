@@ -17,7 +17,7 @@ object InterpreterTests extends TestSuite {
   val tests = Tests {
     
     test("dry run") {
-      val main = Function("main", "main", List.empty, None, List())
+      val main = Function("main", "main")
       val programModel = ProgramModel(Program("p1", "program", main))
       val flowrunChannel = Channel[FlowRun.Event]
       val interpreter = Interpreter(programModel, flowrunChannel)
@@ -27,7 +27,7 @@ object InterpreterTests extends TestSuite {
     }
 
     test("declare") {
-      val main = Function("main", "main", List.empty, None,
+      val main = Function("main", "main", statements =
         List(
           Statement.Declare(getId(), "x", Expression.Type.Integer, None),
           Statement.Declare(getId(), "y", Expression.Type.Integer, Some("5"))
@@ -46,7 +46,7 @@ object InterpreterTests extends TestSuite {
     }
 
     test("assign") {
-      val main = Function("main", "main", List.empty, None,
+      val main = Function("main", "main", statements =
         List(
           Statement.Declare(getId(), "x", Expression.Type.Integer, None),
           Statement.Assign(getId(), "x", "6"),
@@ -65,7 +65,7 @@ object InterpreterTests extends TestSuite {
     }
 
     test("arithmetic") {
-      val main = Function("main", "main", List.empty, None, 
+      val main = Function("main", "main", statements =
         List(
           Statement.Declare(getId(), "x", Expression.Type.Integer, Some("5 + 3 * 2")),
           Statement.Declare(getId(), "y", Expression.Type.Integer, Some("15 / 3 - 2")),
@@ -85,7 +85,7 @@ object InterpreterTests extends TestSuite {
     }
 
     test("if-else") {
-      val main = Function("main", "main", List.empty, None,
+      val main = Function("main", "main", statements =
         List(
           Statement.Declare(getId(), "x", Expression.Type.Integer, None),
           Statement.If(getId(), "true",
