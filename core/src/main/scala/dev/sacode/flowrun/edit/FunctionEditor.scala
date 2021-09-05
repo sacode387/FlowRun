@@ -2,7 +2,7 @@ package dev.sacode.flowrun
 package edit
 
 import scalajs.js
-import scalajs.js.JSConverters._
+import scalajs.js.JSConverters.*
 import org.scalajs.dom
 import reactify.*
 import dev.sacode.flowrun.cytoscape.*

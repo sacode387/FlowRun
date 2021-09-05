@@ -7,6 +7,7 @@ import dev.sacode.flowrun.cytoscape.*
 import dev.sacode.flowrun.ProgramModel.Request
 
 class ContextMenu(programModel: ProgramModel, cy: cytoscape) {
+
   def setup(): Unit = {
     cy.contextMenus(
       js.Dynamic.literal(
@@ -19,42 +20,7 @@ class ContextMenu(programModel: ProgramModel, cy: cytoscape) {
             image =
               js.Dynamic.literal(src = "images/delete.svg", width = 12, height = 12, x = 3, y = 4),
             selector = s"node.${Node.Removable}",
-            onClickFunction = { (event: dom.Event) =>
-              val target = event.target.asDyn
-
-              val prevEdge = target.incomers("edge").first()
-              val prevEdgeLabel = prevEdge.data("label").toString
-              val prevId = target.incomers("node").first().data("id").toString
-
-              // MAYBE END NODE (IF/WHILE/FOR)
-              val maybeEndId = Option(target.data("endId").toString).filterNot(_.trim.isEmpty)
-              val nextId = maybeEndId match
-                case Some(endId) =>
-                  cy.asDyn
-                    .nodes(s"node[id = '$endId']")
-                    .outgoers("node")
-                    .first()
-                    .data("id")
-                    .toString
-                case None =>
-                  target.outgoers("node").first().data("id").toString
-
-              val isNextNodeEnd = target.outgoers("node").first().data("tpe").toString == Node.IfEnd
-
-              if (prevEdgeLabel == "true" || prevEdgeLabel == "false") && isNextNodeEnd then
-                val dummyNode = Node("", Node.Dummy, startId = prevId, endId = nextId)
-                cy.add(dummyNode.toLit)
-                cy.add(Edge(dummyNode.id, nextId, dir = "vert").toLit)
-                prevEdge.move(js.Dynamic.literal(target = dummyNode.id)) // rebind
-              else prevEdge.move(js.Dynamic.literal(target = nextId)) // rebind
-
-              val toDeleteIds = getDeleteIds(target, maybeEndId)
-              toDeleteIds.foreach(id => cy.remove(s"node[id = '$id']"))
-
-              doLayout(cy)
-
-              programModel.delete(Request.Delete(target.data("id").toString))
-            }
+            onClickFunction = removeFunction
           ),
           js.Dynamic.literal(
             id = "add-output",
@@ -63,34 +29,7 @@ class ContextMenu(programModel: ProgramModel, cy: cytoscape) {
             image =
               js.Dynamic.literal(src = "images/output.svg", width = 12, height = 12, x = 3, y = 4),
             selector = s"edge, node.${Node.Dummy}",
-            onClickFunction = { (event: dom.Event) =>
-
-              val target = event.target.asDyn
-
-              val newNode = Node("\"output\"", Node.Output, rawExpr = "\"output\"")
-              val (edge, nextNodeId, maybeDummy, dir) = getInsertData(target)
-              cy.add(newNode.toLit)
-              edge.move(js.Dynamic.literal(target = newNode.id))
-              cy.add(
-                Edge(
-                  newNode.id,
-                  nextNodeId,
-                  dir = dir,
-                  blockId = edge.data("blockId").toString
-                ).toLit
-              )
-              maybeDummy.foreach(dummyId => cy.remove(s"node[id = '$dummyId']"))
-
-              doLayout(cy)
-
-              programModel.addOutput(
-                Request.AddOutput(
-                  newNode.id,
-                  edge.source().data("id").toString,
-                  edge.data("blockId").toString
-                )
-              )
-            }
+            onClickFunction = addOutputFunction
           ),
           js.Dynamic.literal(
             id = "add-input",
@@ -99,34 +38,7 @@ class ContextMenu(programModel: ProgramModel, cy: cytoscape) {
             image =
               js.Dynamic.literal(src = "images/input.svg", width = 12, height = 12, x = 3, y = 4),
             selector = s"edge, node.${Node.Dummy}",
-            onClickFunction = { (event: dom.Event) =>
-
-              val target = event.target.asDyn
-
-              val newNode = Node("input", Node.Input, rawName = "input")
-              val (edge, nextNodeId, maybeDummy, dir) = getInsertData(target)
-              cy.add(newNode.toLit)
-              edge.move(js.Dynamic.literal(target = newNode.id))
-              cy.add(
-                Edge(
-                  newNode.id,
-                  nextNodeId,
-                  dir = dir,
-                  blockId = edge.data("blockId").toString
-                ).toLit
-              )
-              maybeDummy.foreach(dummyId => cy.remove(s"node[id = '$dummyId']"))
-
-              doLayout(cy)
-
-              programModel.addInput(
-                Request.AddInput(
-                  newNode.id,
-                  edge.source().data("id").toString,
-                  edge.data("blockId").toString
-                )
-              )
-            },
+            onClickFunction = addInputFunction,
             hasTrailingDivider = true
           ),
           js.Dynamic.literal(
@@ -136,36 +48,7 @@ class ContextMenu(programModel: ProgramModel, cy: cytoscape) {
             image =
               js.Dynamic.literal(src = "images/declare.svg", width = 12, height = 12, x = 3, y = 4),
             selector = s"edge, node.${Node.Dummy}",
-            onClickFunction = { (event: dom.Event) =>
-
-              val target = event.target.asDyn
-
-              val newNode = Node("declare", Node.Declare, rawTpe = "Integer")
-              val (edge, nextNodeId, maybeDummy, dir) = getInsertData(target)
-              cy.add(newNode.toLit)
-              edge.move(js.Dynamic.literal(target = newNode.id))
-              cy.add(
-                Edge(
-                  newNode.id,
-                  nextNodeId,
-                  dir = dir,
-                  blockId = edge.data("blockId").toString
-                ).toLit
-              )
-              maybeDummy.foreach(dummyId => cy.remove(s"node[id = '$dummyId']"))
-
-              doLayout(cy)
-
-              programModel.addDeclare(
-                Request.AddDeclare(
-                  newNode.id,
-                  "",
-                  Expression.Type.Integer,
-                  edge.source().data("id").toString,
-                  edge.data("blockId").toString
-                )
-              )
-            }
+            onClickFunction = addDeclareFunction
           ),
           js.Dynamic.literal(
             id = "add-assign",
@@ -174,34 +57,7 @@ class ContextMenu(programModel: ProgramModel, cy: cytoscape) {
             image =
               js.Dynamic.literal(src = "images/assign.svg", width = 12, height = 12, x = 3, y = 4),
             selector = s"edge, node.${Node.Dummy}",
-            onClickFunction = { (event: dom.Event) =>
-
-              val target = event.target.asDyn
-
-              val newNode = Node("assign", Node.Assign)
-              val (edge, nextNodeId, maybeDummy, dir) = getInsertData(target)
-              cy.add(newNode.toLit)
-              edge.move(js.Dynamic.literal(target = newNode.id))
-              cy.add(
-                Edge(
-                  newNode.id,
-                  nextNodeId,
-                  dir = dir,
-                  blockId = edge.data("blockId").toString
-                ).toLit
-              )
-              maybeDummy.foreach(dummyId => cy.remove(s"node[id = '$dummyId']"))
-
-              doLayout(cy)
-
-              programModel.addAssign(
-                Request.AddAssign(
-                  newNode.id,
-                  edge.source().data("id").toString,
-                  edge.data("blockId").toString
-                )
-              )
-            },
+            onClickFunction = addAssignFunction,
             hasTrailingDivider = true
           ),
           js.Dynamic.literal(
@@ -211,34 +67,7 @@ class ContextMenu(programModel: ProgramModel, cy: cytoscape) {
             image =
               js.Dynamic.literal(src = "images/assign.svg", width = 12, height = 12, x = 3, y = 4),
             selector = s"edge, node.${Node.Dummy}",
-            onClickFunction = { (event: dom.Event) =>
-
-              val target = event.target.asDyn
-
-              val newNode = Node("call", Node.Call)
-              val (edge, nextNodeId, maybeDummy, dir) = getInsertData(target)
-              cy.add(newNode.toLit)
-              edge.move(js.Dynamic.literal(target = newNode.id))
-              cy.add(
-                Edge(
-                  newNode.id,
-                  nextNodeId,
-                  dir = dir,
-                  blockId = edge.data("blockId").toString
-                ).toLit
-              )
-              maybeDummy.foreach(dummyId => cy.remove(s"node[id = '$dummyId']"))
-
-              doLayout(cy)
-
-              programModel.addCall(
-                Request.AddCall(
-                  newNode.id,
-                  edge.source().data("id").toString,
-                  edge.data("blockId").toString
-                )
-              )
-            },
+            onClickFunction = addCallFunction,
             hasTrailingDivider = true
           ),
           js.Dynamic.literal(
@@ -248,68 +77,254 @@ class ContextMenu(programModel: ProgramModel, cy: cytoscape) {
             image =
               js.Dynamic.literal(src = "images/if.svg", width = 12, height = 12, x = 3, y = 4),
             selector = s"edge, node.${Node.Dummy}",
-            onClickFunction = { (event: dom.Event) =>
-
-              val target = event.target.asDyn
-
-              val (edge, nextNodeId, maybeDummy, dir) = getInsertData(target)
-
-              val ifEndNode = Node("", Node.IfEnd)
-              val ifNode = Node("true", Node.If, endId = ifEndNode.id, rawExpr = "true")
-              val trueNode = Node("", Node.Dummy, startId = ifNode.id, endId = ifEndNode.id)
-              val falseNode = Node("", Node.Dummy, startId = ifNode.id, endId = ifEndNode.id)
-
-              cy.add(ifNode.toLit)
-              cy.add(ifEndNode.toLit)
-              cy.add(trueNode.toLit)
-              cy.add(falseNode.toLit)
-
-              edge.move(js.Dynamic.literal(target = ifNode.id))
-              val falseEdge = Edge(ifNode.id, falseNode.id, "false")
-              val trueEdge = Edge(ifNode.id, trueNode.id, "true")
-
-              cy.add(trueEdge.toLit)
-              cy.add(falseEdge.toLit)
-
-              cy.add(Edge(falseNode.id, ifEndNode.id, dir = "vert").toLit)
-              cy.add(Edge(trueNode.id, ifEndNode.id, dir = "vert").toLit)
-              cy.add(
-                Edge(
-                  ifEndNode.id,
-                  nextNodeId,
-                  dir = "vert",
-                  blockId = edge.data("blockId").toString
-                ).toLit
-              )
-
-              /*
-              val ifNode = Node("if", Node.If)
-              val ifEndNode = Node("", Node.IfEnd)
-              cy.add(ifNode.toLit)
-              cy.add(ifEndNode.toLit)
-              edge.move(js.Dynamic.literal(target = ifNode.id))
-              cy.add(Edge(ifNode.id, ifEndNode.id, "true", dir = "vert").toLit)
-              cy.add(Edge(ifNode.id, ifEndNode.id, "false", dir = "vert").toLit)
-              cy.add(Edge(ifEndNode.id, nextNodeId).toLit)
-               */
-
-              maybeDummy.foreach(dummyId => cy.remove(s"node[id = '$dummyId']"))
-
-              doLayout(cy)
-
-              programModel.addIf(
-                Request.AddIf(
-                  ifNode.id,
-                  trueEdge.id,
-                  falseEdge.id,
-                  ifEndNode.id,
-                  edge.source().data("id").toString,
-                  edge.data("blockId").toString
-                )
-              )
-            }
+            onClickFunction = addIfFunction
           )
         )
+      )
+    )
+  }
+
+  private def removeFunction = { (event: dom.Event) =>
+    val target = event.target.asDyn
+
+    val prevEdge = target.incomers("edge").first()
+    val prevEdgeLabel = prevEdge.data("label").toString
+    val prevId = target.incomers("node").first().data("id").toString
+
+    // MAYBE END NODE (IF/WHILE/FOR)
+    val maybeEndId = Option(target.data("endId").toString).filterNot(_.trim.isEmpty)
+    val nextId = maybeEndId match
+      case Some(endId) =>
+        cy.asDyn
+          .nodes(s"node[id = '$endId']")
+          .outgoers("node")
+          .first()
+          .data("id")
+          .toString
+      case None =>
+        target.outgoers("node").first().data("id").toString
+
+    val isNextNodeEnd = target.outgoers("node").first().data("tpe").toString == Node.IfEnd
+
+    if (prevEdgeLabel == "true" || prevEdgeLabel == "false") && isNextNodeEnd then
+      val dummyNode = Node("", Node.Dummy, startId = prevId, endId = nextId)
+      cy.add(dummyNode.toLit)
+      cy.add(Edge(dummyNode.id, nextId, dir = "vert").toLit)
+      prevEdge.move(js.Dynamic.literal(target = dummyNode.id)) // rebind
+    else prevEdge.move(js.Dynamic.literal(target = nextId)) // rebind
+
+    val toDeleteIds = getDeleteIds(target, maybeEndId)
+    toDeleteIds.foreach(id => cy.remove(s"node[id = '$id']"))
+
+    doLayout(cy)
+
+    programModel.delete(Request.Delete(target.data("id").toString))
+  }
+
+  private def addOutputFunction = { (event: dom.Event) =>
+
+    val target = event.target.asDyn
+
+    val newNode = Node("\"output\"", Node.Output, rawExpr = "\"output\"")
+    val (edge, nextNodeId, maybeDummy, dir) = getInsertData(target)
+    cy.add(newNode.toLit)
+    edge.move(js.Dynamic.literal(target = newNode.id))
+    cy.add(
+      Edge(
+        newNode.id,
+        nextNodeId,
+        dir = dir,
+        blockId = edge.data("blockId").toString
+      ).toLit
+    )
+    maybeDummy.foreach(dummyId => cy.remove(s"node[id = '$dummyId']"))
+
+    doLayout(cy)
+
+    programModel.addOutput(
+      Request.AddOutput(
+        newNode.id,
+        edge.source().data("id").toString,
+        edge.data("blockId").toString
+      )
+    )
+  }
+
+  private def addInputFunction = { (event: dom.Event) =>
+
+    val target = event.target.asDyn
+
+    val newNode = Node("input", Node.Input, rawName = "input")
+    val (edge, nextNodeId, maybeDummy, dir) = getInsertData(target)
+    cy.add(newNode.toLit)
+    edge.move(js.Dynamic.literal(target = newNode.id))
+    cy.add(
+      Edge(
+        newNode.id,
+        nextNodeId,
+        dir = dir,
+        blockId = edge.data("blockId").toString
+      ).toLit
+    )
+    maybeDummy.foreach(dummyId => cy.remove(s"node[id = '$dummyId']"))
+
+    doLayout(cy)
+
+    programModel.addInput(
+      Request.AddInput(
+        newNode.id,
+        edge.source().data("id").toString,
+        edge.data("blockId").toString
+      )
+    )
+  }
+
+  private def addDeclareFunction = { (event: dom.Event) =>
+
+    val target = event.target.asDyn
+
+    val newNode = Node("declare", Node.Declare, rawTpe = "Integer")
+    val (edge, nextNodeId, maybeDummy, dir) = getInsertData(target)
+    cy.add(newNode.toLit)
+    edge.move(js.Dynamic.literal(target = newNode.id))
+    cy.add(
+      Edge(
+        newNode.id,
+        nextNodeId,
+        dir = dir,
+        blockId = edge.data("blockId").toString
+      ).toLit
+    )
+    maybeDummy.foreach(dummyId => cy.remove(s"node[id = '$dummyId']"))
+
+    doLayout(cy)
+
+    programModel.addDeclare(
+      Request.AddDeclare(
+        newNode.id,
+        "",
+        Expression.Type.Integer,
+        edge.source().data("id").toString,
+        edge.data("blockId").toString
+      )
+    )
+  }
+
+  private def addAssignFunction = { (event: dom.Event) =>
+
+    val target = event.target.asDyn
+
+    val newNode = Node("assign", Node.Assign)
+    val (edge, nextNodeId, maybeDummy, dir) = getInsertData(target)
+    cy.add(newNode.toLit)
+    edge.move(js.Dynamic.literal(target = newNode.id))
+    cy.add(
+      Edge(
+        newNode.id,
+        nextNodeId,
+        dir = dir,
+        blockId = edge.data("blockId").toString
+      ).toLit
+    )
+    maybeDummy.foreach(dummyId => cy.remove(s"node[id = '$dummyId']"))
+
+    doLayout(cy)
+
+    programModel.addAssign(
+      Request.AddAssign(
+        newNode.id,
+        edge.source().data("id").toString,
+        edge.data("blockId").toString
+      )
+    )
+  }
+
+  private def addCallFunction = { (event: dom.Event) =>
+
+    val target = event.target.asDyn
+
+    val newNode = Node("call", Node.Call)
+    val (edge, nextNodeId, maybeDummy, dir) = getInsertData(target)
+    cy.add(newNode.toLit)
+    edge.move(js.Dynamic.literal(target = newNode.id))
+    cy.add(
+      Edge(
+        newNode.id,
+        nextNodeId,
+        dir = dir,
+        blockId = edge.data("blockId").toString
+      ).toLit
+    )
+    maybeDummy.foreach(dummyId => cy.remove(s"node[id = '$dummyId']"))
+
+    doLayout(cy)
+
+    programModel.addCall(
+      Request.AddCall(
+        newNode.id,
+        edge.source().data("id").toString,
+        edge.data("blockId").toString
+      )
+    )
+  }
+
+  private def addIfFunction = { (event: dom.Event) =>
+
+    val target = event.target.asDyn
+
+    val (edge, nextNodeId, maybeDummy, dir) = getInsertData(target)
+
+    val ifEndNode = Node("", Node.IfEnd)
+    val ifNode = Node("true", Node.If, endId = ifEndNode.id, rawExpr = "true")
+    val trueNode = Node("", Node.Dummy, startId = ifNode.id, endId = ifEndNode.id)
+    val falseNode = Node("", Node.Dummy, startId = ifNode.id, endId = ifEndNode.id)
+
+    cy.add(ifNode.toLit)
+    cy.add(ifEndNode.toLit)
+    cy.add(trueNode.toLit)
+    cy.add(falseNode.toLit)
+
+    edge.move(js.Dynamic.literal(target = ifNode.id))
+    val falseEdge = Edge(ifNode.id, falseNode.id, "false")
+    val trueEdge = Edge(ifNode.id, trueNode.id, "true")
+
+    cy.add(trueEdge.toLit)
+    cy.add(falseEdge.toLit)
+
+    cy.add(Edge(falseNode.id, ifEndNode.id, dir = "vert").toLit)
+    cy.add(Edge(trueNode.id, ifEndNode.id, dir = "vert").toLit)
+    cy.add(
+      Edge(
+        ifEndNode.id,
+        nextNodeId,
+        dir = "vert",
+        blockId = edge.data("blockId").toString
+      ).toLit
+    )
+
+    /*
+      val ifNode = Node("if", Node.If)
+      val ifEndNode = Node("", Node.IfEnd)
+      cy.add(ifNode.toLit)
+      cy.add(ifEndNode.toLit)
+      edge.move(js.Dynamic.literal(target = ifNode.id))
+      cy.add(Edge(ifNode.id, ifEndNode.id, "true", dir = "vert").toLit)
+      cy.add(Edge(ifNode.id, ifEndNode.id, "false", dir = "vert").toLit)
+      cy.add(Edge(ifEndNode.id, nextNodeId).toLit)
+     */
+
+    maybeDummy.foreach(dummyId => cy.remove(s"node[id = '$dummyId']"))
+
+    doLayout(cy)
+
+    programModel.addIf(
+      Request.AddIf(
+        ifNode.id,
+        trueEdge.id,
+        falseEdge.id,
+        ifEndNode.id,
+        edge.source().data("id").toString,
+        edge.data("blockId").toString
       )
     )
   }
