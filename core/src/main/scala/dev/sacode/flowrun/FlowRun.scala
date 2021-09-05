@@ -37,7 +37,6 @@ class FlowRun(mountElem: dom.Element, programJson: Option[String] = None) {
 
   populateFunctions()
 
-
   dom.document.getElementById("gencode").asInstanceOf[dom.html.Button].onclick = _ => {
     val generator = new dev.sacode.flowrun.codegen.ScalaGenerator(programModel.ast)
     println(generator.generate)
@@ -45,7 +44,7 @@ class FlowRun(mountElem: dom.Element, programJson: Option[String] = None) {
 
   def json(): js.Any =
     programModel.ast.toNative
-  
+
   def allFunctions = List(programModel.ast.main) ++ programModel.ast.functions
 
   private def populateFunctions(): Unit =
@@ -63,7 +62,6 @@ class FlowRun(mountElem: dom.Element, programJson: Option[String] = None) {
       val funItem = option(value := f.id, maybeSelected)(f.name).render
       functionSelector.add(funItem)
     }
-
 
     val deleteFunButton = flowRunElements.deleteFunButton
     deleteFunButton.onclick = { (e: dom.Event) =>
@@ -96,11 +94,18 @@ class FlowRun(mountElem: dom.Element, programJson: Option[String] = None) {
   }
 
   flowRunElements.addFunButton.onclick = { (e: dom.Event) =>
-    val lastFunNum =  allFunctions.map(_.name).filter(_.startsWith("fun")).map(_.substring(3))
+    val lastFunNum = allFunctions
+      .map(_.name)
+      .filter(_.startsWith("fun"))
+      .map(_.substring(3))
       .filter(_.toIntOption.isDefined)
-      .map(_.toInt).maxOption.getOrElse(0)
-    val newFunName = "fun" + (lastFunNum+1)
-    val newFun = Function(UUID.randomUUID.toString, newFunName,
+      .map(_.toInt)
+      .maxOption
+      .getOrElse(0)
+    val newFunName = "fun" + (lastFunNum + 1)
+    val newFun = Function(
+      UUID.randomUUID.toString,
+      newFunName,
       statements = List(Statement.Return(UUID.randomUUID.toString))
     )
     programModel.addFunction(newFun)
@@ -141,7 +146,7 @@ class FlowRun(mountElem: dom.Element, programJson: Option[String] = None) {
   }
 
   private def evalInput(nodeId: String, name: String) = {
-    
+
     val valueInputElem = flowRunElements.newInputText
     val valueBtnElem = flowRunElements.newEnterButton
     val enterValueDiv = div(
@@ -161,11 +166,11 @@ class FlowRun(mountElem: dom.Element, programJson: Option[String] = None) {
       val sym = interpreter.symTab.getSymbol(null, key)
       try {
         val value = sym.tpe match
-          case Expression.Type.Integer  => inputValue.toInt
-          case Expression.Type.Real     => inputValue.toDouble
-          case Expression.Type.Boolean  => inputValue.toBoolean
-          case Expression.Type.String   => inputValue
-          case Expression.Type.Void     => ()
+          case Expression.Type.Integer => inputValue.toInt
+          case Expression.Type.Real    => inputValue.toDouble
+          case Expression.Type.Boolean => inputValue.toBoolean
+          case Expression.Type.String  => inputValue
+          case Expression.Type.Void    => ()
         interpreter.symTab.setValue(nodeId, name, value)
         interpreter.continue()
 
@@ -207,7 +212,6 @@ object FlowRun:
     case SyntaxError(msg: String)
     case SymbolTableUpdated
     case FunctionUpdated
-
 
 def getNowTime: String =
   val now = new js.Date()

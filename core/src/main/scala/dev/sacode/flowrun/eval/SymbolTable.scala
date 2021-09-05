@@ -12,7 +12,7 @@ class SymbolTable(flowrunChannel: Channel[FlowRun.Event]) {
     val key = SymbolKey("abs", Symbol.Kind.Function)
     globalScope.add(null, key, Type.Integer, None)
   }
-  
+
   private var currentScope = globalScope
 
   def enterScope(name: String): Unit =
@@ -20,9 +20,11 @@ class SymbolTable(flowrunChannel: Channel[FlowRun.Event]) {
     currentScope.childScopes = currentScope.childScopes.appended(newScope)
     currentScope = newScope
     flowrunChannel := FlowRun.Event.SymbolTableUpdated
-  
+
   def exitScope(): Unit =
-    currentScope = currentScope.parentScope.getOrElse(throw RuntimeException(s"Cannot exit scope ${currentScope.name}"))
+    currentScope = currentScope.parentScope.getOrElse(
+      throw RuntimeException(s"Cannot exit scope ${currentScope.name}")
+    )
     flowrunChannel := FlowRun.Event.SymbolTableUpdated
 
   def varSymbols: List[Symbol] =
@@ -39,7 +41,7 @@ class SymbolTable(flowrunChannel: Channel[FlowRun.Event]) {
 
   def isDeclaredVar(name: String): Boolean =
     currentScope.isDeclaredVar(name)
-  
+
   def isDeclaredFun(name: String): Boolean =
     currentScope.isDeclaredFun(name)
 
@@ -51,11 +53,15 @@ class SymbolTable(flowrunChannel: Channel[FlowRun.Event]) {
 }
 
 /** One scope level:
- * - global
- * - function
- * - block (for loop, while loop)
- */
-class Scope(val name: String, val parentScope: Option[Scope], flowrunChannel: Channel[FlowRun.Event]):
+  *   - global
+  *   - function
+  *   - block (for loop, while loop)
+  */
+class Scope(
+    val name: String,
+    val parentScope: Option[Scope],
+    flowrunChannel: Channel[FlowRun.Event]
+):
 
   private var symbols: Map[SymbolKey, Symbol] = Map()
 
@@ -72,13 +78,13 @@ class Scope(val name: String, val parentScope: Option[Scope], flowrunChannel: Ch
     symbols += (key -> newSymbol)
     flowrunChannel := FlowRun.Event.SymbolTableUpdated
     newSymbol
-  
+
   def set(key: SymbolKey, newSymbol: Symbol): Unit =
     symbols += (key -> newSymbol)
-  
+
   def get(key: SymbolKey): Option[Symbol] =
     symbols.get(key)
-  
+
   def setValue(nodeId: String, name: String, value: Any): Unit =
     val key = SymbolKey(name, Symbol.Kind.Variable)
     val sym = getSymbol(nodeId, key)
@@ -95,11 +101,11 @@ class Scope(val name: String, val parentScope: Option[Scope], flowrunChannel: Ch
   def isDeclaredVar(name: String): Boolean =
     val key = SymbolKey(name, Symbol.Kind.Variable)
     maybeSymbol(key).nonEmpty
-  
+
   def isDeclaredFun(name: String): Boolean =
     val key = SymbolKey(name, Symbol.Kind.Function)
     maybeSymbol(key).nonEmpty
-  
+
   def getSymbol(nodeId: String, key: SymbolKey): Symbol =
     maybeSymbol(key) match
       case None =>

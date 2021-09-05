@@ -1,18 +1,19 @@
-
 import org.scalajs.linker.interface.OutputPatterns
- 
 
 inThisBuild(
   List(
     scalaVersion := "3.0.1",
     evictionErrorLevel := Level.Warn,
     publish / skip := true,
-
+    scalafmtSbt := true,
     // metadata
     organization := "dev.sacode",
     licenses := List("GPL-3.0" -> url("https://www.gnu.org/licenses/gpl-3.0.html")),
     scmInfo := Some(
-      ScmInfo(url("https://github.com/sacode387/FlowRun"), "scm:git:git@github.com:sacode387/FlowRun.git")
+      ScmInfo(
+        url("https://github.com/sacode387/FlowRun"),
+        "scm:git:git@github.com:sacode387/FlowRun.git"
+      )
     ),
     developers := List(
       Developer(
@@ -39,7 +40,8 @@ lazy val core = (project in file("core"))
       "com.lihaoyi" %%% "utest" % "0.7.10" % Test
     ),
     scalacOptions ++= Seq(
-      "-Xmax-inlines", "64",
+      "-Xmax-inlines",
+      "64",
       "-Ysafe-init",
       "-deprecation"
     ),

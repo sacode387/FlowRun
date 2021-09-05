@@ -2,11 +2,11 @@ package dev.sacode.flowrun
 package eval
 
 import scala.util.*
-import scala.concurrent.{ Future, Promise }
+import scala.concurrent.{Future, Promise}
 import scala.concurrent.ExecutionContext.Implicits.global
 import scalajs.js
 import reactify.*
-import dev.sacode.flowrun.parse.{ Token, parseExpr, ParseException, LexException }
+import dev.sacode.flowrun.parse.{Token, parseExpr, ParseException, LexException}
 
 class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[FlowRun.Event]) {
   import Interpreter.*
@@ -59,7 +59,10 @@ class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[FlowRun.Ev
   def continue(): Unit =
     state = State.RUNNING
 
-  private def interpret(fun: Function, arguments: List[(String, Expression.Type, Any)]): Future[Any] =
+  private def interpret(
+      fun: Function,
+      arguments: List[(String, Expression.Type, Any)]
+  ): Future[Any] =
     symTab.enterScope(fun.name)
     arguments.foreach { (name, tpe, value) =>
       val key = SymbolKey(name, Symbol.Kind.Variable)
@@ -73,13 +76,12 @@ class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[FlowRun.Ev
   private def interpret(stmt: Statement): Future[Any] = waitForContinue().flatMap { _ =>
     //println(s"interpreting: $stmt")
     import Statement.*
-    
+
     stmt match {
       case Declare(id, name, tpe, initValue) =>
-        if name.trim.isEmpty then
-          throw EvalException(s"Not a valid name: '$name'", id)
+        if name.trim.isEmpty then throw EvalException(s"Not a valid name: '$name'", id)
 
-      // TODO validate reserved identifiers
+        // TODO validate reserved identifiers
 
         val maybeInitValueExpr = initValue.map(iv => parseExpr(id, iv))
         maybeInitValueExpr match
@@ -129,7 +131,7 @@ class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[FlowRun.Ev
         execSequentially((): Any, block.statements, (_, s) => interpret(s))
       case Return(id, maybeExpr) => // noop
         maybeExpr match
-          case None => Future.successful(())
+          case None       => Future.successful(())
           case Some(expr) => eval(id, parseExpr(id, expr))
       case Dummy(_) => // noop
         Future.successful(())
@@ -141,12 +143,16 @@ class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[FlowRun.Ev
       if !tmp1.isInstanceOf[Boolean] then Future.successful(tmp1)
       else
         val first = tmp1.asInstanceOf[Boolean]
-        execSequentially(first, expr.boolOrComparisons, (acc, nextBoolOrOpt) => {
-          eval(id, nextBoolOrOpt.boolAndComparison).map { v =>
-            val nextVal = v.asInstanceOf[Boolean]
-            acc || nextVal
+        execSequentially(
+          first,
+          expr.boolOrComparisons,
+          (acc, nextBoolOrOpt) => {
+            eval(id, nextBoolOrOpt.boolAndComparison).map { v =>
+              val nextVal = v.asInstanceOf[Boolean]
+              acc || nextVal
+            }
           }
-        })
+        )
     }
 
   private def eval(id: String, boolOrComparison: BoolOrComparison): Future[Any] =
@@ -154,23 +160,31 @@ class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[FlowRun.Ev
       if !tmp1.isInstanceOf[Boolean] then Future.successful(tmp1)
       else
         val first = tmp1.asInstanceOf[Boolean]
-        execSequentially(first, boolOrComparison.boolAndComparisons, (acc, nextBoolAndOpt) => {
-          eval(id, nextBoolAndOpt.numComparison).map { v =>
-            val nextVal = v.asInstanceOf[Boolean]
-            acc && nextVal
+        execSequentially(
+          first,
+          boolOrComparison.boolAndComparisons,
+          (acc, nextBoolAndOpt) => {
+            eval(id, nextBoolAndOpt.numComparison).map { v =>
+              val nextVal = v.asInstanceOf[Boolean]
+              acc && nextVal
+            }
           }
-        })
+        )
     }
 
   private def eval(id: String, boolAndComparison: BoolAndComparison): Future[Any] =
     eval(id, boolAndComparison.numComparison).flatMap { first =>
-      execSequentially(first, boolAndComparison.numComparisons, (acc, nextNumCompOpt) => {
-        eval(id, nextNumCompOpt.numComparison).map { nextVal =>
-          nextNumCompOpt.op.tpe match
-            case Token.Type.Plus => acc == nextVal
-            case _               => acc != nextVal
+      execSequentially(
+        first,
+        boolAndComparison.numComparisons,
+        (acc, nextNumCompOpt) => {
+          eval(id, nextNumCompOpt.numComparison).map { nextVal =>
+            nextNumCompOpt.op.tpe match
+              case Token.Type.Plus => acc == nextVal
+              case _               => acc != nextVal
+          }
         }
-      })
+      )
     }
 
   private def eval(id: String, numComparison: NumComparison): Future[Any] =
@@ -183,11 +197,11 @@ class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[FlowRun.Ev
             eval(id, nextTermOpt.term).map { v =>
               val nextVal = v.asInstanceOf[Double]
               nextTermOpt.op.tpe match
-              case Token.Type.Lt    => tmp < nextVal
-              case Token.Type.LtEq  => tmp <= nextVal
-              case Token.Type.Gt    => tmp > nextVal
-              case _                => tmp >= nextVal
-          }
+                case Token.Type.Lt   => tmp < nextVal
+                case Token.Type.LtEq => tmp <= nextVal
+                case Token.Type.Gt   => tmp > nextVal
+                case _               => tmp >= nextVal
+            }
           case None => Future.successful(tmp)
     }
 
@@ -197,24 +211,32 @@ class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[FlowRun.Ev
       val isString = tmp1.isInstanceOf[String]
       if isNum then
         val first = tmp1.asInstanceOf[Double]
-        execSequentially(first, term.factors, (acc, nextFactorOpt) => {
-          eval(id, nextFactorOpt.factor).map { v =>
-            val nextVal = v.asInstanceOf[Double] // TODO Integer
-            nextFactorOpt.op.tpe match
-              case Token.Type.Plus => acc + nextVal
-              case _               => acc - nextVal
+        execSequentially(
+          first,
+          term.factors,
+          (acc, nextFactorOpt) => {
+            eval(id, nextFactorOpt.factor).map { v =>
+              val nextVal = v.asInstanceOf[Double] // TODO Integer
+              nextFactorOpt.op.tpe match
+                case Token.Type.Plus => acc + nextVal
+                case _               => acc - nextVal
+            }
           }
-        })
+        )
       else if isString then
         val first = tmp1.asInstanceOf[String]
-        execSequentially(first, term.factors, (acc, nextFactorOpt) => {
-          eval(id, nextFactorOpt.factor).map { v =>
-            val nextVal = v.toString
-            nextFactorOpt.op.tpe match
-              case Token.Type.Plus => acc + nextVal
-              case _               => throw EvalException("Cannot subtract Strings", id)
+        execSequentially(
+          first,
+          term.factors,
+          (acc, nextFactorOpt) => {
+            eval(id, nextFactorOpt.factor).map { v =>
+              val nextVal = v.toString
+              nextFactorOpt.op.tpe match
+                case Token.Type.Plus => acc + nextVal
+                case _               => throw EvalException("Cannot subtract Strings", id)
+            }
           }
-        })
+        )
       else Future.successful(tmp1)
     }
 
@@ -223,26 +245,29 @@ class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[FlowRun.Ev
       if !tmp1.isInstanceOf[Double] then Future.successful(tmp1)
       else
         val first = tmp1.asInstanceOf[Double]
-        execSequentially(first, factor.unaries, (acc, nextUnaryOpt) => {
-          eval(id, nextUnaryOpt.unary).map { v =>
-            val nextVal = v.asInstanceOf[Double]
-            nextUnaryOpt.op.tpe match
-              case Token.Type.Times  => acc * nextVal
-              case Token.Type.Div    => acc / nextVal
-              case _                 => acc % nextVal
+        execSequentially(
+          first,
+          factor.unaries,
+          (acc, nextUnaryOpt) => {
+            eval(id, nextUnaryOpt.unary).map { v =>
+              val nextVal = v.asInstanceOf[Double]
+              nextUnaryOpt.op.tpe match
+                case Token.Type.Times => acc * nextVal
+                case Token.Type.Div   => acc / nextVal
+                case _                => acc % nextVal
+            }
           }
-        })
+        )
     }
 
   private def eval(id: String, unary: Unary): Future[Any] =
     unary match
       case Unary.Prefixed(op, unary) =>
         eval(id, unary).map { next =>
-          if op.tpe == Token.Type.Minus
-          then -next.asInstanceOf[Double]
+          if op.tpe == Token.Type.Minus then -next.asInstanceOf[Double]
           else !next.asInstanceOf[Boolean]
         }
-      case Unary.Simple(atom)        => eval(id, atom)
+      case Unary.Simple(atom) => eval(id, atom)
 
   private def eval(id: String, atom: Atom): Future[Any] =
     import Atom.*
@@ -257,10 +282,14 @@ class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[FlowRun.Ev
         val key = SymbolKey(name, Symbol.Kind.Function)
         val funSym = symTab.getSymbol(id, key) // check if defined
 
-        val futureArgs = execSequentially(List.empty, argumentExprs, (acc, nextExpr) => {
-          eval(id, nextExpr).map(arg => acc.appended(arg))
-        })
-        
+        val futureArgs = execSequentially(
+          List.empty,
+          argumentExprs,
+          (acc, nextExpr) => {
+            eval(id, nextExpr).map(arg => acc.appended(arg))
+          }
+        )
+
         futureArgs.flatMap { args =>
           if name == "abs" then
             // TODO handle all predefined functions
@@ -269,26 +298,31 @@ class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[FlowRun.Ev
           else
             val fun = allFunctions.find(_.name == name).get
             if args.size != fun.parameters.size then
-              throw EvalException(s"Wrong number of parameters. Expected: ${fun.parameters.size}, got ${args.size}", id)
-            val argsWithTypes = args.zip(fun.parameters).zipWithIndex.map { case ((arg, (paramName, paramTpe)), idx) =>
-              // validate expected type
-              if TypeUtils.getUpdateValue(id, paramName, paramTpe, arg).isFailure then
-                throw EvalException(s"Expected: '${paramName}: ${paramTpe}' at index $idx, got value '$arg'", id)
-              (paramName, paramTpe, arg)
+              throw EvalException(
+                s"Wrong number of parameters. Expected: ${fun.parameters.size}, got ${args.size}",
+                id
+              )
+            val argsWithTypes = args.zip(fun.parameters).zipWithIndex.map {
+              case ((arg, (paramName, paramTpe)), idx) =>
+                // validate expected type
+                if TypeUtils.getUpdateValue(id, paramName, paramTpe, arg).isFailure then
+                  throw EvalException(
+                    s"Expected: '${paramName}: ${paramTpe}' at index $idx, got value '$arg'",
+                    id
+                  )
+                (paramName, paramTpe, arg)
             }
             interpret(fun, argsWithTypes)
         }
-        
-  
+
   // adapted https://stackoverflow.com/a/46619347/4496364
   private def waitForContinue(): Future[Unit] = {
     val p = Promise[Unit]()
     val pingHandle: js.timers.SetIntervalHandle = js.timers.setInterval(10) {
-      if state == State.RUNNING && !p.isCompleted then
-        p.success(())
+      if state == State.RUNNING && !p.isCompleted then p.success(())
     }
     val f = p.future
-    f.onComplete { _ => 
+    f.onComplete { _ =>
       js.timers.clearInterval(pingHandle)
     }
     f
@@ -298,7 +332,11 @@ class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[FlowRun.Ev
   // Start from Future.successful(init),
   // wait for it -> then next, then next...
   // https://users.scala-lang.org/t/process-a-list-future-sequentially/3704/4
-  private def execSequentially[T, Res](init: Res, values: List[T], f: (Res, T) => Future[Res]): Future[Res] =
+  private def execSequentially[T, Res](
+      init: Res,
+      values: List[T],
+      f: (Res, T) => Future[Res]
+  ): Future[Res] =
     val initF = Future.successful(init)
     values.foldLeft(initF) { (a, next) =>
       a.flatMap(acc => f(acc, next))

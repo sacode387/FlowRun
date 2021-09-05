@@ -4,7 +4,7 @@ import scala.scalajs.js
 import dev.sacode.flowrun.parse.parseExpr
 
 class ProgramModel(
-  programAst: Program
+    programAst: Program
 ) {
   import ProgramModel.Request.*
 
@@ -20,11 +20,11 @@ class ProgramModel(
   def addFunction(fun: Function): Unit =
     val newFunctions = ast.functions.appended(fun)
     ast = ast.copy(functions = newFunctions)
-  
+
   def deleteFunction(id: String): Unit =
     val newFunctions = ast.functions.filterNot(_.id == id)
     ast = ast.copy(functions = newFunctions)
-  
+
   def updateFunction(req: UpdateFunction) =
     val newFunctions = ast.functions.map { f =>
       if f.id == currentFunction.id then
@@ -32,7 +32,7 @@ class ProgramModel(
         req.name.foreach(n => updatedFun = updatedFun.copy(name = n))
         req.tpe.foreach(t => updatedFun = updatedFun.copy(tpe = t))
         req.parameters.foreach { params =>
-          val newParams = params.map((n,t) => (n, Expression.Type.valueOf(t)))
+          val newParams = params.map((n, t) => (n, Expression.Type.valueOf(t)))
           updatedFun = updatedFun.copy(parameters = newParams)
         }
         updatedFun
@@ -52,7 +52,7 @@ class ProgramModel(
 
   def addInput(req: AddInput): Unit =
     update(_.addInput(req))
-  
+
   def addCall(req: AddCall): Unit =
     update(_.addCall(req))
 
@@ -70,10 +70,10 @@ class ProgramModel(
 
   def updateInput(req: UpdateInput): Unit =
     update(_.updateInput(req))
-  
+
   def updateCall(req: UpdateCall): Unit =
     update(_.updateCall(req))
-  
+
   def updateReturn(req: UpdateReturn): Unit =
     update(_.updateReturn(req))
 
@@ -82,11 +82,10 @@ class ProgramModel(
 
   def delete(req: Delete): Unit =
     update(_.delete(req))
-  
+
   private def update(transform: FunctionModel => FunctionModel): Unit = {
     val newFunction = transform(FunctionModel(currentFunction)).ast
-    if currentFunction.isMain then
-      ast = ast.copy(main = newFunction)
+    if currentFunction.isMain then ast = ast.copy(main = newFunction)
     else
       ast.functions.indexWhere(_.id == currentFunctionId) match
         case -1 =>
@@ -98,7 +97,7 @@ class ProgramModel(
 }
 
 case class FunctionModel(
-  ast: Function
+    ast: Function
 ) {
   import ProgramModel.Request.*
 
@@ -123,7 +122,8 @@ case class FunctionModel(
     doInsert(req.afterId, newStat, req.blockId)
 
   def addIf(req: AddIf): FunctionModel =
-    val newStat = Statement.If(req.id, "true", Statement.Block(req.trueId), Statement.Block(req.falseId))
+    val newStat =
+      Statement.If(req.id, "true", Statement.Block(req.trueId), Statement.Block(req.falseId))
     doInsert(req.afterId, newStat, req.blockId)
 
   def updateDeclare(req: UpdateDeclare): FunctionModel =
@@ -146,11 +146,11 @@ case class FunctionModel(
   def updateInput(req: UpdateInput): FunctionModel =
     val newStat = Statement.Input(req.id, req.name)
     doUpdate(req.id, newStat)
-  
+
   def updateCall(req: UpdateCall): FunctionModel =
     val newStat = Statement.Call(req.id, req.expr)
     doUpdate(req.id, newStat)
-  
+
   def updateReturn(req: UpdateReturn): FunctionModel =
     var updatedStat = doFind(req.id).asInstanceOf[Statement.Return]
     req.expr.foreach(e => updatedStat = updatedStat.copy(maybeValue = e))
@@ -167,16 +167,18 @@ case class FunctionModel(
 
   /* HELPERS */
   private def doInsert(afterId: String, newStatement: Statement, blockId: String): FunctionModel =
-    val newStats = if ast.statements.isEmpty then List(newStatement)
-      else if afterId == "beginId" || afterId.startsWith("fun-") then ast.statements.prepended(newStatement)
+    val newStats =
+      if ast.statements.isEmpty then List(newStatement)
+      else if afterId == "beginId" || afterId.startsWith("fun-") then
+        ast.statements.prepended(newStatement)
       else insert(ast.statements, afterId, newStatement, blockId)
     this.copy(ast = ast.copy(statements = newStats))
 
   private def insert(
-    statements: List[Statement],
-    afterId: String,
-    newStatement: Statement,
-    blockId: String
+      statements: List[Statement],
+      afterId: String,
+      newStatement: Statement,
+      blockId: String
   ): List[Statement] = {
     val afterStatementIdx = statements.indexWhere(_.id == afterId)
     if (afterStatementIdx >= 0) {
@@ -184,15 +186,17 @@ case class FunctionModel(
       afterStatement match {
         case ifStatement: Statement.If =>
           val newIfStatement =
-            if (ifStatement.trueBlock.id == blockId) ifStatement.copy(trueBlock =
-              ifStatement.trueBlock.copy(statements =
-                ifStatement.trueBlock.statements.prepended(newStatement)
+            if (ifStatement.trueBlock.id == blockId)
+              ifStatement.copy(trueBlock =
+                ifStatement.trueBlock
+                  .copy(statements = ifStatement.trueBlock.statements.prepended(newStatement))
               )
-            ) else ifStatement.copy(falseBlock =
-              ifStatement.falseBlock.copy(statements =
-                ifStatement.falseBlock.statements.prepended(newStatement)
+            else
+              ifStatement.copy(falseBlock =
+                ifStatement.falseBlock.copy(statements =
+                  ifStatement.falseBlock.statements.prepended(newStatement)
+                )
               )
-            )
           statements.updated(afterStatementIdx, newIfStatement)
         case _ =>
           statements.patch(afterStatementIdx + 1, List(newStatement), 0)
@@ -213,22 +217,24 @@ case class FunctionModel(
       }
     }
   }
-  
+
   private def doUpdate(statementId: String, newStatement: Statement): FunctionModel =
     val newStats = update(ast.statements, statementId, newStatement)
     //println(s"OLD: ${ast.statements} \nNEW: $newStatement, \nNEW: $newStats")
     this.copy(ast = ast.copy(statements = newStats))
 
   private def update(
-    statements: List[Statement],
-    statementId: String,
-    newStatement: Statement
+      statements: List[Statement],
+      statementId: String,
+      newStatement: Statement
   ): List[Statement] = {
     val statementIdx = statements.indexWhere(_.id == statementId)
     if (statementIdx >= 0) {
       val existingStatement = statements(statementIdx)
       if (existingStatement.getClass != newStatement.getClass) {
-        throw RuntimeException(s"Statement type mismatch. Existing: ${existingStatement.getClass} New: ${newStatement.getClass}")
+        throw RuntimeException(
+          s"Statement type mismatch. Existing: ${existingStatement.getClass} New: ${newStatement.getClass}"
+        )
       }
       statements.updated(statementIdx, newStatement)
     } else {
@@ -250,8 +256,8 @@ case class FunctionModel(
   }
 
   private def delete(
-    statements: List[Statement],
-    statementId: String
+      statements: List[Statement],
+      statementId: String
   ): List[Statement] = {
     import Statement.*
     statements.flatMap {
@@ -259,10 +265,14 @@ case class FunctionModel(
         delete(blockStats, statementId)
       case ifStat @ If(id, expr, trueBlock, falseBlock) =>
         if statementId == id then List.empty
-        else 
+        else
           val newIfStat = ifStat
-            .copy(trueBlock = trueBlock.copy(statements = delete(trueBlock.statements, statementId)))
-            .copy(falseBlock = falseBlock.copy(statements = delete(falseBlock.statements, statementId)))
+            .copy(trueBlock =
+              trueBlock.copy(statements = delete(trueBlock.statements, statementId))
+            )
+            .copy(falseBlock =
+              falseBlock.copy(statements = delete(falseBlock.statements, statementId))
+            )
           List(newIfStat)
       case st =>
         Option.unless(st.id == statementId)(st)
@@ -273,15 +283,16 @@ case class FunctionModel(
     findById(ast.statements, statementId).get
 
   private def findById(
-    statements: List[Statement],
-    statementId: String
+      statements: List[Statement],
+      statementId: String
   ): Option[Statement] =
     import Statement.*
     statements.flatMap {
       case Block(_, blockStats) =>
         findById(blockStats, statementId)
       case ifStat @ If(id, expr, trueBlock, falseBlock) =>
-        Option.when(statementId == id)(ifStat)
+        Option
+          .when(statementId == id)(ifStat)
           .orElse(findById(trueBlock.statements, statementId))
           .orElse(findById(falseBlock.statements, statementId))
       case stmt =>
@@ -299,15 +310,29 @@ object ProgramModel:
     case AddOutput(id: String, afterId: String, blockId: String)
     case AddInput(id: String, afterId: String, blockId: String)
     case AddCall(id: String, afterId: String, blockId: String)
-    case AddIf(id: String, trueId: String, falseId: String, endId: String, afterId: String, blockId: String)
-    case UpdateDeclare(id: String, name: Option[String] = None, tpe: Option[Type] = None, expr: Option[Option[String]] = None)
+    case AddIf(
+        id: String,
+        trueId: String,
+        falseId: String,
+        endId: String,
+        afterId: String,
+        blockId: String
+    )
+    case UpdateDeclare(
+        id: String,
+        name: Option[String] = None,
+        tpe: Option[Type] = None,
+        expr: Option[Option[String]] = None
+    )
     case UpdateAssign(id: String, name: Option[String] = None, expr: Option[String] = None)
     case UpdateOutput(id: String, expr: String)
     case UpdateInput(id: String, name: String)
     case UpdateCall(id: String, expr: String)
     case UpdateReturn(id: String, expr: Option[Option[String]] = None)
     case UpdateIf(id: String, expr: String)
-    case UpdateFunction(id: String, name: Option[String] = None, tpe: Option[Type] = None,
-      parameters: Option[List[(String, String)]] = None
+    case UpdateFunction(
+        id: String,
+        name: Option[String] = None,
+        tpe: Option[Type] = None,
+        parameters: Option[List[(String, String)]] = None
     )
-    

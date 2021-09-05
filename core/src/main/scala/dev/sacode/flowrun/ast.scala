@@ -18,9 +18,10 @@ unary               -> ("!" | "-") unary
 atom                -> NUMBER | STRING | "true" | "false" | "null"
                     | ID
                     | "(" expression ")" ;
-*/
+ */
 
-case class Expression(boolOrComparison: BoolOrComparison, boolOrComparisons: List[BoolOrComparison]) derives NativeConverter
+case class Expression(boolOrComparison: BoolOrComparison, boolOrComparisons: List[BoolOrComparison])
+    derives NativeConverter
 
 object Expression:
   enum Type derives NativeConverter:
@@ -32,9 +33,13 @@ object Expression:
   object Type:
     val VarTypes = Type.values.filterNot(_ == Type.Void)
 
-case class BoolOrComparison(boolAndComparison: BoolAndComparison, boolAndComparisons: List[BoolAndComparison]) derives NativeConverter
+case class BoolOrComparison(
+    boolAndComparison: BoolAndComparison,
+    boolAndComparisons: List[BoolAndComparison]
+) derives NativeConverter
 
-case class BoolAndComparison(numComparison: NumComparison, numComparisons: List[NumComparisonOpt]) derives NativeConverter
+case class BoolAndComparison(numComparison: NumComparison, numComparisons: List[NumComparisonOpt])
+    derives NativeConverter
 
 case class NumComparison(term: Term, terms: Option[TermOpt]) derives NativeConverter
 case class NumComparisonOpt(op: Token, numComparison: NumComparison) derives NativeConverter
@@ -61,7 +66,7 @@ enum Atom derives NativeConverter:
   case FunctionCall(name: String, arguments: List[Expression]) extends Atom
 
 ///////////////////////////////////////////////
-/* AST, represented visually! 
+/* AST, represented visually!
  * We just store exprs as String-s,
  * they're small and interpreted anyway.
  */
@@ -69,10 +74,15 @@ enum Atom derives NativeConverter:
 sealed trait Statement(val id: String) derives NativeConverter:
   def label: String
 
-object Statement:  
+object Statement:
   case class Dummy(override val id: String) extends Statement(id):
     def label = ""
-  case class Declare(override val id: String, name: String, tpe: Expression.Type, initValue: Option[String]) extends Statement(id):
+  case class Declare(
+      override val id: String,
+      name: String,
+      tpe: Expression.Type,
+      initValue: Option[String]
+  ) extends Statement(id):
     def label =
       val maybeExprText = initValue.map(e => s" = $e").getOrElse("")
       s"$name: $tpe$maybeExprText"
@@ -84,45 +94,47 @@ object Statement:
     def label = name
   case class Output(override val id: String, value: String) extends Statement(id):
     def label = value
-  case class Block(override val id: String, statements: List[Statement] = List.empty) extends Statement(id):
+  case class Block(override val id: String, statements: List[Statement] = List.empty)
+      extends Statement(id):
     def label = ""
-  
+
   case class Return(
-    override val id: String,
-    maybeValue: Option[String] = None
+      override val id: String,
+      maybeValue: Option[String] = None
   ) extends Statement(id):
     def label =
       val maybeExprText = maybeValue.map(e => s" $e").getOrElse("")
       s"return$maybeExprText"
   case class If(
-    override val id: String,
-    condition: String,
-    trueBlock: Block,
-    falseBlock: Block
+      override val id: String,
+      condition: String,
+      trueBlock: Block,
+      falseBlock: Block
   ) extends Statement(id):
     def label = condition.toString
 end Statement
 
 case class Function(
-  rawId: String,
-  name: String,
-  parameters: List[(String, Expression.Type)] = List.empty[(String, Expression.Type)],
-  tpe: Expression.Type = Expression.Type.Void,
-  statements: List[Statement] = List.empty[Statement]// java.lang.AssertionError: cannot merge Constraint(...
+    rawId: String,
+    name: String,
+    parameters: List[(String, Expression.Type)] = List.empty[(String, Expression.Type)],
+    tpe: Expression.Type = Expression.Type.Void,
+    statements: List[Statement] =
+      List.empty[Statement] // java.lang.AssertionError: cannot merge Constraint(...
 ) derives NativeConverter:
 
   val id = s"fun-$rawId"
 
   def isMain: Boolean = rawId == "main"
-  
+
   def label: String =
     val title = if isMain then "begin" else name
-    val params = if isMain then "" else s"(${parameters.map((n,t) => s"$n: $t").mkString(",")})"
+    val params = if isMain then "" else s"(${parameters.map((n, t) => s"$n: $t").mkString(",")})"
     s"$title$params: $tpe"
 
 case class Program(
-  id: String,
-  name: String,
-  main: Function,
-  functions: List[Function] = List.empty
+    id: String,
+    name: String,
+    main: Function,
+    functions: List[Function] = List.empty
 ) derives NativeConverter

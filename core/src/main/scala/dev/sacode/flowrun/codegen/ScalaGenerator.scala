@@ -7,7 +7,7 @@ import dev.sacode.flowrun.Expression
 class ScalaGenerator(programAst: Program) {
 
   def generate: String = {
-    
+
     val statements = programAst.main.statements.map(getStatement)
     s"""
     package flowrun
@@ -32,8 +32,8 @@ class ScalaGenerator(programAst: Program) {
         value
       case Input(_, name) =>
         s"$name = StdIn.readLine()"
-      case Output(_, value) => s"println($value)"
-      case Block(_, statements) => statements.map(getStatement).mkString("\n")
+      case Output(_, value)      => s"println($value)"
+      case Block(_, statements)  => statements.map(getStatement).mkString("\n")
       case Return(_, maybeValue) => maybeValue.getOrElse("")
       case If(_, condition, trueBlock, falseBlock) =>
         s"""|
@@ -44,13 +44,13 @@ class ScalaGenerator(programAst: Program) {
             |}""".stripMargin.trim
       case Dummy(_) => ""
 
-  private def getType(tpe: Expression.Type): String = 
+  private def getType(tpe: Expression.Type): String =
     import Expression.Type, Type._
     tpe match
-      case Void     => "Unit"
-      case Integer  => "Int"
-      case Real     => "Double"
-      case String   => "String"
-      case Boolean  => "Boolean"
-  
+      case Void    => "Unit"
+      case Integer => "Int"
+      case Real    => "Double"
+      case String  => "String"
+      case Boolean => "Boolean"
+
 }

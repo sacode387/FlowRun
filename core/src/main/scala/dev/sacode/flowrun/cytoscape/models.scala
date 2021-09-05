@@ -16,15 +16,15 @@ class cytoscape(props: js.Object) extends js.Object {
 /* NODEs */
 
 case class Node(
-  label: String,
-  tpe: String,
-  startId: String = "", // if-metadata
-  endId: String = "", // if-metadata
-  rawExpr: String = "",
-  rawName: String = "",
-  rawTpe: String = "",
-  rawParams: String = "",
-  id: String = UUID.randomUUID.toString
+    label: String,
+    tpe: String,
+    startId: String = "", // if-metadata
+    endId: String = "", // if-metadata
+    rawExpr: String = "",
+    rawName: String = "",
+    rawTpe: String = "",
+    rawParams: String = "",
+    id: String = UUID.randomUUID.toString
 ) {
   import scalajs.js.JSConverters.*
 
@@ -38,7 +38,16 @@ case class Node(
     else (35 max label.length * 11, 25)
 
   private val maybeEditable = Option.when(
-    Set(Node.Start, Node.Return, Node.Output, Node.Input, Node.If, Node.Declare, Node.Assign, Node.Call).contains(tpe)
+    Set(
+      Node.Start,
+      Node.Return,
+      Node.Output,
+      Node.Input,
+      Node.If,
+      Node.Declare,
+      Node.Assign,
+      Node.Call
+    ).contains(tpe)
   )(" " + Node.Editable)
 
   private val maybeRemovable = Option.when(
@@ -84,12 +93,12 @@ object Node {
 
 /* EDGEs */
 case class Edge(
-  source: String,
-  target: String,
-  label: String = "",
-  dir: String = "hor",
-  blockId: String = "", // all edges in SAME BRANCH have same blockId
-  id: String = UUID.randomUUID.toString
+    source: String,
+    target: String,
+    label: String = "",
+    dir: String = "hor",
+    blockId: String = "", // all edges in SAME BRANCH have same blockId
+    id: String = UUID.randomUUID.toString
 ) {
   def toLit: js.Object = js.Dynamic.literal(
     group = "edges",

@@ -4,19 +4,18 @@ import scala.scalajs.js
 import org.scalajs.dom
 import scalatags.JsDom.all.*
 
-
 /* UI sections and elements */
 case class FlowRunElements(
-  template: dom.Element,
-  // functions
-  addFunButton: dom.html.Element,
-  deleteFunButton: dom.html.Element,
-  addParamButton: dom.html.Element,
-  deleteParamButton: dom.html.Element,
-  // other
-  enterButton: dom.html.Element,
-  inputText: dom.html.Input,
-  inputSelect: dom.html.Select
+    template: dom.Element,
+    // functions
+    addFunButton: dom.html.Element,
+    deleteFunButton: dom.html.Element,
+    addParamButton: dom.html.Element,
+    deleteParamButton: dom.html.Element,
+    // other
+    enterButton: dom.html.Element,
+    inputText: dom.html.Input,
+    inputSelect: dom.html.Select
 ) {
 
   val metaData: dom.Element = template.querySelector(".FlowRun-meta")
@@ -28,7 +27,7 @@ case class FlowRunElements(
   val debugVariables: dom.Element = template.querySelector(".FlowRun-debug")
 
   metaData.innerText = ""
-  functionsChooser.innerText = ""  
+  functionsChooser.innerText = ""
   drawArea.innerText = ""
   editStatement.innerText = ""
   output.innerText = ""
@@ -36,13 +35,13 @@ case class FlowRunElements(
 
   def newInputText: dom.html.Input =
     inputText.cloneNode(true).asInstanceOf[dom.html.Input]
-  
+
   def newInputSelect: dom.html.Select =
     inputSelect.cloneNode(true).asInstanceOf[dom.html.Select]
-  
+
   def newEnterButton: dom.html.Element =
     enterButton.cloneNode(true).asInstanceOf[dom.html.Element]
-  
+
   def newDeleteParamButton: dom.html.Element =
     deleteParamButton.cloneNode(true).asInstanceOf[dom.html.Element]
 }
@@ -60,20 +59,35 @@ object FlowRunElements {
     template.id = ""
     template.style = "display: block;"
 
-    val addFunButton = template.querySelector(".FlowRun-add-function").cloneNode(true).asInstanceOf[dom.html.Element]
-    val deleteFunButton = template.querySelector(".FlowRun-delete-function").cloneNode(true).asInstanceOf[dom.html.Element]
+    val addFunButton =
+      template.querySelector(".FlowRun-add-function").cloneNode(true).asInstanceOf[dom.html.Element]
+    val deleteFunButton = template
+      .querySelector(".FlowRun-delete-function")
+      .cloneNode(true)
+      .asInstanceOf[dom.html.Element]
 
-    val addParamButton = template.querySelector(".FlowRun-add-param").cloneNode(true).asInstanceOf[dom.html.Element]
-    val deleteParamButton = template.querySelector(".FlowRun-delete-param").cloneNode(true).asInstanceOf[dom.html.Element]
+    val addParamButton =
+      template.querySelector(".FlowRun-add-param").cloneNode(true).asInstanceOf[dom.html.Element]
+    val deleteParamButton =
+      template.querySelector(".FlowRun-delete-param").cloneNode(true).asInstanceOf[dom.html.Element]
 
-    val enterButton = template.querySelector(".FlowRun-btn-enter").cloneNode(true).asInstanceOf[dom.html.Element]
-    val inputText = template.querySelector(".FlowRun-input-text").cloneNode(true).asInstanceOf[dom.html.Input]
-    val inputSelect = template.querySelector(".FlowRun-input-select").cloneNode(true).asInstanceOf[dom.html.Select]
-    
-    FlowRunElements(template,
-      addFunButton, deleteFunButton,
-      addParamButton, deleteParamButton,
-      enterButton, inputText, inputSelect)
+    val enterButton =
+      template.querySelector(".FlowRun-btn-enter").cloneNode(true).asInstanceOf[dom.html.Element]
+    val inputText =
+      template.querySelector(".FlowRun-input-text").cloneNode(true).asInstanceOf[dom.html.Input]
+    val inputSelect =
+      template.querySelector(".FlowRun-input-select").cloneNode(true).asInstanceOf[dom.html.Select]
+
+    FlowRunElements(
+      template,
+      addFunButton,
+      deleteFunButton,
+      addParamButton,
+      deleteParamButton,
+      enterButton,
+      inputText,
+      inputSelect
+    )
   }
 
   private def defaultFlowRunElements: FlowRunElements = {
@@ -90,19 +104,25 @@ object FlowRunElements {
     val inputSelect = select().render
 
     val template = div(
-        div(cls := "FlowRun-meta")(),
-        div(cls := "FlowRun-function")(),
-        div(cls := "FlowRun-btn-run")(),
-        div(cls := "FlowRun-content")(
-          div(cls := "FlowRun-draw", width := "100%", height := "100%")(),
-          div(cls := "FlowRun-edit")(),
-          div(cls := "FlowRun-output")(),
-          div(cls := "FlowRun-debug")()
-        )
-      ).render
-    FlowRunElements(template,
-      addFunButton, deleteFunButton,
-      addParamButton, deleteParamButton,
-      enterButton, inputText, inputSelect)
+      div(cls := "FlowRun-meta")(),
+      div(cls := "FlowRun-function")(),
+      div(cls := "FlowRun-btn-run")(),
+      div(cls := "FlowRun-content")(
+        div(cls := "FlowRun-draw", width := "100%", height := "100%")(),
+        div(cls := "FlowRun-edit")(),
+        div(cls := "FlowRun-output")(),
+        div(cls := "FlowRun-debug")()
+      )
+    ).render
+    FlowRunElements(
+      template,
+      addFunButton,
+      deleteFunButton,
+      addParamButton,
+      deleteParamButton,
+      enterButton,
+      inputText,
+      inputSelect
+    )
   }
 }

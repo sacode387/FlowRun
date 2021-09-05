@@ -4,23 +4,24 @@ package parse
 import scala.collection.mutable
 import dev.sacode.flowrun.parse.Token, Token.Type
 
-/**
-  * Expression parser.
+/** Expression parser.
   *
-  * @param nodeId ID of the node that contains this expression.
-  * @param allTokens Tokens of this expression.
+  * @param nodeId
+  *   ID of the node that contains this expression.
+  * @param allTokens
+  *   Tokens of this expression.
   */
 final class ExpressionParser(nodeId: String, allTokens: List[Token]) {
 
   private var tokens = allTokens
   private var lookahead = tokens.head
- 
+
   def parse(): Expression =
     val res = expression()
     if lookahead.tpe != Type.EOF then
       error(s"Unexpected symbol '${lookahead.text}' found at index ${lookahead.pos}")
     else res
-  
+
   private def expression(): Expression =
     Expression(boolOrComparison(), boolOrComparisons())
 
@@ -33,7 +34,7 @@ final class ExpressionParser(nodeId: String, allTokens: List[Token]) {
       eat(lookahead.tpe)
       opts += boolOrComparison()
     opts.toList
-  
+
   private def boolAndComparison(): BoolAndComparison =
     BoolAndComparison(numComparison(), numComparisons())
 
@@ -56,13 +57,13 @@ final class ExpressionParser(nodeId: String, allTokens: List[Token]) {
 
   private def term(): Term =
     Term(factor(), factors())
-  
+
   private def terms(): Option[TermOpt] =
     if Set(Type.Gt, Type.GtEq, Type.Lt, Type.LtEq).contains(lookahead.tpe) then
       val op = eat(lookahead.tpe)
       Some(TermOpt(op, term()))
     else None
-  
+
   private def factor(): Factor =
     Factor(unary(), unaries())
 
@@ -72,14 +73,14 @@ final class ExpressionParser(nodeId: String, allTokens: List[Token]) {
       val op = eat(lookahead.tpe)
       opts += FactorOpt(op, factor())
     opts.toList
-  
+
   private def unaries(): List[UnaryOpt] =
     val opts = mutable.ArrayBuffer.empty[UnaryOpt]
     while Set(Type.Times, Type.Div, Type.Mod).contains(lookahead.tpe) do
       val op = eat(lookahead.tpe)
       opts += UnaryOpt(op, unary())
     opts.toList
-    
+
   private def unary(): Unary =
     lookahead.tpe match
       case Type.Not =>
@@ -90,20 +91,20 @@ final class ExpressionParser(nodeId: String, allTokens: List[Token]) {
         Unary.Prefixed(op, unary())
       case _ =>
         Unary.Simple(atom())
-  
+
   private def atom(): Atom =
     import Atom.*
     lookahead.tpe match
       case Type.True =>
         eat(Type.True)
         TrueLit
-      case Type.False => 
+      case Type.False =>
         eat(Type.False)
         FalseLit
-      case Type.Integer => 
+      case Type.Integer =>
         val num = eat(Type.Integer)
         NumberLit(num.text.toDouble)
-      case Type.Real => 
+      case Type.Real =>
         val num = eat(Type.Real)
         NumberLit(num.text.toDouble)
       case Type.String =>
@@ -124,8 +125,7 @@ final class ExpressionParser(nodeId: String, allTokens: List[Token]) {
               arguments += expression()
             eat(Type.RightParen)
             FunctionCall(id.text, arguments.toList)
-        else
-          Identifier(id.text)
+        else Identifier(id.text)
       case Type.LeftParen =>
         eat(Type.LeftParen)
         val res = Parens(expression())
@@ -147,6 +147,6 @@ final class ExpressionParser(nodeId: String, allTokens: List[Token]) {
 }
 
 final class ParseException(
-  message: String,
-  val nodeId: String
+    message: String,
+    val nodeId: String
 ) extends RuntimeException(message)
