@@ -9,6 +9,9 @@ extension (any: Any) {
   def asDyn: js.Dynamic = any.asInstanceOf[js.Dynamic]
 }
 
+def isTouchDevice: Boolean =
+  dom.window.matchMedia("(pointer: coarse)").matches
+
 object TypeUtils:
   import Expression.Type
   // check if assignable, and optionally casts the type

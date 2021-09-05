@@ -1,90 +1,18 @@
 package dev.sacode.flowrun
 package edit
+package ctxmenu
 
 import scalajs.js
 import org.scalajs.dom
 import dev.sacode.flowrun.cytoscape.*
 import dev.sacode.flowrun.ProgramModel.Request
 
-class ContextMenu(programModel: ProgramModel, cy: cytoscape) {
+class ContextMenuActions(
+    programModel: ProgramModel,
+    cy: cytoscape
+) {
 
-  def setup(): Unit = {
-    cy.contextMenus(
-      js.Dynamic.literal(
-        evtType = "cxttap", // right-click
-        menuItems = js.Array(
-          js.Dynamic.literal(
-            id = "remove",
-            content = "remove",
-            tooltipText = "Remove statement",
-            image =
-              js.Dynamic.literal(src = "images/delete.svg", width = 12, height = 12, x = 3, y = 4),
-            selector = s"node.${Node.Removable}",
-            onClickFunction = removeFunction
-          ),
-          js.Dynamic.literal(
-            id = "add-output",
-            content = "output",
-            tooltipText = "Add output statement",
-            image =
-              js.Dynamic.literal(src = "images/output.svg", width = 12, height = 12, x = 3, y = 4),
-            selector = s"edge, node.${Node.Dummy}",
-            onClickFunction = addOutputFunction
-          ),
-          js.Dynamic.literal(
-            id = "add-input",
-            content = "input",
-            tooltipText = "Add input statement",
-            image =
-              js.Dynamic.literal(src = "images/input.svg", width = 12, height = 12, x = 3, y = 4),
-            selector = s"edge, node.${Node.Dummy}",
-            onClickFunction = addInputFunction,
-            hasTrailingDivider = true
-          ),
-          js.Dynamic.literal(
-            id = "add-declare",
-            content = "declare",
-            tooltipText = "Add declare statement",
-            image =
-              js.Dynamic.literal(src = "images/declare.svg", width = 12, height = 12, x = 3, y = 4),
-            selector = s"edge, node.${Node.Dummy}",
-            onClickFunction = addDeclareFunction
-          ),
-          js.Dynamic.literal(
-            id = "add-assign",
-            content = "assign",
-            tooltipText = "Add assign statement",
-            image =
-              js.Dynamic.literal(src = "images/assign.svg", width = 12, height = 12, x = 3, y = 4),
-            selector = s"edge, node.${Node.Dummy}",
-            onClickFunction = addAssignFunction,
-            hasTrailingDivider = true
-          ),
-          js.Dynamic.literal(
-            id = "add-call",
-            content = "call",
-            tooltipText = "Add call statement",
-            image =
-              js.Dynamic.literal(src = "images/assign.svg", width = 12, height = 12, x = 3, y = 4),
-            selector = s"edge, node.${Node.Dummy}",
-            onClickFunction = addCallFunction,
-            hasTrailingDivider = true
-          ),
-          js.Dynamic.literal(
-            id = "add-if",
-            content = "if",
-            tooltipText = "Add if statement",
-            image =
-              js.Dynamic.literal(src = "images/if.svg", width = 12, height = 12, x = 3, y = 4),
-            selector = s"edge, node.${Node.Dummy}",
-            onClickFunction = addIfFunction
-          )
-        )
-      )
-    )
-  }
-
-  private def removeFunction = { (event: dom.Event) =>
+  def removeFunction = { (event: dom.Event) =>
     val target = event.target.asDyn
 
     val prevEdge = target.incomers("edge").first()
@@ -121,9 +49,7 @@ class ContextMenu(programModel: ProgramModel, cy: cytoscape) {
     programModel.delete(Request.Delete(target.data("id").toString))
   }
 
-  private def addOutputFunction = { (event: dom.Event) =>
-
-    val target = event.target.asDyn
+  def addOutputFunction(target: js.Dynamic) = {
 
     val newNode = Node("\"output\"", Node.Output, rawExpr = "\"output\"")
     val (edge, nextNodeId, maybeDummy, dir) = getInsertData(target)
@@ -150,7 +76,7 @@ class ContextMenu(programModel: ProgramModel, cy: cytoscape) {
     )
   }
 
-  private def addInputFunction = { (event: dom.Event) =>
+  def addInputFunction = { (event: dom.Event) =>
 
     val target = event.target.asDyn
 
@@ -179,7 +105,7 @@ class ContextMenu(programModel: ProgramModel, cy: cytoscape) {
     )
   }
 
-  private def addDeclareFunction = { (event: dom.Event) =>
+  def addDeclareFunction = { (event: dom.Event) =>
 
     val target = event.target.asDyn
 
@@ -210,7 +136,7 @@ class ContextMenu(programModel: ProgramModel, cy: cytoscape) {
     )
   }
 
-  private def addAssignFunction = { (event: dom.Event) =>
+  def addAssignFunction = { (event: dom.Event) =>
 
     val target = event.target.asDyn
 
@@ -239,7 +165,7 @@ class ContextMenu(programModel: ProgramModel, cy: cytoscape) {
     )
   }
 
-  private def addCallFunction = { (event: dom.Event) =>
+  def addCallFunction = { (event: dom.Event) =>
 
     val target = event.target.asDyn
 
@@ -268,7 +194,7 @@ class ContextMenu(programModel: ProgramModel, cy: cytoscape) {
     )
   }
 
-  private def addIfFunction = { (event: dom.Event) =>
+  def addIfFunction = { (event: dom.Event) =>
 
     val target = event.target.asDyn
 
