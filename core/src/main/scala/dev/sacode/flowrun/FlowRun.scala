@@ -1,4 +1,4 @@
-package ba.sake.flowrun
+package dev.sacode.flowrun
 
 import java.util.UUID
 import scala.scalajs.js
@@ -7,9 +7,9 @@ import org.scalajs.dom
 import org.getshaka.nativeconverter.NativeConverter
 import scalatags.JsDom.all.*
 import reactify.*
-import ba.sake.flowrun.eval.*
-import ba.sake.flowrun.edit.FunctionEditor
-import ba.sake.flowrun.parse.parseExpr
+import dev.sacode.flowrun.eval.*
+import dev.sacode.flowrun.edit.FunctionEditor
+import dev.sacode.flowrun.parse.parseExpr
 
 @JSExportTopLevel("FlowRun")
 class FlowRun(mountElem: dom.Element, programJson: Option[String] = None) {
@@ -39,7 +39,7 @@ class FlowRun(mountElem: dom.Element, programJson: Option[String] = None) {
 
 
   dom.document.getElementById("gencode").asInstanceOf[dom.html.Button].onclick = _ => {
-    val generator = new ba.sake.flowrun.codegen.ScalaGenerator(programModel.ast)
+    val generator = new dev.sacode.flowrun.codegen.ScalaGenerator(programModel.ast)
     println(generator.generate)
   }
 

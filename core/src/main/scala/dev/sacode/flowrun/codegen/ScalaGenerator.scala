@@ -1,8 +1,8 @@
-package ba.sake.flowrun.codegen
+package dev.sacode.flowrun.codegen
 
-import ba.sake.flowrun.Program
-import ba.sake.flowrun.Statement
-import ba.sake.flowrun.Expression
+import dev.sacode.flowrun.Program
+import dev.sacode.flowrun.Statement
+import dev.sacode.flowrun.Expression
 
 class ScalaGenerator(programAst: Program) {
 

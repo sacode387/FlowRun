@@ -1,4 +1,4 @@
-package ba.sake.flowrun
+package dev.sacode.flowrun
 package eval
 
 import scala.concurrent.ExecutionContext

@@ -1,13 +1,13 @@
-package ba.sake.flowrun
+package dev.sacode.flowrun
 package edit
 
 import scalajs.js
 import org.scalajs.dom
 import scalatags.JsDom.all.*
 import reactify.*
-import ba.sake.flowrun.cytoscape.*
-import ba.sake.flowrun.ProgramModel.Request
-import ba.sake.flowrun.parse.*
+import dev.sacode.flowrun.cytoscape.*
+import dev.sacode.flowrun.ProgramModel.Request
+import dev.sacode.flowrun.parse.*
 
 class EditPanel(programModel: ProgramModel, flowRunElements: FlowRunElements, flowrunChannel: Channel[FlowRun.Event], cy: cytoscape) {
 

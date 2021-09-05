@@ -3,7 +3,7 @@ import scala.scalajs.js
 import org.scalajs.dom
 import org.scalajs.dom.ext.*
 import org.scalajs.dom.document
-import ba.sake.flowrun.FlowRun
+import dev.sacode.flowrun.FlowRun
 
 @main def start(): Unit =
   dom.window.onload = _ => { 

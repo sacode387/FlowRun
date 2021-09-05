@@ -1,4 +1,4 @@
-package ba.sake.flowrun.cytoscape
+package dev.sacode.flowrun.cytoscape
 
 import scalajs.js
 import org.scalajs.dom

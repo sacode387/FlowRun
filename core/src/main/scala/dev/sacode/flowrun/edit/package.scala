@@ -1,8 +1,8 @@
-package ba.sake.flowrun
+package dev.sacode.flowrun
 package edit
 
 import scalajs.js
-import ba.sake.flowrun.cytoscape.cytoscape
+import dev.sacode.flowrun.cytoscape.cytoscape
 
 def doLayout(cy: cytoscape): Unit = {
   val layoutOpts = js.Dynamic.literal(

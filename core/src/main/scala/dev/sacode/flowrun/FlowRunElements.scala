@@ -1,4 +1,4 @@
-package ba.sake.flowrun
+package dev.sacode.flowrun
 
 import scala.scalajs.js
 import org.scalajs.dom

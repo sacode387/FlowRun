@@ -1,7 +1,7 @@
-package ba.sake.flowrun
+package dev.sacode.flowrun
 
 import scala.scalajs.js
-import ba.sake.flowrun.parse.parseExpr
+import dev.sacode.flowrun.parse.parseExpr
 
 class ProgramModel(
   programAst: Program
@@ -291,7 +291,7 @@ case class FunctionModel(
 }
 
 object ProgramModel:
-  import ba.sake.flowrun.Expression.Type
+  import dev.sacode.flowrun.Expression.Type
   enum Request:
     case Delete(id: String)
     case AddDeclare(id: String, name: String, tpe: Type, afterId: String, blockId: String)

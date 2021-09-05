@@ -5,7 +5,23 @@ import org.scalajs.linker.interface.OutputPatterns
 inThisBuild(
   List(
     scalaVersion := "3.0.1",
-    evictionErrorLevel := Level.Warn
+    evictionErrorLevel := Level.Warn,
+    publish / skip := true,
+
+    // metadata
+    organization := "dev.sacode",
+    licenses := List("GPL-3.0" -> url("https://www.gnu.org/licenses/gpl-3.0.html")),
+    scmInfo := Some(
+      ScmInfo(url("https://github.com/sacode387/FlowRun"), "scm:git:git@github.com:sacode387/FlowRun.git")
+    ),
+    developers := List(
+      Developer(
+        "sake92",
+        "Sakib Hadžiavdić",
+        "sakib@sake.ba",
+        url("https://sake.ba")
+      )
+    )
   )
 )
 

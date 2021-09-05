@@ -1,4 +1,4 @@
-package ba.sake.flowrun.cytoscape
+package dev.sacode.flowrun.cytoscape
 
 import java.util.UUID
 import scalajs.js

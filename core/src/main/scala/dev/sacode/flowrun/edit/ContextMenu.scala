@@ -1,10 +1,10 @@
-package ba.sake.flowrun
+package dev.sacode.flowrun
 package edit
 
 import scalajs.js
 import org.scalajs.dom
-import ba.sake.flowrun.cytoscape.*
-import ba.sake.flowrun.ProgramModel.Request
+import dev.sacode.flowrun.cytoscape.*
+import dev.sacode.flowrun.ProgramModel.Request
 
 class ContextMenu(programModel: ProgramModel, cy: cytoscape) {
   def setup(): Unit = {
