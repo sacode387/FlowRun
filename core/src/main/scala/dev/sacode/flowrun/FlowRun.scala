@@ -200,8 +200,6 @@ class FlowRun(mountElem: dom.Element, programJson: Option[String] = None) {
 }
 
 object FlowRun:
-  def parseJson(jsonString: String): Program =
-    NativeConverter[Program].fromNative(js.JSON.parse(jsonString))
 
   enum Event:
     case EvalSuccess
@@ -212,7 +210,4 @@ object FlowRun:
     case SyntaxError(msg: String)
     case SymbolTableUpdated
     case FunctionUpdated
-
-def getNowTime: String =
-  val now = new js.Date()
-  now.toLocaleTimeString
+end FlowRun

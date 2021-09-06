@@ -9,6 +9,10 @@ extension (any: Any) {
   def asDyn: js.Dynamic = any.asInstanceOf[js.Dynamic]
 }
 
+def getNowTime: String =
+  val now = new js.Date()
+  now.toLocaleTimeString
+
 def isTouchDevice: Boolean =
   dom.window.matchMedia("(pointer: coarse)").matches
 
