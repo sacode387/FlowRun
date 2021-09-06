@@ -7,6 +7,7 @@ import org.scalajs.dom
 import reactify.*
 import dev.sacode.flowrun.cytoscape.*
 import dev.sacode.flowrun.parse.*
+import dev.sacode.flowrun.edit.ctxmenu.*
 
 class FunctionEditor(
     programModel: ProgramModel,

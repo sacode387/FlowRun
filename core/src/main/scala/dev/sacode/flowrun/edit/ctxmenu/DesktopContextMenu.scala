@@ -1,5 +1,6 @@
 package dev.sacode.flowrun
 package edit
+package ctxmenu
 
 import scalajs.js
 import org.scalajs.dom
@@ -32,7 +33,7 @@ class DesktopContextMenu(programModel: ProgramModel, cy: cytoscape) {
             image =
               js.Dynamic.literal(src = "images/output.svg", width = 12, height = 12, x = 3, y = 4),
             selector = s"edge, node.${Node.Dummy}",
-            onClickFunction =  { (event: dom.Event) =>
+            onClickFunction = { (event: dom.Event) =>
               val target = event.target.asDyn
               actions.addOutputFunction(target)
             }
@@ -44,7 +45,10 @@ class DesktopContextMenu(programModel: ProgramModel, cy: cytoscape) {
             image =
               js.Dynamic.literal(src = "images/input.svg", width = 12, height = 12, x = 3, y = 4),
             selector = s"edge, node.${Node.Dummy}",
-            onClickFunction = actions.addInputFunction,
+            onClickFunction = { (event: dom.Event) =>
+              val target = event.target.asDyn
+              actions.addInputFunction(target)
+            },
             hasTrailingDivider = true
           ),
           js.Dynamic.literal(
@@ -54,7 +58,10 @@ class DesktopContextMenu(programModel: ProgramModel, cy: cytoscape) {
             image =
               js.Dynamic.literal(src = "images/declare.svg", width = 12, height = 12, x = 3, y = 4),
             selector = s"edge, node.${Node.Dummy}",
-            onClickFunction = actions.addDeclareFunction
+            onClickFunction = { (event: dom.Event) =>
+              val target = event.target.asDyn
+              actions.addDeclareFunction(target)
+            }
           ),
           js.Dynamic.literal(
             id = "add-assign",
@@ -63,7 +70,10 @@ class DesktopContextMenu(programModel: ProgramModel, cy: cytoscape) {
             image =
               js.Dynamic.literal(src = "images/assign.svg", width = 12, height = 12, x = 3, y = 4),
             selector = s"edge, node.${Node.Dummy}",
-            onClickFunction = actions.addAssignFunction,
+            onClickFunction = { (event: dom.Event) =>
+              val target = event.target.asDyn
+              actions.addAssignFunction(target)
+            },
             hasTrailingDivider = true
           ),
           js.Dynamic.literal(
@@ -73,7 +83,10 @@ class DesktopContextMenu(programModel: ProgramModel, cy: cytoscape) {
             image =
               js.Dynamic.literal(src = "images/assign.svg", width = 12, height = 12, x = 3, y = 4),
             selector = s"edge, node.${Node.Dummy}",
-            onClickFunction = actions.addCallFunction,
+            onClickFunction = { (event: dom.Event) =>
+              val target = event.target.asDyn
+              actions.addCallFunction(target)
+            },
             hasTrailingDivider = true
           ),
           js.Dynamic.literal(
@@ -83,7 +96,10 @@ class DesktopContextMenu(programModel: ProgramModel, cy: cytoscape) {
             image =
               js.Dynamic.literal(src = "images/if.svg", width = 12, height = 12, x = 3, y = 4),
             selector = s"edge, node.${Node.Dummy}",
-            onClickFunction = actions.addIfFunction
+            onClickFunction = { (event: dom.Event) =>
+              val target = event.target.asDyn
+              actions.addIfFunction(target)
+            }
           )
         )
       )

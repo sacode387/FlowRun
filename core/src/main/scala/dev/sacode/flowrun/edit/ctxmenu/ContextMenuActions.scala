@@ -12,8 +12,7 @@ class ContextMenuActions(
     cy: cytoscape
 ) {
 
-  def removeFunction = { (event: dom.Event) =>
-    val target = event.target.asDyn
+  def removeFunction(target: js.Dynamic) = {
 
     val prevEdge = target.incomers("edge").first()
     val prevEdgeLabel = prevEdge.data("label").toString
@@ -76,9 +75,7 @@ class ContextMenuActions(
     )
   }
 
-  def addInputFunction = { (event: dom.Event) =>
-
-    val target = event.target.asDyn
+  def addInputFunction(target: js.Dynamic) = {
 
     val newNode = Node("input", Node.Input, rawName = "input")
     val (edge, nextNodeId, maybeDummy, dir) = getInsertData(target)
@@ -105,9 +102,7 @@ class ContextMenuActions(
     )
   }
 
-  def addDeclareFunction = { (event: dom.Event) =>
-
-    val target = event.target.asDyn
+  def addDeclareFunction(target: js.Dynamic) = {
 
     val newNode = Node("declare", Node.Declare, rawTpe = "Integer")
     val (edge, nextNodeId, maybeDummy, dir) = getInsertData(target)
@@ -136,9 +131,7 @@ class ContextMenuActions(
     )
   }
 
-  def addAssignFunction = { (event: dom.Event) =>
-
-    val target = event.target.asDyn
+  def addAssignFunction(target: js.Dynamic) = {
 
     val newNode = Node("assign", Node.Assign)
     val (edge, nextNodeId, maybeDummy, dir) = getInsertData(target)
@@ -165,9 +158,7 @@ class ContextMenuActions(
     )
   }
 
-  def addCallFunction = { (event: dom.Event) =>
-
-    val target = event.target.asDyn
+  def addCallFunction(target: js.Dynamic) = {
 
     val newNode = Node("call", Node.Call)
     val (edge, nextNodeId, maybeDummy, dir) = getInsertData(target)
@@ -194,9 +185,7 @@ class ContextMenuActions(
     )
   }
 
-  def addIfFunction = { (event: dom.Event) =>
-
-    val target = event.target.asDyn
+  def addIfFunction(target: js.Dynamic) = {
 
     val (edge, nextNodeId, maybeDummy, dir) = getInsertData(target)
 
