@@ -112,6 +112,20 @@ object Statement:
       falseBlock: Block
   ) extends Statement(id):
     def label = condition.toString
+  case class While(
+      override val id: String,
+      condition: String,
+      trueBlock: Block,
+      falseBlock: Block
+  ) extends Statement(id):
+    def label = condition.toString
+  case class DoWhile(
+      override val id: String,
+      condition: String,
+      trueBlock: Block,
+      falseBlock: Block
+  ) extends Statement(id):
+    def label = condition.toString
 end Statement
 
 case class Function(

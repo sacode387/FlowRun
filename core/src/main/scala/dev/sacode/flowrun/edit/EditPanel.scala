@@ -127,6 +127,10 @@ class EditPanel(
                 programModel.updateAssign(Request.UpdateAssign(nodeId, expr = Some(newExprText)))
               else if nodeType == Node.If then
                 programModel.updateIf(Request.UpdateIf(nodeId, expr = newExprText))
+              else if nodeType == Node.While then
+                programModel.updateWhile(Request.UpdateWhile(nodeId, expr = newExprText))
+              else if nodeType == Node.DoWhile then
+                programModel.updateDoWhile(Request.UpdateDoWhile(nodeId, expr = newExprText))
               else if nodeType == Node.Call then
                 programModel.updateCall(Request.UpdateCall(nodeId, expr = newExprText))
               else if nodeType == Node.Return then
@@ -141,7 +145,7 @@ class EditPanel(
         }
 
         var hasExpr = false
-        if Set(Node.Declare, Node.Assign, Node.Output, Node.Call, Node.Return, Node.If).contains(
+        if Set(Node.Declare, Node.Assign, Node.Output, Node.Call, Node.Return, Node.If, Node.While, Node.DoWhile).contains(
             nodeType
           )
         then

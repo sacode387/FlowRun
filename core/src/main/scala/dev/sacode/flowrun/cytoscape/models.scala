@@ -33,7 +33,7 @@ case class Node(
     if (Set(Node.Begin, Node.End).contains(tpe)) (70, 30)
     else if (tpe == Node.If) (55, 30)
     else if (tpe == Node.Dummy) (20, 20)
-    else if (tpe == Node.IfEnd) (10, 10)
+    else if (Set(Node.IfEnd, Node.WhileEnd, Node.DoWhileEnd).contains(tpe)) (10, 10)
     else if (tpe == Node.Start) (35 max label.length * 11, 30)
     else if (tpe == Node.Return) (35 max label.length * 11, 30)
     else (35 max label.length * 11, 25)
@@ -45,6 +45,8 @@ case class Node(
       Node.Output,
       Node.Input,
       Node.If,
+      Node.While,
+      Node.DoWhile,
       Node.Declare,
       Node.Assign,
       Node.Call
@@ -81,8 +83,16 @@ object Node {
   val Return = "Return"
   val Output = "Output"
   val Input = "Input"
+
   val If = "If"
   val IfEnd = "IfEnd"
+
+  val While = "While"
+  val WhileEnd = "WhileEnd"
+
+  val DoWhile = "DoWhile"
+  val DoWhileEnd = "DoWhileEnd"
+
   val Dummy = "Dummy" // empty node used just for layout dirty-fix
   val Declare = "Declare"
   val Assign = "Assign"

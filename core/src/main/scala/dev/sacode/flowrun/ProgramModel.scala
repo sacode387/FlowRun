@@ -59,6 +59,13 @@ class ProgramModel(
   def addIf(req: AddIf): Unit =
     update(_.addIf(req))
 
+  def addWhile(req: AddWhile): Unit =
+    update(_.addWhile(req))
+
+  def addDoWhile(req: AddDoWhile): Unit =
+    update(_.addDoWhile(req))
+
+
   def updateDeclare(req: UpdateDeclare): Unit =
     update(_.updateDeclare(req))
 
@@ -79,6 +86,12 @@ class ProgramModel(
 
   def updateIf(req: UpdateIf): Unit =
     update(_.updateIf(req))
+
+  def updateWhile(req: UpdateWhile): Unit =
+    update(_.updateWhile(req))
+
+  def updateDoWhile(req: UpdateDoWhile): Unit =
+    update(_.updateDoWhile(req))
 
   def delete(req: Delete): Unit =
     update(_.delete(req))
@@ -126,6 +139,16 @@ case class FunctionModel(
       Statement.If(req.id, "true", Statement.Block(req.trueId), Statement.Block(req.falseId))
     doInsert(req.afterId, newStat, req.blockId)
 
+  def addWhile(req: AddWhile): FunctionModel =
+    val newStat =
+      Statement.While(req.id, "true", Statement.Block(req.trueId), Statement.Block(req.falseId))
+    doInsert(req.afterId, newStat, req.blockId)
+
+  def addDoWhile(req: AddDoWhile): FunctionModel =
+    val newStat =
+      Statement.DoWhile(req.id, "true", Statement.Block(req.trueId), Statement.Block(req.falseId))
+    doInsert(req.afterId, newStat, req.blockId)
+
   def updateDeclare(req: UpdateDeclare): FunctionModel =
     var updatedStat: Statement.Declare = doFind(req.id).asInstanceOf[Statement.Declare]
     req.name.foreach(n => updatedStat = updatedStat.copy(name = n))
@@ -161,6 +184,16 @@ case class FunctionModel(
     updatedStat = updatedStat.copy(condition = req.expr)
     doUpdate(req.id, updatedStat)
 
+  def updateWhile(req: UpdateWhile): FunctionModel =
+    var updatedStat: Statement.While = doFind(req.id).asInstanceOf[Statement.While]
+    updatedStat = updatedStat.copy(condition = req.expr)
+    doUpdate(req.id, updatedStat)
+
+  def updateDoWhile(req: UpdateDoWhile): FunctionModel =
+    var updatedStat: Statement.DoWhile = doFind(req.id).asInstanceOf[Statement.DoWhile]
+    updatedStat = updatedStat.copy(condition = req.expr)
+    doUpdate(req.id, updatedStat)
+
   def delete(req: Delete): FunctionModel =
     val newStats = delete(ast.statements, req.id)
     this.copy(ast = ast.copy(statements = newStats))
@@ -180,6 +213,7 @@ case class FunctionModel(
       newStatement: Statement,
       blockId: String
   ): List[Statement] = {
+    println(s"insert $newStatement after $afterId in $blockId")
     val afterStatementIdx = statements.indexWhere(_.id == afterId)
     if (afterStatementIdx >= 0) {
       val afterStatement = statements(afterStatementIdx)
@@ -198,6 +232,20 @@ case class FunctionModel(
                 )
               )
           statements.updated(afterStatementIdx, newIfStatement)
+        case whileStatement: Statement.While =>
+          val newWhileStatement =
+            if (whileStatement.trueBlock.id == blockId)
+              whileStatement.copy(trueBlock =
+                whileStatement.trueBlock
+                  .copy(statements = whileStatement.trueBlock.statements.prepended(newStatement))
+              )
+            else
+              whileStatement.copy(falseBlock =
+                whileStatement.falseBlock.copy(statements =
+                  whileStatement.falseBlock.statements.prepended(newStatement)
+                )
+              )
+          statements.updated(afterStatementIdx, newWhileStatement)
         case _ =>
           statements.patch(afterStatementIdx + 1, List(newStatement), 0)
       }
@@ -210,6 +258,24 @@ case class FunctionModel(
             ),
             falseBlock = ifStatement.falseBlock.copy(statements =
               insert(ifStatement.falseBlock.statements, afterId, newStatement, blockId)
+            )
+          )
+        case whileStatement: Statement.While =>
+          whileStatement.copy(
+            trueBlock = whileStatement.trueBlock.copy(statements =
+              insert(whileStatement.trueBlock.statements, afterId, newStatement, blockId)
+            ),
+            falseBlock = whileStatement.falseBlock.copy(statements =
+              insert(whileStatement.falseBlock.statements, afterId, newStatement, blockId)
+            )
+          )
+        case doWhileStatement: Statement.DoWhile =>
+          doWhileStatement.copy(
+            trueBlock = doWhileStatement.trueBlock.copy(statements =
+              insert(doWhileStatement.trueBlock.statements, afterId, newStatement, blockId)
+            ),
+            falseBlock = doWhileStatement.falseBlock.copy(statements =
+              insert(doWhileStatement.falseBlock.statements, afterId, newStatement, blockId)
             )
           )
         case simple =>
@@ -240,7 +306,7 @@ case class FunctionModel(
     } else {
       statements.map {
         case ifStatement: Statement.If =>
-          val newIfStatement = ifStatement.copy(
+          ifStatement.copy(
             trueBlock = ifStatement.trueBlock.copy(statements =
               update(ifStatement.trueBlock.statements, statementId, newStatement)
             ),
@@ -248,7 +314,24 @@ case class FunctionModel(
               update(ifStatement.falseBlock.statements, statementId, newStatement)
             )
           )
-          newIfStatement
+        case whileStatement: Statement.While =>
+          whileStatement.copy(
+            trueBlock = whileStatement.trueBlock.copy(statements =
+              update(whileStatement.trueBlock.statements, statementId, newStatement)
+            ),
+            falseBlock = whileStatement.falseBlock.copy(statements =
+              update(whileStatement.falseBlock.statements, statementId, newStatement)
+            )
+          )
+        case doWhileStatement: Statement.DoWhile =>
+          doWhileStatement.copy(
+            trueBlock = doWhileStatement.trueBlock.copy(statements =
+              update(doWhileStatement.trueBlock.statements, statementId, newStatement)
+            ),
+            falseBlock = doWhileStatement.falseBlock.copy(statements =
+              update(doWhileStatement.falseBlock.statements, statementId, newStatement)
+            )
+          )
         case simple =>
           simple
       }
@@ -295,6 +378,16 @@ case class FunctionModel(
           .when(statementId == id)(ifStat)
           .orElse(findById(trueBlock.statements, statementId))
           .orElse(findById(falseBlock.statements, statementId))
+      case whileStat @ While(id, expr, trueBlock, falseBlock) =>
+        Option
+          .when(statementId == id)(whileStat)
+          .orElse(findById(trueBlock.statements, statementId))
+          .orElse(findById(falseBlock.statements, statementId))
+      case doWhileStat @ DoWhile(id, expr, trueBlock, falseBlock) =>
+        Option
+          .when(statementId == id)(doWhileStat)
+          .orElse(findById(trueBlock.statements, statementId))
+          .orElse(findById(falseBlock.statements, statementId))
       case stmt =>
         Option.when(stmt.id == statementId)(stmt)
     }.headOption
@@ -318,6 +411,23 @@ object ProgramModel:
         afterId: String,
         blockId: String
     )
+    case AddWhile(
+        id: String,
+        trueId: String,
+        falseId: String,
+        endId: String,
+        afterId: String,
+        blockId: String
+    )
+    case AddDoWhile(
+        id: String,
+        trueId: String,
+        falseId: String,
+        endId: String,
+        afterId: String,
+        blockId: String
+    )
+
     case UpdateDeclare(
         id: String,
         name: Option[String] = None,
@@ -330,6 +440,8 @@ object ProgramModel:
     case UpdateCall(id: String, expr: String)
     case UpdateReturn(id: String, expr: Option[Option[String]] = None)
     case UpdateIf(id: String, expr: String)
+    case UpdateWhile(id: String, expr: String)
+    case UpdateDoWhile(id: String, expr: String)
     case UpdateFunction(
         id: String,
         name: Option[String] = None,

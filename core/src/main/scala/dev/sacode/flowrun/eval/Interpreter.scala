@@ -22,7 +22,7 @@ class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[FlowRun.Ev
   def run(): Future[Unit] = {
     //import js.JSConverters.*
     //pprint.pprintln(programModel.ast)
-    println(js.JSON.stringify(programModel.ast.toNative))
+    println(programModel.ast.toJson)
 
     state = State.RUNNING
 
@@ -121,6 +121,23 @@ class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[FlowRun.Ev
           ()
         }
       case If(id, condition, ifTrueStatements, ifFalseStatements) =>
+        eval(id, parseExpr(id, condition)).flatMap {
+          case condition: Boolean =>
+            if (condition) interpret(ifTrueStatements)
+            else interpret(ifFalseStatements)
+          case condValue => throw EvalException(s"Not a valid condition: '$condValue'", id)
+        }
+      case While(id, condition, ifTrueStatements, ifFalseStatements) =>
+        def loop(): Future[Any] =
+          eval(id, parseExpr(id, condition)).flatMap {
+            case condition: Boolean =>
+              println("CONDITION IS: " + condition)
+              if (condition) interpret(ifTrueStatements).flatMap(_ => loop())
+              else interpret(ifFalseStatements)
+            case condValue => throw EvalException(s"Not a valid condition: '$condValue'", id)
+          }
+        loop()
+      case DoWhile(id, condition, ifTrueStatements, ifFalseStatements) =>
         eval(id, parseExpr(id, condition)).flatMap {
           case condition: Boolean =>
             if (condition) interpret(ifTrueStatements)

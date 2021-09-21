@@ -73,6 +73,8 @@ class ContextMenuActions(
         edge.data("blockId").toString
       )
     )
+
+    println("ADDED: " + programModel.ast.toJson)
   }
 
   def addInputFunction(target: js.Dynamic) = {
@@ -217,17 +219,6 @@ class ContextMenuActions(
       ).toLit
     )
 
-    /*
-      val ifNode = Node("if", Node.If)
-      val ifEndNode = Node("", Node.IfEnd)
-      cy.add(ifNode.toLit)
-      cy.add(ifEndNode.toLit)
-      edge.move(js.Dynamic.literal(target = ifNode.id))
-      cy.add(Edge(ifNode.id, ifEndNode.id, "true", dir = "vert").toLit)
-      cy.add(Edge(ifNode.id, ifEndNode.id, "false", dir = "vert").toLit)
-      cy.add(Edge(ifEndNode.id, nextNodeId).toLit)
-     */
-
     maybeDummy.foreach(dummyId => cy.remove(s"node[id = '$dummyId']"))
 
     doLayout(cy)
@@ -238,6 +229,54 @@ class ContextMenuActions(
         trueEdge.id,
         falseEdge.id,
         ifEndNode.id,
+        edge.source().data("id").toString,
+        edge.data("blockId").toString
+      )
+    )
+  }
+
+  def addWhileFunction(target: js.Dynamic) = {
+
+    val (edge, nextNodeId, maybeDummy, dir) = getInsertData(target)
+
+    val whileEndNode = Node("", Node.WhileEnd)
+    val whileNode = Node("true", Node.While, endId = whileEndNode.id, rawExpr = "true")
+    val trueNode = Node("", Node.Dummy, startId = whileNode.id, endId = whileNode.id)
+    val falseNode = Node("", Node.Dummy, startId = whileNode.id, endId = whileEndNode.id)
+
+    cy.add(whileNode.toLit)
+    cy.add(whileEndNode.toLit)
+    cy.add(trueNode.toLit)
+    cy.add(falseNode.toLit)
+
+    edge.move(js.Dynamic.literal(target = whileNode.id))
+    val falseEdge = Edge(whileNode.id, falseNode.id, "false")
+    val trueEdge = Edge(whileNode.id, trueNode.id, "true")
+
+    cy.add(trueEdge.toLit)
+    cy.add(falseEdge.toLit)
+
+    cy.add(Edge(falseNode.id, whileEndNode.id, dir = "vert").toLit)
+    cy.add(Edge(trueNode.id, whileNode.id).toLit)
+    cy.add(
+      Edge(
+        whileEndNode.id,
+        nextNodeId,
+        dir = "vert",
+        blockId = edge.data("blockId").toString
+      ).toLit
+    )
+
+    maybeDummy.foreach(dummyId => cy.remove(s"node[id = '$dummyId']"))
+
+    doLayout(cy)
+
+    programModel.addWhile(
+      Request.AddWhile(
+        whileNode.id,
+        trueEdge.id,
+        falseEdge.id,
+        whileEndNode.id,
         edge.source().data("id").toString,
         edge.data("blockId").toString
       )

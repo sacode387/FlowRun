@@ -102,6 +102,18 @@ class DesktopContextMenu(programModel: ProgramModel, cy: cytoscape) {
               val target = event.target.asDyn
               actions.addIfFunction(target)
             }
+          ),
+          js.Dynamic.literal(
+            id = "add-while",
+            content = "while",
+            tooltipText = "Add while statement",
+            image =
+              js.Dynamic.literal(src = "images/if.svg", width = 12, height = 12, x = 3, y = 4),
+            selector = s"edge, node.${Node.Dummy}",
+            onClickFunction = { (event: dom.Event) =>
+              val target = event.target.asDyn
+              actions.addWhileFunction(target)
+            }
           )
         )
       )

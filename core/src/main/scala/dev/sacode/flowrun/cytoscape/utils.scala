@@ -72,7 +72,7 @@ object utils {
         "color": "black"
       }
     }, {
-      "selector": "node.${Node.IfEnd}",
+      "selector": "node.${Node.IfEnd}, node.${Node.WhileEnd}, node.${Node.DoWhileEnd}",
       "style": {
         "shape": "ellipse",
         "background-color": "#000"

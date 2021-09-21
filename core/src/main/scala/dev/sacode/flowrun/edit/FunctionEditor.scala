@@ -22,7 +22,7 @@ class FunctionEditor(
       userPanningEnabled = false,
       boxSelectionEnabled = false,
       maxZoom = 1.3,
-      autoungrabify = true,
+      //autoungrabify = true,
       style = utils.styleJson
     )
   )
@@ -157,9 +157,11 @@ class FunctionEditor(
         prevEdge = cy.add(Edge(newNode.id, nextNode.id).toLit)
 
       case stmt @ If(id, expr, trueBlock, falseBlock) =>
+        
         val ifEndNode = Node("", Node.IfEnd)
         val ifNode =
           Node(stmt.condition, Node.If, id = stmt.id, endId = ifEndNode.id, rawExpr = expr)
+        
         cy.add(ifNode.toLit)
         cy.add(ifEndNode.toLit)
         prevEdge.move(js.Dynamic.literal(target = ifNode.id))
@@ -189,6 +191,43 @@ class FunctionEditor(
         prevEdge =
           cy.add(Edge(ifEndNode.id, nextNode.id, dir = "vert", blockId = trueBlock.id).toLit)
         prevNode = ifEndNode
+      
+      case stmt @ While(id, expr, trueBlock, falseBlock) =>
+        
+        val whileEndNode = Node("", Node.WhileEnd)
+        val whileNode =
+          Node(stmt.condition, Node.While, id = stmt.id, endId = whileEndNode.id, rawExpr = expr)
+        
+        cy.add(whileNode.toLit)
+        cy.add(whileEndNode.toLit)
+        prevEdge.move(js.Dynamic.literal(target = whileNode.id))
+        val trueEdge = cy.add(Edge(whileNode.id, whileNode.id, "true").toLit)
+        val falseEdge = cy.add(Edge(whileNode.id, whileEndNode.id, "false").toLit)
+
+        val lastFalseEdge = if falseBlock.statements.isEmpty then
+          val falseNode = Node("", Node.Dummy, startId = whileNode.id, endId = whileEndNode.id)
+          cy.add(falseNode.toLit)
+          falseEdge.move(js.Dynamic.literal(target = falseNode.id))
+          cy.add(Edge(falseNode.id, falseNode.id).toLit)
+        else load(falseBlock.statements, whileNode, whileEndNode, falseEdge)
+
+        val lastTrueEdge = if trueBlock.statements.isEmpty then
+          val trueNode = Node("", Node.Dummy, startId = whileNode.id, endId = whileEndNode.id)
+          cy.add(trueNode.toLit)
+          trueEdge.move(js.Dynamic.literal(target = trueNode.id))
+          cy.add(Edge(trueNode.id, trueNode.id).toLit)
+        else load(trueBlock.statements, whileNode, whileEndNode, trueEdge)
+
+        lastTrueEdge.move(js.Dynamic.literal(target = whileEndNode.id))
+        lastFalseEdge.move(js.Dynamic.literal(target = whileEndNode.id))
+
+        lastFalseEdge.data("dir", "vert")
+        lastTrueEdge.data("dir", "vert")
+
+        prevEdge =
+          cy.add(Edge(whileEndNode.id, nextNode.id, dir = "vert", blockId = trueBlock.id).toLit)
+        prevNode = whileEndNode
+      
 
       case stmt @ (_: Dummy) =>
         val newNode = Node(stmt.label, "Dummy", id = stmt.id)
