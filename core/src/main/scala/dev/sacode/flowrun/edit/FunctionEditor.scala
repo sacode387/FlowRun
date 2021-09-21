@@ -27,11 +27,14 @@ class FunctionEditor(
     )
   )
 
+  // load initial program
   loadCurrentFunction()
 
+  // context menu
   if isTouchDevice then TouchContextMenu(programModel, cy).setup()
   else DesktopContextMenu(programModel, cy).setup()
 
+  // edit menu
   EditPanel(programModel, flowRunElements, flowrunChannel, cy).setup()
 
   def disable(): Unit =

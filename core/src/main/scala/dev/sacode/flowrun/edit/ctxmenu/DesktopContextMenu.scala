@@ -24,18 +24,21 @@ class DesktopContextMenu(programModel: ProgramModel, cy: cytoscape) {
             image =
               js.Dynamic.literal(src = "images/delete.svg", width = 12, height = 12, x = 3, y = 4),
             selector = s"node.${Node.Removable}",
-            onClickFunction = actions.removeFunction
+            onClickFunction = { (event: dom.Event) =>
+              val target = event.target.asDyn
+              actions.removeFunction(target)
+            }
           ),
           js.Dynamic.literal(
-            id = "add-output",
-            content = "output",
-            tooltipText = "Add output statement",
+            id = "add-declare",
+            content = "declare",
+            tooltipText = "Add declare statement",
             image =
-              js.Dynamic.literal(src = "images/output.svg", width = 12, height = 12, x = 3, y = 4),
+              js.Dynamic.literal(src = "images/declare.svg", width = 12, height = 12, x = 3, y = 4),
             selector = s"edge, node.${Node.Dummy}",
             onClickFunction = { (event: dom.Event) =>
               val target = event.target.asDyn
-              actions.addOutputFunction(target)
+              actions.addDeclareFunction(target)
             }
           ),
           js.Dynamic.literal(
@@ -48,19 +51,18 @@ class DesktopContextMenu(programModel: ProgramModel, cy: cytoscape) {
             onClickFunction = { (event: dom.Event) =>
               val target = event.target.asDyn
               actions.addInputFunction(target)
-            },
-            hasTrailingDivider = true
+            }
           ),
           js.Dynamic.literal(
-            id = "add-declare",
-            content = "declare",
-            tooltipText = "Add declare statement",
+            id = "add-output",
+            content = "output",
+            tooltipText = "Add output statement",
             image =
-              js.Dynamic.literal(src = "images/declare.svg", width = 12, height = 12, x = 3, y = 4),
+              js.Dynamic.literal(src = "images/output.svg", width = 12, height = 12, x = 3, y = 4),
             selector = s"edge, node.${Node.Dummy}",
             onClickFunction = { (event: dom.Event) =>
               val target = event.target.asDyn
-              actions.addDeclareFunction(target)
+              actions.addOutputFunction(target)
             }
           ),
           js.Dynamic.literal(
