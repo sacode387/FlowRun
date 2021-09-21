@@ -121,13 +121,22 @@ object utils {
         "target-arrow-color": "black",
         "target-arrow-shape": "triangle",
         "curve-style": "taxi",
-        "taxi-direction": "horizontal",
         "taxi-turn": "90%"
       }
     }, {
-      "selector": "edge[dir = 'vert']",
+      "selector": "edge[dir = 'down']",
       "style": {
-        "taxi-direction": "vertical"
+        "taxi-direction": "downward"
+      }
+    }, {
+      "selector": "edge[dir = 'left']",
+      "style": {
+        "taxi-direction": "leftward"
+      }
+    }, {
+      "selector": "edge[dir = 'right']",
+      "style": {
+        "taxi-direction": "rightward"
       }
     }, {
       "selector": "edge[label = 'false']",
