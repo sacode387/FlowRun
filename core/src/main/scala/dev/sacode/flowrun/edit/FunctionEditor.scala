@@ -29,31 +29,34 @@ class FunctionEditor(
 
   flowrunChannel.attach {
     case FlowRun.Event.EvalError(nodeId, msg) =>
-      //cy.asDyn.nodes(s"node[id = '$nodeId']").data("has-error", true)
+    //cy.asDyn.nodes(s"node[id = '$nodeId']").data("has-error", true)
     case _ =>
   }
-
 
   def loadCurrentFunction(): Unit = {
     val graphviz = d3
       .select(flowRunElements.drawArea)
-      .graphviz(js.Dynamic.literal(
-        zoom = false
-      ))
+      .graphviz(
+        js.Dynamic.literal(
+          zoom = false
+        )
+      )
 
     val stmts = programModel.currentFunction.statements
     println(programModel.ast.toJson)
 
-        import Statement._
-    
-        // load nodes starting from bottom up...
-        val mainGroup = programModel.currentFunction.name
-        val lastStmt = stmts.last
-        val reverseStmts = stmts.reverse
-        val statementss = reverseStmts.tail.zip(reverseStmts)
-          .map((stmt, prevStmt) => getDOT(stmt, "", prevStmt.id, mainGroup)).mkString("\n")
+    import Statement._
 
-          // colors: https://graphviz.org/doc/info/colors.html#svg
+    // load nodes starting from bottom up...
+    val mainGroup = programModel.currentFunction.name
+    val lastStmt = stmts.last
+    val reverseStmts = stmts.reverse
+    val statementss = reverseStmts.tail
+      .zip(reverseStmts)
+      .map((stmt, prevStmt) => getDOT(stmt, "", prevStmt.id, mainGroup))
+      .mkString("\n")
+
+    // colors: https://graphviz.org/doc/info/colors.html#svg
     val dotSrc = s"""
     strict digraph {
         nodesep=1.2
@@ -69,7 +72,6 @@ class FunctionEditor(
         $statementss
     }
     """
-    
 
     println(dotSrc)
 
@@ -86,51 +88,63 @@ class FunctionEditor(
   ): String = {
     val group = s"""group="$groupName""""
     stmt match {
-    case End => ""
-    case Begin =>
-      s"""
+      case End => ""
+      case Begin =>
+        s"""
       |${stmt.id} [id="${stmt.id}" label="${stmt.label}" shape="ellipse" fillcolor="aqua" fontcolor="black"]
       |${stmt.id}:s -> $nextStmtId:n [id="$newId"]
       |""".stripMargin
-    case _: Declare =>
-      s"""
+      case _: Declare =>
+        s"""
       |${stmt.id} [id="${stmt.id}" label="${stmt.label}" $group fillcolor="cornsilk" fontcolor="black"]
       |${stmt.id}:s -> $nextStmtId:n [id="$newId"]
       |""".stripMargin
-    case _: Assign =>
-      s"""
+      case _: Assign =>
+        s"""
       |${stmt.id} [id="${stmt.id}" label="${stmt.label}" $group fillcolor="red"]
       |${stmt.id}:s -> $nextStmtId:n [id="$newId"]
       |""".stripMargin
-    case _: Input =>
-      s"""
+      case _: Input =>
+        s"""
       |${stmt.id} [id="${stmt.id}" label="${stmt.label}" $group shape="invtrapezium" fillcolor="mediumblue"]
       |${stmt.id}:s -> $nextStmtId:n [id="$newId"]
       |""".stripMargin
-    case _: Output =>
-      s"""
+      case _: Output =>
+        s"""
       |${stmt.id} [id="${stmt.id}" label="${stmt.label}" $group shape="trapezium" fillcolor="mediumblue"]
       |${stmt.id}:s -> $nextStmtId:n [id="$newId"]
       |""".stripMargin
-    
-    case stmt: If =>
-          val ifEndId = newId
 
-          val reverseTrueStmts = stmt.trueBlock.statements.reverse
-          val trueStatementss = if reverseTrueStmts.isEmpty then ""
-            else (List((reverseTrueStmts.head, ifEndId)) ++ 
-              reverseTrueStmts.tail.zip(reverseTrueStmts).map((stmt, prevStmt) => (stmt, prevStmt.id)))
-              .map((s, n) => getDOT(s, stmt.trueBlock.id, n, s"true_${stmt.id}")).mkString("\n")
-          val firstTrueNodeId= if reverseTrueStmts.isEmpty then ifEndId else reverseTrueStmts.reverse.head.id
+      case stmt: If =>
+        val ifEndId = newId
 
-          val reverseFalseStmts = stmt.falseBlock.statements.reverse
-          val falseStatementss = if reverseFalseStmts.isEmpty then ""
-            else (List((reverseFalseStmts.head, ifEndId)) ++ 
-              reverseFalseStmts.tail.zip(reverseFalseStmts).map((stmt, prevStmt) => (stmt, prevStmt.id)))
-              .map((s, n) => getDOT(s, stmt.falseBlock.id, n, s"false_${stmt.id}")).mkString("\n")
-          val firstFalseNodeId= if reverseFalseStmts.isEmpty then ifEndId else reverseFalseStmts.reverse.head.id
+        val reverseTrueStmts = stmt.trueBlock.statements.reverse
+        val trueStatementss =
+          if reverseTrueStmts.isEmpty then ""
+          else
+            (List((reverseTrueStmts.head, ifEndId)) ++
+              reverseTrueStmts.tail
+                .zip(reverseTrueStmts)
+                .map((stmt, prevStmt) => (stmt, prevStmt.id)))
+              .map((s, n) => getDOT(s, stmt.trueBlock.id, n, s"true_${stmt.id}"))
+              .mkString("\n")
+        val firstTrueNodeId =
+          if reverseTrueStmts.isEmpty then ifEndId else reverseTrueStmts.reverse.head.id
 
-          s"""
+        val reverseFalseStmts = stmt.falseBlock.statements.reverse
+        val falseStatementss =
+          if reverseFalseStmts.isEmpty then ""
+          else
+            (List((reverseFalseStmts.head, ifEndId)) ++
+              reverseFalseStmts.tail
+                .zip(reverseFalseStmts)
+                .map((stmt, prevStmt) => (stmt, prevStmt.id)))
+              .map((s, n) => getDOT(s, stmt.falseBlock.id, n, s"false_${stmt.id}"))
+              .mkString("\n")
+        val firstFalseNodeId =
+          if reverseFalseStmts.isEmpty then ifEndId else reverseFalseStmts.reverse.head.id
+
+        s"""
           |${stmt.id} [id="${stmt.id}" label="${stmt.label}" $group shape="diamond" fillcolor="yellow" fontcolor="black"]
           |
           |${stmt.id}:e -> $firstTrueNodeId:n [id="$newId" taillabel="true"]
@@ -144,9 +158,8 @@ class FunctionEditor(
           |
           |$ifEndId:s -> $nextStmtId:n [id="$newId"]
           |""".stripMargin
-    case _ => ""
+      case _ => ""
+    }
   }
-}
-
 
 }

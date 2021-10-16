@@ -65,7 +65,6 @@ class ProgramModel(
   def addDoWhile(req: AddDoWhile): Unit =
     update(_.addDoWhile(req))
 
-
   def updateDeclare(req: UpdateDeclare): Unit =
     update(_.updateDeclare(req))
 

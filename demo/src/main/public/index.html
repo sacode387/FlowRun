@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -27,14 +28,17 @@
             padding: 1rem;
             margin-bottom: 1rem;
         }
+
         .FlowRun-draw {
             padding: 1rem;
             background-color: aliceblue;
             text-align: center;
         }
+
         .FlowRun-edit-panel {
             padding: 0 1rem;
         }
+
         .FlowRun-meta {
             text-align: center;
             text-transform: uppercase;
@@ -42,14 +46,17 @@
             font-size: 1.2rem;
             padding-bottom: .5rem;
         }
+
         .FlowRun-output:not(:empty) {
             padding: 1em;
             background-color: palegreen;
         }
+
         .FlowRun-output.error {
             background-color: rgb(223, 41, 41);
             color: white;
         }
+
         .FlowRun-edit {
             margin-bottom: 1em;
         }
@@ -58,62 +65,71 @@
             display: flex;
             gap: 10px;
         }
+
         .FlowRun-function {
             display: flex;
             flex-wrap: wrap;
             gap: 1rem;
         }
+
         .FlowRun-btn-run {
             margin-left: auto;
         }
-        
+
 
         @media screen and (min-width: 481px) {
+
             /* you need to have a tablet at least.. */
             .FlowRun-content {
                 display: flex;
                 flex-wrap: wrap;
             }
+
             .FlowRun-draw {
                 flex: 1 1 60%;
                 min-width: 250px;
             }
+
             .FlowRun-edit-panel {
                 flex: 1 1 40%;
                 min-width: 200px;
             }
         }
-
     </style>
 
     <style>
-.flowrun-context-menu {
-  position:fixed;
-  z-index:10000;
-  width:150px;
-  background:#1b1a1a;
-  transform:scale(0);
-  transform-origin:top left;
-}
-.flowrun-context-menu.active {
-  transform:scale(1);
-}
-.flowrun-context-menu .item {
-  padding:8px 10px;
-  font-size:15px;
-  color:#eee;
-}
-.flowrun-context-menu .item:hover {
-  background:#555;
-}
-.flowrun-context-menu .item i {
-  display:inline-block;
-  margin-right:5px;
-}
-.flowrun-context-menu hr {
-  margin:2px 0px;
-  border-color:#555;
-}
+        .flowrun-context-menu {
+            position: fixed;
+            z-index: 10000;
+            width: 150px;
+            background: #1b1a1a;
+            transform: scale(0);
+            transform-origin: top left;
+        }
+
+        .flowrun-context-menu.active {
+            transform: scale(1);
+        }
+
+        .flowrun-context-menu .item {
+            padding: 8px 10px;
+            font-size: 15px;
+            color: #eee;
+        }
+
+        .flowrun-context-menu .item:hover {
+            background: #555;
+        }
+
+        .flowrun-context-menu .item i {
+            display: inline-block;
+            margin-right: 5px;
+        }
+
+        .flowrun-context-menu hr {
+            margin: 2px 0px;
+            border-color: #555;
+        }
     </style>
 </head>
 
@@ -121,14 +137,14 @@
 
     <div id="flowrun-edge-context-menu" class="flowrun-context-menu">
         <div class="item" id="flowrun-add-output">
-          <i class="fa fa-cut"></i> Output
+            <i class="fa fa-cut"></i> Output
         </div>
         <div class="item">
-          <i class="fa fa-clone"></i> Copy
+            <i class="fa fa-clone"></i> Copy
         </div>
         <hr>
         <div class="item">
-          <i class="fa fa-paste"></i> Paste
+            <i class="fa fa-paste"></i> Paste
         </div>
     </div>
 
@@ -144,7 +160,7 @@
 
         <div class="FlowRun-edit-panel">
             <div class="FlowRun-meta"></div>
-            
+
             <div class="function-chooser">
                 <div class="FlowRun-function">
                     <button class="FlowRun-add-function">Add</button>
@@ -183,11 +199,11 @@
     </div>
     -->
 
-    
+
     <script src="https://unpkg.com/@hpcc-js/wasm@0.3.11/dist/index.min.js"></script>
     <script src="https://d3js.org/d3.v5.min.js"></script>
     <script src="https://unpkg.com/d3-graphviz@3.0.5/build/d3-graphviz.js"></script>
-    
+
     <script type="module" src="scripts/main.js"></script>
 </body>
 

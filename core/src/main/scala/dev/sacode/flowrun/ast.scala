@@ -78,7 +78,7 @@ sealed trait Statement(val id: String) derives NativeConverter:
 object Statement:
   def newId: String =
     "id_" + UUID.randomUUID.toString.replaceAll("-", "_")
-    
+
   case object Begin extends Statement("beginId"):
     def label = "Begin"
   case object End extends Statement("endId"):
@@ -140,7 +140,7 @@ case class Function(
     parameters: List[(String, Expression.Type)] = List.empty[(String, Expression.Type)],
     tpe: Expression.Type = Expression.Type.Void,
     statements: List[Statement] = List(Statement.Begin, Statement.End)
-      //List.empty[Statement] // java.lang.AssertionError: cannot merge Constraint(...
+    //List.empty[Statement] // java.lang.AssertionError: cannot merge Constraint(...
 ) derives NativeConverter:
 
   val id = s"fun-$rawId"

@@ -13,9 +13,8 @@ class EditPanel(
     flowRunElements: FlowRunElements,
     flowrunChannel: Channel[FlowRun.Event]
 ) {
-  def setup(): Unit = {
-  }
-/*
+  def setup(): Unit = {}
+  /*
   def setup(): Unit = {
     cy.asDyn.on(
       "select",
@@ -278,5 +277,5 @@ class EditPanel(
     }
     paramTpeInput
   }
-  */
+   */
 }
