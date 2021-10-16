@@ -7,44 +7,41 @@
 
     <title>FlowRun</title>
 
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cytoscape-context-menus@4.0.0/cytoscape-context-menus.css">
-    <link rel="stylesheet" href="https://unpkg.com/spectre.css/dist/spectre.min.css">
-    <link rel="stylesheet" href="https://unpkg.com/spectre.css/dist/spectre-exp.min.css">
-    <link rel="stylesheet" href="https://unpkg.com/spectre.css/dist/spectre-icons.min.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/css.gg/icons/all.css">
-
     <style>
-        body {
-            width: 90%;
-            margin: 10px auto;
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
 
-        .FlowRun-meta {
-            text-align: center;
-            text-transform: uppercase;
-            font-weight: bold;
-            font-size: 1.2em;
+        body {
+            margin: 1rem;
+        }
+
+        svg {
+            width: 100%;
         }
 
         .FlowRun-editor {
             border: 1px solid black;
-            margin: 15px;
-            background-color: azure;
-        }
-
-        .FlowRun-content {
-            padding: 15px;
-            display: grid;
-            grid-template-columns: 50% 50%;
-        }
-        
-        .FlowRun-function * {
-            margin-left: .3em;
+            padding: 1rem;
+            margin-bottom: 1rem;
         }
         .FlowRun-draw {
-            min-height: 400px;
+            padding: 1rem;
+            background-color: aliceblue;
+            text-align: center;
         }
-
+        .FlowRun-edit-panel {
+            padding: 0 1rem;
+        }
+        .FlowRun-meta {
+            text-align: center;
+            text-transform: uppercase;
+            font-weight: bold;
+            font-size: 1.2rem;
+            padding-bottom: .5rem;
+        }
         .FlowRun-output:not(:empty) {
             padding: 1em;
             background-color: palegreen;
@@ -53,68 +50,122 @@
             background-color: rgb(223, 41, 41);
             color: white;
         }
-        
-        *[class^="FlowRun-input"] {
-            display: inline;
-            width: auto;
-            vertical-align: top;
-        }
-
         .FlowRun-edit {
             margin-bottom: 1em;
         }
-        .FlowRun-edit span {
-            vertical-align: middle;
-        }
-        .FlowRun-edit * {
-            margin-left: .3em;
-        }
 
         .function-chooser {
-            display: grid;
-            grid-template-columns: 80% auto;
+            display: flex;
+            gap: 10px;
+        }
+        .FlowRun-function {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        .FlowRun-btn-run {
+            margin-left: auto;
         }
         
+
+        @media screen and (min-width: 481px) {
+            /* you need to have a tablet at least.. */
+            .FlowRun-content {
+                display: flex;
+                flex-wrap: wrap;
+            }
+            .FlowRun-draw {
+                flex: 1 1 60%;
+                min-width: 250px;
+            }
+            .FlowRun-edit-panel {
+                flex: 1 1 40%;
+                min-width: 200px;
+            }
+        }
+
+    </style>
+
+    <style>
+.flowrun-context-menu {
+  position:fixed;
+  z-index:10000;
+  width:150px;
+  background:#1b1a1a;
+  transform:scale(0);
+  transform-origin:top left;
+}
+.flowrun-context-menu.active {
+  transform:scale(1);
+}
+.flowrun-context-menu .item {
+  padding:8px 10px;
+  font-size:15px;
+  color:#eee;
+}
+.flowrun-context-menu .item:hover {
+  background:#555;
+}
+.flowrun-context-menu .item i {
+  display:inline-block;
+  margin-right:5px;
+}
+.flowrun-context-menu hr {
+  margin:2px 0px;
+  border-color:#555;
+}
     </style>
 </head>
 
 <body>
 
-    <div id="FlowRun-template" style="display: none;">
-        <div class="FlowRun-meta"></div>        <!-- program title etc -->
-        
-        <div class="FlowRun-content">
-            <div style="background-color: aliceblue; padding: 10px;">
+    <div id="flowrun-edge-context-menu" class="flowrun-context-menu">
+        <div class="item" id="flowrun-add-output">
+          <i class="fa fa-cut"></i> Output
+        </div>
+        <div class="item">
+          <i class="fa fa-clone"></i> Copy
+        </div>
+        <hr>
+        <div class="item">
+          <i class="fa fa-paste"></i> Paste
+        </div>
+    </div>
 
-                <div class="function-chooser">
-                    <div class="FlowRun-function">
-                        <button class="FlowRun-add-function btn">Add</button>
-                        <button class="FlowRun-delete-function btn">Delete</button>
+    <div id="flowrun-node-context-menu" class="flowrun-context-menu">
+        <div class="item" id="flowrun-delete">
+            <i class="fa fa-trash-o"></i> Delete
+        </div>
+    </div>
 
-                        <button class="FlowRun-add-param btn">+</button>
-                        <button class="FlowRun-delete-param btn">-</button>
-                    </div>
-                    <div><button class="FlowRun-btn-run btn btn-primary">Run</button></div>
+    <div id="FlowRun-template" class="FlowRun-content" style="display: none;">
+
+        <div class="FlowRun-draw"></div>
+
+        <div class="FlowRun-edit-panel">
+            <div class="FlowRun-meta"></div>
+            
+            <div class="function-chooser">
+                <div class="FlowRun-function">
+                    <button class="FlowRun-add-function">Add</button>
+                    <button class="FlowRun-delete-function">Delete</button>
+
+                    <button class="FlowRun-add-param">+</button>
+                    <button class="FlowRun-delete-param">-</button>
                 </div>
-                
-                <div class="FlowRun-draw"></div> <!-- visual editor -->
+                <button class="FlowRun-btn-run">Run</button>
             </div>
 
-            <div>
-                <div class="FlowRun-edit"> <!-- statement editor -->
-                    <input class="FlowRun-input-text form-input" type="text" size="10">
-    
-                    <select class="FlowRun-input-select form-select"></select>
-    
-                    
-                </div>
-
-                <div class="FlowRun-output"> <!-- output of program -->
-                    <button class="FlowRun-btn-enter btn btn-success">Enter</button>
-                </div>
-
-                <div class="FlowRun-debug"></div> <!-- debug variables -->
+            <div class="FlowRun-edit">
+                <input class="FlowRun-input-text" type="text" size="10">
+                <select class="FlowRun-input-select"></select>
             </div>
+
+            <div class="FlowRun-output">
+                <button class="FlowRun-btn-enter">Enter</button>
+            </div>
+
+            <div class="FlowRun-debug"></div>
         </div>
     </div>
 
@@ -133,11 +184,9 @@
     -->
 
     
-    <script src="https://cdn.jsdelivr.net/npm/cytoscape@3.17.1/dist/cytoscape.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/cytoscape-context-menus@4.0.0/cytoscape-context-menus.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/cytoscape-cxtmenu@3.4.0/cytoscape-cxtmenu.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/dagre@0.8.5/dist/dagre.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/cytoscape-dagre@2.3.2/cytoscape-dagre.js"></script>
+    <script src="https://unpkg.com/@hpcc-js/wasm@0.3.11/dist/index.min.js"></script>
+    <script src="https://d3js.org/d3.v5.min.js"></script>
+    <script src="https://unpkg.com/d3-graphviz@3.0.5/build/d3-graphviz.js"></script>
     
     <script type="module" src="scripts/main.js"></script>
 </body>

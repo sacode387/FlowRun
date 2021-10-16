@@ -5,17 +5,17 @@ import scalajs.js
 import org.scalajs.dom
 import scalatags.JsDom.all.*
 import reactify.*
-import dev.sacode.flowrun.cytoscape.*
 import dev.sacode.flowrun.ProgramModel.Request
 import dev.sacode.flowrun.parse.*
 
 class EditPanel(
     programModel: ProgramModel,
     flowRunElements: FlowRunElements,
-    flowrunChannel: Channel[FlowRun.Event],
-    cy: cytoscape
+    flowrunChannel: Channel[FlowRun.Event]
 ) {
-
+  def setup(): Unit = {
+  }
+/*
   def setup(): Unit = {
     cy.asDyn.on(
       "select",
@@ -278,4 +278,5 @@ class EditPanel(
     }
     paramTpeInput
   }
+  */
 }

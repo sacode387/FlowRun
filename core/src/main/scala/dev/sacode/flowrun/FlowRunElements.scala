@@ -57,7 +57,7 @@ object FlowRunElements {
 
     val template = tmpl.cloneNode(true).asInstanceOf[dom.html.Element]
     template.id = ""
-    template.style = "display: block;"
+    template.style = "" // "display: block;"
 
     val addFunButton =
       template.querySelector(".FlowRun-add-function").cloneNode(true).asInstanceOf[dom.html.Element]
@@ -108,7 +108,7 @@ object FlowRunElements {
       div(cls := "FlowRun-function")(),
       div(cls := "FlowRun-btn-run")(),
       div(cls := "FlowRun-content")(
-        div(cls := "FlowRun-draw", width := "100%", height := "100%")(),
+        div(cls := "FlowRun-draw")(),
         div(cls := "FlowRun-edit")(),
         div(cls := "FlowRun-output")(),
         div(cls := "FlowRun-debug")()

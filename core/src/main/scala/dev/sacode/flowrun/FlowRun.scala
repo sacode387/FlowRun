@@ -21,7 +21,9 @@ class FlowRun(mountElem: dom.Element, programJson: Option[String] = None) {
   mountElem.innerText = ""
   mountElem.appendChild(flowRunElements.template)
 
-  private val maybeJson = programJson.orElse(Option.when(mountElemText.nonEmpty)(mountElemText))
+  private val maybeJson = programJson.orElse(
+    Option.when(mountElemText.nonEmpty)(mountElemText)
+  )
   private val program = maybeJson match
     case Some(json) => NativeConverter[Program].fromNative(js.JSON.parse(json))
     case None => Program(UUID.randomUUID.toString, "program", Function("main", "main"), List.empty)
@@ -74,8 +76,8 @@ class FlowRun(mountElem: dom.Element, programJson: Option[String] = None) {
     val selectElem = frag(
       label("Function: "),
       functionSelector,
-      Option.unless(programModel.currentFunction.isMain)(deleteFunButton),
-      flowRunElements.addFunButton
+      flowRunElements.addFunButton,
+      Option.unless(programModel.currentFunction.isMain)(deleteFunButton)
     )
     flowRunElements.functionsChooser.innerText = ""
     flowRunElements.functionsChooser.appendChild(selectElem.render)

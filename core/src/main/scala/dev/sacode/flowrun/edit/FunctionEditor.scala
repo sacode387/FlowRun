@@ -5,9 +5,9 @@ import scalajs.js
 import scalajs.js.JSConverters.*
 import org.scalajs.dom
 import reactify.*
-import dev.sacode.flowrun.cytoscape.*
 import dev.sacode.flowrun.parse.*
-import dev.sacode.flowrun.edit.ctxmenu.*
+import dev.sacode.flowrun.edit.CtxMenu
+import java.util.UUID
 
 class FunctionEditor(
     programModel: ProgramModel,
@@ -15,229 +15,138 @@ class FunctionEditor(
     flowRunElements: FlowRunElements
 ) {
 
-  private val cy = new cytoscape(
-    js.Dynamic.literal(
-      container = flowRunElements.drawArea,
-      userZoomingEnabled = false,
-      userPanningEnabled = false,
-      boxSelectionEnabled = false,
-      maxZoom = 1.3,
-      //autoungrabify = true,
-      style = utils.styleJson
-    )
-  )
-
-  // load initial program
   loadCurrentFunction()
 
-  // context menu
-  if isTouchDevice then TouchContextMenu(programModel, cy).setup()
-  else DesktopContextMenu(programModel, cy).setup()
+  CtxMenu(flowRunElements, programModel, this)
 
-  // edit menu
-  EditPanel(programModel, flowRunElements, flowrunChannel, cy).setup()
+  def disable(): Unit = {}
 
-  def disable(): Unit =
-    cy.asDyn.autounselectify(true)
+  def enable(): Unit = {}
 
-  def enable(): Unit =
-    cy.asDyn.autounselectify(false)
-
-  cy.asDyn.on(
-    "unselect add remove",
-    "node",
-    (evt: js.Dynamic) => {
-      // node not selected anymore, hide the inputs...
-      flowRunElements.editStatement.innerText = ""
-      cy.asDyn.nodes().unselect()
-      // clear visual error on nodes
-      clearErrors()
-    }
-  )
+  def clearErrors(): Unit =
+    //cy.asDyn.nodes().data("has-error", false)
+    flowrunChannel := FlowRun.Event.SyntaxSuccess
 
   flowrunChannel.attach {
     case FlowRun.Event.EvalError(nodeId, msg) =>
-      cy.asDyn.nodes(s"node[id = '$nodeId']").data("has-error", true)
+      //cy.asDyn.nodes(s"node[id = '$nodeId']").data("has-error", true)
     case _ =>
   }
 
-  def clearErrors(): Unit =
-    cy.asDyn.nodes().data("has-error", false)
-    flowrunChannel := FlowRun.Event.SyntaxSuccess
 
   def loadCurrentFunction(): Unit = {
-    ///import scalajs.js.JSConverters.*
-    //println("BEFORE: " + js.JSON.stringify(cy.asDyn.elements().jsons()))
-    cy.remove("*")
-    val currentFun = programModel.currentFunction
-    val statements = currentFun.statements
+    val graphviz = d3
+      .select(flowRunElements.drawArea)
+      .graphviz(js.Dynamic.literal(
+        zoom = false
+      ))
 
-    if currentFun.isMain then
-      val firstNode = Node("begin", Node.Begin, id = "beginId")
-      val lastNode = Node("end", Node.End, id = "endId")
-      cy.add(firstNode.toLit)
-      cy.add(lastNode.toLit)
-      val firstEdge = cy.add(Edge(firstNode.id, lastNode.id).toLit)
-      load(statements, firstNode, lastNode, firstEdge)
-    else
-      val rawParams = currentFun.parameters.map((n, t) => s"$n: $t").mkString(",")
-      val firstNode = Node(
-        currentFun.label,
-        Node.Start,
-        id = currentFun.id,
-        rawName = currentFun.name,
-        rawParams = rawParams,
-        rawTpe = currentFun.tpe.toString
-      )
-      val retStmt = statements.last.asInstanceOf[Statement.Return]
-      val lastNode = Node(
-        retStmt.label,
-        Node.Return,
-        id = retStmt.id,
-        rawExpr = retStmt.maybeValue.getOrElse("")
-      )
-      cy.add(firstNode.toLit)
-      cy.add(lastNode.toLit)
-      val firstEdge = cy.add(Edge(firstNode.id, lastNode.id).toLit)
-      load(statements.init, firstNode, lastNode, firstEdge)
+    val stmts = programModel.currentFunction.statements
+    println(programModel.ast.toJson)
 
-    doLayout(cy)
-  }
+        import Statement._
+    
+        // load nodes starting from bottom up...
+        val mainGroup = programModel.currentFunction.name
+        val lastStmt = stmts.last
+        val reverseStmts = stmts.reverse
+        val statementss = reverseStmts.tail.zip(reverseStmts)
+          .map((stmt, prevStmt) => getDOT(stmt, "", prevStmt.id, mainGroup)).mkString("\n")
 
-  private def load(
-      statements: List[Statement],
-      lastNode: Node,
-      nextNode: Node,
-      lastEdge: js.Dynamic
-  ): js.Dynamic = {
-    import Statement.*
+          // colors: https://graphviz.org/doc/info/colors.html#svg
+    val dotSrc = s"""
+    strict digraph {
+        nodesep=1.2
+        ranksep=0.4
+        bgcolor="transparent"
+        splines="true"
 
-    var prevNode = lastNode
-    var prevEdge = lastEdge
-
-    statements.foreach {
-      case stmt: Input =>
-        val newNode = Node(stmt.label, Node.Input, id = stmt.id, rawName = stmt.name)
-        cy.add(newNode.toLit)
-        cy.add(Edge(prevNode.id, newNode.id).toLit)
-        prevEdge.move(js.Dynamic.literal(target = newNode.id))
-        prevNode = newNode
-        prevEdge = cy.add(Edge(newNode.id, nextNode.id).toLit)
-      case stmt: Output =>
-        val newNode = Node(stmt.label, Node.Output, id = stmt.id, rawExpr = stmt.value)
-        cy.add(newNode.toLit)
-        prevEdge.move(js.Dynamic.literal(target = newNode.id))
-        prevNode = newNode
-        prevEdge = cy.add(Edge(newNode.id, nextNode.id).toLit)
-      case stmt: Declare =>
-        val newNode = Node(
-          stmt.label,
-          Node.Declare,
-          id = stmt.id,
-          rawName = stmt.name,
-          rawTpe = stmt.tpe.toString,
-          rawExpr = stmt.initValue.getOrElse("")
-        )
-        cy.add(newNode.toLit)
-        prevEdge.move(js.Dynamic.literal(target = newNode.id))
-        prevNode = newNode
-        prevEdge = cy.add(Edge(newNode.id, nextNode.id).toLit)
-      case stmt: Assign =>
-        val newNode =
-          Node(stmt.label, Node.Assign, id = stmt.id, rawName = stmt.name, rawExpr = stmt.value)
-        cy.add(newNode.toLit)
-        prevEdge.move(js.Dynamic.literal(target = newNode.id))
-        prevNode = newNode
-        prevEdge = cy.add(Edge(newNode.id, nextNode.id).toLit)
-      case stmt: Call =>
-        val newNode = Node(stmt.label, Node.Call, id = stmt.id, rawExpr = stmt.value)
-        cy.add(newNode.toLit)
-        prevEdge.move(js.Dynamic.literal(target = newNode.id))
-        prevNode = newNode
-        prevEdge = cy.add(Edge(newNode.id, nextNode.id).toLit)
-
-      case stmt @ If(id, expr, trueBlock, falseBlock) =>
+        node [shape="box" style="filled" fillcolor="white" penwidth="0.5" margin=0 fontcolor="white" fontname="Courier New"]
+        edge [penwidth=2]
         
-        val ifEndNode = Node("", Node.IfEnd)
-        val ifNode =
-          Node(stmt.condition, Node.If, id = stmt.id, endId = ifEndNode.id, rawExpr = expr)
-        
-        cy.add(ifNode.toLit)
-        cy.add(ifEndNode.toLit)
-        prevEdge.move(js.Dynamic.literal(target = ifNode.id))
-        val trueEdge = cy.add(Edge(ifNode.id, ifNode.id, "true").toLit)
-        val falseEdge = cy.add(Edge(ifNode.id, ifEndNode.id, "false").toLit)
+        ${lastStmt.id} [id="${lastStmt.id}" label="${lastStmt.label}" group="$mainGroup" shape="ellipse" fillcolor="aqua" fontcolor="black"]
 
-        val lastFalseEdge = if falseBlock.statements.isEmpty then
-          val falseNode = Node("", Node.Dummy, startId = ifNode.id, endId = ifEndNode.id)
-          cy.add(falseNode.toLit)
-          falseEdge.move(js.Dynamic.literal(target = falseNode.id))
-          cy.add(Edge(falseNode.id, falseNode.id).toLit)
-        else load(falseBlock.statements, ifNode, ifEndNode, falseEdge)
-
-        val lastTrueEdge = if trueBlock.statements.isEmpty then
-          val trueNode = Node("", Node.Dummy, startId = ifNode.id, endId = ifEndNode.id)
-          cy.add(trueNode.toLit)
-          trueEdge.move(js.Dynamic.literal(target = trueNode.id))
-          cy.add(Edge(trueNode.id, trueNode.id).toLit)
-        else load(trueBlock.statements, ifNode, ifEndNode, trueEdge)
-
-        lastTrueEdge.move(js.Dynamic.literal(target = ifEndNode.id))
-        lastFalseEdge.move(js.Dynamic.literal(target = ifEndNode.id))
-
-        lastFalseEdge.data("dir", "vert")
-        lastTrueEdge.data("dir", "vert")
-
-        prevEdge =
-          cy.add(Edge(ifEndNode.id, nextNode.id, dir = "vert", blockId = trueBlock.id).toLit)
-        prevNode = ifEndNode
-      
-      case stmt @ While(id, expr, trueBlock, falseBlock) =>
-        
-        val whileEndNode = Node("", Node.WhileEnd)
-        val whileNode =
-          Node(stmt.condition, Node.While, id = stmt.id, endId = whileEndNode.id, rawExpr = expr)
-        
-        cy.add(whileNode.toLit)
-        cy.add(whileEndNode.toLit)
-        prevEdge.move(js.Dynamic.literal(target = whileNode.id))
-        val trueEdge = cy.add(Edge(whileNode.id, whileNode.id, "true").toLit)
-        val falseEdge = cy.add(Edge(whileNode.id, whileEndNode.id, "false").toLit)
-
-        val lastFalseEdge = if falseBlock.statements.isEmpty then
-          val falseNode = Node("", Node.Dummy, startId = whileNode.id, endId = whileEndNode.id)
-          cy.add(falseNode.toLit)
-          falseEdge.move(js.Dynamic.literal(target = falseNode.id))
-          cy.add(Edge(falseNode.id, falseNode.id).toLit)
-        else load(falseBlock.statements, whileNode, whileEndNode, falseEdge)
-
-        val lastTrueEdge = if trueBlock.statements.isEmpty then
-          val trueNode = Node("", Node.Dummy, startId = whileNode.id, endId = whileEndNode.id)
-          cy.add(trueNode.toLit)
-          trueEdge.move(js.Dynamic.literal(target = trueNode.id))
-          cy.add(Edge(trueNode.id, trueNode.id).toLit)
-        else load(trueBlock.statements, whileNode, whileEndNode, trueEdge)
-
-        lastTrueEdge.move(js.Dynamic.literal(target = whileEndNode.id))
-        lastFalseEdge.move(js.Dynamic.literal(target = whileEndNode.id))
-
-        lastFalseEdge.data("dir", "vert")
-        lastTrueEdge.data("dir", "vert")
-
-        prevEdge =
-          cy.add(Edge(whileEndNode.id, nextNode.id, dir = "vert", blockId = trueBlock.id).toLit)
-        prevNode = whileEndNode
-      
-
-      case stmt @ (_: Dummy) =>
-        val newNode = Node(stmt.label, "Dummy", id = stmt.id)
-        cy.add(newNode.toLit)
-        prevEdge.move(js.Dynamic.literal(target = newNode.id))
-
-      case _: Block            => // noop
-      case _: Statement.Return => // noop
+        $statementss
     }
-    prevEdge
+    """
+    
+
+    println(dotSrc)
+
+    graphviz.renderDot(dotSrc)
   }
+
+  import Statement._
+
+  private def getDOT(
+      stmt: Statement,
+      blockId: String,
+      nextStmtId: String,
+      groupName: String
+  ): String = {
+    val group = s"""group="$groupName""""
+    stmt match {
+    case End => ""
+    case Begin =>
+      s"""
+      |${stmt.id} [id="${stmt.id}" label="${stmt.label}" shape="ellipse" fillcolor="aqua" fontcolor="black"]
+      |${stmt.id}:s -> $nextStmtId:n [id="$newId"]
+      |""".stripMargin
+    case _: Declare =>
+      s"""
+      |${stmt.id} [id="${stmt.id}" label="${stmt.label}" $group fillcolor="cornsilk" fontcolor="black"]
+      |${stmt.id}:s -> $nextStmtId:n [id="$newId"]
+      |""".stripMargin
+    case _: Assign =>
+      s"""
+      |${stmt.id} [id="${stmt.id}" label="${stmt.label}" $group fillcolor="red"]
+      |${stmt.id}:s -> $nextStmtId:n [id="$newId"]
+      |""".stripMargin
+    case _: Input =>
+      s"""
+      |${stmt.id} [id="${stmt.id}" label="${stmt.label}" $group shape="invtrapezium" fillcolor="mediumblue"]
+      |${stmt.id}:s -> $nextStmtId:n [id="$newId"]
+      |""".stripMargin
+    case _: Output =>
+      s"""
+      |${stmt.id} [id="${stmt.id}" label="${stmt.label}" $group shape="trapezium" fillcolor="mediumblue"]
+      |${stmt.id}:s -> $nextStmtId:n [id="$newId"]
+      |""".stripMargin
+    
+    case stmt: If =>
+          val ifEndId = newId
+
+          val reverseTrueStmts = stmt.trueBlock.statements.reverse
+          val trueStatementss = if reverseTrueStmts.isEmpty then ""
+            else (List((reverseTrueStmts.head, ifEndId)) ++ 
+              reverseTrueStmts.tail.zip(reverseTrueStmts).map((stmt, prevStmt) => (stmt, prevStmt.id)))
+              .map((s, n) => getDOT(s, stmt.trueBlock.id, n, s"true_${stmt.id}")).mkString("\n")
+          val firstTrueNodeId= if reverseTrueStmts.isEmpty then ifEndId else reverseTrueStmts.reverse.head.id
+
+          val reverseFalseStmts = stmt.falseBlock.statements.reverse
+          val falseStatementss = if reverseFalseStmts.isEmpty then ""
+            else (List((reverseFalseStmts.head, ifEndId)) ++ 
+              reverseFalseStmts.tail.zip(reverseFalseStmts).map((stmt, prevStmt) => (stmt, prevStmt.id)))
+              .map((s, n) => getDOT(s, stmt.falseBlock.id, n, s"false_${stmt.id}")).mkString("\n")
+          val firstFalseNodeId= if reverseFalseStmts.isEmpty then ifEndId else reverseFalseStmts.reverse.head.id
+
+          s"""
+          |${stmt.id} [id="${stmt.id}" label="${stmt.label}" $group shape="diamond" fillcolor="yellow" fontcolor="black"]
+          |
+          |${stmt.id}:e -> $firstTrueNodeId:n [id="$newId" taillabel="true"]
+          |${stmt.id}:w -> $firstFalseNodeId:n [id="$newId" taillabel="false"]
+          |
+          |
+          |$trueStatementss
+          |$falseStatementss
+          |
+          |$ifEndId [id="$ifEndId" label="" $group shape="circle" fillcolor="black" fixedsize=true width=0.3 height=0.3]
+          |
+          |$ifEndId:s -> $nextStmtId:n [id="$newId"]
+          |""".stripMargin
+    case _ => ""
+  }
+}
+
 
 }

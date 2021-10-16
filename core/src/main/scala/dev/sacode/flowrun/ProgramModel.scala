@@ -141,12 +141,12 @@ case class FunctionModel(
 
   def addWhile(req: AddWhile): FunctionModel =
     val newStat =
-      Statement.While(req.id, "true", Statement.Block(req.trueId), Statement.Block(req.falseId))
+      Statement.While(req.id, "true", Statement.Block(req.bodyId))
     doInsert(req.afterId, newStat, req.blockId)
 
   def addDoWhile(req: AddDoWhile): FunctionModel =
     val newStat =
-      Statement.DoWhile(req.id, "true", Statement.Block(req.trueId), Statement.Block(req.falseId))
+      Statement.DoWhile(req.id, "true", Statement.Block(req.bodyId))
     doInsert(req.afterId, newStat, req.blockId)
 
   def updateDeclare(req: UpdateDeclare): FunctionModel =
@@ -202,8 +202,8 @@ case class FunctionModel(
   private def doInsert(afterId: String, newStatement: Statement, blockId: String): FunctionModel =
     val newStats =
       if ast.statements.isEmpty then List(newStatement)
-      else if afterId == "beginId" || afterId.startsWith("fun-") then
-        ast.statements.prepended(newStatement)
+      //else if afterId == "beginId" || afterId.startsWith("fun-") then
+      //  ast.statements.prepended(newStatement)
       else insert(ast.statements, afterId, newStatement, blockId)
     this.copy(ast = ast.copy(statements = newStats))
 
@@ -234,17 +234,13 @@ case class FunctionModel(
           statements.updated(afterStatementIdx, newIfStatement)
         case whileStatement: Statement.While =>
           val newWhileStatement =
-            if (whileStatement.trueBlock.id == blockId)
-              whileStatement.copy(trueBlock =
-                whileStatement.trueBlock
-                  .copy(statements = whileStatement.trueBlock.statements.prepended(newStatement))
+            if (whileStatement.body.id == blockId)
+              whileStatement.copy(body =
+                whileStatement.body
+                  .copy(statements = whileStatement.body.statements.prepended(newStatement))
               )
             else
-              whileStatement.copy(falseBlock =
-                whileStatement.falseBlock.copy(statements =
-                  whileStatement.falseBlock.statements.prepended(newStatement)
-                )
-              )
+              whileStatement
           statements.updated(afterStatementIdx, newWhileStatement)
         case _ =>
           statements.patch(afterStatementIdx + 1, List(newStatement), 0)
@@ -262,20 +258,14 @@ case class FunctionModel(
           )
         case whileStatement: Statement.While =>
           whileStatement.copy(
-            trueBlock = whileStatement.trueBlock.copy(statements =
-              insert(whileStatement.trueBlock.statements, afterId, newStatement, blockId)
-            ),
-            falseBlock = whileStatement.falseBlock.copy(statements =
-              insert(whileStatement.falseBlock.statements, afterId, newStatement, blockId)
+            body = whileStatement.body.copy(statements =
+              insert(whileStatement.body.statements, afterId, newStatement, blockId)
             )
           )
         case doWhileStatement: Statement.DoWhile =>
           doWhileStatement.copy(
-            trueBlock = doWhileStatement.trueBlock.copy(statements =
-              insert(doWhileStatement.trueBlock.statements, afterId, newStatement, blockId)
-            ),
-            falseBlock = doWhileStatement.falseBlock.copy(statements =
-              insert(doWhileStatement.falseBlock.statements, afterId, newStatement, blockId)
+            body = doWhileStatement.body.copy(statements =
+              insert(doWhileStatement.body.statements, afterId, newStatement, blockId)
             )
           )
         case simple =>
@@ -316,20 +306,14 @@ case class FunctionModel(
           )
         case whileStatement: Statement.While =>
           whileStatement.copy(
-            trueBlock = whileStatement.trueBlock.copy(statements =
-              update(whileStatement.trueBlock.statements, statementId, newStatement)
-            ),
-            falseBlock = whileStatement.falseBlock.copy(statements =
-              update(whileStatement.falseBlock.statements, statementId, newStatement)
+            body = whileStatement.body.copy(statements =
+              update(whileStatement.body.statements, statementId, newStatement)
             )
           )
         case doWhileStatement: Statement.DoWhile =>
           doWhileStatement.copy(
-            trueBlock = doWhileStatement.trueBlock.copy(statements =
-              update(doWhileStatement.trueBlock.statements, statementId, newStatement)
-            ),
-            falseBlock = doWhileStatement.falseBlock.copy(statements =
-              update(doWhileStatement.falseBlock.statements, statementId, newStatement)
+            body = doWhileStatement.body.copy(statements =
+              update(doWhileStatement.body.statements, statementId, newStatement)
             )
           )
         case simple =>
@@ -378,16 +362,14 @@ case class FunctionModel(
           .when(statementId == id)(ifStat)
           .orElse(findById(trueBlock.statements, statementId))
           .orElse(findById(falseBlock.statements, statementId))
-      case whileStat @ While(id, expr, trueBlock, falseBlock) =>
+      case whileStat @ While(id, expr, body) =>
         Option
           .when(statementId == id)(whileStat)
-          .orElse(findById(trueBlock.statements, statementId))
-          .orElse(findById(falseBlock.statements, statementId))
-      case doWhileStat @ DoWhile(id, expr, trueBlock, falseBlock) =>
+          .orElse(findById(body.statements, statementId))
+      case doWhileStat @ DoWhile(id, expr, body) =>
         Option
           .when(statementId == id)(doWhileStat)
-          .orElse(findById(trueBlock.statements, statementId))
-          .orElse(findById(falseBlock.statements, statementId))
+          .orElse(findById(body.statements, statementId))
       case stmt =>
         Option.when(stmt.id == statementId)(stmt)
     }.headOption
@@ -413,16 +395,14 @@ object ProgramModel:
     )
     case AddWhile(
         id: String,
-        trueId: String,
-        falseId: String,
+        bodyId: String,
         endId: String,
         afterId: String,
         blockId: String
     )
     case AddDoWhile(
         id: String,
-        trueId: String,
-        falseId: String,
+        bodyId: String,
         endId: String,
         afterId: String,
         blockId: String

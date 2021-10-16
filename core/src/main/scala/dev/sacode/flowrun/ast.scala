@@ -3,6 +3,7 @@ package dev.sacode.flowrun
 import org.getshaka.nativeconverter.NativeConverter
 
 import dev.sacode.flowrun.parse.Token
+import java.util.UUID
 
 /*
 EXPRESSION GRAMMAR:
@@ -75,6 +76,13 @@ sealed trait Statement(val id: String) derives NativeConverter:
   def label: String
 
 object Statement:
+  def newId: String =
+    "id_" + UUID.randomUUID.toString.replaceAll("-", "_")
+    
+  case object Begin extends Statement("beginId"):
+    def label = "Begin"
+  case object End extends Statement("endId"):
+    def label = "End"
   case class Dummy(override val id: String) extends Statement(id):
     def label = ""
   case class Declare(
@@ -93,7 +101,7 @@ object Statement:
   case class Input(override val id: String, name: String) extends Statement(id):
     def label = name
   case class Output(override val id: String, value: String) extends Statement(id):
-    def label = value
+    def label = value.replaceAll("\"", "\\\\\"")
   case class Block(override val id: String, statements: List[Statement] = List.empty)
       extends Statement(id):
     def label = ""
@@ -115,15 +123,13 @@ object Statement:
   case class While(
       override val id: String,
       condition: String,
-      trueBlock: Block,
-      falseBlock: Block
+      body: Block
   ) extends Statement(id):
     def label = condition.toString
   case class DoWhile(
       override val id: String,
       condition: String,
-      trueBlock: Block,
-      falseBlock: Block
+      body: Block
   ) extends Statement(id):
     def label = condition.toString
 end Statement
@@ -133,8 +139,8 @@ case class Function(
     name: String,
     parameters: List[(String, Expression.Type)] = List.empty[(String, Expression.Type)],
     tpe: Expression.Type = Expression.Type.Void,
-    statements: List[Statement] =
-      List.empty[Statement] // java.lang.AssertionError: cannot merge Constraint(...
+    statements: List[Statement] = List(Statement.Begin, Statement.End)
+      //List.empty[Statement] // java.lang.AssertionError: cannot merge Constraint(...
 ) derives NativeConverter:
 
   val id = s"fun-$rawId"

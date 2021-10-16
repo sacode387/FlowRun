@@ -88,7 +88,7 @@ class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[FlowRun.Ev
           case None =>
             val key = SymbolKey(name, Symbol.Kind.Variable)
             symTab.add(id, key, tpe, None)
-            Future.successful(())
+            Future.successful({})
           case Some(expr) =>
             eval(id, expr).map { v =>
               TypeUtils.getUpdateValue(id, name, tpe, v).get // validate
@@ -127,23 +127,24 @@ class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[FlowRun.Ev
             else interpret(ifFalseStatements)
           case condValue => throw EvalException(s"Not a valid condition: '$condValue'", id)
         }
-      case While(id, condition, ifTrueStatements, ifFalseStatements) =>
+      case While(id, condition, body) =>
         def loop(): Future[Any] =
           eval(id, parseExpr(id, condition)).flatMap {
             case condition: Boolean =>
-              println("CONDITION IS: " + condition)
-              if (condition) interpret(ifTrueStatements).flatMap(_ => loop())
-              else interpret(ifFalseStatements)
+              if (condition) interpret(body).flatMap(_ => loop())
+              else Future.successful({})
             case condValue => throw EvalException(s"Not a valid condition: '$condValue'", id)
           }
         loop()
-      case DoWhile(id, condition, ifTrueStatements, ifFalseStatements) =>
-        eval(id, parseExpr(id, condition)).flatMap {
-          case condition: Boolean =>
-            if (condition) interpret(ifTrueStatements)
-            else interpret(ifFalseStatements)
-          case condValue => throw EvalException(s"Not a valid condition: '$condValue'", id)
-        }
+      case DoWhile(id, condition, body) =>
+        def loop(): Future[Any] =
+          eval(id, parseExpr(id, condition)).flatMap {
+            case condition: Boolean =>
+              if (condition) interpret(body).flatMap(_ => loop())
+              else Future.successful({})
+            case condValue => throw EvalException(s"Not a valid condition: '$condValue'", id)
+          }
+        loop()
       case block: Block =>
         execSequentially((): Any, block.statements, (_, s) => interpret(s))
       case Return(id, maybeExpr) => // noop
@@ -151,6 +152,8 @@ class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[FlowRun.Ev
           case None       => Future.successful(())
           case Some(expr) => eval(id, parseExpr(id, expr))
       case Dummy(_) => // noop
+        Future.successful(())
+      case Begin | End => // noop
         Future.successful(())
     }
   }
