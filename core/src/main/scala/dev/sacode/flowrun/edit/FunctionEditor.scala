@@ -58,11 +58,12 @@ class FunctionEditor(
 
     // colors: https://graphviz.org/doc/info/colors.html#svg
     val dotSrc = s"""
-    strict digraph {
-        nodesep=1.2
-        ranksep=0.4
+    digraph {
+        nodesep=0.65
+        ranksep=0.35
         bgcolor="transparent"
-        splines="true"
+        splines="spline"
+       
 
         node [shape="box" style="filled" fillcolor="white" penwidth="0.5" margin=0 fontcolor="white" fontname="Courier New"]
         edge [penwidth=2]
@@ -91,29 +92,29 @@ class FunctionEditor(
       case End => ""
       case Begin =>
         s"""
-      |${stmt.id} [id="${stmt.id}" label="${stmt.label}" shape="ellipse" fillcolor="aqua" fontcolor="black"]
-      |${stmt.id}:s -> $nextStmtId:n [id="$newId"]
-      |""".stripMargin
+        |${stmt.id} [id="${stmt.id}" label="${stmt.label}" shape="ellipse" fillcolor="aqua" fontcolor="black"]
+        |${stmt.id}:s -> $nextStmtId:n [id="$newId"]
+        |""".stripMargin
       case _: Declare =>
         s"""
-      |${stmt.id} [id="${stmt.id}" label="${stmt.label}" $group fillcolor="cornsilk" fontcolor="black"]
-      |${stmt.id}:s -> $nextStmtId:n [id="$newId"]
-      |""".stripMargin
+        |${stmt.id} [id="${stmt.id}" label="${stmt.label}" $group fillcolor="cornsilk" fontcolor="black"]
+        |${stmt.id}:s -> $nextStmtId:n [id="$newId"]
+        |""".stripMargin
       case _: Assign =>
         s"""
-      |${stmt.id} [id="${stmt.id}" label="${stmt.label}" $group fillcolor="red"]
-      |${stmt.id}:s -> $nextStmtId:n [id="$newId"]
-      |""".stripMargin
+        |${stmt.id} [id="${stmt.id}" label="${stmt.label}" $group fillcolor="red"]
+        |${stmt.id}:s -> $nextStmtId:n [id="$newId"]
+        |""".stripMargin
       case _: Input =>
         s"""
-      |${stmt.id} [id="${stmt.id}" label="${stmt.label}" $group shape="invtrapezium" fillcolor="mediumblue"]
-      |${stmt.id}:s -> $nextStmtId:n [id="$newId"]
-      |""".stripMargin
+        |${stmt.id} [id="${stmt.id}" label="${stmt.label}" $group shape="invtrapezium" fillcolor="mediumblue"]
+        |${stmt.id}:s -> $nextStmtId:n [id="$newId"]
+        |""".stripMargin
       case _: Output =>
         s"""
-      |${stmt.id} [id="${stmt.id}" label="${stmt.label}" $group shape="trapezium" fillcolor="mediumblue"]
-      |${stmt.id}:s -> $nextStmtId:n [id="$newId"]
-      |""".stripMargin
+        |${stmt.id} [id="${stmt.id}" label="${stmt.label}" $group shape="trapezium" fillcolor="mediumblue"]
+        |${stmt.id}:s -> $nextStmtId:n [id="$newId"]
+        |""".stripMargin
 
       case stmt: If =>
         val ifEndId = newId
@@ -145,18 +146,16 @@ class FunctionEditor(
           if reverseFalseStmts.isEmpty then ifEndId else reverseFalseStmts.reverse.head.id
 
         s"""
+          |$ifEndId [id="$ifEndId" label="" $group shape="circle" fillcolor="black" fixedsize=true width=0.3 height=0.3]
+          |$ifEndId:s -> $nextStmtId:n [id="$newId"]
+          |
           |${stmt.id} [id="${stmt.id}" label="${stmt.label}" $group shape="diamond" fillcolor="yellow" fontcolor="black"]
           |
           |${stmt.id}:e -> $firstTrueNodeId:n [id="$newId" taillabel="true"]
           |${stmt.id}:w -> $firstFalseNodeId:n [id="$newId" taillabel="false"]
           |
-          |
           |$trueStatementss
           |$falseStatementss
-          |
-          |$ifEndId [id="$ifEndId" label="" $group shape="circle" fillcolor="black" fixedsize=true width=0.3 height=0.3]
-          |
-          |$ifEndId:s -> $nextStmtId:n [id="$newId"]
           |""".stripMargin
       case _ => ""
     }

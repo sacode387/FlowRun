@@ -6,6 +6,7 @@ import dev.sacode.flowrun.ProgramModel
 import dev.sacode.flowrun.edit.FunctionEditor
 import dev.sacode.flowrun.ProgramModel.Request
 import dev.sacode.flowrun.Statement
+import dev.sacode.flowrun.Expression
 
 class CtxMenu(
     flowRunElements: FlowRunElements,
@@ -20,8 +21,20 @@ class CtxMenu(
 
   private val edgeContextMenu =
     dom.document.getElementById("flowrun-edge-context-menu").asInstanceOf[dom.html.Element]
+  private val addDeclareButton =
+    edgeContextMenu.querySelector("#flowrun-add-declare").asInstanceOf[dom.html.Element]
+  private val addAssignButton =
+    edgeContextMenu.querySelector("#flowrun-add-assign").asInstanceOf[dom.html.Element]
+  private val addInputButton =
+    edgeContextMenu.querySelector("#flowrun-add-input").asInstanceOf[dom.html.Element]
   private val addOutputButton =
     edgeContextMenu.querySelector("#flowrun-add-output").asInstanceOf[dom.html.Element]
+  private val addCallButton =
+    edgeContextMenu.querySelector("#flowrun-add-call").asInstanceOf[dom.html.Element]
+  private val addIfButton =
+    edgeContextMenu.querySelector("#flowrun-add-if").asInstanceOf[dom.html.Element]
+  private val addWhileButton =
+    edgeContextMenu.querySelector("#flowrun-add-while").asInstanceOf[dom.html.Element]
 
   private val nodeContextMenu =
     dom.document.getElementById("flowrun-node-context-menu").asInstanceOf[dom.html.Element]
@@ -70,8 +83,33 @@ class CtxMenu(
   deleteButton.addEventListener(
     "click",
     (event: dom.MouseEvent) => {
-      println("Delete " + nodeId)
       programModel.delete(Request.Delete(nodeId))
+      functionEditor.loadCurrentFunction()
+    }
+  )
+
+  addDeclareButton.addEventListener(
+    "click",
+    (event: dom.MouseEvent) => {
+      programModel.addDeclare(
+        Request.AddDeclare(Statement.newId, "?", Expression.Type.Integer, afterId, blockId)
+      )
+      functionEditor.loadCurrentFunction()
+    }
+  )
+
+  addAssignButton.addEventListener(
+    "click",
+    (event: dom.MouseEvent) => {
+      programModel.addAssign(Request.AddAssign(Statement.newId, afterId, blockId))
+      functionEditor.loadCurrentFunction()
+    }
+  )
+
+  addInputButton.addEventListener(
+    "click",
+    (event: dom.MouseEvent) => {
+      programModel.addInput(Request.AddInput(Statement.newId, afterId, blockId))
       functionEditor.loadCurrentFunction()
     }
   )
@@ -79,7 +117,32 @@ class CtxMenu(
   addOutputButton.addEventListener(
     "click",
     (event: dom.MouseEvent) => {
-      println(s"Add output after $afterId")
+      programModel.addOutput(Request.AddOutput(Statement.newId, afterId, blockId))
+      functionEditor.loadCurrentFunction()
+    }
+  )
+
+  addCallButton.addEventListener(
+    "click",
+    (event: dom.MouseEvent) => {
+      programModel.addCall(Request.AddCall(Statement.newId, afterId, blockId))
+      functionEditor.loadCurrentFunction()
+    }
+  )
+
+  addIfButton.addEventListener(
+    "click",
+    (event: dom.MouseEvent) => {
+      programModel.addIf(
+        Request.AddIf(Statement.newId, Statement.newId, Statement.newId, afterId, blockId)
+      )
+      functionEditor.loadCurrentFunction()
+    }
+  )
+
+  addWhileButton.addEventListener(
+    "click",
+    (event: dom.MouseEvent) => {
       programModel.addOutput(Request.AddOutput(Statement.newId, afterId, blockId))
       functionEditor.loadCurrentFunction()
     }

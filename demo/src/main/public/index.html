@@ -111,19 +111,14 @@
             transform: scale(1);
         }
 
-        .flowrun-context-menu .item {
+        .flowrun-context-menu > div {
             padding: 8px 10px;
             font-size: 15px;
             color: #eee;
         }
 
-        .flowrun-context-menu .item:hover {
+        .flowrun-context-menu > *:hover {
             background: #555;
-        }
-
-        .flowrun-context-menu .item i {
-            display: inline-block;
-            margin-right: 5px;
         }
 
         .flowrun-context-menu hr {
@@ -136,16 +131,17 @@
 <body>
 
     <div id="flowrun-edge-context-menu" class="flowrun-context-menu">
-        <div class="item" id="flowrun-add-output">
-            <i class="fa fa-cut"></i> Output
-        </div>
-        <div class="item">
-            <i class="fa fa-clone"></i> Copy
-        </div>
+        <div id="flowrun-add-declare">Declare</div>
+        <div id="flowrun-add-assign">Assign</div>
         <hr>
-        <div class="item">
-            <i class="fa fa-paste"></i> Paste
-        </div>
+        <div id="flowrun-add-input">Input</div>
+        <div id="flowrun-add-output">Output</div>
+        <hr>
+        <div id="flowrun-add-call">Call</div>
+        <hr>
+        <div id="flowrun-add-if">If</div>
+        <div id="flowrun-add-while">While</div>
+        <hr>
     </div>
 
     <div id="flowrun-node-context-menu" class="flowrun-context-menu">

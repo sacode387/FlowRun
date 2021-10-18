@@ -82,6 +82,9 @@ class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[FlowRun.Ev
         if name.trim.isEmpty then throw EvalException(s"Not a valid name: '$name'", id)
 
         // TODO validate reserved identifiers
+        // TODO validate [a-zA-Z][a-zA-Z0-9]*
+        if !name.trim.matches("[a-zA-Z][a-zA-Z0-9]*") then
+          throw EvalException(s"Not a valid name: '$name'", id)
 
         val maybeInitValueExpr = initValue.map(iv => parseExpr(id, iv))
         maybeInitValueExpr match
