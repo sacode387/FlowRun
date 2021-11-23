@@ -4,6 +4,7 @@ import org.getshaka.nativeconverter.NativeConverter
 
 import dev.sacode.flowrun.parse.Token
 import java.util.UUID
+import dev.sacode.flowrun.eval.Interpreter.State
 
 /*
 EXPRESSION GRAMMAR:
@@ -132,6 +133,29 @@ object Statement:
       body: Block
   ) extends Statement(id):
     def label = condition.toString
+  
+  // utils
+  def name(stmt: Statement): String =
+    getName(stmt).getOrElse("")
+  def hasName(stmt: Statement): Boolean =
+    getName(stmt).isDefined
+  
+  private def getName(stmt: Statement): Option[String] = stmt match
+    case Declare(_, name, _, _) => Some(name)
+    case Assign(_, name, _) => Some(name)
+    case Input(_, name) => Some(name)
+    case _ => None
+  
+  def tpe(stmt: Statement): String =
+    getTpe(stmt).getOrElse("")
+  def hasTpe(stmt: Statement): Boolean =
+    getTpe(stmt).isDefined
+  
+  private def getTpe(stmt: Statement): Option[String] = stmt match
+    case Declare(_, name, tpe, _) => Some(tpe.toString)
+    case Begin => Some("??????")
+    case _ => None
+
 end Statement
 
 case class Function(

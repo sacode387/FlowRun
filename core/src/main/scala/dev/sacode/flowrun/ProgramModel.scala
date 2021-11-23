@@ -1,14 +1,16 @@
 package dev.sacode.flowrun
 
 import scala.scalajs.js
+import reactify.*
 import dev.sacode.flowrun.parse.parseExpr
 
 class ProgramModel(
-    programAst: Program
+    initAst: Program,
+    flowrunChannel: Channel[FlowRun.Event]
 ) {
   import ProgramModel.Request.*
 
-  var ast = programAst
+  var ast = initAst
 
   // I'm too lazy to make this a request parameter :/
   var currentFunctionId = "fun-main"
@@ -20,10 +22,12 @@ class ProgramModel(
   def addFunction(fun: Function): Unit =
     val newFunctions = ast.functions.appended(fun)
     ast = ast.copy(functions = newFunctions)
+    flowrunChannel := FlowRun.Event.FunctionUpdated
 
   def deleteFunction(id: String): Unit =
     val newFunctions = ast.functions.filterNot(_.id == id)
     ast = ast.copy(functions = newFunctions)
+    flowrunChannel := FlowRun.Event.FunctionUpdated
 
   def updateFunction(req: UpdateFunction) =
     val newFunctions = ast.functions.map { f =>
@@ -39,6 +43,7 @@ class ProgramModel(
       else f
     }
     ast = ast.copy(functions = newFunctions)
+    flowrunChannel := FlowRun.Event.FunctionUpdated
 
   /* per-function */
   def addDeclare(req: AddDeclare): Unit =
@@ -94,6 +99,9 @@ class ProgramModel(
 
   def delete(req: Delete): Unit =
     update(_.delete(req))
+  
+  def findStatement(stmtId: String): Statement =
+    FunctionModel(currentFunction).doFind(stmtId)
 
   private def update(transform: FunctionModel => FunctionModel): Unit = {
     val newFunction = transform(FunctionModel(currentFunction)).ast
@@ -105,6 +113,8 @@ class ProgramModel(
         case idx =>
           val newFunctions = ast.functions.updated(idx, newFunction)
           ast = ast.copy(functions = newFunctions)
+
+    flowrunChannel := FlowRun.Event.SyntaxSuccess
   }
 }
 
@@ -345,7 +355,7 @@ case class FunctionModel(
     }
   }
 
-  private def doFind(statementId: String): Statement =
+  def doFind(statementId: String): Statement =
     findById(ast.statements, statementId).get
 
   private def findById(

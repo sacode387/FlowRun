@@ -9,6 +9,7 @@ import scalatags.JsDom.all.*
 import reactify.*
 import dev.sacode.flowrun.eval.*
 import dev.sacode.flowrun.edit.FunctionEditor
+import dev.sacode.flowrun.edit.StatementEditor
 import dev.sacode.flowrun.parse.parseExpr
 
 @JSExportTopLevel("FlowRun")
@@ -29,8 +30,9 @@ class FlowRun(mountElem: dom.Element, programJson: Option[String] = None) {
     case None => Program(UUID.randomUUID.toString, "program", Function("main", "main"), List.empty)
 
   private val flowrunChannel = Channel[FlowRun.Event]
-  private val programModel = ProgramModel(program)
+  private val programModel = ProgramModel(program, flowrunChannel)
   private val functionEditor = FunctionEditor(programModel, flowrunChannel, flowRunElements)
+  private val statementEditor = StatementEditor(programModel, flowrunChannel, flowRunElements)
   private var interpreter = Interpreter(programModel, flowrunChannel)
 
   private var lastRun: String = ""
@@ -38,6 +40,7 @@ class FlowRun(mountElem: dom.Element, programJson: Option[String] = None) {
   flowRunElements.metaData.innerText = program.name
 
   populateFunctions()
+  statementEditor.setup()
 
   dom.document.getElementById("gencode").asInstanceOf[dom.html.Button].onclick = _ => {
     val generator = new dev.sacode.flowrun.codegen.ScalaGenerator(programModel.ast)
@@ -126,6 +129,7 @@ class FlowRun(mountElem: dom.Element, programJson: Option[String] = None) {
       // TODO REMOVE SAMO SYNTAX ERORE !!!!!!!!!
       flowRunElements.output.innerText = ""
       flowRunElements.output.classList.remove("error")
+      functionEditor.loadCurrentFunction()
     case SyntaxError(msg) =>
       var output = s"Started at: $lastRun"
       output += "\nError: " + msg

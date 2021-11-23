@@ -8,12 +8,109 @@ import reactify.*
 import dev.sacode.flowrun.ProgramModel.Request
 import dev.sacode.flowrun.parse.*
 
-class EditPanel(
+/**
+ * Editor for selected statement.
+ */
+class StatementEditor(
     programModel: ProgramModel,
-    flowRunElements: FlowRunElements,
-    flowrunChannel: Channel[FlowRun.Event]
+    flowrunChannel: Channel[FlowRun.Event],
+    flowRunElements: FlowRunElements
 ) {
-  def setup(): Unit = {}
+
+  def setup(): Unit = {
+    flowRunElements.drawArea.addEventListener(
+      "click",
+      (event: dom.MouseEvent) => {
+        event.preventDefault()
+        event.target match {
+          case g: dom.svg.Element =>
+            g.parentNode match {
+              case parent: dom.svg.G =>
+                if parent.className.baseVal == "node" then
+                  doEdit(parent.id)
+                else
+                  println("Not a node")
+              case _ =>
+                println("Not a group")
+            }
+          case _ =>
+            println("Not an svg element")
+        }
+      }
+    )
+  }
+
+  private def doEdit(nodeId: String): Unit = {
+    val node = programModel.findStatement(nodeId)
+    val nodeType = node.getClass.getSimpleName.filterNot(_ == '$')
+    println(s"Editing statement: $nodeType")
+
+    // clear first, prepare for new inputs
+    flowRunElements.editStatement.innerText = ""
+    flowRunElements.editStatement.appendChild(div(s"Editing $nodeType:").render)
+
+    // name input
+    val nameInputElem = flowRunElements.newInputText
+    nameInputElem.value = Statement.name(node) // TODO expr ili labela, kako kad.. :D
+    //nameInputElem.placeholder = if nodeType == Node.Start then "myFun" else "x"
+    nameInputElem.oninput = { (_: dom.Event) =>
+      val newName = nameInputElem.value.trim
+      val errorMsg: Option[String] =
+        if newName.isEmpty then None // noop when blank
+        else if !newName.head.isLetter then Some("Name must start with a letter.")
+        else if newName.matches(".*\\s.*") then Some("Name must not contain spaces.")
+        else if !newName.matches("[a-zA-Z0-9_]+") then
+          Some("Name can contain only letters, numbers and underscore.")
+        else {
+          node match {
+            case _: Statement.Declare =>
+              programModel.updateDeclare(Request.UpdateDeclare(nodeId, name = Some(newName)))
+            case _: Statement.Input =>
+              programModel.updateInput(Request.UpdateInput(nodeId, name = newName))
+            case Statement.Begin =>
+              programModel.updateFunction(Request.UpdateFunction(nodeId, name = Some(newName)))
+            case _: Statement.Assign =>
+              programModel.updateAssign(Request.UpdateAssign(nodeId, name = Some(newName)))
+            case _ => ()
+          }
+          None
+        }
+
+      println(s"err: $errorMsg")
+      errorMsg.foreach(msg => flowrunChannel := FlowRun.Event.SyntaxError(msg))
+    }
+
+    var filledName = false
+    if Statement.hasName(node) then
+      filledName = nameInputElem.value.nonEmpty
+      flowRunElements.editStatement.appendChild(nameInputElem)
+    
+    
+    // type input
+    val typeSelectElem = flowRunElements.newInputSelect
+    val types =
+      if nodeType == "Begin" then Expression.Type.values
+      else Expression.Type.VarTypes
+    types.foreach { tpe =>
+      val typeItem = option(value := tpe.toString)(tpe.toString).render
+      typeSelectElem.add(typeItem)
+    }
+    typeSelectElem.onchange = { (e: dom.Event) =>
+      val thisElem = e.target.asInstanceOf[dom.html.Select]
+      val newType = Expression.Type.valueOf(thisElem.value)
+      if nodeType == "Declare" then
+        programModel.updateDeclare(Request.UpdateDeclare(nodeId, tpe = Some(newType)))
+      else
+        programModel.updateFunction(Request.UpdateFunction(nodeId, tpe = Some(newType)))
+    }
+
+    if Statement.hasTpe(node) then
+      typeSelectElem.value = Statement.tpe(node) // select appropriate type
+      flowRunElements.editStatement.appendChild(span(": ").render)
+      flowRunElements.editStatement.appendChild(typeSelectElem)
+    // TODO nastavit
+    
+  }
   /*
   def setup(): Unit = {
     cy.asDyn.on(

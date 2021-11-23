@@ -2,7 +2,7 @@ import org.scalajs.linker.interface.OutputPatterns
 
 inThisBuild(
   List(
-    scalaVersion := "3.0.1",
+    scalaVersion := "3.1.0",
     evictionErrorLevel := Level.Warn,
     publish / skip := true,
     scalafmtSbt := true,
@@ -30,9 +30,8 @@ lazy val core = (project in file("core"))
   .settings(
     name := "FlowRun",
     libraryDependencies ++= Seq(
-      "org.scala-js" %%% "scalajs-dom" % "1.1.0", // not yet available
-      "com.lihaoyi" %%% "scalatags" % "0.9.4", // not yet available
-      "com.lihaoyi" %%% "pprint" % "0.6.6" // sourcecode from scalatags... 2.13
+      "com.lihaoyi" %%% "scalatags" % "0.10.0",
+      "com.lihaoyi" %%% "pprint" % "0.6.6" // sourcecode from scalatags is 2.13
     ).map(_.cross(CrossVersion.for3Use2_13)),
     libraryDependencies ++= Seq(
       "com.outr" %%% "reactify" % "4.0.6",

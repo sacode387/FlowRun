@@ -14,6 +14,7 @@ class CtxMenu(
     functionEditor: FunctionEditor
 ) {
 
+  /** used for delete */
   private var nodeId = ""
 
   private var afterId = ""
@@ -49,9 +50,11 @@ class CtxMenu(
       // we save relevant ids, and then use them when a button is clicked
 
       event.preventDefault()
-      hideAll()
+      hideAllMenus()
       event.target match {
         case g: dom.svg.Element =>
+          // click usually refers to a <title>, <path>, <polygon> etc
+          // but the id is on the parent group <g> element
           g.parentNode match {
             case parent: dom.svg.G =>
               if parent.className.baseVal == "node" then
@@ -78,7 +81,7 @@ class CtxMenu(
   )
 
   // close menu when clicked anywhere
-  dom.window.addEventListener("click", event => hideAll())
+  dom.window.addEventListener("click", event => hideAllMenus())
 
   deleteButton.addEventListener(
     "click",
@@ -148,14 +151,12 @@ class CtxMenu(
     }
   )
 
-  private def hideAll(): Unit =
-    import dom.ext.*
+  private def hideAllMenus(): Unit =
     dom.document
       .getElementsByClassName("flowrun-context-menu")
       .foreach { e =>
         e.asInstanceOf[dom.html.Element].classList.remove("active")
       }
-  end hideAll
 
   private def getAfterId(title: String): String =
     title.takeWhile(_ != ':')

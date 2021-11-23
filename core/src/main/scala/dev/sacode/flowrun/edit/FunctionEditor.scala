@@ -85,7 +85,8 @@ class FunctionEditor(
       stmt: Statement,
       blockId: String,
       nextStmtId: String,
-      groupName: String
+      groupName: String,
+      nextStmtDir: String = "n"
   ): String = {
     val group = s"""group="$groupName""""
     stmt match {
@@ -93,27 +94,27 @@ class FunctionEditor(
       case Begin =>
         s"""
         |${stmt.id} [id="${stmt.id}" label="${stmt.label}" shape="ellipse" fillcolor="aqua" fontcolor="black"]
-        |${stmt.id}:s -> $nextStmtId:n [id="$newId"]
+        |${stmt.id}:s -> $nextStmtId:$nextStmtDir [id="$newId"]
         |""".stripMargin
       case _: Declare =>
         s"""
         |${stmt.id} [id="${stmt.id}" label="${stmt.label}" $group fillcolor="cornsilk" fontcolor="black"]
-        |${stmt.id}:s -> $nextStmtId:n [id="$newId"]
+        |${stmt.id}:s -> $nextStmtId:$nextStmtDir [id="$newId"]
         |""".stripMargin
       case _: Assign =>
         s"""
         |${stmt.id} [id="${stmt.id}" label="${stmt.label}" $group fillcolor="red"]
-        |${stmt.id}:s -> $nextStmtId:n [id="$newId"]
+        |${stmt.id}:s -> $nextStmtId:$nextStmtDir [id="$newId"]
         |""".stripMargin
       case _: Input =>
         s"""
         |${stmt.id} [id="${stmt.id}" label="${stmt.label}" $group shape="invtrapezium" fillcolor="mediumblue"]
-        |${stmt.id}:s -> $nextStmtId:n [id="$newId"]
+        |${stmt.id}:s -> $nextStmtId:$nextStmtDir [id="$newId"]
         |""".stripMargin
       case _: Output =>
         s"""
         |${stmt.id} [id="${stmt.id}" label="${stmt.label}" $group shape="trapezium" fillcolor="mediumblue"]
-        |${stmt.id}:s -> $nextStmtId:n [id="$newId"]
+        |${stmt.id}:s -> $nextStmtId:$nextStmtDir [id="$newId"]
         |""".stripMargin
 
       case stmt: If =>
@@ -123,36 +124,40 @@ class FunctionEditor(
         val trueStatementss =
           if reverseTrueStmts.isEmpty then ""
           else
-            (List((reverseTrueStmts.head, ifEndId)) ++
+            (List((reverseTrueStmts.head, ifEndId, "e")) ++
               reverseTrueStmts.tail
                 .zip(reverseTrueStmts)
-                .map((stmt, prevStmt) => (stmt, prevStmt.id)))
-              .map((s, n) => getDOT(s, stmt.trueBlock.id, n, s"true_${stmt.id}"))
+                .map((stmt, prevStmt) => (stmt, prevStmt.id, "n")))
+              .map((s, n, dir) => getDOT(s, stmt.trueBlock.id, n, s"true_${stmt.id}", dir))
               .mkString("\n")
-        val firstTrueNodeId =
-          if reverseTrueStmts.isEmpty then ifEndId else reverseTrueStmts.reverse.head.id
+        val (firstTrueNodeId, trueDir) =
+          if reverseTrueStmts.isEmpty 
+          then (ifEndId, "e")
+          else (reverseTrueStmts.reverse.head.id, "n")
 
         val reverseFalseStmts = stmt.falseBlock.statements.reverse
         val falseStatementss =
           if reverseFalseStmts.isEmpty then ""
           else
-            (List((reverseFalseStmts.head, ifEndId)) ++
+            (List((reverseFalseStmts.head, ifEndId, "w")) ++
               reverseFalseStmts.tail
                 .zip(reverseFalseStmts)
-                .map((stmt, prevStmt) => (stmt, prevStmt.id)))
-              .map((s, n) => getDOT(s, stmt.falseBlock.id, n, s"false_${stmt.id}"))
+                .map((stmt, prevStmt) => (stmt, prevStmt.id, "n")))
+              .map((s, n, dir) => getDOT(s, stmt.falseBlock.id, n, s"false_${stmt.id}", dir))
               .mkString("\n")
-        val firstFalseNodeId =
-          if reverseFalseStmts.isEmpty then ifEndId else reverseFalseStmts.reverse.head.id
+        val (firstFalseNodeId, falseDir) =
+          if reverseFalseStmts.isEmpty
+          then (ifEndId, "w")
+          else (reverseFalseStmts.reverse.head.id, "n")
 
         s"""
           |$ifEndId [id="$ifEndId" label="" $group shape="circle" fillcolor="black" fixedsize=true width=0.3 height=0.3]
-          |$ifEndId:s -> $nextStmtId:n [id="$newId"]
+          |$ifEndId:s -> $nextStmtId:$nextStmtDir [id="$newId"]
           |
           |${stmt.id} [id="${stmt.id}" label="${stmt.label}" $group shape="diamond" fillcolor="yellow" fontcolor="black"]
           |
-          |${stmt.id}:e -> $firstTrueNodeId:n [id="$newId" taillabel="true"]
-          |${stmt.id}:w -> $firstFalseNodeId:n [id="$newId" taillabel="false"]
+          |${stmt.id}:e -> $firstTrueNodeId:$trueDir [id="$newId" taillabel="true"]
+          |${stmt.id}:w -> $firstFalseNodeId:$falseDir [id="$newId" taillabel="false"]
           |
           |$trueStatementss
           |$falseStatementss
