@@ -28,6 +28,7 @@ class StatementEditor(
                 else println("Not a node")
               case _ =>
                 println("Not a group")
+                flowrunChannel := FlowRun.Event.Deselected               
             }
           case _ =>
             println("Not an svg element")

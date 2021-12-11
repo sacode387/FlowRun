@@ -148,6 +148,8 @@ class FlowRun(mountElem: dom.Element, programJson: Option[String] = None) {
       showVariables()
     case FunctionUpdated =>
       populateFunctions()
+    case Deselected =>
+      flowRunElements.editStatement.innerText = ""
   }
 
   private def evalInput(nodeId: String, name: String) = {
@@ -215,4 +217,5 @@ object FlowRun:
     case SyntaxError(msg: String)
     case SymbolTableUpdated
     case FunctionUpdated
+    case Deselected
 end FlowRun
