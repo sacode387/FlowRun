@@ -7,7 +7,6 @@ import org.scalajs.dom
 import reactify.*
 import dev.sacode.flowrun.parse.*
 import dev.sacode.flowrun.edit.CtxMenu
-import java.util.UUID
 
 class FunctionEditor(
     programModel: ProgramModel,
@@ -43,7 +42,7 @@ class FunctionEditor(
       )
 
     val stmts = programModel.currentFunction.statements
-    println(programModel.ast.toJson)
+    //println(programModel.ast.toJson)
 
     import Statement._
 
@@ -51,7 +50,7 @@ class FunctionEditor(
     val mainGroup = programModel.currentFunction.name
     val lastStmt = stmts.last
     val reverseStmts = stmts.reverse
-    val statementss = reverseStmts.tail
+    val statementsDot = reverseStmts.tail
       .zip(reverseStmts)
       .map((stmt, prevStmt) => getDOT(stmt, "", prevStmt.id, mainGroup))
       .mkString("\n")
@@ -65,16 +64,16 @@ class FunctionEditor(
         splines="spline"
        
 
-        node [shape="box" style="filled" fillcolor="white" penwidth="0.5" margin=0 fontcolor="white" fontname="Courier New"]
+        node [shape="box" style="filled" fillcolor="white" penwidth="0.5" margin="0.1,0" fontcolor="white" fontname="Courier New"]
         edge [penwidth=2]
         
         ${lastStmt.id} [id="${lastStmt.id}" label="${lastStmt.label}" group="$mainGroup" shape="ellipse" fillcolor="aqua" fontcolor="black"]
 
-        $statementss
+        $statementsDot
     }
     """
 
-    println(dotSrc)
+    //println(dotSrc)
 
     graphviz.renderDot(dotSrc)
   }
@@ -98,7 +97,7 @@ class FunctionEditor(
         |""".stripMargin
       case _: Declare =>
         s"""
-        |${stmt.id} [id="${stmt.id}" label="${stmt.label}" $group fillcolor="cornsilk" fontcolor="black"]
+        |${stmt.id} [id="${stmt.id}" label="${stmt.label}" $group fillcolor="cornsilk" fontcolor="black" margin="0.05" ]
         |${stmt.id}:s -> $nextStmtId:$nextStmtDir [id="$newId"]
         |""".stripMargin
       case _: Assign =>
