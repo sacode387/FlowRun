@@ -95,7 +95,7 @@ class CtxMenu(
     "click",
     (event: dom.MouseEvent) => {
       programModel.addDeclare(
-        Request.AddDeclare(Statement.newId, "?", Expression.Type.Integer, afterId, blockId)
+        Request.AddDeclare(Statement.newId, "x", Expression.Type.Integer, afterId, blockId)
       )
       functionEditor.loadCurrentFunction()
     }

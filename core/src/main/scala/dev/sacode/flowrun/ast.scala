@@ -152,8 +152,24 @@ object Statement:
     getTpe(stmt).isDefined
   
   private def getTpe(stmt: Statement): Option[String] = stmt match
-    case Declare(_, name, tpe, _) => Some(tpe.toString)
+    case Declare(_, _, tpe, _) => Some(tpe.toString)
     case Begin => Some("??????")
+    case _ => None
+  
+  def expr(stmt: Statement): String =
+    getExpr(stmt).getOrElse("")
+  def hasExpr(stmt: Statement): Boolean =
+    getExpr(stmt).isDefined
+  
+  private def getExpr(stmt: Statement): Option[String] = stmt match
+    case Declare(_, _, _, expr) => Some(expr.getOrElse(""))
+    case Assign(_, _, expr) => Some(expr)
+    case Output(_, expr) => Some(expr)
+    case Call(_, expr) => Some(expr)
+    case Return(_, expr) => Some(expr.getOrElse(""))
+    case If(_, expr, _, _) => Some(expr)
+    case While(_, expr, _) => Some(expr)
+    case DoWhile(_, expr, _) => Some(expr)
     case _ => None
 
 end Statement
@@ -164,7 +180,6 @@ case class Function(
     parameters: List[(String, Expression.Type)] = List.empty[(String, Expression.Type)],
     tpe: Expression.Type = Expression.Type.Void,
     statements: List[Statement] = List(Statement.Begin, Statement.End)
-    //List.empty[Statement] // java.lang.AssertionError: cannot merge Constraint(...
 ) derives NativeConverter:
 
   val id = s"fun-$rawId"

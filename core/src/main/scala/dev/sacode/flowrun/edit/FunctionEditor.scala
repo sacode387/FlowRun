@@ -88,7 +88,7 @@ class FunctionEditor(
       groupName: String,
       nextStmtDir: String = "n"
   ): String = {
-    val group = s"""group="$groupName""""
+    val group = ""// TODO remove ??? s"""group="$groupName""""
     stmt match {
       case End => ""
       case Begin =>
