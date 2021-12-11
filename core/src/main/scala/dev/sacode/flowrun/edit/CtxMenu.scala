@@ -3,10 +3,11 @@ package dev.sacode.flowrun.edit
 import org.scalajs.dom
 import dev.sacode.flowrun.FlowRunElements
 import dev.sacode.flowrun.ProgramModel
-import dev.sacode.flowrun.edit.FunctionEditor
 import dev.sacode.flowrun.ProgramModel.Request
 import dev.sacode.flowrun.Statement
 import dev.sacode.flowrun.Expression
+import dev.sacode.flowrun.AST
+import dev.sacode.flowrun.edit.FunctionEditor
 
 class CtxMenu(
     flowRunElements: FlowRunElements,
@@ -95,7 +96,7 @@ class CtxMenu(
     "click",
     (event: dom.MouseEvent) => {
       programModel.addDeclare(
-        Request.AddDeclare(Statement.newId, "x", Expression.Type.Integer, afterId, blockId)
+        Request.AddDeclare(AST.newId, "x", Expression.Type.Integer, afterId, blockId)
       )
       functionEditor.loadCurrentFunction()
     }
@@ -104,7 +105,7 @@ class CtxMenu(
   addAssignButton.addEventListener(
     "click",
     (event: dom.MouseEvent) => {
-      programModel.addAssign(Request.AddAssign(Statement.newId, afterId, blockId))
+      programModel.addAssign(Request.AddAssign(AST.newId, afterId, blockId))
       functionEditor.loadCurrentFunction()
     }
   )
@@ -112,7 +113,7 @@ class CtxMenu(
   addInputButton.addEventListener(
     "click",
     (event: dom.MouseEvent) => {
-      programModel.addInput(Request.AddInput(Statement.newId, afterId, blockId))
+      programModel.addInput(Request.AddInput(AST.newId, afterId, blockId))
       functionEditor.loadCurrentFunction()
     }
   )
@@ -120,7 +121,7 @@ class CtxMenu(
   addOutputButton.addEventListener(
     "click",
     (event: dom.MouseEvent) => {
-      programModel.addOutput(Request.AddOutput(Statement.newId, afterId, blockId))
+      programModel.addOutput(Request.AddOutput(AST.newId, afterId, blockId))
       functionEditor.loadCurrentFunction()
     }
   )
@@ -128,7 +129,7 @@ class CtxMenu(
   addCallButton.addEventListener(
     "click",
     (event: dom.MouseEvent) => {
-      programModel.addCall(Request.AddCall(Statement.newId, afterId, blockId))
+      programModel.addCall(Request.AddCall(AST.newId, afterId, blockId))
       functionEditor.loadCurrentFunction()
     }
   )
@@ -137,7 +138,7 @@ class CtxMenu(
     "click",
     (event: dom.MouseEvent) => {
       programModel.addIf(
-        Request.AddIf(Statement.newId, Statement.newId, Statement.newId, afterId, blockId)
+        Request.AddIf(AST.newId, AST.newId, AST.newId, afterId, blockId)
       )
       functionEditor.loadCurrentFunction()
     }
@@ -146,7 +147,7 @@ class CtxMenu(
   addWhileButton.addEventListener(
     "click",
     (event: dom.MouseEvent) => {
-      programModel.addOutput(Request.AddOutput(Statement.newId, afterId, blockId))
+      programModel.addOutput(Request.AddOutput(AST.newId, afterId, blockId))
       functionEditor.loadCurrentFunction()
     }
   )

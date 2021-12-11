@@ -79,6 +79,7 @@ class FunctionEditor(
   }
 
   import Statement._
+  import AST.newId
 
   private def getDOT(
       stmt: Statement,

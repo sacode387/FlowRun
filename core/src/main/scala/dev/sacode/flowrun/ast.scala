@@ -77,8 +77,6 @@ sealed trait Statement(val id: String) derives NativeConverter:
   def label: String
 
 object Statement:
-  def newId: String =
-    "id_" + UUID.randomUUID.toString.replaceAll("-", "_")
 
   case object Begin extends Statement("beginId"):
     def label = "Begin"
@@ -197,3 +195,7 @@ case class Program(
     main: Function,
     functions: List[Function] = List.empty
 ) derives NativeConverter
+
+object AST:
+  def newId: String =
+    "id_" + UUID.randomUUID.toString.replaceAll("-", "_")

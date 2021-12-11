@@ -1,6 +1,5 @@
 package dev.sacode.flowrun
 
-import java.util.UUID
 import scala.scalajs.js
 import scala.scalajs.js.annotation.JSExportTopLevel
 import org.scalajs.dom
@@ -27,7 +26,7 @@ class FlowRun(mountElem: dom.Element, programJson: Option[String] = None) {
   )
   private val program = maybeJson match
     case Some(json) => NativeConverter[Program].fromNative(js.JSON.parse(json))
-    case None => Program(UUID.randomUUID.toString, "program", Function("main", "main"), List.empty)
+    case None => Program(AST.newId, "program", Function("main", "main"), List.empty)
 
   private val flowrunChannel = Channel[FlowRun.Event]
   private val programModel = ProgramModel(program, flowrunChannel)
@@ -109,9 +108,9 @@ class FlowRun(mountElem: dom.Element, programJson: Option[String] = None) {
       .getOrElse(0)
     val newFunName = "fun" + (lastFunNum + 1)
     val newFun = Function(
-      UUID.randomUUID.toString,
+      AST.newId,
       newFunName,
-      statements = List(Statement.Return(UUID.randomUUID.toString))
+      statements = List(Statement.Return(AST.newId))
     )
     programModel.addFunction(newFun)
     programModel.currentFunctionId = newFun.id
