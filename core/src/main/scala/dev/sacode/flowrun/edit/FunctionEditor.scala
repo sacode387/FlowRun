@@ -91,9 +91,14 @@ class FunctionEditor(
   ): String = {
     val group = ""// TODO remove ??? s"""group="$groupName""""
     stmt match {
-      case Begin(_) =>
+      case Begin(true) =>
         s"""
         |${stmt.id} [id="${stmt.id}" label="${stmt.label}" shape="ellipse" fillcolor="aqua" fontcolor="black"]
+        |${stmt.id}:s -> $nextStmtId:$nextStmtDir [id="$newId"]
+        |""".stripMargin
+      case Begin(false) =>
+        s"""
+        |${stmt.id} [id="${stmt.id}" label="${programModel.currentFunction.label}" shape="ellipse" fillcolor="aqua" fontcolor="black"]
         |${stmt.id}:s -> $nextStmtId:$nextStmtDir [id="$newId"]
         |""".stripMargin
       case _: Declare =>

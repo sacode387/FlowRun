@@ -27,6 +27,7 @@ class ProgramModel(
   def deleteFunction(id: String): Unit =
     val newFunctions = ast.functions.filterNot(_.id == id)
     ast = ast.copy(functions = newFunctions)
+    currentFunctionId = "fun-main"
     flowrunChannel := FlowRun.Event.FunctionUpdated
 
   def updateFunction(req: UpdateFunction) =

@@ -70,9 +70,6 @@ class FlowRun(mountElem: dom.Element, programJson: Option[String] = None) {
     val deleteFunButton = flowRunElements.deleteFunButton
     deleteFunButton.onclick = { (e: dom.Event) =>
       programModel.deleteFunction(programModel.currentFunctionId)
-      programModel.currentFunctionId = "fun-main"
-      functionEditor.loadCurrentFunction()
-      populateFunctions()
     }
 
     val selectElem = frag(
@@ -147,6 +144,7 @@ class FlowRun(mountElem: dom.Element, programJson: Option[String] = None) {
     case SymbolTableUpdated =>
       showVariables()
     case FunctionUpdated =>
+      functionEditor.loadCurrentFunction()
       populateFunctions()
     case Deselected =>
       flowRunElements.editStatement.innerText = ""
