@@ -18,8 +18,8 @@ object InterpreterTests extends TestSuite {
     
     test("dry run") {
       val main = Function("main", "main")
-      val programModel = ProgramModel(Program("p1", "program", main))
       val flowrunChannel = Channel[FlowRun.Event]
+      val programModel = ProgramModel(Program("p1", "program", main), flowrunChannel)
       val interpreter = Interpreter(programModel, flowrunChannel)
       interpreter.run().map { _ =>
         assert(1 == 1)
@@ -33,8 +33,8 @@ object InterpreterTests extends TestSuite {
           Statement.Declare(getId(), "y", Expression.Type.Integer, Some("5"))
         )
       )
-      val programModel = ProgramModel(Program("p2", "program", main))
       val flowrunChannel = Channel[FlowRun.Event]
+      val programModel = ProgramModel(Program("p2", "program", main), flowrunChannel)
       val interpreter = Interpreter(programModel, flowrunChannel)
 
       interpreter.run().map { _ =>
@@ -53,8 +53,8 @@ object InterpreterTests extends TestSuite {
           Statement.Output(getId(), "x")
         )
       )
-      val programModel = ProgramModel(Program("p3", "program", main))
       val flowrunChannel = Channel[FlowRun.Event]
+      val programModel = ProgramModel(Program("p3", "program", main), flowrunChannel)
       val interpreter = Interpreter(programModel, flowrunChannel)
 
       interpreter.run().map { _ =>
@@ -72,8 +72,8 @@ object InterpreterTests extends TestSuite {
           Statement.Declare(getId(), "z", Expression.Type.Integer, Some("15 % 2 + 2"))
         )
       )
-      val programModel = ProgramModel(Program("p4", "program", main))
       val flowrunChannel = Channel[FlowRun.Event]
+      val programModel = ProgramModel(Program("p4", "program", main), flowrunChannel)
       val interpreter = Interpreter(programModel, flowrunChannel)
 
       interpreter.run().map { _ =>
@@ -94,8 +94,8 @@ object InterpreterTests extends TestSuite {
           )
         )
       )
-      val programModel = ProgramModel(Program("p5", "program", main))
       val flowrunChannel = Channel[FlowRun.Event]
+      val programModel = ProgramModel(Program("p5", "program", main), flowrunChannel)
       val interpreter = Interpreter(programModel, flowrunChannel)
 
       interpreter.run().map { _ =>
