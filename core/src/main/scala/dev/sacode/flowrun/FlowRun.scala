@@ -58,8 +58,8 @@ class FlowRun(mountElem: dom.Element, programJson: Option[String] = None) {
     functionSelector.onchange = { (e: dom.Event) =>
       val selectedFunId = e.target.asInstanceOf[dom.html.Input].value
       programModel.currentFunctionId = selectedFunId
-      functionEditor.loadCurrentFunction()
-      populateFunctions()
+      flowrunChannel := FlowRun.Event.Deselected
+      flowrunChannel := FlowRun.Event.FunctionUpdated
     }
     allFunctions.foreach { f =>
       val maybeSelected = Option.when(f.id == programModel.currentFunctionId)(selected)
@@ -96,11 +96,8 @@ class FlowRun(mountElem: dom.Element, programJson: Option[String] = None) {
 
   flowRunElements.addFunButton.onclick = { (e: dom.Event) =>
     val lastFunNum = allFunctions
-      .map(_.name)
-      .filter(_.startsWith("fun"))
-      .map(_.substring(3))
-      .filter(_.toIntOption.isDefined)
-      .map(_.toInt)
+      .map(_.name.substring(3))
+      .flatMap(_.toIntOption)
       .maxOption
       .getOrElse(0)
     val newFunName = "fun" + (lastFunNum + 1)
@@ -110,9 +107,6 @@ class FlowRun(mountElem: dom.Element, programJson: Option[String] = None) {
       statements = List(Statement.Begin(false), Statement.Return(AST.newId))
     )
     programModel.addFunction(newFun)
-    programModel.currentFunctionId = newFun.id
-    functionEditor.loadCurrentFunction()
-    populateFunctions()
   }
 
   import FlowRun.Event.*

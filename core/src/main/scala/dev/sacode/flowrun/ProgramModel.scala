@@ -22,12 +22,15 @@ class ProgramModel(
   def addFunction(fun: Function): Unit =
     val newFunctions = ast.functions.appended(fun)
     ast = ast.copy(functions = newFunctions)
+    currentFunctionId = fun.id
+    flowrunChannel := FlowRun.Event.Deselected
     flowrunChannel := FlowRun.Event.FunctionUpdated
 
   def deleteFunction(id: String): Unit =
     val newFunctions = ast.functions.filterNot(_.id == id)
     ast = ast.copy(functions = newFunctions)
     currentFunctionId = "fun-main"
+    flowrunChannel := FlowRun.Event.Deselected
     flowrunChannel := FlowRun.Event.FunctionUpdated
 
   def updateFunction(req: UpdateFunction) =
@@ -100,7 +103,7 @@ class ProgramModel(
 
   def delete(req: Delete): Unit =
     update(_.delete(req))
-  
+
   def findStatement(stmtId: String): Statement =
     FunctionModel(currentFunction).doFind(stmtId)
 
