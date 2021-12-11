@@ -56,6 +56,7 @@ class FunctionEditor(
       .mkString("\n")
 
     // colors: https://graphviz.org/doc/info/colors.html#svg
+    val endLabel = Option.when(programModel.currentFunction.tpe == Expression.Type.Void)("End").getOrElse(lastStmt.label)
     val dotSrc = s"""
     digraph {
         nodesep=0.65
@@ -67,7 +68,7 @@ class FunctionEditor(
         node [shape="box" style="filled" fillcolor="white" penwidth="0.5" margin="0.1,0" fontcolor="white" fontname="Courier New"]
         edge [penwidth=2]
         
-        ${lastStmt.id} [id="${lastStmt.id}" label="${lastStmt.label}" group="$mainGroup" shape="ellipse" fillcolor="aqua" fontcolor="black"]
+        ${lastStmt.id} [id="${lastStmt.id}" label="${endLabel}" group="$mainGroup" shape="ellipse" fillcolor="aqua" fontcolor="black"]
 
         $statementsDot
     }
@@ -90,8 +91,7 @@ class FunctionEditor(
   ): String = {
     val group = ""// TODO remove ??? s"""group="$groupName""""
     stmt match {
-      case End => ""
-      case Begin =>
+      case Begin(_) =>
         s"""
         |${stmt.id} [id="${stmt.id}" label="${stmt.label}" shape="ellipse" fillcolor="aqua" fontcolor="black"]
         |${stmt.id}:s -> $nextStmtId:$nextStmtDir [id="$newId"]

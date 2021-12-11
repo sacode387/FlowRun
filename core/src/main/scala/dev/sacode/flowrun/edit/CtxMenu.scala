@@ -4,8 +4,7 @@ import org.scalajs.dom
 import dev.sacode.flowrun.FlowRunElements
 import dev.sacode.flowrun.ProgramModel
 import dev.sacode.flowrun.ProgramModel.Request
-import dev.sacode.flowrun.Statement
-import dev.sacode.flowrun.Expression
+import dev.sacode.flowrun.Expression.Type
 import dev.sacode.flowrun.AST
 import dev.sacode.flowrun.edit.FunctionEditor
 
@@ -96,7 +95,7 @@ class CtxMenu(
     "click",
     (event: dom.MouseEvent) => {
       programModel.addDeclare(
-        Request.AddDeclare(AST.newId, "x", Expression.Type.Integer, afterId, blockId)
+        Request.AddDeclare(AST.newId, "x", Type.Integer, afterId, blockId)
       )
       functionEditor.loadCurrentFunction()
     }

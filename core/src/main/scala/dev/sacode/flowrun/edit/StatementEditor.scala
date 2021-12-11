@@ -39,6 +39,13 @@ class StatementEditor(
   private def doEdit(nodeId: String): Unit = {
     val node = programModel.findStatement(nodeId)
     val nodeType = node.getClass.getSimpleName.filterNot(_ == '$')
+
+    // skip Begin if main function
+    if nodeType == "Begin" && node.asInstanceOf[Statement.Begin].isMain then return
+
+    // skip Return if function doesn't return anything
+    if nodeType == "Return" && programModel.currentFunction.tpe == Expression.Type.Void then return
+
     println(s"Editing statement: $nodeType")
 
     // clear first, prepare for new inputs
@@ -47,11 +54,12 @@ class StatementEditor(
 
     // name input
     val nameInputElem = flowRunElements.newInputText
-    nameInputElem.value = Statement.name(node)
+    nameInputElem.value = Statement.name(node, programModel.currentFunction.name)
     nameInputElem.placeholder = if nodeType == "Begin" then "myFun" else "x"
     nameInputElem.oninput = { (_: dom.Event) =>
       val newName = nameInputElem.value.trim
       val errorMsg: Option[String] =
+        // TODO extract validation
         if newName.isEmpty then None // noop when blank
         else if !newName.head.isLetter then Some("Name must start with a letter.")
         else if newName.matches(".*\\s.*") then Some("Name must not contain spaces.")
@@ -63,7 +71,7 @@ class StatementEditor(
               programModel.updateDeclare(Request.UpdateDeclare(nodeId, name = Some(newName)))
             case _: Statement.Input =>
               programModel.updateInput(Request.UpdateInput(nodeId, name = newName))
-            case Statement.Begin =>
+            case Statement.Begin(false) =>
               programModel.updateFunction(Request.UpdateFunction(nodeId, name = Some(newName)))
             case _: Statement.Assign =>
               programModel.updateAssign(Request.UpdateAssign(nodeId, name = Some(newName)))
@@ -77,7 +85,7 @@ class StatementEditor(
     }
 
     var filledName = false
-    if Statement.hasName(node) then
+    if Statement.hasName(node, programModel.currentFunction.name) then
       filledName = nameInputElem.value.nonEmpty
       flowRunElements.editStatement.appendChild(nameInputElem)
 
@@ -96,10 +104,12 @@ class StatementEditor(
       if nodeType == "Declare" then
         programModel.updateDeclare(Request.UpdateDeclare(nodeId, tpe = Some(newType)))
       else programModel.updateFunction(Request.UpdateFunction(nodeId, tpe = Some(newType)))
+      flowrunChannel := FlowRun.Event.SyntaxSuccess
     }
 
-    if Statement.hasTpe(node) then
-      typeSelectElem.value = Statement.tpe(node) // select appropriate type
+    if Statement.hasTpe(node, programModel.currentFunction.tpe.toString) then
+      typeSelectElem.value =
+        Statement.tpe(node, programModel.currentFunction.tpe.toString) // select appropriate type
       flowRunElements.editStatement.appendChild(span(": ").render)
       flowRunElements.editStatement.appendChild(typeSelectElem)
 
@@ -184,7 +194,11 @@ class StatementEditor(
     end if
 
     // focus
-    if !Statement.hasExpr(node) || (Statement.hasName(node) && !filledName) then
+    if !Statement.hasExpr(node) || (Statement.hasName(
+        node,
+        programModel.currentFunction.name
+      ) && !filledName)
+    then
       nameInputElem.focus()
       nameInputElem.select()
     else

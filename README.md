@@ -44,4 +44,4 @@ There are also some *predefined functions* that you can use, they are defined au
 ---
 ## Implementation details
 Written in [ScalaJS](https://www.scala-js.org/).  
-Uses [CytoscapeJS](https://js.cytoscape.org/) to display and edit the flowcharts.
+Uses [d3-graphviz](https://github.com/magjac/d3-graphviz) to display the flowcharts.

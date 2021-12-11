@@ -26,7 +26,7 @@ class FlowRun(mountElem: dom.Element, programJson: Option[String] = None) {
   )
   private val program = maybeJson match
     case Some(json) => NativeConverter[Program].fromNative(js.JSON.parse(json))
-    case None => Program(AST.newId, "program", Function("main", "main"), List.empty)
+    case None => Program(AST.newId, "program", Function("main", "main", statements = List(Statement.Begin(true), Statement.Return(AST.newId))), List.empty)
 
   private val flowrunChannel = Channel[FlowRun.Event]
   private val programModel = ProgramModel(program, flowrunChannel)
@@ -110,7 +110,7 @@ class FlowRun(mountElem: dom.Element, programJson: Option[String] = None) {
     val newFun = Function(
       AST.newId,
       newFunName,
-      statements = List(Statement.Return(AST.newId))
+      statements = List(Statement.Begin(false), Statement.Return(AST.newId))
     )
     programModel.addFunction(newFun)
     programModel.currentFunctionId = newFun.id

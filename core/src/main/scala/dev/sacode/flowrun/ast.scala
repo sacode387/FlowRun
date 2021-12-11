@@ -78,10 +78,8 @@ sealed trait Statement(val id: String) derives NativeConverter:
 
 object Statement:
 
-  case object Begin extends Statement("beginId"):
+  case class Begin(isMain: Boolean = false) extends Statement("beginId"):
     def label = "Begin"
-  case object End extends Statement("endId"):
-    def label = "End"
   case class Dummy(override val id: String) extends Statement(id):
     def label = ""
   case class Declare(
@@ -110,8 +108,7 @@ object Statement:
       maybeValue: Option[String] = None
   ) extends Statement(id):
     def label =
-      val maybeExprText = maybeValue.map(e => s" $e").getOrElse("")
-      s"return$maybeExprText"
+      maybeValue.map(e => s"return $e").getOrElse("return")
   case class If(
       override val id: String,
       condition: String,
@@ -133,25 +130,26 @@ object Statement:
     def label = condition.toString
   
   // utils
-  def name(stmt: Statement): String =
-    getName(stmt).getOrElse("")
-  def hasName(stmt: Statement): Boolean =
-    getName(stmt).isDefined
+  def name(stmt: Statement, funName: String):  String =
+    getName(stmt, funName).getOrElse("")
+  def hasName(stmt: Statement, funName: String): Boolean =
+    getName(stmt, funName).isDefined
   
-  private def getName(stmt: Statement): Option[String] = stmt match
+  private def getName(stmt: Statement, funName: String): Option[String] = stmt match
+    case Begin(false) => Some(funName)
     case Declare(_, name, _, _) => Some(name)
     case Assign(_, name, _) => Some(name)
     case Input(_, name) => Some(name)
     case _ => None
   
-  def tpe(stmt: Statement): String =
-    getTpe(stmt).getOrElse("")
-  def hasTpe(stmt: Statement): Boolean =
-    getTpe(stmt).isDefined
+  def tpe(stmt: Statement, funTpe: String): String =
+    getTpe(stmt, funTpe).getOrElse("")
+  def hasTpe(stmt: Statement, funTpe: String): Boolean =
+    getTpe(stmt, funTpe).isDefined
   
-  private def getTpe(stmt: Statement): Option[String] = stmt match
+  private def getTpe(stmt: Statement, funTpe: String): Option[String] = stmt match
     case Declare(_, _, tpe, _) => Some(tpe.toString)
-    case Begin => Some("??????")
+    case Begin(false) => Some(funTpe)
     case _ => None
   
   def expr(stmt: Statement): String =
@@ -177,7 +175,7 @@ case class Function(
     name: String,
     parameters: List[(String, Expression.Type)] = List.empty[(String, Expression.Type)],
     tpe: Expression.Type = Expression.Type.Void,
-    statements: List[Statement] = List(Statement.Begin, Statement.End)
+    statements: List[Statement] = List.empty
 ) derives NativeConverter:
 
   val id = s"fun-$rawId"
