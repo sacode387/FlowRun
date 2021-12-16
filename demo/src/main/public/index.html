@@ -23,23 +23,19 @@
             width: 100%;
         }
 
-        .FlowRun-editor {
+        .flowrun-editor {
             border: 1px solid black;
             padding: 1rem;
             margin-bottom: 1rem;
         }
 
-        .FlowRun-draw {
+        .flowrun-draw {
             padding: 1rem;
             background-color: aliceblue;
             text-align: center;
         }
 
-        .FlowRun-edit-panel {
-            padding: 0 1rem;
-        }
-
-        .FlowRun-meta {
+        .flowrun-meta {
             text-align: center;
             text-transform: uppercase;
             font-weight: bold;
@@ -47,57 +43,34 @@
             padding-bottom: .5rem;
         }
 
-        .FlowRun-output:not(:empty) {
+        .flowrun-output:not(:empty) {
             padding: 1em;
             background-color: palegreen;
         }
 
-        .FlowRun-output.error {
+        .flowrun-output.error {
             background-color: rgb(223, 41, 41);
             color: white;
         }
 
-        .FlowRun-edit {
-            margin-bottom: 1em;
-        }
-
-        .function-chooser {
-            display: flex;
-            gap: 10px;
-        }
-
-        .FlowRun-function {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 1rem;
-        }
-
-        .FlowRun-btn-run {
-            margin-left: auto;
-        }
-
-
+        /* you need to have a tablet at least.. */
         @media screen and (min-width: 481px) {
-
-            /* you need to have a tablet at least.. */
-            .FlowRun-content {
+            .flowrun-content {
                 display: flex;
-                flex-wrap: wrap;
             }
 
-            .FlowRun-draw {
-                flex: 1 1 60%;
-                min-width: 250px;
+            .flowrun-content *:nth-child(1) {
+                flex: 1 1 330px;
             }
 
-            .FlowRun-edit-panel {
-                flex: 1 1 40%;
-                min-width: 200px;
+            .flowrun-content *:nth-child(2) {
+                flex: 1 1 150px;
             }
         }
     </style>
 
     <style>
+        /* CTX menu styles */
         .flowrun-context-menu {
             position: fixed;
             z-index: 10000;
@@ -111,13 +84,13 @@
             transform: scale(1);
         }
 
-        .flowrun-context-menu > div {
+        .flowrun-context-menu>div {
             padding: 8px 10px;
             font-size: 15px;
             color: #eee;
         }
 
-        .flowrun-context-menu > *:hover {
+        .flowrun-context-menu>*:hover {
             background: #555;
         }
 
@@ -150,47 +123,46 @@
         </div>
     </div>
 
-    <div id="FlowRun-template" class="FlowRun-content" style="display: none;">
+    <div id="flowrun-template" class="flowrun-content" style="display: none;">
+        <div class="flowrun-draw"></div>
+        <div>
+            <div class="flowrun-meta"></div>
 
-        <div class="FlowRun-draw"></div>
+            <div class="flowrun-fun-chooser"></div>
 
-        <div class="FlowRun-edit-panel">
-            <div class="FlowRun-meta"></div>
+            <button class="flowrun-btn-run">Run</button>
 
-            <div class="function-chooser">
-                <div class="FlowRun-function">
-                    <button class="FlowRun-add-function">Add</button>
-                    <button class="FlowRun-delete-function">Delete</button>
+            <div class="flowrun-stmt-edit"></div>
 
-                    <button class="FlowRun-add-param">+</button>
-                    <button class="FlowRun-delete-param">-</button>
-                </div>
-                <button class="FlowRun-btn-run">Run</button>
-            </div>
+            <div class="flowrun-output"></div>
 
-            <div class="FlowRun-edit">
-                <input class="FlowRun-input-text" type="text" size="10">
-                <select class="FlowRun-input-select"></select>
-            </div>
+            <div class="flowrun-debug"></div>
+        </div>
 
-            <div class="FlowRun-output">
-                <button class="FlowRun-btn-enter">Enter</button>
-            </div>
+        <!-- this whole div will be deleted -->
+        <div class="flowrun-template-transient">
+            <button class="flowrun-fun-add">Add</button>
+            <button class="flowrun-fun-delete">Delete</button>
+            <button class="flowrun-fun-add-param">+</button>
+            <button class="flowrun-fun-delete-param">-</button>
 
-            <div class="FlowRun-debug"></div>
+            <input class="flowrun-input-text" type="text" size="10">
+            <select class="flowrun-input-select"></select>
+            <button class="flowrun-btn-enter">Enter</button>
         </div>
     </div>
 
-    <div class="FlowRun-editor"></div>
+    <!-- blank editor instance -->
+    <div class="flowrun-editor"></div>
 
     <button id="gencode">GEN</button>
 
     <!--
-    <div class="FlowRun-editor">
+    <div class="flowrun-editor">
         {"name":"Output","id":"5cc4dc13-d773-4aca-a3e6-b60f8bda6b04","main":{"name":"main","tpe":null,"statements":[{"@type":"Begin"},{"id":"aaa35665-03e5-44d0-a4a2-6e590fcd1b76","name":"x","tpe":"Integer","initValue":"5","@type":"Declare"},{"id":"908fc23d-4417-4904-a12f-e2002e78367c","value":"\"X is: \" + x","@type":"Output"},{"@type":"End"}]},"functions":[]}
     </div>
 
-    <div class="FlowRun-editor">
+    <div class="flowrun-editor">
         {"name":"Functions","id":"1e2b38e8-9284-495a-9e59-3205bd60838a","main":{"name":"main","tpe":null,"statements":[{"@type":"Begin"},{"id":"a432371a-b441-445d-ab99-6ed5eb766ee5","value":"fun123()","@type":"Call"},{"@type":"End"}]},"functions":[{"name":"fun123","tpe":null,"statements":[{"@type":"Begin"},{"id":"186aa5af-6854-4a6d-a716-faa3539cb490","value":"\"funnnnnn\"","@type":"Output"},{"@type":"End"}]}]}
     </div>
     -->

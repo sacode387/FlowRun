@@ -7,7 +7,7 @@ import dev.sacode.flowrun.FlowRun
 @main def start(): Unit =
   dom.window.onload = _ => {
 
-    val flowRunMounts = document.querySelectorAll(".FlowRun-editor")
+    val flowRunMounts = document.querySelectorAll(".flowrun-editor")
     for flowRunMount <- flowRunMounts do
       val flowRun = FlowRun(flowRunMount.asInstanceOf[dom.Element])
 

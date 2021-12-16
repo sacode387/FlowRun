@@ -18,13 +18,15 @@ case class FlowRunElements(
     inputSelect: dom.html.Select
 ) {
 
-  val metaData: dom.Element = template.querySelector(".FlowRun-meta")
-  val functionsChooser: dom.Element = template.querySelector(".FlowRun-function")
-  val runButton = template.querySelector(".FlowRun-btn-run").asInstanceOf[dom.html.Element]
-  val drawArea: dom.Element = template.querySelector(".FlowRun-draw")
-  val editStatement: dom.Element = template.querySelector(".FlowRun-edit")
-  val output: dom.Element = template.querySelector(".FlowRun-output")
-  val debugVariables: dom.Element = template.querySelector(".FlowRun-debug")
+  val metaData: dom.Element = template.querySelector(".flowrun-meta")
+  val functionsChooser: dom.Element = template.querySelector(".flowrun-fun-chooser")
+  val runButton = template.querySelector(".flowrun-btn-run").asInstanceOf[dom.html.Element]
+  val drawArea: dom.Element = template.querySelector(".flowrun-draw")
+  val editStatement: dom.Element = template.querySelector(".flowrun-stmt-edit")
+  val output: dom.Element = template.querySelector(".flowrun-output")
+  val debugVariables: dom.Element = template.querySelector(".flowrun-debug")
+
+  template.querySelector(".flowrun-template-transient").remove()
 
   metaData.innerText = ""
   functionsChooser.innerText = ""
@@ -61,23 +63,23 @@ object FlowRunElements {
     template.style = "" // "display: block;"
 
     val addFunButton =
-      template.querySelector(".FlowRun-add-function").cloneNode(true).asInstanceOf[dom.html.Element]
+      template.querySelector(".flowrun-fun-add").cloneNode(true).asInstanceOf[dom.html.Element]
     val deleteFunButton = template
-      .querySelector(".FlowRun-delete-function")
+      .querySelector(".flowrun-fun-delete")
       .cloneNode(true)
       .asInstanceOf[dom.html.Element]
 
     val addParamButton =
-      template.querySelector(".FlowRun-add-param").cloneNode(true).asInstanceOf[dom.html.Element]
+      template.querySelector(".flowrun-fun-add-param").cloneNode(true).asInstanceOf[dom.html.Element]
     val deleteParamButton =
-      template.querySelector(".FlowRun-delete-param").cloneNode(true).asInstanceOf[dom.html.Element]
+      template.querySelector(".flowrun-fun-delete-param").cloneNode(true).asInstanceOf[dom.html.Element]
 
     val enterButton =
-      template.querySelector(".FlowRun-btn-enter").cloneNode(true).asInstanceOf[dom.html.Element]
+      template.querySelector(".flowrun-btn-enter").cloneNode(true).asInstanceOf[dom.html.Element]
     val inputText =
-      template.querySelector(".FlowRun-input-text").cloneNode(true).asInstanceOf[dom.html.Input]
+      template.querySelector(".flowrun-input-text").cloneNode(true).asInstanceOf[dom.html.Input]
     val inputSelect =
-      template.querySelector(".FlowRun-input-select").cloneNode(true).asInstanceOf[dom.html.Select]
+      template.querySelector(".flowrun-input-select").cloneNode(true).asInstanceOf[dom.html.Select]
 
     FlowRunElements(
       template,
@@ -105,14 +107,14 @@ object FlowRunElements {
     val inputSelect = select().render
 
     val template = div(
-      div(cls := "FlowRun-meta")(),
-      div(cls := "FlowRun-function")(),
-      div(cls := "FlowRun-btn-run")(),
-      div(cls := "FlowRun-content")(
-        div(cls := "FlowRun-draw")(),
-        div(cls := "FlowRun-edit")(),
-        div(cls := "FlowRun-output")(),
-        div(cls := "FlowRun-debug")()
+      div(cls := "flowrun-meta")(),
+      div(cls := "flowrun-function")(),
+      div(cls := "flowrun-btn-run")(),
+      div(cls := "flowrun-content")(
+        div(cls := "flowrun-draw")(),
+        div(cls := "flowrun-edit")(),
+        div(cls := "flowrun-output")(),
+        div(cls := "flowrun-debug")()
       )
     ).render
     FlowRunElements(

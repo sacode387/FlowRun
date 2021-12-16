@@ -18,6 +18,7 @@ def isTouchDevice: Boolean =
 
 object TypeUtils:
   import Expression.Type
+  
   // check if assignable, and optionally casts the type
   def getUpdateValue(nodeId: String, name: String, expectedType: Type, value: Any): Try[Any] = Try {
     // prevent small numbers to be shown as Byte,Short etc
