@@ -78,6 +78,7 @@ class StatementEditor(
               programModel.updateAssign(Request.UpdateAssign(nodeId, name = Some(newName)))
             case _ => ()
           }
+          flowrunChannel := FlowRun.Event.SyntaxSuccess
           None
         }
 

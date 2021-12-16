@@ -8,6 +8,7 @@ import scalatags.JsDom.all.*
 import reactify.*
 import dev.sacode.flowrun.eval.*
 import dev.sacode.flowrun.edit.FunctionEditor
+import dev.sacode.flowrun.edit.FunctionSelector
 import dev.sacode.flowrun.edit.StatementEditor
 import dev.sacode.flowrun.parse.parseExpr
 
@@ -31,6 +32,7 @@ class FlowRun(mountElem: dom.Element, programJson: Option[String] = None) {
   private val flowrunChannel = Channel[FlowRun.Event]
   private val programModel = ProgramModel(program, flowrunChannel)
   private val functionEditor = FunctionEditor(programModel, flowrunChannel, flowRunElements)
+  private val functionSelector = FunctionSelector(programModel, flowrunChannel, flowRunElements)
   private val statementEditor = StatementEditor(programModel, flowrunChannel, flowRunElements)
   private var interpreter = Interpreter(programModel, flowrunChannel)
 
@@ -38,7 +40,7 @@ class FlowRun(mountElem: dom.Element, programJson: Option[String] = None) {
 
   flowRunElements.metaData.innerText = program.name
 
-  populateFunctions()
+  functionSelector.loadFunctions()
   statementEditor.setup()
 
   dom.document.getElementById("gencode").asInstanceOf[dom.html.Button].onclick = _ => {
@@ -51,36 +53,6 @@ class FlowRun(mountElem: dom.Element, programJson: Option[String] = None) {
 
   def allFunctions = List(programModel.ast.main) ++ programModel.ast.functions
 
-  private def populateFunctions(): Unit =
-
-    val functionSelector = flowRunElements.newInputSelect
-    functionSelector.name = s"${program.id}-currentFunction"
-    functionSelector.onchange = { (e: dom.Event) =>
-      val selectedFunId = e.target.asInstanceOf[dom.html.Input].value
-      programModel.currentFunctionId = selectedFunId
-      flowrunChannel := FlowRun.Event.Deselected
-      flowrunChannel := FlowRun.Event.FunctionUpdated
-    }
-    allFunctions.foreach { f =>
-      val maybeSelected = Option.when(f.id == programModel.currentFunctionId)(selected)
-      val funItem = option(value := f.id, maybeSelected)(f.name).render
-      functionSelector.add(funItem)
-    }
-
-    val deleteFunButton = flowRunElements.deleteFunButton
-    deleteFunButton.onclick = { (e: dom.Event) =>
-      programModel.deleteFunction(programModel.currentFunctionId)
-    }
-
-    val selectElem = frag(
-      label("Function: "),
-      functionSelector,
-      flowRunElements.addFunButton,
-      Option.unless(programModel.currentFunction.isMain)(deleteFunButton)
-    )
-    flowRunElements.functionsChooser.innerText = ""
-    flowRunElements.functionsChooser.appendChild(selectElem.render)
-  end populateFunctions
 
   // run the program
   flowRunElements.runButton.onclick = _ => {
@@ -94,20 +66,8 @@ class FlowRun(mountElem: dom.Element, programJson: Option[String] = None) {
     functionEditor.disable()
   }
 
-  flowRunElements.addFunButton.onclick = { (e: dom.Event) =>
-    val lastFunNum = allFunctions
-      .map(_.name.substring(3))
-      .flatMap(_.toIntOption)
-      .maxOption
-      .getOrElse(0)
-    val newFunName = "fun" + (lastFunNum + 1)
-    val newFun = Function(
-      AST.newId,
-      newFunName,
-      statements = List(Statement.Begin(false), Statement.Return(AST.newId))
-    )
-    programModel.addFunction(newFun)
-  }
+  flowRunElements.addFunButton.onclick = _ =>
+    programModel.addNewFunction()
 
   import FlowRun.Event.*
   flowrunChannel.attach {
@@ -139,7 +99,7 @@ class FlowRun(mountElem: dom.Element, programJson: Option[String] = None) {
       showVariables()
     case FunctionUpdated =>
       functionEditor.loadCurrentFunction()
-      populateFunctions()
+      functionSelector.loadFunctions()
     case Deselected =>
       flowRunElements.editStatement.innerText = ""
   }

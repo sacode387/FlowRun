@@ -8,15 +8,15 @@ class ProgramModel(
     initAst: Program,
     flowrunChannel: Channel[FlowRun.Event]
 ) {
-  import ProgramModel.Request.*
+  import ProgramModel.*, Request.*
 
   var ast = initAst
 
   // I'm too lazy to make this a request parameter :/
-  var currentFunctionId = "fun-main"
+  var currentFunctionId = MainFunId
 
   def currentFunction: Function =
-    if currentFunctionId == "fun-main" then ast.main
+    if currentFunctionId == MainFunId then ast.main
     else ast.functions.find(_.id == currentFunctionId).get
 
   def addFunction(fun: Function): Unit =
@@ -25,11 +25,25 @@ class ProgramModel(
     currentFunctionId = fun.id
     flowrunChannel := FlowRun.Event.Deselected
     flowrunChannel := FlowRun.Event.FunctionUpdated
+  
+  def addNewFunction(): Unit =
+    val lastFunNum = ast.functions
+      .map(_.name.substring(3))
+      .flatMap(_.toIntOption)
+      .maxOption
+      .getOrElse(0)
+    val newFunName = "fun" + (lastFunNum + 1)
+    val newFun = Function(
+      AST.newId,
+      newFunName,
+      statements = List(Statement.Begin(false), Statement.Return(AST.newId))
+    )
+    addFunction(newFun)
 
   def deleteFunction(id: String): Unit =
     val newFunctions = ast.functions.filterNot(_.id == id)
     ast = ast.copy(functions = newFunctions)
-    currentFunctionId = "fun-main"
+    currentFunctionId = MainFunId
     flowrunChannel := FlowRun.Event.Deselected
     flowrunChannel := FlowRun.Event.FunctionUpdated
 
@@ -121,6 +135,61 @@ class ProgramModel(
     flowrunChannel := FlowRun.Event.SyntaxSuccess
   }
 }
+
+
+object ProgramModel:
+  import dev.sacode.flowrun.Expression.Type
+  
+  val MainFunId = "fun-main"
+
+  enum Request:
+    case Delete(id: String)
+    case AddDeclare(id: String, name: String, tpe: Type, afterId: String, blockId: String)
+    case AddAssign(id: String, afterId: String, blockId: String)
+    case AddOutput(id: String, afterId: String, blockId: String)
+    case AddInput(id: String, afterId: String, blockId: String)
+    case AddCall(id: String, afterId: String, blockId: String)
+    case AddIf(
+        id: String,
+        trueId: String,
+        falseId: String,
+        afterId: String,
+        blockId: String
+    )
+    case AddWhile(
+        id: String,
+        bodyId: String,
+        afterId: String,
+        blockId: String
+    )
+    case AddDoWhile(
+        id: String,
+        bodyId: String,
+        afterId: String,
+        blockId: String
+    )
+
+    case UpdateDeclare(
+        id: String,
+        name: Option[String] = None,
+        tpe: Option[Type] = None,
+        expr: Option[Option[String]] = None
+    )
+    case UpdateAssign(id: String, name: Option[String] = None, expr: Option[String] = None)
+    case UpdateOutput(id: String, expr: String)
+    case UpdateInput(id: String, name: String)
+    case UpdateCall(id: String, expr: String)
+    case UpdateReturn(id: String, expr: Option[Option[String]] = None)
+    case UpdateIf(id: String, expr: String)
+    case UpdateWhile(id: String, expr: String)
+    case UpdateDoWhile(id: String, expr: String)
+    case UpdateFunction(
+        id: String,
+        name: Option[String] = None,
+        tpe: Option[Type] = None,
+        parameters: Option[List[(String, String)]] = None
+    )
+end ProgramModel
 
 case class FunctionModel(
     ast: Function
@@ -388,53 +457,3 @@ case class FunctionModel(
     }.headOption
 
 }
-
-object ProgramModel:
-  import dev.sacode.flowrun.Expression.Type
-  enum Request:
-    case Delete(id: String)
-    case AddDeclare(id: String, name: String, tpe: Type, afterId: String, blockId: String)
-    case AddAssign(id: String, afterId: String, blockId: String)
-    case AddOutput(id: String, afterId: String, blockId: String)
-    case AddInput(id: String, afterId: String, blockId: String)
-    case AddCall(id: String, afterId: String, blockId: String)
-    case AddIf(
-        id: String,
-        trueId: String,
-        falseId: String,
-        afterId: String,
-        blockId: String
-    )
-    case AddWhile(
-        id: String,
-        bodyId: String,
-        afterId: String,
-        blockId: String
-    )
-    case AddDoWhile(
-        id: String,
-        bodyId: String,
-        afterId: String,
-        blockId: String
-    )
-
-    case UpdateDeclare(
-        id: String,
-        name: Option[String] = None,
-        tpe: Option[Type] = None,
-        expr: Option[Option[String]] = None
-    )
-    case UpdateAssign(id: String, name: Option[String] = None, expr: Option[String] = None)
-    case UpdateOutput(id: String, expr: String)
-    case UpdateInput(id: String, name: String)
-    case UpdateCall(id: String, expr: String)
-    case UpdateReturn(id: String, expr: Option[Option[String]] = None)
-    case UpdateIf(id: String, expr: String)
-    case UpdateWhile(id: String, expr: String)
-    case UpdateDoWhile(id: String, expr: String)
-    case UpdateFunction(
-        id: String,
-        name: Option[String] = None,
-        tpe: Option[Type] = None,
-        parameters: Option[List[(String, String)]] = None
-    )
