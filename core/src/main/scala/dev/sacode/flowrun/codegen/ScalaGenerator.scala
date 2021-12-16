@@ -42,7 +42,6 @@ class ScalaGenerator(programAst: Program) {
             |} else {
             |  ${getStatement(falseBlock)}
             |}""".stripMargin.trim
-      case Dummy(_) => ""
 
   private def getType(tpe: Expression.Type): String =
     import Expression.Type, Type._

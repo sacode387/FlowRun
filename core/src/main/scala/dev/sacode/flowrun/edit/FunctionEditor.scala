@@ -84,14 +84,10 @@ class FunctionEditor(
   ): String = {
     val group = ""// TODO remove ??? s"""group="$groupName""""
     stmt match {
-      case Begin(true) =>
+      case Begin(isMain) =>
+        val lbl = if isMain then stmt.label else programModel.currentFunction.label
         s"""
-        |${stmt.id} [id="${stmt.id}" label="${stmt.label}" shape="ellipse" fillcolor="aqua" fontcolor="black"]
-        |${stmt.id}:s -> $nextStmtId:$nextStmtDir [id="$newId"]
-        |""".stripMargin
-      case Begin(false) =>
-        s"""
-        |${stmt.id} [id="${stmt.id}" label="${programModel.currentFunction.label}" shape="ellipse" fillcolor="aqua" fontcolor="black"]
+        |${stmt.id} [id="${stmt.id}" label="${lbl}" shape="ellipse" fillcolor="aqua" fontcolor="black"]
         |${stmt.id}:s -> $nextStmtId:$nextStmtDir [id="$newId"]
         |""".stripMargin
       case _: Declare =>
@@ -110,6 +106,11 @@ class FunctionEditor(
         |${stmt.id}:s -> $nextStmtId:$nextStmtDir [id="$newId"]
         |""".stripMargin
       case _: Output =>
+        s"""
+        |${stmt.id} [id="${stmt.id}" label="${stmt.label}" $group shape="trapezium" fillcolor="mediumblue"]
+        |${stmt.id}:s -> $nextStmtId:$nextStmtDir [id="$newId"]
+        |""".stripMargin
+      case _: Statement.Call =>
         s"""
         |${stmt.id} [id="${stmt.id}" label="${stmt.label}" $group shape="trapezium" fillcolor="mediumblue"]
         |${stmt.id}:s -> $nextStmtId:$nextStmtDir [id="$newId"]
@@ -160,7 +161,12 @@ class FunctionEditor(
           |$trueStatementss
           |$falseStatementss
           |""".stripMargin
-      case _ => ""
+
+      case stmt: While => "" // TODO
+      case stmt: DoWhile => "" // TODO
+
+      case _: Statement.Block => ""
+      case _: Statement.Return => "" // already drawn in loadCurrentFunction
     }
   }
 

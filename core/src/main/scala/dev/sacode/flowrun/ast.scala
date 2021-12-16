@@ -80,8 +80,6 @@ object Statement:
 
   case class Begin(isMain: Boolean = false) extends Statement("beginId"):
     def label = "Begin"
-  case class Dummy(override val id: String) extends Statement(id):
-    def label = ""
   case class Declare(
       override val id: String,
       name: String,

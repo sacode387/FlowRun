@@ -213,7 +213,7 @@ case class FunctionModel(
     doInsert(req.afterId, newStat, req.blockId)
 
   def addCall(req: AddCall): FunctionModel =
-    val newStat = Statement.Call(req.id, "f()")
+    val newStat = Statement.Call(req.id, "fun1()")
     doInsert(req.afterId, newStat, req.blockId)
 
   def addIf(req: AddIf): FunctionModel =
