@@ -16,21 +16,14 @@ class FunctionEditor(
 
   loadCurrentFunction()
 
-  CtxMenu(flowRunElements, programModel, this)
+  CtxMenu(flowRunElements, programModel, this).init()
 
   def disable(): Unit = {}
 
   def enable(): Unit = {}
 
   def clearErrors(): Unit =
-    //cy.asDyn.nodes().data("has-error", false)
     flowrunChannel := FlowRun.Event.SyntaxSuccess
-
-  flowrunChannel.attach {
-    case FlowRun.Event.EvalError(nodeId, msg) =>
-    //cy.asDyn.nodes(s"node[id = '$nodeId']").data("has-error", true)
-    case _ =>
-  }
 
   def loadCurrentFunction(): Unit = {
     val graphviz = d3

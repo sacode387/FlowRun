@@ -3,14 +3,14 @@ package dev.sacode.flowrun
 import scala.scalajs.js
 import scala.scalajs.js.annotation.JSExportTopLevel
 import org.scalajs.dom
-import org.getshaka.nativeconverter.NativeConverter
 import scalatags.JsDom.all.*
+import org.getshaka.nativeconverter.NativeConverter
 import reactify.*
-import dev.sacode.flowrun.eval.*
+import dev.sacode.flowrun.eval.Interpreter
 import dev.sacode.flowrun.edit.FunctionEditor
 import dev.sacode.flowrun.edit.FunctionSelector
 import dev.sacode.flowrun.edit.StatementEditor
-import dev.sacode.flowrun.parse.parseExpr
+import dev.sacode.flowrun.edit.OutputArea
 
 @JSExportTopLevel("FlowRun")
 class FlowRun(mountElem: dom.Element, programJson: Option[String] = None) {
@@ -35,6 +35,7 @@ class FlowRun(mountElem: dom.Element, programJson: Option[String] = None) {
   private val functionSelector = FunctionSelector(programModel, flowrunChannel, flowRunElements)
   private val statementEditor = StatementEditor(programModel, flowrunChannel, flowRunElements)
   private var interpreter = Interpreter(programModel, flowrunChannel)
+  private var outputArea = OutputArea(interpreter, flowRunElements)
 
   private var lastRun: String = ""
 
@@ -50,9 +51,6 @@ class FlowRun(mountElem: dom.Element, programJson: Option[String] = None) {
 
   def json(): js.Any =
     programModel.ast.toNative
-
-  def allFunctions = List(programModel.ast.main) ++ programModel.ast.functions
-
 
   // run the program
   flowRunElements.runButton.onclick = _ => {
@@ -77,24 +75,23 @@ class FlowRun(mountElem: dom.Element, programJson: Option[String] = None) {
       functionEditor.enable()
     case SyntaxSuccess =>
       // TODO REMOVE SAMO SYNTAX ERORE !!!!!!!!!
-      flowRunElements.output.innerText = ""
-      flowRunElements.output.classList.remove("error")
+      outputArea.clearErrors()
       functionEditor.loadCurrentFunction()
     case SyntaxError(msg) =>
       var output = s"Started at: $lastRun"
       output += "\nError: " + msg
-      displayError(output)
+      outputArea.displayError(output)
       functionEditor.enable()
     case EvalError(_, msg) =>
       var output = s"Started at: $lastRun"
       output += "\nError: " + msg
-      displayError(output)
+      outputArea.displayError(output)
       functionEditor.enable()
     case EvalOutput(output) =>
       val newOutput = pre(output).render
       flowRunElements.output.appendChild(newOutput)
     case EvalInput(nodeId, name) =>
-      evalInput(nodeId, name)
+      outputArea.evalInput(nodeId, name)
     case SymbolTableUpdated =>
       showVariables()
     case FunctionUpdated =>
@@ -102,52 +99,7 @@ class FlowRun(mountElem: dom.Element, programJson: Option[String] = None) {
       functionSelector.loadFunctions()
     case Deselected =>
       flowRunElements.editStatement.innerText = ""
-  }
-
-  private def evalInput(nodeId: String, name: String) = {
-
-    val valueInputElem = flowRunElements.newInputText
-    val valueBtnElem = flowRunElements.newEnterButton
-    val enterValueDiv = div(
-      label(
-        s"Please enter value for '$name': ",
-        valueInputElem,
-        valueBtnElem
-      )
-    ).render
-    flowRunElements.output.appendChild(enterValueDiv)
-
-    valueInputElem.focus()
-
-    valueBtnElem.onclick = _ => {
-      val inputValue = valueInputElem.value.trim
-      val key = SymbolKey(name, Symbol.Kind.Variable)
-      val sym = interpreter.symTab.getSymbol(null, key)
-      try {
-        val value = sym.tpe match
-          case Expression.Type.Integer => inputValue.toInt
-          case Expression.Type.Real    => inputValue.toDouble
-          case Expression.Type.Boolean => inputValue.toBoolean
-          case Expression.Type.String  => inputValue
-          case Expression.Type.Void    => ()
-        interpreter.symTab.setValue(nodeId, name, value)
-        interpreter.continue()
-
-        val newOutput = pre(s"Please enter value for '$name': $inputValue").render
-        flowRunElements.output.removeChild(enterValueDiv)
-        flowRunElements.output.appendChild(newOutput)
-      } catch {
-        case (e: EvalException) => // from symbol table
-          displayError(e.getMessage)
-        case e: (NumberFormatException | IllegalArgumentException) =>
-          displayError(s"Entered invalid ${sym.tpe}: '${inputValue}'")
-      }
-    }
-  }
-
-  private def displayError(msg: String): Unit =
-    flowRunElements.output.innerText = msg
-    flowRunElements.output.classList.add("error")
+  } 
 
   private def showVariables(): Unit =
     flowRunElements.debugVariables.innerText = ""
