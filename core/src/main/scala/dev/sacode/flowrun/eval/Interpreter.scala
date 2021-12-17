@@ -26,16 +26,15 @@ class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[FlowRun.Ev
 
     state = State.RUNNING
 
-    val futureDeclareFuncs = Future.successful {
-      allFunctions.foreach { fun =>
-        val key = SymbolKey(fun.name, Symbol.Kind.Function)
-        symTab.add(null, key, fun.tpe, None)
-      }
+    allFunctions.foreach { fun =>
+      val key = SymbolKey(fun.name, Symbol.Kind.Function, "")
+      symTab.add(null, key, fun.tpe, None)
     }
 
-    val futureExec = futureDeclareFuncs.flatMap { _ =>
-      interpret(programModel.ast.main, List.empty)
-    }
+    //println(symTab.globalScope.allSymbols)
+    //println(symTab.globalScope.childScopes.map(_.allSymbols))
+
+    val futureExec = interpret(programModel.ast.main, List.empty)
 
     futureExec.onComplete {
       case Success(_) =>
@@ -65,7 +64,7 @@ class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[FlowRun.Ev
   ): Future[Any] =
     symTab.enterScope(fun.name)
     arguments.foreach { (name, tpe, value) =>
-      val key = SymbolKey(name, Symbol.Kind.Variable)
+      val key = SymbolKey(name, Symbol.Kind.Variable, "")
       symTab.add(null, key, tpe, Some(value))
     }
     execSequentially((): Any, fun.statements, (_, s) => interpret(s)).map { result =>
@@ -79,30 +78,23 @@ class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[FlowRun.Ev
 
     stmt match {
       case Declare(id, name, tpe, initValue) =>
-        if name.trim.isEmpty then throw EvalException(s"Not a valid name: '$name'", id)
-
-        // TODO validate reserved identifiers
-        // TODO validate [a-zA-Z][a-zA-Z0-9]*
-        if !name.trim.matches("[a-zA-Z][a-zA-Z0-9]*") then
-          throw EvalException(s"Not a valid name: '$name'", id)
-
         val maybeInitValueExpr = initValue.map(iv => parseExpr(id, iv))
         maybeInitValueExpr match
           case None =>
-            val key = SymbolKey(name, Symbol.Kind.Variable)
+            val key = SymbolKey(name, Symbol.Kind.Variable, id)
             symTab.add(id, key, tpe, None)
             Future.successful({})
           case Some(expr) =>
             eval(id, expr).map { v =>
               TypeUtils.getUpdateValue(id, name, tpe, v).get // validate
-              val key = SymbolKey(name, Symbol.Kind.Variable)
+              val key = SymbolKey(name, Symbol.Kind.Variable, id)
               symTab.add(id, key, tpe, Some(v))
               ()
             }
       case Assign(id, name, expr) =>
         if !symTab.isDeclaredVar(name) then
           throw EvalException(s"Variable '$name' is not declared.", id)
-        val key = SymbolKey(name, Symbol.Kind.Variable)
+        val key = SymbolKey(name, Symbol.Kind.Variable, id)
         val sym = symTab.getSymbol(id, key)
         eval(id, parseExpr(id, expr)).map { exprValue =>
           if exprValue.toString.isEmpty && sym.tpe != Expression.Type.String then
@@ -201,7 +193,7 @@ class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[FlowRun.Ev
         (acc, nextNumCompOpt) => {
           eval(id, nextNumCompOpt.numComparison).map { nextVal =>
             nextNumCompOpt.op.tpe match
-              case Token.Type.Plus => acc == nextVal
+              case Token.Type.EqualsEquals => acc == nextVal
               case _               => acc != nextVal
           }
         }
@@ -300,7 +292,7 @@ class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[FlowRun.Ev
       case FalseLit           => Future.successful(false)
       case Parens(expression) => eval(id, expression)
       case FunctionCall(name, argumentExprs) =>
-        val key = SymbolKey(name, Symbol.Kind.Function)
+        val key = SymbolKey(name, Symbol.Kind.Function, id)
         val funSym = symTab.getSymbol(id, key) // check if defined
 
         val futureArgs = execSequentially(

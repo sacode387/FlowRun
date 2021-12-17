@@ -3,6 +3,7 @@
 TODO
 
 - clear output button
+- kad klikne bilo đe da obriše input đavo
 - validate return type with return expr !!!
 
 

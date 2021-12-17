@@ -155,8 +155,8 @@ class FunctionEditor(
           |
           |${stmt.id} [id="${stmt.id}" label="${stmt.label}" $group shape="diamond" fillcolor="yellow" fontcolor="black"]
           |
-          |${stmt.id}:e -> $firstTrueNodeId:$trueDir [id="$newId" taillabel="true"]
-          |${stmt.id}:w -> $firstFalseNodeId:$falseDir [id="$newId" taillabel="false"]
+          |${stmt.id}:e -> $firstTrueNodeId:$trueDir [id="${stmt.trueBlock.id}" taillabel="true"]
+          |${stmt.id}:w -> $firstFalseNodeId:$falseDir [id="${stmt.falseBlock.id}" taillabel="false"]
           |
           |$trueStatementss
           |$falseStatementss

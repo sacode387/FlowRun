@@ -70,6 +70,7 @@ class CtxMenu(
 
                   val titleText = parent.getElementsByTagName("title")(0).textContent
                   setAfterId(titleText)
+                  setBlockId(parent.id)
                   println("TITLE: " + titleText)
                 else println("noooooooo idea")
               case _ =>
@@ -121,6 +122,7 @@ class CtxMenu(
     addOutputButton.addEventListener(
       "click",
       (event: dom.MouseEvent) => {
+        println(s"ADD OUT $afterId, $blockId")
         programModel.addOutput(Request.AddOutput(AST.newId, afterId, blockId))
         functionEditor.loadCurrentFunction()
       }
@@ -147,6 +149,7 @@ class CtxMenu(
     addWhileButton.addEventListener(
       "click",
       (event: dom.MouseEvent) => {
+        
         programModel.addOutput(Request.AddOutput(AST.newId, afterId, blockId))
         functionEditor.loadCurrentFunction()
       }
@@ -162,5 +165,10 @@ class CtxMenu(
 
   private def setAfterId(title: String): Unit =
     afterId = title.takeWhile(_ != ':')
+
+  private def setBlockId(id: String): Unit =
+    blockId = id
+  
+  
 
 }

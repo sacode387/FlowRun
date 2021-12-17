@@ -9,11 +9,11 @@ class SymbolTable(flowrunChannel: Channel[FlowRun.Event]) {
 
   val globalScope = Scope("GLOBAL", None, flowrunChannel)
   locally {
-    val key = SymbolKey("abs", Symbol.Kind.Function)
+    val key = SymbolKey("abs", Symbol.Kind.Function, "")
     globalScope.add(null, key, Type.Integer, None)
   }
 
-  private var currentScope = globalScope
+  var currentScope = globalScope
 
   def enterScope(name: String): Unit =
     val newScope = Scope(name, Some(currentScope), flowrunChannel)
@@ -86,7 +86,7 @@ class Scope(
     symbols.get(key)
 
   def setValue(nodeId: String, name: String, value: Any): Unit =
-    val key = SymbolKey(name, Symbol.Kind.Variable)
+    val key = SymbolKey(name, Symbol.Kind.Variable, nodeId)
     val sym = getSymbol(nodeId, key)
     val updateValue = TypeUtils.getUpdateValue(nodeId, name, sym.tpe, value).get
     val updatedSym = sym.copy(value = Some(updateValue))
@@ -94,16 +94,16 @@ class Scope(
     flowrunChannel := FlowRun.Event.SymbolTableUpdated
 
   def getValue(nodeId: String, name: String): Any =
-    val key = SymbolKey(name, Symbol.Kind.Variable)
+    val key = SymbolKey(name, Symbol.Kind.Variable, nodeId)
     val sym = getSymbol(nodeId, key)
     sym.value.getOrElse(error(s"Variable '$name' is not initialized.", nodeId))
 
   def isDeclaredVar(name: String): Boolean =
-    val key = SymbolKey(name, Symbol.Kind.Variable)
+    val key = SymbolKey(name, Symbol.Kind.Variable, "")
     maybeSymbol(key).nonEmpty
 
   def isDeclaredFun(name: String): Boolean =
-    val key = SymbolKey(name, Symbol.Kind.Function)
+    val key = SymbolKey(name, Symbol.Kind.Function, "")
     maybeSymbol(key).nonEmpty
 
   def getSymbol(nodeId: String, key: SymbolKey): Symbol =
@@ -129,11 +129,24 @@ class Scope(
     throw EvalException(msg + maybeFun, nodeId)
 end Scope
 
-case class SymbolKey(name: String, kind: Symbol.Kind)
+case class SymbolKey(name: String, kind: Symbol.Kind) {
+  require(name.trim.nonEmpty, "Name is empty")
+  require(name.trim.matches("[a-zA-Z][_a-zA-Z0-9]*"), "Name is invalid")
+  require(!SymbolKey.ReservedWords(name.trim), "Name is a reserved word")
+}
+
+object SymbolKey {
+  val ReservedWords = Set("true", "false")
+  def apply(name: String, kind: Symbol.Kind, nodeId: String): SymbolKey = scala.util.Try {
+    SymbolKey(name, kind)
+  }.recover {
+    case e: IllegalArgumentException => throw EvalException(e.getMessage, nodeId)
+  }.get
+}
 
 case class Symbol(key: SymbolKey, tpe: Type, value: Option[Any] = None, scope: Scope):
   override def toString: String =
-    s"${key}: ${tpe}"
+    s"${key.name}: ${tpe}" + value.map(v => s" = $v").getOrElse("")
 
 object Symbol:
   enum Kind:

@@ -60,6 +60,7 @@ class FlowRun(mountElem: dom.Element, programJson: Option[String] = None) {
     flowRunElements.output.appendChild(s"Started at: $lastRun".render)
 
     interpreter = Interpreter(programModel, flowrunChannel) // fresh SymTable etc
+    outputArea = OutputArea(interpreter, flowRunElements)
     interpreter.run()
     functionEditor.disable()
   }

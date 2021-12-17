@@ -36,7 +36,7 @@ class OutputArea(
 
     valueBtnElem.onclick = _ => {
       val inputValue = valueInputElem.value.trim
-      val key = SymbolKey(name, Symbol.Kind.Variable)
+      val key = SymbolKey(name, Symbol.Kind.Variable, nodeId)
       val sym = interpreter.symTab.getSymbol(null, key)
       try {
         val value = sym.tpe match
