@@ -26,15 +26,17 @@ class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[FlowRun.Ev
 
     state = State.RUNNING
 
-    allFunctions.foreach { fun =>
-      val key = SymbolKey(fun.name, Symbol.Kind.Function, "")
-      symTab.add(null, key, fun.tpe, None)
+    val functionsFuture = Future { // needed coz SymbolKey throws
+      allFunctions.foreach { fun =>
+        val key = SymbolKey(fun.name, Symbol.Kind.Function, "")
+        symTab.add(null, key, fun.tpe, None)
+      }
     }
 
-    //println(symTab.globalScope.allSymbols)
-    //println(symTab.globalScope.childScopes.map(_.allSymbols))
-
-    val futureExec = interpret(programModel.ast.main, List.empty)
+    val futureExec = for
+      _ <- functionsFuture
+      res <- interpret(programModel.ast.main, List.empty)
+    yield res
 
     futureExec.onComplete {
       case Success(_) =>
@@ -52,7 +54,8 @@ class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[FlowRun.Ev
       case Failure(e) =>
         println(s"Unexpected error: $e")
     }
-    futureExec.map(_ => ())
+
+    futureExec.mapTo[Unit]
   }
 
   def continue(): Unit =
@@ -80,10 +83,10 @@ class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[FlowRun.Ev
       case Declare(id, name, tpe, initValue) =>
         val maybeInitValueExpr = initValue.map(iv => parseExpr(id, iv))
         maybeInitValueExpr match
-          case None =>
+          case None => Future {
             val key = SymbolKey(name, Symbol.Kind.Variable, id)
             symTab.add(id, key, tpe, None)
-            Future.successful({})
+          }
           case Some(expr) =>
             eval(id, expr).map { v =>
               TypeUtils.getUpdateValue(id, name, tpe, v).get // validate
@@ -147,7 +150,7 @@ class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[FlowRun.Ev
           case None       => Future.successful(())
           case Some(expr) => eval(id, parseExpr(id, expr))
       case Begin(_) => // noop
-        Future.successful(())
+        Future.successful({})
     }
   }
 
@@ -287,7 +290,7 @@ class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[FlowRun.Ev
     atom match
       case NumberLit(value)   => Future.successful(value)
       case StringLit(value)   => Future.successful(value)
-      case Identifier(name)   => Future.successful(symTab.getValue(id, name))
+      case Identifier(name)   => Future(symTab.getValue(id, name))
       case TrueLit            => Future.successful(true)
       case FalseLit           => Future.successful(false)
       case Parens(expression) => eval(id, expression)
@@ -307,7 +310,7 @@ class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[FlowRun.Ev
           if name == "abs" then
             // TODO handle all predefined functions
             // TODO validate args..........
-            Future.successful(Math.abs(args.head.asInstanceOf[Double]))
+            Future(Math.abs(args.head.asInstanceOf[Double]))
           else
             val fun = allFunctions.find(_.name == name).get
             if args.size != fun.parameters.size then
