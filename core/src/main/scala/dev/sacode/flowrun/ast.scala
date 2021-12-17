@@ -96,7 +96,7 @@ object Statement:
   case class Input(override val id: String, name: String) extends Statement(id):
     def label = name
   case class Output(override val id: String, value: String) extends Statement(id):
-    def label = value.replaceAll("\"", "\\\\\"")
+    def label = value
   case class Block(override val id: String, statements: List[Statement] = List.empty)
       extends Statement(id):
     def label = ""

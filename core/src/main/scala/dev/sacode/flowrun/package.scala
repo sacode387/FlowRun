@@ -9,6 +9,11 @@ extension (any: Any) {
   def asDyn: js.Dynamic = any.asInstanceOf[js.Dynamic]
 }
 
+extension (str: String) {
+  def toGraphvizLbl: String =
+    str.replace("\"", "\\\"")
+}
+
 def getNowTime: String =
   val now = new js.Date()
   now.toLocaleTimeString

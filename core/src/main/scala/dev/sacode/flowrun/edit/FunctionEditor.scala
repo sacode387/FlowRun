@@ -92,12 +92,12 @@ class FunctionEditor(
         |""".stripMargin
       case _: Declare =>
         s"""
-        |${stmt.id} [id="${stmt.id}" label="${stmt.label}" $group fillcolor="cornsilk" fontcolor="black" margin="0.05" ]
+        |${stmt.id} [id="${stmt.id}" label="${stmt.label.toGraphvizLbl}" $group fillcolor="cornsilk" fontcolor="black" margin="0.05" ]
         |${stmt.id}:s -> $nextStmtId:$nextStmtDir [id="$newId"]
         |""".stripMargin
       case _: Assign =>
         s"""
-        |${stmt.id} [id="${stmt.id}" label="${stmt.label}" $group fillcolor="red"]
+        |${stmt.id} [id="${stmt.id}" label="${stmt.label.toGraphvizLbl}" $group fillcolor="red"]
         |${stmt.id}:s -> $nextStmtId:$nextStmtDir [id="$newId"]
         |""".stripMargin
       case _: Input =>
@@ -107,17 +107,17 @@ class FunctionEditor(
         |""".stripMargin
       case _: Output =>
         s"""
-        |${stmt.id} [id="${stmt.id}" label="${stmt.label}" $group shape="trapezium" fillcolor="mediumblue"]
+        |${stmt.id} [id="${stmt.id}" label="${stmt.label.toGraphvizLbl}" $group shape="trapezium" fillcolor="mediumblue"]
         |${stmt.id}:s -> $nextStmtId:$nextStmtDir [id="$newId"]
         |""".stripMargin
       case _: Statement.Call =>
         s"""
-        |${stmt.id} [id="${stmt.id}" label="${stmt.label}" $group shape="trapezium" fillcolor="mediumblue"]
+        |${stmt.id} [id="${stmt.id}" label="${stmt.label.toGraphvizLbl}" $group shape="trapezium" fillcolor="mediumblue"]
         |${stmt.id}:s -> $nextStmtId:$nextStmtDir [id="$newId"]
         |""".stripMargin
 
       case stmt: If =>
-        val ifEndId = newId
+        val ifEndId = s"end_${stmt.id}"
 
         val reverseTrueStmts = stmt.trueBlock.statements.reverse
         val trueStatementss =
@@ -153,7 +153,7 @@ class FunctionEditor(
           |$ifEndId [id="$ifEndId" label="" $group shape="circle" fillcolor="black" fixedsize=true width=0.3 height=0.3]
           |$ifEndId:s -> $nextStmtId:$nextStmtDir [id="$newId"]
           |
-          |${stmt.id} [id="${stmt.id}" label="${stmt.label}" $group shape="diamond" fillcolor="yellow" fontcolor="black"]
+          |${stmt.id} [id="${stmt.id}" label="${stmt.label.toGraphvizLbl}" $group shape="diamond" fillcolor="yellow" fontcolor="black"]
           |
           |${stmt.id}:e -> $firstTrueNodeId:$trueDir [id="${stmt.trueBlock.id}" taillabel="true"]
           |${stmt.id}:w -> $firstFalseNodeId:$falseDir [id="${stmt.falseBlock.id}" taillabel="false"]
