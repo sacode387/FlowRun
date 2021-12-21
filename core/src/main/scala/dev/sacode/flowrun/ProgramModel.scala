@@ -282,11 +282,7 @@ case class FunctionModel(
 
   /* HELPERS */
   private def doInsert(afterId: String, newStatement: Statement, blockId: String): FunctionModel =
-    val newStats =
-      if ast.statements.isEmpty then List(newStatement)
-      //else if afterId == "beginId" || afterId.startsWith("fun-") then
-      //  ast.statements.prepended(newStatement)
-      else insert(ast.statements, afterId, newStatement, blockId)
+    val newStats = insert(ast.statements, afterId, newStatement, blockId)
     this.copy(ast = ast.copy(statements = newStats))
 
   private def insert(

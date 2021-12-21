@@ -56,18 +56,19 @@ class FunctionEditor(
         ranksep=0.35
         bgcolor="transparent"
         splines="spline"
+        #splines=ortho
        
 
-        node [shape="box" style="filled" fillcolor="white" penwidth="0.5" margin="0.1,0" fontcolor="white" fontname="Courier New"]
-        edge [penwidth=2]
+        node [shape="box" style="filled" fillcolor="white" height=0.3 penwidth="0.5" margin="0.1,0" fontcolor="white" fontname="Courier New"]
+        edge [penwidth=1.5 arrowsize=0.8]
         
-        ${lastStmt.id} [id="${lastStmt.id}" label="${endLabel}" group="$mainGroup" shape="ellipse" fillcolor="aqua" fontcolor="black"]
+        ${lastStmt.id} [id="${lastStmt.id}" label="${endLabel}" tooltip="${endLabel}" group="$mainGroup" height=0.3 shape="ellipse" fillcolor="aqua" fontcolor="black"]
 
         $statementsDot
     }
     """
 
-    //println(dotSrc)
+    println(dotSrc)
 
     graphviz.renderDot(dotSrc)
   }
@@ -82,41 +83,49 @@ class FunctionEditor(
       groupName: String,
       nextStmtDir: String = "n"
   ): String = {
-    val group = ""// TODO remove ??? s"""group="$groupName""""
+    
+    // group puts elements of one branch in a straight line
+    val group = s"""group="$groupName"""" 
     stmt match {
       case Begin(isMain) =>
         val lbl = if isMain then stmt.label else programModel.currentFunction.label
         s"""
-        |${stmt.id} [id="${stmt.id}" label="${lbl}" shape="ellipse" fillcolor="aqua" fontcolor="black"]
+        |${stmt.id} [id="${stmt.id}" label="$lbl" tooltip="$lbl" shape="ellipse" fillcolor="aqua" fontcolor="black" ${dimensions(stmt)}]
         |${stmt.id}:s -> $nextStmtId:$nextStmtDir [id="$newId"]
         |""".stripMargin
       case _: Declare =>
+        val lbl = stmt.label.toGraphvizLbl
         s"""
-        |${stmt.id} [id="${stmt.id}" label="${stmt.label.toGraphvizLbl}" $group fillcolor="cornsilk" fontcolor="black" margin="0.05" ]
+        |${stmt.id} [id="${stmt.id}" $group label="$lbl" tooltip="$lbl" fillcolor="cornsilk" fontcolor="black" margin="0.05" ${dimensions(stmt)}]
         |${stmt.id}:s -> $nextStmtId:$nextStmtDir [id="$newId"]
         |""".stripMargin
       case _: Assign =>
+        val lbl = stmt.label.toGraphvizLbl
         s"""
-        |${stmt.id} [id="${stmt.id}" label="${stmt.label.toGraphvizLbl}" $group fillcolor="red"]
+        |${stmt.id} [id="${stmt.id}" $group label="$lbl" tooltip="$lbl" fillcolor="red" ${dimensions(stmt)}]
         |${stmt.id}:s -> $nextStmtId:$nextStmtDir [id="$newId"]
         |""".stripMargin
       case _: Input =>
+        val lbl = stmt.label.toGraphvizLbl
         s"""
-        |${stmt.id} [id="${stmt.id}" label="${stmt.label}" $group shape="invtrapezium" fillcolor="mediumblue"]
+        |${stmt.id} [id="${stmt.id}" $group label="$lbl"  tooltip="$lbl" shape="invtrapezium" fillcolor="mediumblue" ${dimensions(stmt)}]
         |${stmt.id}:s -> $nextStmtId:$nextStmtDir [id="$newId"]
         |""".stripMargin
       case _: Output =>
+        val lbl = stmt.label.toGraphvizLbl
         s"""
-        |${stmt.id} [id="${stmt.id}" label="${stmt.label.toGraphvizLbl}" $group shape="trapezium" fillcolor="mediumblue"]
+        |${stmt.id} [id="${stmt.id}" $group label="$lbl" tooltip="$lbl" shape="trapezium" fillcolor="mediumblue" ${dimensions(stmt)}]
         |${stmt.id}:s -> $nextStmtId:$nextStmtDir [id="$newId"]
         |""".stripMargin
       case _: Statement.Call =>
+        val lbl = stmt.label.toGraphvizLbl
         s"""
-        |${stmt.id} [id="${stmt.id}" label="${stmt.label.toGraphvizLbl}" $group shape="trapezium" fillcolor="mediumblue"]
+        |${stmt.id} [id="${stmt.id}" $group label="$lbl" tooltip="$lbl" shape="trapezium" fillcolor="mediumblue" ${dimensions(stmt)}]
         |${stmt.id}:s -> $nextStmtId:$nextStmtDir [id="$newId"]
         |""".stripMargin
 
       case stmt: If =>
+        val lbl = stmt.label.toGraphvizLbl
         val ifEndId = s"end_${stmt.id}"
 
         val reverseTrueStmts = stmt.trueBlock.statements.reverse
@@ -150,10 +159,10 @@ class FunctionEditor(
           else (reverseFalseStmts.reverse.head.id, "n")
 
         s"""
-          |$ifEndId [id="$ifEndId" label="" $group shape="circle" fillcolor="black" fixedsize=true width=0.3 height=0.3]
+          |$ifEndId [id="$ifEndId" $group label="" tooltip=" " shape="circle" fillcolor="black" fixedsize=true width=0.2 height=0.2 ]
           |$ifEndId:s -> $nextStmtId:$nextStmtDir [id="$newId"]
           |
-          |${stmt.id} [id="${stmt.id}" label="${stmt.label.toGraphvizLbl}" $group shape="diamond" fillcolor="yellow" fontcolor="black"]
+          |${stmt.id} [id="${stmt.id}" $group label="$lbl" tooltip="$lbl" $group ${dimensions(stmt, true)} shape="diamond" fillcolor="yellow" fontcolor="black"]
           |
           |${stmt.id}:e -> $firstTrueNodeId:$trueDir [id="${stmt.trueBlock.id}" taillabel="true"]
           |${stmt.id}:w -> $firstFalseNodeId:$falseDir [id="${stmt.falseBlock.id}" taillabel="false"]
@@ -169,5 +178,11 @@ class FunctionEditor(
       case _: Statement.Return => "" // already drawn in loadCurrentFunction
     }
   }
+
+  private def dimensions(stmt: Statement, luft: Boolean = false): String =
+    val w = stmt.label.toGraphvizLbl.length * 0.15 + (if luft then 0.5 else 0)
+    val width = w max 1
+    val h = 0.3  + (if luft then 0.1 else 0)
+    s"height=$h width=$width fixedsize=true"
 
 }

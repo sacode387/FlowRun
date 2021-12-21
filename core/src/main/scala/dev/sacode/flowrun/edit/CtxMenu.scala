@@ -69,9 +69,8 @@ class CtxMenu(
                   edgeContextMenu.classList.add("active")
 
                   val titleText = parent.getElementsByTagName("title")(0).textContent
-                  setBlockId(parent.id)
-                  setAfterId(titleText)
-                  
+                  setEdgeIds(titleText, parent.id)
+
                   println("TITLE: " + titleText)
                 else println("noooooooo idea")
               case _ =>
@@ -150,7 +149,7 @@ class CtxMenu(
     addWhileButton.addEventListener(
       "click",
       (event: dom.MouseEvent) => {
-        
+
         programModel.addOutput(Request.AddOutput(AST.newId, afterId, blockId))
         functionEditor.loadCurrentFunction()
       }
@@ -164,16 +163,13 @@ class CtxMenu(
         e.asInstanceOf[dom.html.Element].classList.remove("active")
       }
 
-  private def setAfterId(title: String): Unit =
-    var newAfterId = title.takeWhile(_ != ':')
+  private def setEdgeIds(title: String, id: String): Unit =
+    val newAfterId = title.takeWhile(_ != ':')
     if newAfterId.startsWith("end_") then
-      newAfterId = newAfterId.drop("end_".length)
       blockId = ""
-    afterId = newAfterId
-
-  private def setBlockId(id: String): Unit =
-    blockId = id
-  
-  
+      afterId = newAfterId.drop("end_".length)
+    else
+      blockId = id
+      afterId = newAfterId
 
 }
