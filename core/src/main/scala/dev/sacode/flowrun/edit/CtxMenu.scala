@@ -6,12 +6,11 @@ import dev.sacode.flowrun.ProgramModel
 import dev.sacode.flowrun.ProgramModel.Request
 import dev.sacode.flowrun.Expression.Type
 import dev.sacode.flowrun.AST
-import dev.sacode.flowrun.edit.FunctionEditor
+import dev.sacode.flowrun.getSvgNode
 
 class CtxMenu(
     flowRunElements: FlowRunElements,
-    programModel: ProgramModel,
-    functionEditor: FunctionEditor
+    programModel: ProgramModel
 ) {
 
   /** used for delete */
@@ -23,6 +22,65 @@ class CtxMenu(
   def init(): Unit = {
     val edgeContextMenu =
       dom.document.getElementById("flowrun-edge-context-menu").asInstanceOf[dom.html.Element]
+    val nodeContextMenu =
+      dom.document.getElementById("flowrun-node-context-menu").asInstanceOf[dom.html.Element]
+
+    flowRunElements.drawArea.addEventListener(
+      "contextmenu",
+      (event: dom.MouseEvent) => {
+
+        // here we know which NODE/EDGE is right-clicked
+        // we save relevant ids, and then use them when a button is clicked
+
+        event.preventDefault()
+        hideAllMenus()
+
+        getSvgNode(event.target) match {
+          case ("NODE", n) =>
+            nodeContextMenu.style.left = s"${event.clientX}px"
+            nodeContextMenu.style.top = s"${event.clientY}px"
+            nodeContextMenu.classList.add("active")
+            nodeId = n.id
+          case ("EDGE", e) =>
+            edgeContextMenu.style.left = s"${event.clientX}px"
+            edgeContextMenu.style.top = s"${event.clientY}px"
+            edgeContextMenu.classList.add("active")
+
+            val titleText = e.getElementsByTagName("title")(0).textContent
+            setEdgeIds(titleText, e.id)
+          case _ =>
+            println("Not relevant right-click")
+        }
+      }
+    )
+
+    attachListeners()
+  }
+
+  private def hideAllMenus(): Unit =
+    dom.document
+      .getElementsByClassName("flowrun-context-menu")
+      .foreach { e =>
+        e.asInstanceOf[dom.html.Element].classList.remove("active")
+      }
+
+  private def setEdgeIds(title: String, id: String): Unit =
+    afterId = title.takeWhile(_ != ':')
+    if afterId.startsWith("end_") then afterId = afterId.drop("end_".length)
+
+    blockId = id.split("@")(1)
+
+  private def attachListeners(): Unit = {
+    // close menu when clicked anywhere
+    dom.window.addEventListener("click", event => hideAllMenus())
+
+    val edgeContextMenu =
+      dom.document.getElementById("flowrun-edge-context-menu").asInstanceOf[dom.html.Element]
+    val nodeContextMenu =
+      dom.document.getElementById("flowrun-node-context-menu").asInstanceOf[dom.html.Element]
+
+    val deleteButton =
+      nodeContextMenu.querySelector("#flowrun-delete").asInstanceOf[dom.html.Element]
     val addDeclareButton =
       edgeContextMenu.querySelector("#flowrun-add-declare").asInstanceOf[dom.html.Element]
     val addAssignButton =
@@ -38,58 +96,10 @@ class CtxMenu(
     val addWhileButton =
       edgeContextMenu.querySelector("#flowrun-add-while").asInstanceOf[dom.html.Element]
 
-    val nodeContextMenu =
-      dom.document.getElementById("flowrun-node-context-menu").asInstanceOf[dom.html.Element]
-    val deleteButton =
-      nodeContextMenu.querySelector("#flowrun-delete").asInstanceOf[dom.html.Element]
-
-    flowRunElements.drawArea.addEventListener(
-      "contextmenu",
-      (event: dom.MouseEvent) => {
-
-        // here we know which NODE/EDGE is right-clicked
-        // we save relevant ids, and then use them when a button is clicked
-
-        event.preventDefault()
-        hideAllMenus()
-        event.target match {
-          case g: dom.svg.Element =>
-            // click usually refers to a <title>, <path>, <polygon> etc
-            // but the id is on the parent group <g> element
-            g.parentNode match {
-              case parent: dom.svg.G =>
-                if parent.className.baseVal == "node" then
-                  nodeContextMenu.style.left = s"${event.clientX}px"
-                  nodeContextMenu.style.top = s"${event.clientY}px"
-                  nodeContextMenu.classList.add("active")
-                  nodeId = parent.id
-                else if parent.className.baseVal == "edge" then
-                  edgeContextMenu.style.left = s"${event.clientX}px"
-                  edgeContextMenu.style.top = s"${event.clientY}px"
-                  edgeContextMenu.classList.add("active")
-
-                  val titleText = parent.getElementsByTagName("title")(0).textContent
-                  setEdgeIds(titleText, parent.id)
-
-                  println("TITLE: " + titleText)
-                else println("noooooooo idea")
-              case _ =>
-                println("Not a group")
-            }
-          case _ =>
-            println("Not an svg element")
-        }
-      }
-    )
-
-    // close menu when clicked anywhere
-    dom.window.addEventListener("click", event => hideAllMenus())
-
     deleteButton.addEventListener(
       "click",
       (event: dom.MouseEvent) => {
         programModel.delete(Request.Delete(nodeId))
-        functionEditor.loadCurrentFunction()
       }
     )
 
@@ -99,7 +109,6 @@ class CtxMenu(
         programModel.addDeclare(
           Request.AddDeclare(AST.newId, "x", Type.Integer, afterId, blockId)
         )
-        functionEditor.loadCurrentFunction()
       }
     )
 
@@ -107,7 +116,6 @@ class CtxMenu(
       "click",
       (event: dom.MouseEvent) => {
         programModel.addAssign(Request.AddAssign(AST.newId, afterId, blockId))
-        functionEditor.loadCurrentFunction()
       }
     )
 
@@ -115,16 +123,13 @@ class CtxMenu(
       "click",
       (event: dom.MouseEvent) => {
         programModel.addInput(Request.AddInput(AST.newId, afterId, blockId))
-        functionEditor.loadCurrentFunction()
       }
     )
 
     addOutputButton.addEventListener(
       "click",
       (event: dom.MouseEvent) => {
-        println(s"ADD OUT $afterId, $blockId")
         programModel.addOutput(Request.AddOutput(AST.newId, afterId, blockId))
-        functionEditor.loadCurrentFunction()
       }
     )
 
@@ -132,7 +137,6 @@ class CtxMenu(
       "click",
       (event: dom.MouseEvent) => {
         programModel.addCall(Request.AddCall(AST.newId, afterId, blockId))
-        functionEditor.loadCurrentFunction()
       }
     )
 
@@ -142,7 +146,6 @@ class CtxMenu(
         programModel.addIf(
           Request.AddIf(AST.newId, AST.newId, AST.newId, afterId, blockId)
         )
-        functionEditor.loadCurrentFunction()
       }
     )
 
@@ -151,25 +154,8 @@ class CtxMenu(
       (event: dom.MouseEvent) => {
 
         programModel.addOutput(Request.AddOutput(AST.newId, afterId, blockId))
-        functionEditor.loadCurrentFunction()
       }
     )
   }
-
-  private def hideAllMenus(): Unit =
-    dom.document
-      .getElementsByClassName("flowrun-context-menu")
-      .foreach { e =>
-        e.asInstanceOf[dom.html.Element].classList.remove("active")
-      }
-
-  private def setEdgeIds(title: String, id: String): Unit =
-    val newAfterId = title.takeWhile(_ != ':')
-    if newAfterId.startsWith("end_") then
-      blockId = ""
-      afterId = newAfterId.drop("end_".length)
-    else
-      blockId = id
-      afterId = newAfterId
 
 }

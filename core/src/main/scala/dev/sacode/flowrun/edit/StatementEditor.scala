@@ -20,18 +20,14 @@ class StatementEditor(
       "click",
       (event: dom.MouseEvent) => {
         event.preventDefault()
-        event.target match {
-          case g: dom.svg.Element =>
-            g.parentNode match {
-              case parent: dom.svg.G =>
-                if parent.className.baseVal == "node" then doEdit(parent.id)
-                else println("Not a node")
-              case _ =>
-                println("Not a group")
-                flowrunChannel := FlowRun.Event.Deselected               
-            }
+
+        getSvgNode(event.target) match {
+          case ("NODE", n) =>
+            flowrunChannel := FlowRun.Event.SyntaxSuccess
+            doEdit(n.id)
           case _ =>
-            println("Not an svg element")
+            println("Not relevant click")
+            flowrunChannel := FlowRun.Event.Deselected               
         }
       }
     )

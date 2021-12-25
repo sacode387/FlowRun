@@ -295,6 +295,9 @@ case class FunctionModel(
     val afterStatementIdx = statements.indexWhere(_.id == afterId)
     if (afterStatementIdx >= 0) {
       val afterStatement = statements(afterStatementIdx)
+      if blockId.startsWith("fun-") then
+        return statements.patch(afterStatementIdx + 1, List(newStatement), 0)
+      
       afterStatement match {
         case ifStatement: Statement.If =>
           val newIfStatement =

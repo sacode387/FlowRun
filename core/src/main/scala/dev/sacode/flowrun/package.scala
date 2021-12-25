@@ -21,6 +21,28 @@ def getNowTime: String =
 def isTouchDevice: Boolean =
   dom.window.matchMedia("(pointer: coarse)").matches
 
+def getSvgNode(et: dom.EventTarget): (String, dom.svg.G) = {
+    var node: dom.EventTarget = et
+    while (!js.isUndefined(node)) {
+      println(node)
+      node match {
+        case g: dom.svg.G =>
+          if g.className.baseVal == "node" then
+            return ("NODE", g)
+          else if g.className.baseVal == "edge" then
+            return ("EDGE", g)
+          else
+            node = g.parentNode
+        case n: dom.Node =>
+          node = n.parentNode
+        case _ =>
+          println("hmmmmmm")
+          return ("", null)
+      }
+    }
+    ("", null)
+  }
+
 object TypeUtils:
   import Expression.Type
   
@@ -38,8 +60,9 @@ object TypeUtils:
       case (Type.String, "String")         => value
       case (Type.Boolean, "Boolean")       => value
       case (expectedType, _) =>
+        val valueStr = if valueType == "String" then s"\"$value\"" else value
         throw eval.EvalException(
-          s"Expected type: '$expectedType', got type: '$valueType' for value ${value} ",
+          s"Expected type '$expectedType' but got type '$valueType' for value $valueStr ",
           nodeId
         )
     }

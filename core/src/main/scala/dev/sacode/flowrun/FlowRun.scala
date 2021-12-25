@@ -11,6 +11,7 @@ import dev.sacode.flowrun.edit.FunctionEditor
 import dev.sacode.flowrun.edit.FunctionSelector
 import dev.sacode.flowrun.edit.StatementEditor
 import dev.sacode.flowrun.edit.OutputArea
+import dev.sacode.flowrun.edit.DebugArea
 
 @JSExportTopLevel("FlowRun")
 class FlowRun(mountElem: dom.Element, programJson: Option[String] = None) {
@@ -27,7 +28,17 @@ class FlowRun(mountElem: dom.Element, programJson: Option[String] = None) {
   )
   private val program = maybeJson match
     case Some(json) => NativeConverter[Program].fromNative(js.JSON.parse(json))
-    case None => Program(AST.newId, "program", Function("main", "main", statements = List(Statement.Begin(true), Statement.Return(AST.newId))), List.empty)
+    case None =>
+      Program(
+        AST.newId,
+        "program",
+        Function(
+          "main",
+          "main",
+          statements = List(Statement.Begin(true), Statement.Return(AST.newId))
+        ),
+        List.empty
+      )
 
   private val flowrunChannel = Channel[FlowRun.Event]
   private val programModel = ProgramModel(program, flowrunChannel)
@@ -36,6 +47,7 @@ class FlowRun(mountElem: dom.Element, programJson: Option[String] = None) {
   private val statementEditor = StatementEditor(programModel, flowrunChannel, flowRunElements)
   private var interpreter = Interpreter(programModel, flowrunChannel)
   private var outputArea = OutputArea(interpreter, flowRunElements)
+  private var debugArea = DebugArea(interpreter, flowRunElements)
 
   private var lastRun: String = ""
 
@@ -54,29 +66,36 @@ class FlowRun(mountElem: dom.Element, programJson: Option[String] = None) {
 
   // run the program
   flowRunElements.runButton.onclick = _ => {
+    outputArea.clearErrors()
     functionEditor.clearErrors()
+
     lastRun = getNowTime
     flowRunElements.output.innerText = ""
     flowRunElements.output.appendChild(s"Started at: $lastRun".render)
+    flowRunElements.output.appendChild(br.render)
+    flowRunElements.output.appendChild(br.render)
 
     interpreter = Interpreter(programModel, flowrunChannel) // fresh SymTable etc
     outputArea = OutputArea(interpreter, flowRunElements)
+    debugArea = DebugArea(interpreter, flowRunElements)
+
     interpreter.run()
     functionEditor.disable()
   }
 
-  flowRunElements.addFunButton.onclick = _ =>
-    programModel.addNewFunction()
+  flowRunElements.addFunButton.onclick = _ => programModel.addNewFunction()
 
   import FlowRun.Event.*
   flowrunChannel.attach {
     case EvalSuccess =>
-      val newOutput = pre("Program finished.").render
-      flowRunElements.output.appendChild(newOutput)
+      flowRunElements.output.appendChild(br.render)
+      flowRunElements.output.appendChild(br.render)
+      flowRunElements.output.appendChild(s"Finished at: $getNowTime".render)
       functionEditor.enable()
     case SyntaxSuccess =>
-      // TODO REMOVE SAMO SYNTAX ERORE !!!!!!!!!
+      // TODO REMOVE SAMO SYNTAX ERORE !!!!!!!!!??
       outputArea.clearErrors()
+      functionEditor.clearErrors()
       functionEditor.loadCurrentFunction()
     case SyntaxError(msg) =>
       var output = s"Started at: $lastRun"
@@ -94,21 +113,13 @@ class FlowRun(mountElem: dom.Element, programJson: Option[String] = None) {
     case EvalInput(nodeId, name) =>
       outputArea.evalInput(nodeId, name)
     case SymbolTableUpdated =>
-      showVariables()
+      debugArea.showVariables()
     case FunctionUpdated =>
       functionEditor.loadCurrentFunction()
       functionSelector.loadFunctions()
     case Deselected =>
       flowRunElements.editStatement.innerText = ""
-  } 
-
-  private def showVariables(): Unit =
-    flowRunElements.debugVariables.innerText = ""
-    val varValues = interpreter.symTab.varSymbols
-    varValues.foreach { sym =>
-      val symElem = div(s"${sym.key.name}: ${sym.tpe} = ${sym.value.getOrElse("")}").render
-      flowRunElements.debugVariables.appendChild(symElem)
-    }
+  }
 }
 
 object FlowRun:

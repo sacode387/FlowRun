@@ -182,7 +182,7 @@ case class Function(
 
   def label: String =
     val title = if isMain then "begin" else name
-    val params = if isMain then "" else s"(${parameters.map((n, t) => s"$n: $t").mkString(",")})"
+    val params = if isMain then "" else s"(${parameters.map((n, t) => s"$n: $t").mkString(", ")})"
     s"$title$params: $tpe"
 
 case class Program(
