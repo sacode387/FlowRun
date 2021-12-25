@@ -19,7 +19,7 @@ class OutputArea(
     flowRunElements.output.innerText = msg
     flowRunElements.output.classList.add("error")
   
-  def evalInput(nodeId: String, name: String) = {
+  def evalInput(nodeId: String, name: String): Unit = {
 
     val valueInputElem = flowRunElements.newInputText
     val valueBtnElem = flowRunElements.newEnterButton
@@ -32,9 +32,7 @@ class OutputArea(
     ).render
     flowRunElements.output.appendChild(enterValueDiv)
 
-    valueInputElem.focus()
-
-    valueBtnElem.onclick = _ => {
+    def inputValueSubmitted(): Unit = {
       val inputValue = valueInputElem.value.trim
       val key = SymbolKey(name, Symbol.Kind.Variable, nodeId)
       val sym = interpreter.symTab.getSymbol(null, key)
@@ -58,5 +56,12 @@ class OutputArea(
           displayError(s"Entered invalid ${sym.tpe}: '${inputValue}'")
       }
     }
+
+    valueInputElem.focus()
+    valueInputElem.onkeydown = (event) => {
+      if(event.key == "Enter") inputValueSubmitted()  
+    }
+
+    valueBtnElem.onclick = _ => inputValueSubmitted()
   }
 }
