@@ -24,9 +24,10 @@ class StatementEditor(
         getSvgNode(event.target) match {
           case ("NODE", n) =>
             flowrunChannel := FlowRun.Event.SyntaxSuccess
-            doEdit(n.id)
+            val idParts = n.id.split("#")
+            val nodeId = idParts(0)
+            doEdit(nodeId)
           case _ =>
-            println("Not relevant click")
             flowrunChannel := FlowRun.Event.Deselected               
         }
       }

@@ -95,7 +95,6 @@ class FlowRun(mountElem: dom.Element, programJson: Option[String] = None) {
     case SyntaxSuccess =>
       // TODO REMOVE SAMO SYNTAX ERORE !!!!!!!!!??
       outputArea.clearErrors()
-      functionEditor.clearErrors()
       functionEditor.loadCurrentFunction()
     case SyntaxError(msg) =>
       var output = s"Started at: $lastRun"

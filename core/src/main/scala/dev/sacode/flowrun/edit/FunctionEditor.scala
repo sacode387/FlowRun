@@ -70,7 +70,7 @@ class FunctionEditor(
         node [shape="box" style="filled" fillcolor="white" height=0.3 penwidth="0.5" margin="0.1,0" fontcolor="white" fontname="Courier New"]
         edge [penwidth=1.5 arrowsize=0.8]
         
-        ${lastStmt.id} [id="${lastStmt.id}" label="${endLabel}" tooltip="${endLabel}" group="$funId" height=0.3 shape="ellipse" fillcolor="aqua" fontcolor="black"]
+        ${lastStmt.id} [id="${lastStmt.id}#End" label="${endLabel}" tooltip="${endLabel}" group="$funId" height=0.3 shape="ellipse" fillcolor="aqua" fontcolor="black"]
 
         $statementsDot
     }
@@ -90,47 +90,48 @@ class FunctionEditor(
     // group puts elements of one branch in a straight line
     val group = s""" group="$blockId" """.trim
 
+    val stmtId = s"${stmt.id}#${stmt.getClass.getSimpleName}"
     stmt match {
       case Begin(isMain) =>
         val lbl = if isMain then stmt.label else programModel.currentFunction.label
-        val edgeId = s"$newId@${blockId}"
+        val edgeId = s"$newId@$blockId"
         s"""
-        |${stmt.id} [id="${stmt.id}" $group label="$lbl" tooltip="$lbl" shape="ellipse" fillcolor="aqua" fontcolor="black" ${dimensions(lbl)}]
+        |${stmt.id} [id="$stmtId" $group label="$lbl" tooltip="$lbl" shape="ellipse" fillcolor="aqua" fontcolor="black" ${dimensions(lbl)}]
         |${stmt.id}:s -> $nextStmtId:$nextStmtDir [id="$edgeId"]
         |""".stripMargin
       case _: Declare =>
         val lbl = stmt.label.toGraphvizLbl
         val edgeId = s"$newId@${blockId}"
         s"""
-        |${stmt.id} [id="${stmt.id}" $group label="$lbl" tooltip="$lbl" fillcolor="cornsilk" fontcolor="black" margin="0.05" ${dimensions(lbl)}]
+        |${stmt.id} [id="$stmtId" $group label="$lbl" tooltip="$lbl" fillcolor="cornsilk" fontcolor="black" margin="0.05" ${dimensions(lbl)}]
         |${stmt.id}:s -> $nextStmtId:$nextStmtDir [id="$edgeId"]
         |""".stripMargin
       case _: Assign =>
         val lbl = stmt.label.toGraphvizLbl
         val edgeId = s"$newId@${blockId}"
         s"""
-        |${stmt.id} [id="${stmt.id}" $group label="$lbl" tooltip="$lbl" fillcolor="red" ${dimensions(lbl)}]
+        |${stmt.id} [id="$stmtId" $group label="$lbl" tooltip="$lbl" fillcolor="red" ${dimensions(lbl)}]
         |${stmt.id}:s -> $nextStmtId:$nextStmtDir [id="$edgeId"]
         |""".stripMargin
       case _: Input =>
         val lbl = stmt.label.toGraphvizLbl
         val edgeId = s"$newId@${blockId}"
         s"""
-        |${stmt.id} [id="${stmt.id}" $group label="$lbl"  tooltip="$lbl" shape="invtrapezium" fillcolor="mediumblue" ${dimensions(lbl)}]
+        |${stmt.id} [id="${stmtId}" $group label="$lbl"  tooltip="$lbl" shape="invtrapezium" fillcolor="mediumblue" ${dimensions(lbl)}]
         |${stmt.id}:s -> $nextStmtId:$nextStmtDir [id="$edgeId"]
         |""".stripMargin
       case _: Output =>
         val lbl = stmt.label.toGraphvizLbl
         val edgeId = s"$newId@${blockId}"
         s"""
-        |${stmt.id} [id="${stmt.id}" $group label="$lbl" tooltip="$lbl" shape="trapezium" fillcolor="mediumblue" ${dimensions(lbl)}]
+        |${stmt.id} [id="${stmtId}" $group label="$lbl" tooltip="$lbl" shape="trapezium" fillcolor="mediumblue" ${dimensions(lbl)}]
         |${stmt.id}:s -> $nextStmtId:$nextStmtDir [id="$edgeId"]
         |""".stripMargin
       case _: Statement.Call =>
         val lbl = stmt.label.toGraphvizLbl
         val edgeId = s"$newId@${blockId}"
         s"""
-        |${stmt.id} [id="${stmt.id}" $group label="$lbl" tooltip="$lbl" shape="trapezium" fillcolor="mediumblue" ${dimensions(lbl)}]
+        |${stmt.id} [id="${stmtId}" $group label="$lbl" tooltip="$lbl" shape="trapezium" fillcolor="mediumblue" ${dimensions(lbl)}]
         |${stmt.id}:s -> $nextStmtId:$nextStmtDir [id="$edgeId"]
         |""".stripMargin
 
@@ -170,10 +171,10 @@ class FunctionEditor(
           else (reverseFalseStmts.reverse.head.id, "n")
 
         s"""
-          |$ifEndId [id="$ifEndId" $group label="" tooltip=" " shape="circle" fillcolor="black" fixedsize=true width=0.2 height=0.2 ]
+          |$ifEndId [id="$ifEndId#IfEnd" $group label="" tooltip=" " shape="circle" fillcolor="black" fixedsize=true width=0.2 height=0.2 ]
           |$ifEndId:s -> $nextStmtId:$nextStmtDir [id="$ifEndEdgeId"]
           |
-          |${stmt.id} [id="${stmt.id}" $group label="$lbl" tooltip="$lbl" $group ${dimensions(lbl, true)} shape="diamond" fillcolor="yellow" fontcolor="black"]
+          |${stmt.id} [id="${stmtId}" $group label="$lbl" tooltip="$lbl" $group ${dimensions(lbl, true)} shape="diamond" fillcolor="yellow" fontcolor="black"]
           |
           |${stmt.id}:e -> $firstTrueNodeId:$trueDir [id="$newId@${stmt.trueBlock.id}" taillabel="true"]
           |${stmt.id}:w -> $firstFalseNodeId:$falseDir [id="$newId@${stmt.falseBlock.id}" taillabel="false"]
@@ -185,8 +186,8 @@ class FunctionEditor(
       case stmt: While => "" // TODO
       case stmt: DoWhile => "" // TODO
 
-      case _: Statement.Block => ""
-      case _: Statement.Return => "" // already drawn in loadCurrentFunction
+      case _: Block => ""
+      case _: Return => "" // already drawn in loadCurrentFunction
     }
   }
 

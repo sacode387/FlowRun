@@ -201,7 +201,7 @@ case class FunctionModel(
     doInsert(req.afterId, newStat, req.blockId)
 
   def addAssign(req: AddAssign): FunctionModel =
-    val newStat = Statement.Assign(req.id, "x", "?")
+    val newStat = Statement.Assign(req.id, "x", "19")
     doInsert(req.afterId, newStat, req.blockId)
 
   def addOutput(req: AddOutput): FunctionModel =

@@ -68,8 +68,8 @@ enum Atom derives NativeConverter:
   case FunctionCall(name: String, arguments: List[Expression]) extends Atom
 
 ///////////////////////////////////////////////
-/* AST, represented visually!
- * We just store exprs as String-s,
+/* AST, of visual statements.
+ * We store exprs as String-s,
  * they're small and interpreted anyway.
  */
 

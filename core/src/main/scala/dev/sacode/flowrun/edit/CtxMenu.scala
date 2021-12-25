@@ -19,6 +19,9 @@ class CtxMenu(
   private var afterId = ""
   private var blockId = ""
 
+  private val DeleteableNodeTypes =
+    Set("Declare", "Assign", "Input", "Output", "Call", "If", "While", "DoWhile")
+
   def init(): Unit = {
     val edgeContextMenu =
       dom.document.getElementById("flowrun-edge-context-menu").asInstanceOf[dom.html.Element]
@@ -29,18 +32,26 @@ class CtxMenu(
       "contextmenu",
       (event: dom.MouseEvent) => {
 
+        event.preventDefault()
+
         // here we know which NODE/EDGE is right-clicked
         // we save relevant ids, and then use them when a button is clicked
 
-        event.preventDefault()
         hideAllMenus()
 
         getSvgNode(event.target) match {
           case ("NODE", n) =>
-            nodeContextMenu.style.left = s"${event.clientX}px"
-            nodeContextMenu.style.top = s"${event.clientY}px"
-            nodeContextMenu.classList.add("active")
-            nodeId = n.id
+            // TODO validate not Begin or End
+
+            val idParts = n.id.split("#")
+            nodeId = idParts(0)
+            val nodeTpe = idParts(1)
+            if DeleteableNodeTypes(nodeTpe) then {
+              nodeContextMenu.style.left = s"${event.clientX}px"
+              nodeContextMenu.style.top = s"${event.clientY}px"
+              nodeContextMenu.classList.add("active")
+            }
+
           case ("EDGE", e) =>
             edgeContextMenu.style.left = s"${event.clientX}px"
             edgeContextMenu.style.top = s"${event.clientY}px"
@@ -49,7 +60,6 @@ class CtxMenu(
             val titleText = e.getElementsByTagName("title")(0).textContent
             setEdgeIds(titleText, e.id)
           case _ =>
-            println("Not relevant right-click")
         }
       }
     )
@@ -152,7 +162,6 @@ class CtxMenu(
     addWhileButton.addEventListener(
       "click",
       (event: dom.MouseEvent) => {
-
         programModel.addOutput(Request.AddOutput(AST.newId, afterId, blockId))
       }
     )

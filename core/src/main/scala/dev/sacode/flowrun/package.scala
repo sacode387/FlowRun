@@ -24,7 +24,6 @@ def isTouchDevice: Boolean =
 def getSvgNode(et: dom.EventTarget): (String, dom.svg.G) = {
     var node: dom.EventTarget = et
     while (!js.isUndefined(node)) {
-      println(node)
       node match {
         case g: dom.svg.G =>
           if g.className.baseVal == "node" then
@@ -36,7 +35,6 @@ def getSvgNode(et: dom.EventTarget): (String, dom.svg.G) = {
         case n: dom.Node =>
           node = n.parentNode
         case _ =>
-          println("hmmmmmm")
           return ("", null)
       }
     }
