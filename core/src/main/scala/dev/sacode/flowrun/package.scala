@@ -5,6 +5,8 @@ import scalajs.js
 import org.scalajs.dom
 import org.scalajs.dom.window
 
+import dev.sacode.flowrun.eval.SymbolKey
+
 extension (any: Any) {
   def asDyn: js.Dynamic = any.asInstanceOf[js.Dynamic]
 }
@@ -22,28 +24,25 @@ def isTouchDevice: Boolean =
   dom.window.matchMedia("(pointer: coarse)").matches
 
 def getSvgNode(et: dom.EventTarget): (String, dom.svg.G) = {
-    var node: dom.EventTarget = et
-    while (!js.isUndefined(node)) {
-      node match {
-        case g: dom.svg.G =>
-          if g.className.baseVal == "node" then
-            return ("NODE", g)
-          else if g.className.baseVal == "edge" then
-            return ("EDGE", g)
-          else
-            node = g.parentNode
-        case n: dom.Node =>
-          node = n.parentNode
-        case _ =>
-          return ("", null)
-      }
+  var node: dom.EventTarget = et
+  while (!js.isUndefined(node)) {
+    node match {
+      case g: dom.svg.G =>
+        if g.className.baseVal == "node" then return ("NODE", g)
+        else if g.className.baseVal == "edge" then return ("EDGE", g)
+        else node = g.parentNode
+      case n: dom.Node =>
+        node = n.parentNode
+      case _ =>
+        return ("", null)
     }
-    ("", null)
   }
+  ("", null)
+}
 
 object TypeUtils:
   import Expression.Type
-  
+
   // check if assignable, and optionally casts the type
   def getUpdateValue(nodeId: String, name: String, expectedType: Type, value: Any): Try[Any] = Try {
     // prevent small numbers to be shown as Byte,Short etc
@@ -65,3 +64,15 @@ object TypeUtils:
         )
     }
   }
+
+object NameUtils:
+  def validateIdentifier(identifier: String): Option[String] =
+    val ident = identifier.trim
+    if ident.isEmpty then Some("Name must not be empty")
+    else if ident.length > 30 then Some("Name can be longer than 100 characters")
+    else if !ident.head.isLetter then Some("Name must start with a letter")
+    else if ident.matches(".*\\s.*") then Some("Name must not contain spaces")
+    else if !ident.matches("[a-zA-Z0-9_]+") then
+      Some("Name must contain only letters, numbers or underscore.")
+    else if SymbolKey.ReservedWords(ident) then Some("Name must not be a reserved word")
+    else None

@@ -41,7 +41,6 @@ class CtxMenu(
 
         getSvgNode(event.target) match {
           case ("NODE", n) =>
-            // TODO validate not Begin or End
 
             val idParts = n.id.split("#")
             nodeId = idParts(0)

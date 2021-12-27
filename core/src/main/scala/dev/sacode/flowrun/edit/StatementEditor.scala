@@ -28,7 +28,7 @@ class StatementEditor(
             val nodeId = idParts(0)
             doEdit(nodeId)
           case _ =>
-            flowrunChannel := FlowRun.Event.Deselected               
+            flowrunChannel := FlowRun.Event.Deselected
         }
       }
     )
@@ -56,30 +56,21 @@ class StatementEditor(
     nameInputElem.placeholder = if nodeType == "Begin" then "myFun" else "x"
     nameInputElem.oninput = { (_: dom.Event) =>
       val newName = nameInputElem.value.trim
-      val errorMsg: Option[String] =
-        // TODO extract validation
-        if newName.isEmpty then None // noop when blank
-        else if !newName.head.isLetter then Some("Name must start with a letter.")
-        else if newName.matches(".*\\s.*") then Some("Name must not contain spaces.")
-        else if !newName.matches("[a-zA-Z0-9_]+") then
-          Some("Name can contain only letters, numbers and underscore.")
-        else {
-          node match {
-            case _: Statement.Declare =>
-              programModel.updateDeclare(Request.UpdateDeclare(nodeId, name = Some(newName)))
-            case _: Statement.Input =>
-              programModel.updateInput(Request.UpdateInput(nodeId, name = newName))
-            case Statement.Begin(false) =>
-              programModel.updateFunction(Request.UpdateFunction(nodeId, name = Some(newName)))
-            case _: Statement.Assign =>
-              programModel.updateAssign(Request.UpdateAssign(nodeId, name = Some(newName)))
-            case _ => ()
-          }
-          flowrunChannel := FlowRun.Event.SyntaxSuccess
-          None
+      val errorMsg: Option[String] = NameUtils.validateIdentifier(newName)
+      if errorMsg.isEmpty then {
+        node match {
+          case _: Statement.Declare =>
+            programModel.updateDeclare(Request.UpdateDeclare(nodeId, name = Some(newName)))
+          case _: Statement.Input =>
+            programModel.updateInput(Request.UpdateInput(nodeId, name = newName))
+          case Statement.Begin(false) =>
+            programModel.updateFunction(Request.UpdateFunction(nodeId, name = Some(newName)))
+          case _: Statement.Assign =>
+            programModel.updateAssign(Request.UpdateAssign(nodeId, name = Some(newName)))
+          case _ => ()
         }
-
-      println(s"err: $errorMsg")
+        flowrunChannel := FlowRun.Event.SyntaxSuccess
+      }
       errorMsg.foreach(msg => flowrunChannel := FlowRun.Event.SyntaxError(msg))
     }
 

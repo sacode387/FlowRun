@@ -124,15 +124,15 @@ class Scope(
     }
 
   private def error(msg: String, nodeId: String) =
-    // TODO val maybeFun = if name.startsWith("fun-") then s" [in function '$name']" else ""
+    // TODO handle IF, WHILE blocks
     val maybeFun = if name == "GLOBAL" then " [in global scope]" else s" [in function '$name']"
     throw EvalException(msg + maybeFun, nodeId)
 end Scope
 
 case class SymbolKey(name: String, kind: Symbol.Kind) {
-  require(name.trim.nonEmpty, "Name is empty")
-  require(name.trim.matches("[a-zA-Z][_a-zA-Z0-9]*"), "Name is invalid")
-  require(!SymbolKey.ReservedWords(name.trim), "Name is a reserved word")
+  NameUtils.validateIdentifier(name).foreach { err =>
+    throw IllegalArgumentException(err)
+  }
 }
 
 object SymbolKey {

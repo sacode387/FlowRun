@@ -97,42 +97,42 @@ class FunctionEditor(
         val edgeId = s"$newId@$blockId"
         s"""
         |${stmt.id} [id="$stmtId" $group label="$lbl" tooltip="$lbl" shape="ellipse" fillcolor="aqua" fontcolor="black" ${dimensions(lbl)}]
-        |${stmt.id}:s -> $nextStmtId:$nextStmtDir [id="$edgeId"]
+        |${stmt.id}:s -> $nextStmtId:$nextStmtDir [id="$edgeId" $noTooltips]
         |""".stripMargin
       case _: Declare =>
         val lbl = stmt.label.toGraphvizLbl
         val edgeId = s"$newId@${blockId}"
         s"""
         |${stmt.id} [id="$stmtId" $group label="$lbl" tooltip="$lbl" fillcolor="cornsilk" fontcolor="black" margin="0.05" ${dimensions(lbl)}]
-        |${stmt.id}:s -> $nextStmtId:$nextStmtDir [id="$edgeId"]
+        |${stmt.id}:s -> $nextStmtId:$nextStmtDir [id="$edgeId" $noTooltips]
         |""".stripMargin
       case _: Assign =>
         val lbl = stmt.label.toGraphvizLbl
         val edgeId = s"$newId@${blockId}"
         s"""
         |${stmt.id} [id="$stmtId" $group label="$lbl" tooltip="$lbl" fillcolor="red" ${dimensions(lbl)}]
-        |${stmt.id}:s -> $nextStmtId:$nextStmtDir [id="$edgeId"]
+        |${stmt.id}:s -> $nextStmtId:$nextStmtDir [id="$edgeId" $noTooltips]
         |""".stripMargin
       case _: Input =>
         val lbl = stmt.label.toGraphvizLbl
         val edgeId = s"$newId@${blockId}"
         s"""
         |${stmt.id} [id="${stmtId}" $group label="$lbl"  tooltip="$lbl" shape="invtrapezium" fillcolor="mediumblue" ${dimensions(lbl)}]
-        |${stmt.id}:s -> $nextStmtId:$nextStmtDir [id="$edgeId"]
+        |${stmt.id}:s -> $nextStmtId:$nextStmtDir [id="$edgeId" $noTooltips]
         |""".stripMargin
       case _: Output =>
         val lbl = stmt.label.toGraphvizLbl
         val edgeId = s"$newId@${blockId}"
         s"""
         |${stmt.id} [id="${stmtId}" $group label="$lbl" tooltip="$lbl" shape="trapezium" fillcolor="mediumblue" ${dimensions(lbl)}]
-        |${stmt.id}:s -> $nextStmtId:$nextStmtDir [id="$edgeId"]
+        |${stmt.id}:s -> $nextStmtId:$nextStmtDir [id="$edgeId" $noTooltips]
         |""".stripMargin
       case _: Statement.Call =>
         val lbl = stmt.label.toGraphvizLbl
         val edgeId = s"$newId@${blockId}"
         s"""
         |${stmt.id} [id="${stmtId}" $group label="$lbl" tooltip="$lbl" shape="trapezium" fillcolor="mediumblue" ${dimensions(lbl)}]
-        |${stmt.id}:s -> $nextStmtId:$nextStmtDir [id="$edgeId"]
+        |${stmt.id}:s -> $nextStmtId:$nextStmtDir [id="$edgeId" $noTooltips]
         |""".stripMargin
 
       case stmt: If =>
@@ -172,12 +172,12 @@ class FunctionEditor(
 
         s"""
           |$ifEndId [id="$ifEndId#IfEnd" $group label="" tooltip=" " shape="circle" fillcolor="black" fixedsize=true width=0.2 height=0.2 ]
-          |$ifEndId:s -> $nextStmtId:$nextStmtDir [id="$ifEndEdgeId"]
+          |$ifEndId:s -> $nextStmtId:$nextStmtDir [id="$ifEndEdgeId" $noTooltips]
           |
           |${stmt.id} [id="${stmtId}" $group label="$lbl" tooltip="$lbl" $group ${dimensions(lbl, true)} shape="diamond" fillcolor="yellow" fontcolor="black"]
           |
-          |${stmt.id}:e -> $firstTrueNodeId:$trueDir [id="$newId@${stmt.trueBlock.id}" taillabel="true"]
-          |${stmt.id}:w -> $firstFalseNodeId:$falseDir [id="$newId@${stmt.falseBlock.id}" taillabel="false"]
+          |${stmt.id}:e -> $firstTrueNodeId:$trueDir [id="$newId@${stmt.trueBlock.id}" taillabel="true" $noTooltips]
+          |${stmt.id}:w -> $firstFalseNodeId:$falseDir [id="$newId@${stmt.falseBlock.id}" taillabel="false" $noTooltips]
           |
           |$trueStatementss
           |$falseStatementss
@@ -196,5 +196,7 @@ class FunctionEditor(
     val width = w max 1
     val h = 0.3  + (if luft then 0.1 else 0)
     s"height=$h width=$width fixedsize=true"
+  
+  private def noTooltips: String = """ tailtooltip=" " edgetooltip=" " """.trim
 
 }

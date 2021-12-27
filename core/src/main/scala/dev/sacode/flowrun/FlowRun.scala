@@ -97,13 +97,12 @@ class FlowRun(mountElem: dom.Element, programJson: Option[String] = None) {
       outputArea.clearErrors()
       functionEditor.loadCurrentFunction()
     case SyntaxError(msg) =>
-      var output = s"Started at: $lastRun"
-      output += "\nError: " + msg
+      var output = "Syntax Error: " + msg
       outputArea.displayError(output)
       functionEditor.enable()
     case EvalError(_, msg) =>
       var output = s"Started at: $lastRun"
-      output += "\nError: " + msg
+      output += "\n\nError: " + msg
       outputArea.displayError(output)
       functionEditor.enable()
     case EvalOutput(output) =>
