@@ -8,6 +8,9 @@ import utest.*
 object InterpreterTests extends TestSuite {
   given ExecutionContext = scala.concurrent.ExecutionContext.global
 
+  val S = Statement
+  val E = Expression
+
   var stmtCount: Int = 0
 
   def getId(): String =
@@ -15,9 +18,9 @@ object InterpreterTests extends TestSuite {
     s"stmt-$stmtCount"
 
   val tests = Tests {
-    
+
     test("dry run") {
-      val main = Function("main", "main")
+      val main = newFun(List())
       val flowrunChannel = Channel[FlowRun.Event]
       val programModel = ProgramModel(Program("p1", "program", main), flowrunChannel)
       val interpreter = Interpreter(programModel, flowrunChannel)
@@ -27,11 +30,12 @@ object InterpreterTests extends TestSuite {
     }
 
     test("declare uninitialized") {
-      val main = Function("main", "main", statements =
+      val main = newFun(
         List(
-          Statement.Declare(getId(), "empty", Expression.Type.Integer, None)
+          S.Declare(getId(), "empty", E.Type.Integer, None)
         )
       )
+
       val flowrunChannel = Channel[FlowRun.Event]
       val programModel = ProgramModel(Program("p2", "program", main), flowrunChannel)
       val interpreter = Interpreter(programModel, flowrunChannel)
@@ -46,14 +50,14 @@ object InterpreterTests extends TestSuite {
     }
 
     test("declare initialized") {
-      val main = Function("main", "main", statements =
+      val main = newFun(
         List(
-          Statement.Declare(getId(), "integer", Expression.Type.Integer, Some("5")),
-          Statement.Declare(getId(), "neg_integer", Expression.Type.Integer, Some("-123")),
-          Statement.Declare(getId(), "real", Expression.Type.Real, Some("12.345")),
-          Statement.Declare(getId(), "string", Expression.Type.String, Some("\"abc\"")),
-          Statement.Declare(getId(), "boolean", Expression.Type.Boolean, Some("false")),
-          Statement.Declare(getId(), "neg_boolean", Expression.Type.Boolean, Some("!false")),
+          S.Declare(getId(), "integer", E.Type.Integer, Some("5")),
+          S.Declare(getId(), "neg_integer", E.Type.Integer, Some("-123")),
+          S.Declare(getId(), "real", E.Type.Real, Some("12.345")),
+          S.Declare(getId(), "string", E.Type.String, Some("\"abc\"")),
+          S.Declare(getId(), "boolean", E.Type.Boolean, Some("false")),
+          S.Declare(getId(), "neg_boolean", E.Type.Boolean, Some("!false"))
         )
       )
       val flowrunChannel = Channel[FlowRun.Event]
@@ -65,7 +69,7 @@ object InterpreterTests extends TestSuite {
 
         scope.getValue("", "integer") ==> 5
         scope.getValue("", "neg_integer") ==> -123
-        
+
         scope.getValue("", "real") ==> 12.345
         scope.getValue("", "string") ==> "abc"
         scope.getValue("", "boolean") ==> false
@@ -74,11 +78,11 @@ object InterpreterTests extends TestSuite {
     }
 
     test("assign") {
-      val main = Function("main", "main", statements =
+      val main = newFun(
         List(
-          Statement.Declare(getId(), "x", Expression.Type.Integer, None),
-          Statement.Assign(getId(), "x", "6"),
-          Statement.Output(getId(), "x")
+          S.Declare(getId(), "x", E.Type.Integer, None),
+          S.Assign(getId(), "x", "6"),
+          S.Output(getId(), "x")
         )
       )
       val flowrunChannel = Channel[FlowRun.Event]
@@ -93,14 +97,14 @@ object InterpreterTests extends TestSuite {
     }
 
     test("arithmetic") {
-      val main = Function("main", "main", statements =
+      val main = newFun(
         List(
-          Statement.Declare(getId(), "a", Expression.Type.Integer, Some("5 + 3 * 2")),
-          Statement.Declare(getId(), "b", Expression.Type.Integer, Some("15 / 3 - 2")),
-          Statement.Declare(getId(), "c", Expression.Type.Integer, Some("15 % (2 + 2)")),
-          Statement.Declare(getId(), "d", Expression.Type.Boolean, Some("1 == 1")),
-          Statement.Declare(getId(), "e", Expression.Type.Boolean, Some("2 >= 1")),
-          Statement.Declare(getId(), "f", Expression.Type.Boolean, Some("2 <= 1")),
+          S.Declare(getId(), "a", E.Type.Integer, Some("5 + 3 * 2")),
+          S.Declare(getId(), "b", E.Type.Integer, Some("15 / 3 - 2")),
+          S.Declare(getId(), "c", E.Type.Integer, Some("15 % (2 + 2)")),
+          S.Declare(getId(), "d", E.Type.Boolean, Some("1 == 1")),
+          S.Declare(getId(), "e", E.Type.Boolean, Some("2 >= 1")),
+          S.Declare(getId(), "f", E.Type.Boolean, Some("2 <= 1"))
         )
       )
       val flowrunChannel = Channel[FlowRun.Event]
@@ -119,12 +123,14 @@ object InterpreterTests extends TestSuite {
     }
 
     test("if-else") {
-      val main = Function("main", "main", statements =
+      val main = newFun(
         List(
-          Statement.Declare(getId(), "x", Expression.Type.Integer, None),
-          Statement.If(getId(), "true",
-            Statement.Block(getId(), List(Statement.Assign(getId(), "x", "1"))), // true
-            Statement.Block(getId(), List(Statement.Assign(getId(), "x", "2"))) // false
+          S.Declare(getId(), "x", E.Type.Integer, None),
+          S.If(
+            getId(),
+            "true",
+            S.Block(getId(), List(S.Assign(getId(), "x", "1"))), // true
+            S.Block(getId(), List(S.Assign(getId(), "x", "2"))) // false
           )
         )
       )
@@ -137,5 +143,10 @@ object InterpreterTests extends TestSuite {
         scope.getValue("123", "x") ==> 1
       }
     }
+  }
+
+  def newFun(statements: List[Statement]) = {
+    val stmts = List(S.Begin(true)) ++ statements ++ List(S.Return(AST.newId))
+    Function("main", "main", statements = stmts)
   }
 }
