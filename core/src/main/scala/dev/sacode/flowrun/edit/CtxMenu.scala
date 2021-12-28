@@ -161,7 +161,7 @@ class CtxMenu(
     addWhileButton.addEventListener(
       "click",
       (event: dom.MouseEvent) => {
-        programModel.addOutput(Request.AddOutput(AST.newId, afterId, blockId))
+        programModel.addWhile(Request.AddWhile(AST.newId, AST.newId, afterId, blockId))
       }
     )
   }

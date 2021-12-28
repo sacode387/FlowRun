@@ -61,9 +61,12 @@ class FunctionEditor(
     s"""
     digraph {
         nodesep=0.75
-        ranksep=0.35
+        ranksep="0.5 equally"
         bgcolor="transparent"
-        #splines="spline"
+
+        #splines=polyline
+        #splines=curved
+        #splines=spline
         #splines=ortho
        
 
@@ -183,7 +186,37 @@ class FunctionEditor(
           |$falseStatementss
           |""".stripMargin
 
-      case stmt: While => "" // TODO
+      case stmt: While =>
+        val lbl = stmt.label.toGraphvizLbl
+        val falseEdgeId = s"$newId@${blockId}"
+
+        val reverseTrueStmts = stmt.body.statements.reverse
+        val trueStatementss =
+          if reverseTrueStmts.isEmpty then ""
+          else
+            (List((reverseTrueStmts.head, stmt.id, "s")) ++
+              reverseTrueStmts.tail
+                .zip(reverseTrueStmts)
+                .map((stmt, prevStmt) => (stmt, prevStmt.id, "n")))
+              .map((s, n, dir) => getDOT(s, stmt.body.id, n, dir))
+              .mkString("\n")
+        val (firstTrueNodeId, trueDir) =
+          if reverseTrueStmts.isEmpty 
+          then (stmt.id, "s")
+          else (reverseTrueStmts.reverse.head.id, "n")
+
+        s"""
+           |${stmt.id} [id="${stmtId}" $group label="$lbl" tooltip="$lbl" $group ${dimensions(lbl, true)} shape="diamond" fillcolor="yellow" fontcolor="black"]
+           |${stmt.id}:s -> $nextStmtId:$nextStmtDir [id="$falseEdgeId" taillabel="false" $noTooltips]
+           |
+           |${stmt.id}:e -> $firstTrueNodeId:$trueDir [id="$newId@${stmt.body.id}" taillabel="true" $noTooltips]
+           |
+           |subgraph {
+           |  
+           |  $trueStatementss
+           |}
+           |
+           |""".stripMargin
       case stmt: DoWhile => "" // TODO
 
       case _: Block => ""

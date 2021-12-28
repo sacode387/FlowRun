@@ -3,8 +3,6 @@
 TODO
 
 - clear output button
-- fix add nakon IF-END
-- kad klikne bilo đe da obriše input đavo
 - validate return type with return expr !!!
 
 
