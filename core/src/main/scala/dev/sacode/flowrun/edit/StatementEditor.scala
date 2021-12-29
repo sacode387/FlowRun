@@ -15,6 +15,9 @@ class StatementEditor(
     flowRunElements: FlowRunElements
 ) {
 
+  private val EditableNodeTypes =
+    Set("Begin", "Return", "Declare", "Assign", "Input", "Output", "Call", "If", "While", "DoWhile")
+
   def setup(): Unit = {
     flowRunElements.drawArea.addEventListener(
       "click",
@@ -26,7 +29,8 @@ class StatementEditor(
             flowrunChannel := FlowRun.Event.SyntaxSuccess
             val idParts = n.id.split("#")
             val nodeId = idParts(0)
-            doEdit(nodeId)
+            val tpe = idParts(1)
+            if EditableNodeTypes(tpe) then doEdit(nodeId)
           case _ =>
             flowrunChannel := FlowRun.Event.Deselected
         }
@@ -91,15 +95,13 @@ class StatementEditor(
     typeSelectElem.onchange = { (e: dom.Event) =>
       val thisElem = e.target.asInstanceOf[dom.html.Select]
       val newType = Expression.Type.valueOf(thisElem.value)
-      if nodeType == "Declare" then
-        programModel.updateDeclare(Request.UpdateDeclare(nodeId, tpe = Some(newType)))
+      if nodeType == "Declare" then programModel.updateDeclare(Request.UpdateDeclare(nodeId, tpe = Some(newType)))
       else programModel.updateFunction(Request.UpdateFunction(nodeId, tpe = Some(newType)))
       flowrunChannel := FlowRun.Event.SyntaxSuccess
     }
 
     if Statement.hasTpe(node, programModel.currentFunction.tpe.toString) then
-      typeSelectElem.value =
-        Statement.tpe(node, programModel.currentFunction.tpe.toString) // select appropriate type
+      typeSelectElem.value = Statement.tpe(node, programModel.currentFunction.tpe.toString) // select appropriate type
       flowRunElements.editStatement.appendChild(span(": ").render)
       flowRunElements.editStatement.appendChild(typeSelectElem)
 
@@ -129,14 +131,11 @@ class StatementEditor(
             )
           else if nodeType == "Assign" then
             programModel.updateAssign(Request.UpdateAssign(nodeId, expr = Some(newExprText)))
-          else if nodeType == "If" then
-            programModel.updateIf(Request.UpdateIf(nodeId, expr = newExprText))
-          else if nodeType == "While" then
-            programModel.updateWhile(Request.UpdateWhile(nodeId, expr = newExprText))
+          else if nodeType == "If" then programModel.updateIf(Request.UpdateIf(nodeId, expr = newExprText))
+          else if nodeType == "While" then programModel.updateWhile(Request.UpdateWhile(nodeId, expr = newExprText))
           else if nodeType == "DoWhile" then
             programModel.updateDoWhile(Request.UpdateDoWhile(nodeId, expr = newExprText))
-          else if nodeType == "Call" then
-            programModel.updateCall(Request.UpdateCall(nodeId, expr = newExprText))
+          else if nodeType == "Call" then programModel.updateCall(Request.UpdateCall(nodeId, expr = newExprText))
           else if nodeType == "Return" then
             programModel.updateReturn(
               Request.UpdateReturn(nodeId, expr = Some(Some(newExprText)))
@@ -146,8 +145,7 @@ class StatementEditor(
     }
 
     if Statement.hasExpr(node) then
-      if Set("Declare", "Assign").contains(nodeType) then
-        flowRunElements.editStatement.appendChild(span(" = ").render)
+      if Set("Declare", "Assign").contains(nodeType) then flowRunElements.editStatement.appendChild(span(" = ").render)
       flowRunElements.editStatement.appendChild(exprInputElem)
     end if
 
