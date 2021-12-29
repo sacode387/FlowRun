@@ -39,7 +39,7 @@ class StatementEditor(
     val nodeType = node.getClass.getSimpleName.filterNot(_ == '$')
 
     // skip Begin if main function
-    if nodeType == "Begin" && node.asInstanceOf[Statement.Begin].isMain then return
+    if nodeType == "Begin" && programModel.currentFunction.isMain then return
 
     // skip Return if function doesn't return anything
     if nodeType == "Return" && programModel.currentFunction.tpe == Expression.Type.Void then return
@@ -63,7 +63,7 @@ class StatementEditor(
             programModel.updateDeclare(Request.UpdateDeclare(nodeId, name = Some(newName)))
           case _: Statement.Input =>
             programModel.updateInput(Request.UpdateInput(nodeId, name = newName))
-          case Statement.Begin(false) =>
+          case _: Statement.Begin =>
             programModel.updateFunction(Request.UpdateFunction(nodeId, name = Some(newName)))
           case _: Statement.Assign =>
             programModel.updateAssign(Request.UpdateAssign(nodeId, name = Some(newName)))

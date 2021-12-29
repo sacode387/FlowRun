@@ -146,7 +146,7 @@ object InterpreterTests extends TestSuite {
   }
 
   def newFun(statements: List[Statement]) = {
-    val stmts = List(S.Begin(true)) ++ statements ++ List(S.Return(AST.newId))
+    val stmts = List(S.Begin(AST.newId)) ++ statements ++ List(S.Return(AST.newId))
     Function("main", "main", statements = stmts)
   }
 }

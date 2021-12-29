@@ -14,6 +14,8 @@ class FunctionEditor(
     flowRunElements: FlowRunElements
 ) {
 
+  private val PxInInch = 96
+
   loadCurrentFunction()
 
   CtxMenu(flowRunElements, programModel).init()
@@ -35,52 +37,180 @@ class FunctionEditor(
           zoom = false
         )
       )
-    
-    val dotSrc = getDOT
+
+    val dotSrc = funDOT
     println(dotSrc)
-    graphviz.renderDot(dotSrc)
+    graphviz
+      .engine("neato")
+      .renderDot(dotSrc)
   }
-  
-  private def getDOT: String = {
-    val stmts = programModel.currentFunction.statements
-    //println(programModel.ast.toJson)
 
-    import Statement._
+  private def funDOT: String = {
 
-    // load nodes starting from bottom up...
-    val funId = programModel.currentFunction.id
-    val lastStmt = stmts.last
-    val reverseStmts = stmts.reverse
-    val statementsDot = reverseStmts.tail
-      .zip(reverseStmts)
-      .map((stmt, prevStmt) => getDOT(stmt, funId, prevStmt.id))
-      .mkString("\n")
-
-    // colors: https://graphviz.org/doc/info/colors.html#svg
-    val endLabel = Option.when(programModel.currentFunction.tpe == Expression.Type.Void)("End").getOrElse(lastStmt.label)
     s"""
-    digraph {
-        nodesep=0.75
-        ranksep="0.5 equally"
-        bgcolor="transparent"
+    |digraph {
+    |  bgcolor="transparent"
+    |
+    |  node [penwidth=0.5 shape="box" style="filled" fontcolor="white" fontname="Courier New"]
+    |  edge [penwidth=1.5 arrowsize=0.8]
+    |
+    |  $nodesDOT
+    |
+    |  $edgesDOT
+    |
+    |}
+    |""".stripMargin
 
-        #splines=polyline
-        #splines=curved
-        #splines=spline
-        #splines=ortho
-       
-
-        node [shape="box" style="filled" fillcolor="white" height=0.3 penwidth="0.5" margin="0.1,0" fontcolor="white" fontname="Courier New"]
-        edge [penwidth=1.5 arrowsize=0.8]
-        
-        ${lastStmt.id} [id="${lastStmt.id}#End" label="${endLabel}" tooltip="${endLabel}" group="$funId" height=0.3 shape="ellipse" fillcolor="aqua" fontcolor="black"]
-
-        $statementsDot
-    }
-    """
   }
 
-  private def getDOT(
+  /* NODES */
+  private def nodesDOT: String = {
+    val stmts = programModel.currentFunction.statements
+    val funId = programModel.currentFunction.id
+    val dots = stmts.foldLeft((List.empty[String], 0, 0)) { case ((prevDots, lastX, lastY), s) =>
+      val dot = nodeDOT(s, funId, lastX, lastY)
+      (prevDots.appended(dot._1), dot._2, dot._3 + 1)
+    }
+
+    dots._1.mkString("\n")
+  }
+
+  private def nodeDOT(
+      stmt: Statement,
+      blockId: String,
+      posX: Int,
+      posY: Int
+  ): (String, Int, Int) = {
+    import Statement._
+    import AST.newId
+
+    // group puts elements of one branch in a straight line
+    val group = s""" group="$blockId" """.trim
+
+    val stmtId = s"${stmt.id}#${stmt.getClass.getSimpleName}"
+    stmt match {
+      case _: Begin =>
+        val lbl = if programModel.currentFunction.isMain then "Begin" else programModel.currentFunction.label
+        val dot =
+          s"""|${stmt.id} [id="$stmtId" ${pos(posX, posY)} ${dimensions(lbl)} $group 
+              |label="$lbl" tooltip="$lbl" shape="ellipse" fillcolor="aqua" fontcolor="black"]
+              |""".stripMargin.replaceAll("\n", " ")
+        (dot, posX, posY)
+
+      case _: Return =>
+        val lbl = if programModel.currentFunction.isMain then "End" else stmt.label
+        val dot =
+          s"""|${stmt.id} [id="$stmtId" ${pos(posX, posY)} ${dimensions(lbl)} $group 
+              |label="$lbl" tooltip="$lbl" shape="ellipse" fillcolor="aqua" fontcolor="black"]
+              |""".stripMargin.replaceAll("\n", " ")
+        (dot, posX, posY)
+
+      case _: Declare =>
+        val lbl = stmt.label.toGraphvizLbl
+        val dot =
+          s"""|${stmt.id} [id="$stmtId" ${pos(posX, posY)} ${dimensions(lbl)} $group 
+              |label="$lbl" tooltip="$lbl" fillcolor="cornsilk" fontcolor="black"]
+              |""".stripMargin.replaceAll("\n", " ")
+        (dot, posX, posY)
+
+      case _: Assign =>
+        val lbl = stmt.label.toGraphvizLbl
+        val dot =
+          s"""|${stmt.id} [id="$stmtId" ${pos(posX, posY)} ${dimensions(lbl)} $group 
+              |label="$lbl" tooltip="$lbl" fillcolor="red" fontcolor="black"]
+              |""".stripMargin.replaceAll("\n", " ")
+        (dot, posX, posY)
+
+      case _: Input =>
+        val lbl = stmt.label.toGraphvizLbl
+        val dot =
+          s"""|${stmt.id} [id="$stmtId" ${pos(posX, posY)} ${dimensions(lbl)} $group 
+              |label="$lbl" tooltip="$lbl" shape="invtrapezium" fillcolor="mediumblue"]
+              |""".stripMargin.replaceAll("\n", " ")
+        (dot, posX, posY)
+
+      case _: Output =>
+        val lbl = stmt.label.toGraphvizLbl
+        val dot =
+          s"""|${stmt.id} [id="$stmtId" ${pos(posX, posY)} ${dimensions(lbl)} $group 
+              |label="$lbl" tooltip="$lbl" shape="trapezium" fillcolor="mediumblue"]
+              |""".stripMargin.replaceAll("\n", " ")
+        (dot, posX, posY)
+
+      case _: Call =>
+        val lbl = stmt.label.toGraphvizLbl
+        val dot =
+          s"""|${stmt.id} [id="$stmtId" ${pos(posX, posY)} ${dimensions(lbl)} $group 
+              |label="$lbl" tooltip="$lbl" fillcolor="mediumblue"]
+              |""".stripMargin.replaceAll("\n", " ")
+        (dot, posX, posY)
+
+      case stmt: If =>
+        val lbl = stmt.label.toGraphvizLbl
+        val ifEndId = s"end_${stmt.id}"
+
+        val trueNodeDOTs = locally {
+          val block = stmt.trueBlock
+          val stmts = block.statements
+
+          stmts.foldLeft((List.empty[String], posX + 1, posY + 1)) { case ((prevDots, lastX, lastY), s) =>
+            val dot = nodeDOT(s, block.id, lastX + (s.width / 2), lastY)
+            (prevDots.appended(dot._1), dot._2, dot._3 + 1)
+          }
+        }
+
+        val falseNodeDOTs = locally {
+          val block = stmt.falseBlock
+          val stmts = block.statements
+
+          stmts.foldLeft((List.empty[String], posX - 1, posY + 1)) { case ((prevDots, lastX, lastY), s) =>
+            val dot = nodeDOT(s, block.id, lastX - (s.width / 2), lastY)
+            (prevDots.appended(dot._1), dot._2, dot._3 + 1)
+          }
+        }
+
+        val maxBranchY = trueNodeDOTs._3 max falseNodeDOTs._3
+        val trueOffsetX = stmt.trueBlock.statements.headOption.map(_.width / 2).getOrElse(0)
+        val falseOffsetX = stmt.falseBlock.statements.headOption.map(_.width / 2).getOrElse(0)
+
+        val dot =
+          s"""|${stmt.id} [id="$stmtId" ${pos(posX, posY)} ${dimensions(lbl, true)} $group 
+              |label="$lbl" tooltip="$lbl" shape="diamond" fillcolor="yellow" fontcolor="black"]
+              |
+              |true_dummy_up_${stmt.id} [ ${pos(posX + 1 + trueOffsetX, posY)} shape=point width=0]
+              |false_dummy_up_${stmt.id} [ ${pos(posX - 1 - falseOffsetX, posY)} shape=point width=0]
+              |
+              |${trueNodeDOTs._1.mkString("\n")}
+              |
+              |${falseNodeDOTs._1.mkString("\n")}
+              |
+              |$ifEndId [id="$ifEndId#IfEnd" ${pos(posX, maxBranchY)} $group 
+              |label="" tooltip=" " shape="circle" fillcolor="black" fixedsize=true width=0.2 height=0.2]
+              |
+              |true_dummy_down_${stmt.id} [ ${pos(posX + 1 + trueOffsetX, maxBranchY)} shape=point width=0]
+              |false_dummy_down_${stmt.id} [ ${pos(posX - 1 - falseOffsetX, maxBranchY)} shape=point width=0]
+              |
+              |""".stripMargin
+        (dot, posX, maxBranchY)
+
+      case _ => ("", posX, posY)
+    }
+  }
+
+  /* EDGES */
+  private def edgesDOT: String = {
+    val stmts = programModel.currentFunction.statements
+    // draw edges starting from bottom up...
+    val funId = programModel.currentFunction.id
+
+    val statementsDot = stmts
+      .zip(stmts.tail)
+      .map { (prev, next) => edgeDOT(prev, funId, next.id) }
+      .mkString("\n")
+    statementsDot
+  }
+
+  private def edgeDOT(
       stmt: Statement,
       blockId: String,
       nextStmtId: String,
@@ -88,104 +218,92 @@ class FunctionEditor(
   ): String = {
 
     import Statement._
-    import AST.newId
-    
-    // group puts elements of one branch in a straight line
-    val group = s""" group="$blockId" """.trim
 
     val stmtId = s"${stmt.id}#${stmt.getClass.getSimpleName}"
     stmt match {
       case Begin(isMain) =>
-        val lbl = if isMain then stmt.label else programModel.currentFunction.label
-        val edgeId = s"$newId@$blockId"
-        s"""
-        |${stmt.id} [id="$stmtId" $group label="$lbl" tooltip="$lbl" shape="ellipse" fillcolor="aqua" fontcolor="black" ${dimensions(lbl)}]
-        |${stmt.id}:s -> $nextStmtId:$nextStmtDir [id="$edgeId" $noTooltips]
-        |""".stripMargin
+        val edgeId = s"${stmt.id}@$blockId"
+        s"""${stmt.id}:s -> $nextStmtId:$nextStmtDir [id="$edgeId" ${edgeAttrs(nextStmtId)}]"""
+
       case _: Declare =>
-        val lbl = stmt.label.toGraphvizLbl
-        val edgeId = s"$newId@${blockId}"
-        s"""
-        |${stmt.id} [id="$stmtId" $group label="$lbl" tooltip="$lbl" fillcolor="cornsilk" fontcolor="black" margin="0.05" ${dimensions(lbl)}]
-        |${stmt.id}:s -> $nextStmtId:$nextStmtDir [id="$edgeId" $noTooltips]
-        |""".stripMargin
+        val edgeId = s"${stmt.id}@$blockId"
+        s"""${stmt.id}:s -> $nextStmtId:$nextStmtDir [id="$edgeId" ${edgeAttrs(nextStmtId)}]"""
+
       case _: Assign =>
-        val lbl = stmt.label.toGraphvizLbl
-        val edgeId = s"$newId@${blockId}"
-        s"""
-        |${stmt.id} [id="$stmtId" $group label="$lbl" tooltip="$lbl" fillcolor="red" ${dimensions(lbl)}]
-        |${stmt.id}:s -> $nextStmtId:$nextStmtDir [id="$edgeId" $noTooltips]
-        |""".stripMargin
+        val edgeId = s"${stmt.id}@$blockId"
+        s"""${stmt.id}:s -> $nextStmtId:$nextStmtDir [id="$edgeId" ${edgeAttrs(nextStmtId)}]"""
+
       case _: Input =>
-        val lbl = stmt.label.toGraphvizLbl
-        val edgeId = s"$newId@${blockId}"
-        s"""
-        |${stmt.id} [id="${stmtId}" $group label="$lbl"  tooltip="$lbl" shape="invtrapezium" fillcolor="mediumblue" ${dimensions(lbl)}]
-        |${stmt.id}:s -> $nextStmtId:$nextStmtDir [id="$edgeId" $noTooltips]
-        |""".stripMargin
+        val edgeId = s"${stmt.id}@$blockId"
+        s"""${stmt.id}:s -> $nextStmtId:$nextStmtDir [id="$edgeId" ${edgeAttrs(nextStmtId)}]"""
+
       case _: Output =>
-        val lbl = stmt.label.toGraphvizLbl
-        val edgeId = s"$newId@${blockId}"
-        s"""
-        |${stmt.id} [id="${stmtId}" $group label="$lbl" tooltip="$lbl" shape="trapezium" fillcolor="mediumblue" ${dimensions(lbl)}]
-        |${stmt.id}:s -> $nextStmtId:$nextStmtDir [id="$edgeId" $noTooltips]
-        |""".stripMargin
+        val edgeId = s"${stmt.id}@$blockId"
+        s"""${stmt.id}:s -> $nextStmtId:$nextStmtDir [id="$edgeId" ${edgeAttrs(nextStmtId)}]"""
+
       case _: Statement.Call =>
-        val lbl = stmt.label.toGraphvizLbl
-        val edgeId = s"$newId@${blockId}"
-        s"""
-        |${stmt.id} [id="${stmtId}" $group label="$lbl" tooltip="$lbl" shape="trapezium" fillcolor="mediumblue" ${dimensions(lbl)}]
-        |${stmt.id}:s -> $nextStmtId:$nextStmtDir [id="$edgeId" $noTooltips]
-        |""".stripMargin
+        val edgeId = s"${stmt.id}@$blockId"
+        s"""${stmt.id}:s -> $nextStmtId:$nextStmtDir [id="$edgeId" ${edgeAttrs(nextStmtId)}]"""
 
       case stmt: If =>
-        val lbl = stmt.label.toGraphvizLbl
         val ifEndId = s"end_${stmt.id}"
         val ifEndEdgeId = s"$ifEndId@${blockId}"
+        val trueDummyUpId = s"true_dummy_up_${stmt.id}"
+        val trueDummyDownId = s"true_dummy_down_${stmt.id}"
+        val falseDummyUpId = s"false_dummy_up_${stmt.id}"
+        val falseDummyDownId = s"false_dummy_down_${stmt.id}"
 
-        val reverseTrueStmts = stmt.trueBlock.statements.reverse
-        val trueStatementss =
-          if reverseTrueStmts.isEmpty then ""
-          else
-            (List((reverseTrueStmts.head, ifEndId, "e")) ++
-              reverseTrueStmts.tail
-                .zip(reverseTrueStmts)
-                .map((stmt, prevStmt) => (stmt, prevStmt.id, "n")))
-              .map((s, n, dir) => getDOT(s, stmt.trueBlock.id, n, dir))
-              .mkString("\n")
-        val (firstTrueNodeId, trueDir) =
-          if reverseTrueStmts.isEmpty 
-          then (ifEndId, "e")
-          else (reverseTrueStmts.reverse.head.id, "n")
+        val (trueEdgeDOTs, firstTrueNodeId) = locally {
+          val block = stmt.trueBlock
+          val stmts = block.statements
+          val nextStmtIds = block.statements.drop(1).map(_.id) ++ List(s"true_dummy_down_${stmt.id}")
 
-        val reverseFalseStmts = stmt.falseBlock.statements.reverse
-        val falseStatementss =
-          if reverseFalseStmts.isEmpty then ""
-          else
-            (List((reverseFalseStmts.head, ifEndId, "w")) ++
-              reverseFalseStmts.tail
-                .zip(reverseFalseStmts)
-                .map((stmt, prevStmt) => (stmt, prevStmt.id, "n")))
-              .map((s, n, dir) => getDOT(s, stmt.falseBlock.id, n, dir))
-              .mkString("\n")
-        val (firstFalseNodeId, falseDir) =
-          if reverseFalseStmts.isEmpty
-          then (ifEndId, "w")
-          else (reverseFalseStmts.reverse.head.id, "n")
+          val statementsDot = stmts
+            .zip(nextStmtIds)
+            .map { (prev, nextId) => edgeDOT(prev, block.id, nextId) }
+            .mkString("\n")
 
-        s"""
-          |$ifEndId [id="$ifEndId#IfEnd" $group label="" tooltip=" " shape="circle" fillcolor="black" fixedsize=true width=0.2 height=0.2 ]
-          |$ifEndId:s -> $nextStmtId:$nextStmtDir [id="$ifEndEdgeId" $noTooltips]
-          |
-          |${stmt.id} [id="${stmtId}" $group label="$lbl" tooltip="$lbl" $group ${dimensions(lbl, true)} shape="diamond" fillcolor="yellow" fontcolor="black"]
-          |
-          |${stmt.id}:e -> $firstTrueNodeId:$trueDir [id="$newId@${stmt.trueBlock.id}" taillabel="true" $noTooltips]
-          |${stmt.id}:w -> $firstFalseNodeId:$falseDir [id="$newId@${stmt.falseBlock.id}" taillabel="false" $noTooltips]
-          |
-          |$trueStatementss
-          |$falseStatementss
-          |""".stripMargin
+          val first = stmts.headOption.map(_.id).getOrElse(s"true_dummy_down_${stmt.id}")
+          (statementsDot, first)
+        }
 
+        val (falseEdgeDOTs, firstFalseNodeId) = locally {
+          val block = stmt.falseBlock
+          val stmts = block.statements
+          val nextStmtIds = block.statements.drop(1).map(_.id) ++ List(s"false_dummy_down_${stmt.id}")
+
+          val statementsDot = stmts
+            .zip(nextStmtIds)
+            .map { (prev, nextId) => edgeDOT(prev, block.id, nextId) }
+            .mkString("\n")
+
+          val first = stmts.headOption.map(_.id).getOrElse(s"false_dummy_down_${stmt.id}")
+          (statementsDot, first)
+        }
+
+        s"""|## TRUE branch
+            |${stmt.id}:e -> $trueDummyUpId [id="${stmt.id}@${stmt.trueBlock.id}" ${edgeAttrs(trueDummyUpId)} taillabel="true"]
+            |$trueDummyUpId -> $firstTrueNodeId:n [id="${stmt.id}@${stmt.trueBlock.id}" ${edgeAttrs(firstTrueNodeId)}]
+            |
+            |$trueEdgeDOTs
+            |
+            |$trueDummyDownId -> $ifEndId [id="${stmt.id}@${stmt.trueBlock.id}" ${edgeAttrs(ifEndId)}]
+            |
+            |
+            |## FALSE branch
+            |${stmt.id}:w -> $falseDummyUpId [id="${stmt.id}@${stmt.falseBlock.id}" ${edgeAttrs(falseDummyUpId)} taillabel="false"]
+            |$falseDummyUpId -> $firstFalseNodeId:n [id="${stmt.id}@${stmt.falseBlock.id}" ${edgeAttrs(firstFalseNodeId)}]
+            |
+            |$falseEdgeDOTs
+            |
+            |$falseDummyDownId -> $ifEndId [id="${stmt.id}@${stmt.falseBlock.id}" ${edgeAttrs(ifEndId)}]
+            |
+            |## IF-END
+            |$ifEndId:s -> $nextStmtId:$nextStmtDir [id="$ifEndEdgeId" ${edgeAttrs(nextStmtId)}]
+            |
+            |""".stripMargin
+
+      /*
       case stmt: While =>
         val lbl = stmt.label.toGraphvizLbl
         val falseEdgeId = s"$newId@${blockId}"
@@ -201,35 +319,53 @@ class FunctionEditor(
               .map((s, n, dir) => getDOT(s, stmt.body.id, n, dir))
               .mkString("\n")
         val (firstTrueNodeId, trueDir) =
-          if reverseTrueStmts.isEmpty 
-          then (stmt.id, "s")
+          if reverseTrueStmts.isEmpty then (stmt.id, "s")
           else (reverseTrueStmts.reverse.head.id, "n")
 
         s"""
-           |${stmt.id} [id="${stmtId}" $group label="$lbl" tooltip="$lbl" $group ${dimensions(lbl, true)} shape="diamond" fillcolor="yellow" fontcolor="black"]
-           |${stmt.id}:s -> $nextStmtId:$nextStmtDir [id="$falseEdgeId" taillabel="false" $noTooltips]
+           |${stmt.id} [id="${stmtId}" $group label="$lbl" tooltip="$lbl" $group ${dimensions(
+          lbl,
+          true
+        )} shape="diamond" fillcolor="yellow" fontcolor="black"]
+           |${stmt.id}:s -> $nextStmtId:$nextStmtDir [id="$falseEdgeId" taillabel="false" ${edgeAttrs(nextStmtId)}]
            |
-           |${stmt.id}:e -> $firstTrueNodeId:$trueDir [id="$newId@${stmt.body.id}" taillabel="true" $noTooltips]
+           |${stmt.id}:e -> $firstTrueNodeId:$trueDir [id="$newId@${stmt.body.id}" taillabel="true" ${edgeAttrs(nextStmtId)}]
            |
            |subgraph {
-           |  
+           |
            |  $trueStatementss
            |}
            |
            |""".stripMargin
+       */
       case stmt: DoWhile => "" // TODO
 
-      case _: Block => ""
+      case _: Block  => ""
       case _: Return => "" // already drawn in loadCurrentFunction
     }
   }
 
+  // Graphviz uses "mathematical" coordinates, with bottom left corner being (0,0)
+  // https://stackoverflow.com/questions/55905661/how-to-force-neato-engine-to-reverse-node-order
+  // it's easier here to have (0,0) at top-center (we just flip y axis that is..)
+  private def pos(x: Int, y: Int): String =
+    val xPx: Double = if x == 0 then 0 else px2Inch(x * 90)
+    val yPx = if y == 0 then 0 else px2Inch(y * 60)
+    val realY = 10_000 - yPx
+    s""" pos="$xPx,$realY!" """.trim
+
+  // neato requires inches for "pos"
+  private def px2Inch(px: Int): Double =
+    px.toDouble / PxInInch
+
   private def dimensions(label: String, luft: Boolean = false): String =
     val w = label.length * 0.15 + (if luft then 0.5 else 0)
     val width = w max 1
-    val h = 0.3  + (if luft then 0.1 else 0)
+    val h = 0.3 + (if luft then 0.1 else 0)
     s"height=$h width=$width fixedsize=true"
-  
-  private def noTooltips: String = """ tailtooltip=" " edgetooltip=" " """.trim
+
+  private def edgeAttrs(nextStmtId: String): String =
+    val maybeNoArrow = Option.when(nextStmtId.contains("dummy"))("arrowhead=none").getOrElse("")
+    s""" tailtooltip=" " edgetooltip=" " $maybeNoArrow """.trim
 
 }

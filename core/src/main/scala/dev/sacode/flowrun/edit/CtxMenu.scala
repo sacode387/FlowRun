@@ -55,9 +55,7 @@ class CtxMenu(
             edgeContextMenu.style.left = s"${event.clientX}px"
             edgeContextMenu.style.top = s"${event.clientY}px"
             edgeContextMenu.classList.add("active")
-
-            val titleText = e.getElementsByTagName("title")(0).textContent
-            setEdgeIds(titleText, e.id)
+            setEdgeIds(e.id)
           case _ =>
         }
       }
@@ -73,11 +71,17 @@ class CtxMenu(
         e.asInstanceOf[dom.html.Element].classList.remove("active")
       }
 
-  private def setEdgeIds(title: String, id: String): Unit =
-    afterId = title.takeWhile(_ != ':')
-    if afterId.startsWith("end_") then afterId = afterId.drop("end_".length)
+  private def setEdgeIds(edgeId: String): Unit = {
+    val parts =edgeId.split("@")
+    afterId = parts(0)
+    blockId = parts(1)
 
-    blockId = id.split("@")(1)
+    if afterId.startsWith("end_") then afterId = afterId.drop("end_".length)
+    else if afterId.startsWith("true_dummy_up_") then afterId = afterId.drop("true_dummy_up_".length)
+    else if afterId.startsWith("true_dummy_down_") then afterId = afterId.drop("true_dummy_down_".length)
+    else if afterId.startsWith("false_dummy_up_") then afterId = afterId.drop("false_dummy_up_".length)
+    else if afterId.startsWith("false_dummy_down_") then afterId = afterId.drop("false_dummy_down_".length)
+  }
 
   private def attachListeners(): Unit = {
     // close menu when clicked anywhere

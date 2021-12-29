@@ -36,7 +36,7 @@ class ProgramModel(
     val newFun = Function(
       AST.newId,
       newFunName,
-      statements = List(Statement.Begin(false), Statement.Return(AST.newId))
+      statements = List(Statement.Begin(AST.newId), Statement.Return(AST.newId))
     )
     addFunction(newFun)
 

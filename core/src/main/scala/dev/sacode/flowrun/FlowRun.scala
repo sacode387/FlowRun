@@ -35,7 +35,28 @@ class FlowRun(mountElem: dom.Element, programJson: Option[String] = None) {
         Function(
           "main",
           "main",
-          statements = List(Statement.Begin(true), Statement.Return(AST.newId))
+          statements = List(Statement.Begin(AST.newId), Statement.Return(AST.newId))
+          /*statements = List(
+          Statement.Begin(AST.newId), 
+          Statement.Declare(AST.newId, "x", Expression.Type.Integer, None),
+          
+          Statement.If(
+            AST.newId,
+            "true",
+            Statement.Block(AST.newId, List(
+              Statement.If(
+                AST.newId,
+                "true",
+                Statement.Block(AST.newId, List(
+                  Statement.Assign(AST.newId, "x", "2")
+                )), // true
+                Statement.Block(AST.newId, List(Statement.Assign(AST.newId, "x", "2"))) // false
+              )
+            )), // true
+            Statement.Block(AST.newId, List(Statement.Assign(AST.newId, "x", "2"))) // false
+          ),
+          Statement.Return(AST.newId)
+          )*/
         ),
         List.empty
       )

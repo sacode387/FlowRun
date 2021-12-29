@@ -75,10 +75,11 @@ enum Atom derives NativeConverter:
 
 sealed trait Statement(val id: String) derives NativeConverter:
   def label: String
+  def width: Int = 1
 
 object Statement:
 
-  case class Begin(isMain: Boolean = false) extends Statement("beginId"):
+  case class Begin(override val id: String) extends Statement(id):
     def label = "Begin"
   case class Declare(
       override val id: String,
@@ -100,6 +101,7 @@ object Statement:
   case class Block(override val id: String, statements: List[Statement] = List.empty)
       extends Statement(id):
     def label = ""
+    override def width: Int = statements.map(_.width).maxOption.getOrElse(1)
 
   case class Return(
       override val id: String,
@@ -114,6 +116,8 @@ object Statement:
       falseBlock: Block
   ) extends Statement(id):
     def label = condition.toString
+    override def width: Int = 
+      1 + trueBlock.width + falseBlock.width
   case class While(
       override val id: String,
       condition: String,
@@ -134,7 +138,7 @@ object Statement:
     getName(stmt, funName).isDefined
   
   private def getName(stmt: Statement, funName: String): Option[String] = stmt match
-    case Begin(false) => Some(funName)
+    case _: Begin => Some(funName)
     case Declare(_, name, _, _) => Some(name)
     case Assign(_, name, _) => Some(name)
     case Input(_, name) => Some(name)
@@ -147,7 +151,7 @@ object Statement:
   
   private def getTpe(stmt: Statement, funTpe: String): Option[String] = stmt match
     case Declare(_, _, tpe, _) => Some(tpe.toString)
-    case Begin(false) => Some(funTpe)
+    case _: Begin => Some(funTpe)
     case _ => None
   
   def expr(stmt: Statement): String =
