@@ -50,6 +50,7 @@ class FunctionEditor(
     s"""
     |digraph {
     |  bgcolor="transparent"
+    |  fontsize="12"
     |
     |  node [penwidth=0.5 shape="box" style="filled" fontcolor="white" fontname="Courier New"]
     |  edge [penwidth=1.5 arrowsize=0.8]
@@ -152,9 +153,7 @@ class FunctionEditor(
         val (trueNodeDOTs, trueOffsetX) = locally {
           val block = stmt.trueBlock
           val stmts = block.statements
-
           val x = posX + widthRight(stmt, 0)
-
           val dots = stmts.foldLeft((List.empty[String], posY + 1)) { case ((prevDots, lastY), s) =>
             val dot = nodeDOT(s, block.id, x, lastY)
             (prevDots.appended(dot._1), dot._2 + 1)
@@ -165,9 +164,7 @@ class FunctionEditor(
         val (falseNodeDOTs, falseOffsetX) = locally {
           val block = stmt.falseBlock
           val stmts = block.statements
-
           val x = posX - widthLeft(stmt, 0)
-
           val dots = stmts.foldLeft((List.empty[String], posY + 1)) { case ((prevDots, lastY), s) =>
             val dot = nodeDOT(s, block.id, x, lastY)
             (prevDots.appended(dot._1), dot._2 + 1)
@@ -179,7 +176,7 @@ class FunctionEditor(
 
         val dot =
           s"""|${stmt.id} [id="$stmtId" ${pos(posX, posY)} ${dimensions(lbl, true)} $group 
-              |label="$lbl" tooltip="$lbl" shape="diamond" fillcolor="yellow" fontcolor="black"]
+              |label="$lbl" tooltip="$lbl" shape="diamond" fillcolor="gold" fontcolor="black"]
               |
               |true_dummy_up_${stmt.id} [ ${pos(trueOffsetX, posY)} shape=point width=0]
               |false_dummy_up_${stmt.id} [ ${pos(falseOffsetX, posY)} shape=point width=0]
@@ -196,7 +193,44 @@ class FunctionEditor(
               |""".stripMargin
         (dot, maxBranchY)
 
-      case _ => ("", posY)
+      case stmt: While =>
+        val lbl = stmt.label.toGraphvizLbl
+
+        val (trueNodeDOTs, trueOffsetX) = locally {
+          val block = stmt.body
+          val stmts = block.statements
+          val x = posX + widthRight(stmt, 0)
+          val dots = stmts.foldLeft((List.empty[String], posY + 1)) { case ((prevDots, lastY), s) =>
+            val dot = nodeDOT(s, block.id, x, lastY)
+            (prevDots.appended(dot._1), dot._2 + 1)
+          }
+          (dots, x)
+        }
+
+        val falseOffsetX = posX - 1
+
+        val maxBranchY = trueNodeDOTs._2
+
+        val dot =
+          s"""|${stmt.id} [id="$stmtId" ${pos(posX, posY)} ${dimensions(lbl, true)} $group 
+              |label="$lbl" tooltip="$lbl" shape="diamond" fillcolor="yellow" fontcolor="black"]
+              |
+              |true_dummy_up_${stmt.id} [${pos(trueOffsetX, posY)} shape=point width=0]
+              |false_dummy_up_${stmt.id} [${pos(falseOffsetX, posY)} shape=point width=0]
+              |
+              |${trueNodeDOTs._1.mkString("\n")}
+              |
+              |true_dummy_down_${stmt.id} [${pos(trueOffsetX, maxBranchY)} shape=point width=0]
+              |true_dummy_down_left_${stmt.id} [${pos(posX, maxBranchY)} shape=point width=0]
+              |false_dummy_down_${stmt.id} [${pos(falseOffsetX, maxBranchY + 1)} shape=point width=0]
+              |end_dummy_down_${stmt.id} [${pos(posX, maxBranchY + 1)} $group shape=point width=0]
+              |
+              |""".stripMargin
+        (dot, maxBranchY + 1)
+
+      case stmt: DoWhile => ("", posY) // TODO
+
+      case _: Block => ("", posY)
     }
   }
 
@@ -284,8 +318,8 @@ class FunctionEditor(
           (statementsDot, first)
         }
 
-        s"""|## TRUE branch
-            |${stmt.id}:e -> $trueDummyUpId [id="${stmt.id}@${stmt.trueBlock.id}" ${edgeAttrs(trueDummyUpId)} taillabel="true"]
+        s"""|## TRUE
+            |${stmt.id}:e -> $trueDummyUpId [id="${stmt.id}@${stmt.trueBlock.id}" ${edgeAttrs(trueDummyUpId)} taillabel="true" fontcolor="forestgreen"]
             |$trueDummyUpId -> $firstTrueNodeId:n [id="${stmt.id}@${stmt.trueBlock.id}" ${edgeAttrs(firstTrueNodeId)}]
             |
             |$trueEdgeDOTs
@@ -293,8 +327,8 @@ class FunctionEditor(
             |$trueDummyDownId -> $ifEndId [id="${stmt.id}@${stmt.trueBlock.id}" ${edgeAttrs(ifEndId)}]
             |
             |
-            |## FALSE branch
-            |${stmt.id}:w -> $falseDummyUpId [id="${stmt.id}@${stmt.falseBlock.id}" ${edgeAttrs(falseDummyUpId)} taillabel="false"]
+            |## FALSE
+            |${stmt.id}:w -> $falseDummyUpId [id="${stmt.id}@${stmt.falseBlock.id}" ${edgeAttrs(falseDummyUpId)} taillabel="false" fontcolor="red"]
             |$falseDummyUpId -> $firstFalseNodeId:n [id="${stmt.id}@${stmt.falseBlock.id}" ${edgeAttrs(firstFalseNodeId)}]
             |
             |$falseEdgeDOTs
@@ -306,45 +340,50 @@ class FunctionEditor(
             |
             |""".stripMargin
 
-      /*
       case stmt: While =>
-        val lbl = stmt.label.toGraphvizLbl
-        val falseEdgeId = s"$newId@${blockId}"
+        val trueDummyUpId = s"true_dummy_up_${stmt.id}"
+        val trueDummyDownId = s"true_dummy_down_${stmt.id}"
+        val trueDummyDownLeftId = s"true_dummy_down_left_${stmt.id}"
+        val falseDummyUpId = s"false_dummy_up_${stmt.id}"
+        val falseDummyDownId = s"false_dummy_down_${stmt.id}"
+        val endDummyDownId = s"end_dummy_down_${stmt.id}"
 
-        val reverseTrueStmts = stmt.body.statements.reverse
-        val trueStatementss =
-          if reverseTrueStmts.isEmpty then ""
-          else
-            (List((reverseTrueStmts.head, stmt.id, "s")) ++
-              reverseTrueStmts.tail
-                .zip(reverseTrueStmts)
-                .map((stmt, prevStmt) => (stmt, prevStmt.id, "n")))
-              .map((s, n, dir) => getDOT(s, stmt.body.id, n, dir))
-              .mkString("\n")
-        val (firstTrueNodeId, trueDir) =
-          if reverseTrueStmts.isEmpty then (stmt.id, "s")
-          else (reverseTrueStmts.reverse.head.id, "n")
+        val (trueEdgeDOTs, firstTrueNodeId) = locally {
+          val block = stmt.body
+          val stmts = block.statements
+          val nextStmtIds = block.statements.drop(1).map(_.id) ++ List(s"true_dummy_down_${stmt.id}")
 
-        s"""
-           |${stmt.id} [id="${stmtId}" $group label="$lbl" tooltip="$lbl" $group ${dimensions(
-          lbl,
-          true
-        )} shape="diamond" fillcolor="yellow" fontcolor="black"]
-           |${stmt.id}:s -> $nextStmtId:$nextStmtDir [id="$falseEdgeId" taillabel="false" ${edgeAttrs(nextStmtId)}]
-           |
-           |${stmt.id}:e -> $firstTrueNodeId:$trueDir [id="$newId@${stmt.body.id}" taillabel="true" ${edgeAttrs(nextStmtId)}]
-           |
-           |subgraph {
-           |
-           |  $trueStatementss
-           |}
-           |
-           |""".stripMargin
-       */
+          val statementsDot = stmts
+            .zip(nextStmtIds)
+            .map { (prev, nextId) => edgeDOT(prev, block.id, nextId) }
+            .mkString("\n")
+
+          val first = stmts.headOption.map(_.id).getOrElse(s"true_dummy_down_${stmt.id}")
+          (statementsDot, first)
+        }
+
+        s"""|## TRUE
+            |${stmt.id}:e -> $trueDummyUpId [id="${stmt.id}@${stmt.body.id}" ${edgeAttrs(trueDummyUpId)} taillabel="true" fontcolor="forestgreen"]
+            |$trueDummyUpId -> $firstTrueNodeId:n [id="${stmt.id}@${stmt.body.id}" ${edgeAttrs(firstTrueNodeId)}]
+            |
+            |$trueEdgeDOTs
+            |
+            |$trueDummyDownId -> $trueDummyDownLeftId [id="${stmt.id}@${stmt.body.id}" ${edgeAttrs(trueDummyDownLeftId)}]
+            |$trueDummyDownLeftId -> ${stmt.id}:s [id="${stmt.id}@${stmt.body.id}" ${edgeAttrs(stmt.id)}]
+            |
+            |## FALSE
+            |${stmt.id}:w -> $falseDummyUpId [id="${stmt.id}@${blockId}" ${edgeAttrs(falseDummyUpId)} taillabel="false" fontcolor="red"]
+            |$falseDummyUpId -> $falseDummyDownId [id="${stmt.id}@${blockId}" ${edgeAttrs(falseDummyDownId)}]
+            |$falseDummyDownId -> $endDummyDownId [id="${stmt.id}@${blockId}" ${edgeAttrs(endDummyDownId)}]
+            |$endDummyDownId -> $nextStmtId [id="${stmt.id}@${blockId}" ${edgeAttrs(nextStmtId)}]
+            |
+            |
+            |""".stripMargin
+
       case stmt: DoWhile => "" // TODO
 
       case _: Block  => ""
-      case _: Return => "" // already drawn in loadCurrentFunction
+      case _: Return => "" // no edges after return..
     }
   }
 
@@ -352,7 +391,7 @@ class FunctionEditor(
   // https://stackoverflow.com/questions/55905661/how-to-force-neato-engine-to-reverse-node-order
   // it's easier here to have (0,0) at top-center (we just flip y axis that is..)
   private def pos(x: Int, y: Int): String =
-    val xPx: Double = if x == 0 then 0 else px2Inch(x * 90)
+    val xPx: Double = if x == 0 then 0 else px2Inch(x * 120)
     val yPx = if y == 0 then 0 else px2Inch(y * 60)
     val realY = 10_000 - yPx
     s""" pos="$xPx,$realY!" """.trim

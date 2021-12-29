@@ -180,7 +180,7 @@ object Statement:
       val wlMax = stmt.falseBlock.statements.map(s => widthLeft(s, depth + 1)).maxOption.getOrElse(0)
       val wrMax = stmt.falseBlock.statements.map(s => widthRight(s, depth + 1)).maxOption.getOrElse(0)
       if depth == 0 then wrMax + 1 else wlMax + wrMax + 1
-    case _: While   => 0
+    case _: While   => 1
     case _: DoWhile => 0
     case _          => 0
 
@@ -189,7 +189,10 @@ object Statement:
       val wlMax = stmt.trueBlock.statements.map(s => widthLeft(s, depth + 1)).maxOption.getOrElse(0)
       val wrMax = stmt.trueBlock.statements.map(s => widthRight(s, depth + 1)).maxOption.getOrElse(0)
       if depth == 0 then wlMax + 1 else wlMax + wrMax + 1
-    case _: While   => 0
+    case stmt: While   =>
+      val wlMax = stmt.body.statements.map(s => widthLeft(s, depth + 1)).maxOption.getOrElse(0)
+      val wrMax = stmt.body.statements.map(s => widthRight(s, depth + 1)).maxOption.getOrElse(0)
+      if depth == 0 then wlMax + 1 else wlMax + wrMax + 1
     case _: DoWhile => 0
     case _          => 0
 
