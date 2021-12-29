@@ -50,10 +50,9 @@ class FunctionEditor(
     s"""
     |digraph {
     |  bgcolor="transparent"
-    |  fontsize="12"
     |
-    |  node [penwidth=0.5 shape="box" style="filled" fontcolor="white" fontname="Courier New"]
-    |  edge [penwidth=1.5 arrowsize=0.8]
+    |  node [penwidth=0.5 fontsize="12" shape="box" style="filled" fontcolor="white" fontname="Courier New"]
+    |  edge [penwidth=1.5 fontsize="12" arrowsize=0.8]
     |
     |  $nodesDOT
     |
@@ -290,7 +289,7 @@ class FunctionEditor(
         val falseDummyUpId = s"false_dummy_up_${stmt.id}"
         val falseDummyDownId = s"false_dummy_down_${stmt.id}"
 
-        val (trueEdgeDOTs, firstTrueNodeId) = locally {
+        val (trueEdgeDOTs, firstTrueNodeId, lastTrueNodeId) = locally {
           val block = stmt.trueBlock
           val stmts = block.statements
           val nextStmtIds = block.statements.drop(1).map(_.id) ++ List(s"true_dummy_down_${stmt.id}")
@@ -301,10 +300,11 @@ class FunctionEditor(
             .mkString("\n")
 
           val first = stmts.headOption.map(_.id).getOrElse(s"true_dummy_down_${stmt.id}")
-          (statementsDot, first)
+          val last = stmts.lastOption.map(_.id).getOrElse(stmt.id)
+          (statementsDot, first, last)
         }
 
-        val (falseEdgeDOTs, firstFalseNodeId) = locally {
+        val (falseEdgeDOTs, firstFalseNodeId, lastFalseNodeId) = locally {
           val block = stmt.falseBlock
           val stmts = block.statements
           val nextStmtIds = block.statements.drop(1).map(_.id) ++ List(s"false_dummy_down_${stmt.id}")
@@ -315,7 +315,8 @@ class FunctionEditor(
             .mkString("\n")
 
           val first = stmts.headOption.map(_.id).getOrElse(s"false_dummy_down_${stmt.id}")
-          (statementsDot, first)
+          val last = stmts.lastOption.map(_.id).getOrElse(stmt.id)
+          (statementsDot, first, last)
         }
 
         s"""|## TRUE
@@ -324,7 +325,7 @@ class FunctionEditor(
             |
             |$trueEdgeDOTs
             |
-            |$trueDummyDownId -> $ifEndId [id="${stmt.id}@${stmt.trueBlock.id}" ${edgeAttrs(ifEndId)}]
+            |$trueDummyDownId -> $ifEndId [id="${lastTrueNodeId}@${stmt.trueBlock.id}" ${edgeAttrs(ifEndId)}]
             |
             |
             |## FALSE
@@ -333,7 +334,7 @@ class FunctionEditor(
             |
             |$falseEdgeDOTs
             |
-            |$falseDummyDownId -> $ifEndId [id="${stmt.id}@${stmt.falseBlock.id}" ${edgeAttrs(ifEndId)}]
+            |$falseDummyDownId -> $ifEndId [id="${lastFalseNodeId}@${stmt.falseBlock.id}" ${edgeAttrs(ifEndId)}]
             |
             |## IF-END
             |$ifEndId:s -> $nextStmtId:$nextStmtDir [id="$ifEndEdgeId" ${edgeAttrs(nextStmtId)}]
@@ -348,7 +349,7 @@ class FunctionEditor(
         val falseDummyDownId = s"false_dummy_down_${stmt.id}"
         val endDummyDownId = s"end_dummy_down_${stmt.id}"
 
-        val (trueEdgeDOTs, firstTrueNodeId) = locally {
+        val (trueEdgeDOTs, firstTrueNodeId, lastTrueNodeId) = locally {
           val block = stmt.body
           val stmts = block.statements
           val nextStmtIds = block.statements.drop(1).map(_.id) ++ List(s"true_dummy_down_${stmt.id}")
@@ -359,7 +360,8 @@ class FunctionEditor(
             .mkString("\n")
 
           val first = stmts.headOption.map(_.id).getOrElse(s"true_dummy_down_${stmt.id}")
-          (statementsDot, first)
+          val last = stmts.lastOption.map(_.id).getOrElse(stmt.id)
+          (statementsDot, first, last)
         }
 
         s"""|## TRUE
@@ -368,15 +370,14 @@ class FunctionEditor(
             |
             |$trueEdgeDOTs
             |
-            |$trueDummyDownId -> $trueDummyDownLeftId [id="${stmt.id}@${stmt.body.id}" ${edgeAttrs(trueDummyDownLeftId)}]
-            |$trueDummyDownLeftId -> ${stmt.id}:s [id="${stmt.id}@${stmt.body.id}" ${edgeAttrs(stmt.id)}]
+            |$trueDummyDownId -> $trueDummyDownLeftId [id="${lastTrueNodeId}@${stmt.body.id}" ${edgeAttrs(trueDummyDownLeftId)}]
+            |$trueDummyDownLeftId -> ${stmt.id}:s [id="${lastTrueNodeId}@${stmt.body.id}" ${edgeAttrs(stmt.id)}]
             |
             |## FALSE
             |${stmt.id}:w -> $falseDummyUpId [id="${stmt.id}@${blockId}" ${edgeAttrs(falseDummyUpId)} taillabel="false" fontcolor="red"]
             |$falseDummyUpId -> $falseDummyDownId [id="${stmt.id}@${blockId}" ${edgeAttrs(falseDummyDownId)}]
             |$falseDummyDownId -> $endDummyDownId [id="${stmt.id}@${blockId}" ${edgeAttrs(endDummyDownId)}]
             |$endDummyDownId -> $nextStmtId [id="${stmt.id}@${blockId}" ${edgeAttrs(nextStmtId)}]
-            |
             |
             |""".stripMargin
 
