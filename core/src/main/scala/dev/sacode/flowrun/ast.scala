@@ -75,12 +75,12 @@ enum Atom derives NativeConverter:
 
 sealed trait Statement(val id: String) derives NativeConverter:
   def label: String
-  def width: Int = 1
 
 object Statement:
 
   case class Begin(override val id: String) extends Statement(id):
     def label = "Begin"
+
   case class Declare(
       override val id: String,
       name: String,
@@ -92,23 +92,25 @@ object Statement:
       s"$name: $tpe$maybeExprText"
   case class Assign(override val id: String, name: String, value: String) extends Statement(id):
     def label = s"$name = $value"
+
   case class Call(override val id: String, value: String) extends Statement(id):
     def label = value
+
   case class Input(override val id: String, name: String) extends Statement(id):
     def label = name
+
   case class Output(override val id: String, value: String) extends Statement(id):
     def label = value
-  case class Block(override val id: String, statements: List[Statement] = List.empty)
-      extends Statement(id):
+
+  case class Block(override val id: String, statements: List[Statement] = List.empty) extends Statement(id):
     def label = ""
-    override def width: Int = statements.map(_.width).maxOption.getOrElse(1)
 
   case class Return(
       override val id: String,
       maybeValue: Option[String] = None
   ) extends Statement(id):
-    def label =
-      maybeValue.map(e => s"return $e").getOrElse("return")
+    def label = maybeValue.map(e => s"return $e").getOrElse("return")
+
   case class If(
       override val id: String,
       condition: String,
@@ -116,59 +118,80 @@ object Statement:
       falseBlock: Block
   ) extends Statement(id):
     def label = condition.toString
-    override def width: Int = 
-      1 + trueBlock.width + falseBlock.width
+
   case class While(
       override val id: String,
       condition: String,
       body: Block
   ) extends Statement(id):
     def label = condition.toString
+
   case class DoWhile(
       override val id: String,
       condition: String,
       body: Block
   ) extends Statement(id):
     def label = condition.toString
-  
+
   // utils
-  def name(stmt: Statement, funName: String):  String =
+  def name(stmt: Statement, funName: String): String =
     getName(stmt, funName).getOrElse("")
   def hasName(stmt: Statement, funName: String): Boolean =
     getName(stmt, funName).isDefined
-  
+
   private def getName(stmt: Statement, funName: String): Option[String] = stmt match
-    case _: Begin => Some(funName)
+    case _: Begin               => Some(funName)
     case Declare(_, name, _, _) => Some(name)
-    case Assign(_, name, _) => Some(name)
-    case Input(_, name) => Some(name)
-    case _ => None
-  
+    case Assign(_, name, _)     => Some(name)
+    case Input(_, name)         => Some(name)
+    case _                      => None
+
   def tpe(stmt: Statement, funTpe: String): String =
     getTpe(stmt, funTpe).getOrElse("")
   def hasTpe(stmt: Statement, funTpe: String): Boolean =
     getTpe(stmt, funTpe).isDefined
-  
+
   private def getTpe(stmt: Statement, funTpe: String): Option[String] = stmt match
     case Declare(_, _, tpe, _) => Some(tpe.toString)
-    case _: Begin => Some(funTpe)
-    case _ => None
-  
+    case _: Begin              => Some(funTpe)
+    case _                     => None
+
   def expr(stmt: Statement): String =
     getExpr(stmt).getOrElse("")
   def hasExpr(stmt: Statement): Boolean =
     getExpr(stmt).isDefined
-  
+
   private def getExpr(stmt: Statement): Option[String] = stmt match
     case Declare(_, _, _, expr) => Some(expr.getOrElse(""))
-    case Assign(_, _, expr) => Some(expr)
-    case Output(_, expr) => Some(expr)
-    case Call(_, expr) => Some(expr)
-    case Return(_, expr) => Some(expr.getOrElse(""))
-    case If(_, expr, _, _) => Some(expr)
-    case While(_, expr, _) => Some(expr)
-    case DoWhile(_, expr, _) => Some(expr)
-    case _ => None
+    case Assign(_, _, expr)     => Some(expr)
+    case Output(_, expr)        => Some(expr)
+    case Call(_, expr)          => Some(expr)
+    case Return(_, expr)        => Some(expr.getOrElse(""))
+    case If(_, expr, _, _)      => Some(expr)
+    case While(_, expr, _)      => Some(expr)
+    case DoWhile(_, expr, _)    => Some(expr)
+    case _                      => None
+
+  // umm, this logic is a bit hard to explain
+  // best to concentrate on it visually
+  // look nested ifs
+  def widthLeft(stmt: Statement, depth: Int): Int = stmt match
+    case stmt: If =>
+      val wlMax = stmt.falseBlock.statements.map(s => widthLeft(s, depth + 1)).maxOption.getOrElse(0)
+      val wrMax = stmt.falseBlock.statements.map(s => widthRight(s, depth + 1)).maxOption.getOrElse(0)
+      if depth == 0 then wrMax + 1 else wlMax + wrMax + 1
+    case _: While   => 0
+    case _: DoWhile => 0
+    case _          => 0
+
+  def widthRight(statement: Statement, depth: Int): Int = statement match
+    case stmt: If =>
+      val wlMax = stmt.trueBlock.statements.map(s => widthLeft(s, depth + 1)).maxOption.getOrElse(0)
+      val wrMax = stmt.trueBlock.statements.map(s => widthRight(s, depth + 1)).maxOption.getOrElse(0)
+      if depth == 0 then wlMax + 1 else wlMax + wrMax + 1
+    case _: While   => 0
+    case _: DoWhile => 0
+    case _          => 0
 
 end Statement
 

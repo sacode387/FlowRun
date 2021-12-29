@@ -39,7 +39,7 @@ class FunctionEditor(
       )
 
     val dotSrc = funDOT
-    println(dotSrc)
+    //println(dotSrc)
     graphviz
       .engine("neato")
       .renderDot(dotSrc)
@@ -67,9 +67,9 @@ class FunctionEditor(
   private def nodesDOT: String = {
     val stmts = programModel.currentFunction.statements
     val funId = programModel.currentFunction.id
-    val dots = stmts.foldLeft((List.empty[String], 0, 0)) { case ((prevDots, lastX, lastY), s) =>
-      val dot = nodeDOT(s, funId, lastX, lastY)
-      (prevDots.appended(dot._1), dot._2, dot._3 + 1)
+    val dots = stmts.foldLeft((List.empty[String], 0)) { case ((prevDots, lastY), s) =>
+      val dot = nodeDOT(s, funId, 0, lastY)
+      (prevDots.appended(dot._1), dot._2 + 1)
     }
 
     dots._1.mkString("\n")
@@ -80,7 +80,7 @@ class FunctionEditor(
       blockId: String,
       posX: Int,
       posY: Int
-  ): (String, Int, Int) = {
+  ): (String, Int) = {
     import Statement._
     import AST.newId
 
@@ -95,7 +95,7 @@ class FunctionEditor(
           s"""|${stmt.id} [id="$stmtId" ${pos(posX, posY)} ${dimensions(lbl)} $group 
               |label="$lbl" tooltip="$lbl" shape="ellipse" fillcolor="aqua" fontcolor="black"]
               |""".stripMargin.replaceAll("\n", " ")
-        (dot, posX, posY)
+        (dot, posY)
 
       case _: Return =>
         val lbl = if programModel.currentFunction.isMain then "End" else stmt.label
@@ -103,7 +103,7 @@ class FunctionEditor(
           s"""|${stmt.id} [id="$stmtId" ${pos(posX, posY)} ${dimensions(lbl)} $group 
               |label="$lbl" tooltip="$lbl" shape="ellipse" fillcolor="aqua" fontcolor="black"]
               |""".stripMargin.replaceAll("\n", " ")
-        (dot, posX, posY)
+        (dot, posY)
 
       case _: Declare =>
         val lbl = stmt.label.toGraphvizLbl
@@ -111,7 +111,7 @@ class FunctionEditor(
           s"""|${stmt.id} [id="$stmtId" ${pos(posX, posY)} ${dimensions(lbl)} $group 
               |label="$lbl" tooltip="$lbl" fillcolor="cornsilk" fontcolor="black"]
               |""".stripMargin.replaceAll("\n", " ")
-        (dot, posX, posY)
+        (dot, posY)
 
       case _: Assign =>
         val lbl = stmt.label.toGraphvizLbl
@@ -119,7 +119,7 @@ class FunctionEditor(
           s"""|${stmt.id} [id="$stmtId" ${pos(posX, posY)} ${dimensions(lbl)} $group 
               |label="$lbl" tooltip="$lbl" fillcolor="red" fontcolor="black"]
               |""".stripMargin.replaceAll("\n", " ")
-        (dot, posX, posY)
+        (dot, posY)
 
       case _: Input =>
         val lbl = stmt.label.toGraphvizLbl
@@ -127,7 +127,7 @@ class FunctionEditor(
           s"""|${stmt.id} [id="$stmtId" ${pos(posX, posY)} ${dimensions(lbl)} $group 
               |label="$lbl" tooltip="$lbl" shape="invtrapezium" fillcolor="mediumblue"]
               |""".stripMargin.replaceAll("\n", " ")
-        (dot, posX, posY)
+        (dot, posY)
 
       case _: Output =>
         val lbl = stmt.label.toGraphvizLbl
@@ -135,7 +135,7 @@ class FunctionEditor(
           s"""|${stmt.id} [id="$stmtId" ${pos(posX, posY)} ${dimensions(lbl)} $group 
               |label="$lbl" tooltip="$lbl" shape="trapezium" fillcolor="mediumblue"]
               |""".stripMargin.replaceAll("\n", " ")
-        (dot, posX, posY)
+        (dot, posY)
 
       case _: Call =>
         val lbl = stmt.label.toGraphvizLbl
@@ -143,57 +143,60 @@ class FunctionEditor(
           s"""|${stmt.id} [id="$stmtId" ${pos(posX, posY)} ${dimensions(lbl)} $group 
               |label="$lbl" tooltip="$lbl" fillcolor="mediumblue"]
               |""".stripMargin.replaceAll("\n", " ")
-        (dot, posX, posY)
+        (dot, posY)
 
       case stmt: If =>
         val lbl = stmt.label.toGraphvizLbl
         val ifEndId = s"end_${stmt.id}"
 
-        val trueNodeDOTs = locally {
+        val (trueNodeDOTs, trueOffsetX) = locally {
           val block = stmt.trueBlock
           val stmts = block.statements
 
-          stmts.foldLeft((List.empty[String], posX + 1, posY + 1)) { case ((prevDots, lastX, lastY), s) =>
-            val dot = nodeDOT(s, block.id, lastX + (s.width / 2), lastY)
-            (prevDots.appended(dot._1), dot._2, dot._3 + 1)
+          val x = posX + widthRight(stmt, 0)
+
+          val dots = stmts.foldLeft((List.empty[String], posY + 1)) { case ((prevDots, lastY), s) =>
+            val dot = nodeDOT(s, block.id, x, lastY)
+            (prevDots.appended(dot._1), dot._2 + 1)
           }
+          (dots, x)
         }
 
-        val falseNodeDOTs = locally {
+        val (falseNodeDOTs, falseOffsetX) = locally {
           val block = stmt.falseBlock
           val stmts = block.statements
 
-          stmts.foldLeft((List.empty[String], posX - 1, posY + 1)) { case ((prevDots, lastX, lastY), s) =>
-            val dot = nodeDOT(s, block.id, lastX - (s.width / 2), lastY)
-            (prevDots.appended(dot._1), dot._2, dot._3 + 1)
+          val x = posX - widthLeft(stmt, 0)
+
+          val dots = stmts.foldLeft((List.empty[String], posY + 1)) { case ((prevDots, lastY), s) =>
+            val dot = nodeDOT(s, block.id, x, lastY)
+            (prevDots.appended(dot._1), dot._2 + 1)
           }
+          (dots, x)
         }
 
-        val maxBranchY = trueNodeDOTs._3 max falseNodeDOTs._3
-        val trueOffsetX = stmt.trueBlock.statements.headOption.map(_.width / 2).getOrElse(0)
-        val falseOffsetX = stmt.falseBlock.statements.headOption.map(_.width / 2).getOrElse(0)
+        val maxBranchY = trueNodeDOTs._2 max falseNodeDOTs._2
 
         val dot =
           s"""|${stmt.id} [id="$stmtId" ${pos(posX, posY)} ${dimensions(lbl, true)} $group 
               |label="$lbl" tooltip="$lbl" shape="diamond" fillcolor="yellow" fontcolor="black"]
               |
-              |true_dummy_up_${stmt.id} [ ${pos(posX + 1 + trueOffsetX, posY)} shape=point width=0]
-              |false_dummy_up_${stmt.id} [ ${pos(posX - 1 - falseOffsetX, posY)} shape=point width=0]
+              |true_dummy_up_${stmt.id} [ ${pos(trueOffsetX, posY)} shape=point width=0]
+              |false_dummy_up_${stmt.id} [ ${pos(falseOffsetX, posY)} shape=point width=0]
               |
               |${trueNodeDOTs._1.mkString("\n")}
-              |
               |${falseNodeDOTs._1.mkString("\n")}
+              |
+              |true_dummy_down_${stmt.id} [ ${pos(trueOffsetX, maxBranchY)} shape=point width=0]
+              |false_dummy_down_${stmt.id} [ ${pos(falseOffsetX, maxBranchY)} shape=point width=0]
               |
               |$ifEndId [id="$ifEndId#IfEnd" ${pos(posX, maxBranchY)} $group 
               |label="" tooltip=" " shape="circle" fillcolor="black" fixedsize=true width=0.2 height=0.2]
               |
-              |true_dummy_down_${stmt.id} [ ${pos(posX + 1 + trueOffsetX, maxBranchY)} shape=point width=0]
-              |false_dummy_down_${stmt.id} [ ${pos(posX - 1 - falseOffsetX, maxBranchY)} shape=point width=0]
-              |
               |""".stripMargin
-        (dot, posX, maxBranchY)
+        (dot, maxBranchY)
 
-      case _ => ("", posX, posY)
+      case _ => ("", posY)
     }
   }
 
