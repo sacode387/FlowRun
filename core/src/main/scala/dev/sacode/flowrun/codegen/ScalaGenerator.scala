@@ -47,7 +47,7 @@ class ScalaGenerator(programAst: Program) {
     import Expression.Type, Type._
     tpe match
       case Void    => "Unit"
-      case Integer => "Int"
+      case Integer => "Long"
       case Real    => "Double"
       case String  => "String"
       case Boolean => "Boolean"

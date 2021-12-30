@@ -1,6 +1,8 @@
 package dev.sacode.flowrun
 
 import scala.util.Try
+import scala.util.Success
+import scala.util.Failure
 import scalajs.js
 import org.scalajs.dom
 import org.scalajs.dom.window
@@ -14,6 +16,13 @@ extension (any: Any) {
 extension (str: String) {
   def toGraphvizLbl: String =
     str.replace("\"", "\\\"")
+  
+  def asInteger: Try[Long] =
+    if str.trim.forall(_.isDigit) then Try(str.toLong)
+    else Failure(new RuntimeException("Invalid integer"))
+  
+  def asReal: Try[Double] =
+    Try(str.toDouble)
 }
 
 def getNowTime: String =
