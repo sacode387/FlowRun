@@ -144,8 +144,12 @@ class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[FlowRun.Ev
           }
         interpret(body).flatMap(_ => loop())
       case block: Block =>
-        execSequentially((): Any, block.statements, (_, s) => interpret(s))
-      case Return(id, maybeExpr) => // noop
+        symTab.enterScope(block.id)
+        execSequentially((): Any, block.statements, (_, s) => interpret(s)).map { res =>
+          symTab.exitScope()
+          res
+        }
+      case Return(id, maybeExpr) =>
         maybeExpr match
           case None       => Future.successful(())
           case Some(expr) => eval(id, parseExpr(id, expr))

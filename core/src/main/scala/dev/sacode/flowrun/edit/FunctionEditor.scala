@@ -34,7 +34,8 @@ class FunctionEditor(
       .select(flowRunElements.drawArea)
       .graphviz(
         js.Dynamic.literal(
-          zoom = false
+          zoom = false,
+          fit = true
         )
       )
 
@@ -443,12 +444,12 @@ class FunctionEditor(
             |$trueEdgeDOTs
             |
             |## TRUE
-            |${stmt.id}:e -> $trueDummyDownId [${edgeAttrs(trueDummyDownId)} taillabel="true" fontcolor="forestgreen"]
+            |${stmt.id}:e -> $trueDummyDownId [${edgeAttrs(trueDummyDownId)} taillabel="true" fontcolor="forestgreen"labelangle=90]
             |$trueDummyDownId -> $trueDummyUpId [${edgeAttrs(trueDummyUpId)}]
             |$trueDummyUpId -> ${doWhileEndId}:e [ ${edgeAttrs(stmt.id)}]
             |
             |## FALSE
-            |${stmt.id}:s -> $nextStmtId [id="${stmt.id}@${blockId}" ${edgeAttrs(nextStmtId)} taillabel="false" fontcolor="red"]
+            |${stmt.id}:s -> $nextStmtId [id="${stmt.id}@${blockId}" ${edgeAttrs(nextStmtId)} taillabel="false" fontcolor="red" labeldistance=2 labelangle=-80]
             |
             |""".stripMargin
 
@@ -462,7 +463,7 @@ class FunctionEditor(
   // it's easier here to have (0,0) at top-center (we just flip y axis that is..)
   private def pos(x: Int, y: Int): String =
     val xPx: Double = if x == 0 then 0 else px2Inch(x * 120)
-    val yPx = if y == 0 then 0 else px2Inch(y * 60)
+    val yPx = if y == 0 then 0 else px2Inch(y * 70)
     val realY = 10_000 - yPx
     s""" pos="$xPx,$realY!" """.trim
 
