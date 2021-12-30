@@ -142,7 +142,7 @@ class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[FlowRun.Ev
               else Future.successful({})
             case condValue => throw EvalException(s"Not a valid condition: '$condValue'", id)
           }
-        loop()
+        interpret(body).flatMap(_ => loop())
       case block: Block =>
         execSequentially((): Any, block.statements, (_, s) => interpret(s))
       case Return(id, maybeExpr) => // noop

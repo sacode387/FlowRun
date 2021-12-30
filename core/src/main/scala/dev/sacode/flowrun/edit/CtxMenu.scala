@@ -41,7 +41,6 @@ class CtxMenu(
 
         getSvgNode(event.target) match {
           case ("NODE", n) =>
-
             val idParts = n.id.split("#")
             nodeId = idParts(0)
             val nodeTpe = idParts(1)
@@ -52,10 +51,12 @@ class CtxMenu(
             }
 
           case ("EDGE", e) =>
-            edgeContextMenu.style.left = s"${event.clientX}px"
-            edgeContextMenu.style.top = s"${event.clientY}px"
-            edgeContextMenu.classList.add("active")
-            setEdgeIds(e.id)
+            val canActivate = setEdgeIds(e.id)
+            if canActivate then
+              edgeContextMenu.style.left = s"${event.clientX}px"
+              edgeContextMenu.style.top = s"${event.clientY}px"
+              edgeContextMenu.classList.add("active")
+            
           case _ =>
         }
       }
@@ -71,8 +72,10 @@ class CtxMenu(
         e.asInstanceOf[dom.html.Element].classList.remove("active")
       }
 
-  private def setEdgeIds(edgeId: String): Unit = {
-    val parts =edgeId.split("@")
+  private def setEdgeIds(edgeId: String): Boolean = {
+    val parts = edgeId.split("@")
+    if parts.length != 2 then return false
+
     afterId = parts(0)
     blockId = parts(1)
 
@@ -81,33 +84,26 @@ class CtxMenu(
     else if afterId.startsWith("true_dummy_down_") then afterId = afterId.drop("true_dummy_down_".length)
     else if afterId.startsWith("false_dummy_up_") then afterId = afterId.drop("false_dummy_up_".length)
     else if afterId.startsWith("false_dummy_down_") then afterId = afterId.drop("false_dummy_down_".length)
+    
+    true
   }
 
   private def attachListeners(): Unit = {
     // close menu when clicked anywhere
     dom.window.addEventListener("click", event => hideAllMenus())
 
-    val edgeContextMenu =
-      dom.document.getElementById("flowrun-edge-context-menu").asInstanceOf[dom.html.Element]
-    val nodeContextMenu =
-      dom.document.getElementById("flowrun-node-context-menu").asInstanceOf[dom.html.Element]
+    val edgeContextMenu = dom.document.getElementById("flowrun-edge-context-menu").asInstanceOf[dom.html.Element]
+    val nodeContextMenu = dom.document.getElementById("flowrun-node-context-menu").asInstanceOf[dom.html.Element]
 
-    val deleteButton =
-      nodeContextMenu.querySelector("#flowrun-delete").asInstanceOf[dom.html.Element]
-    val addDeclareButton =
-      edgeContextMenu.querySelector("#flowrun-add-declare").asInstanceOf[dom.html.Element]
-    val addAssignButton =
-      edgeContextMenu.querySelector("#flowrun-add-assign").asInstanceOf[dom.html.Element]
-    val addInputButton =
-      edgeContextMenu.querySelector("#flowrun-add-input").asInstanceOf[dom.html.Element]
-    val addOutputButton =
-      edgeContextMenu.querySelector("#flowrun-add-output").asInstanceOf[dom.html.Element]
-    val addCallButton =
-      edgeContextMenu.querySelector("#flowrun-add-call").asInstanceOf[dom.html.Element]
-    val addIfButton =
-      edgeContextMenu.querySelector("#flowrun-add-if").asInstanceOf[dom.html.Element]
-    val addWhileButton =
-      edgeContextMenu.querySelector("#flowrun-add-while").asInstanceOf[dom.html.Element]
+    val deleteButton = nodeContextMenu.querySelector("#flowrun-delete").asInstanceOf[dom.html.Element]
+    val addDeclareButton = edgeContextMenu.querySelector("#flowrun-add-declare").asInstanceOf[dom.html.Element]
+    val addAssignButton = edgeContextMenu.querySelector("#flowrun-add-assign").asInstanceOf[dom.html.Element]
+    val addInputButton = edgeContextMenu.querySelector("#flowrun-add-input").asInstanceOf[dom.html.Element]
+    val addOutputButton = edgeContextMenu.querySelector("#flowrun-add-output").asInstanceOf[dom.html.Element]
+    val addCallButton = edgeContextMenu.querySelector("#flowrun-add-call").asInstanceOf[dom.html.Element]
+    val addIfButton = edgeContextMenu.querySelector("#flowrun-add-if").asInstanceOf[dom.html.Element]
+    val addWhileButton = edgeContextMenu.querySelector("#flowrun-add-while").asInstanceOf[dom.html.Element]
+    val addDoWhileButton = edgeContextMenu.querySelector("#flowrun-add-do-while").asInstanceOf[dom.html.Element]
 
     deleteButton.addEventListener(
       "click",
@@ -168,6 +164,13 @@ class CtxMenu(
         programModel.addWhile(Request.AddWhile(AST.newId, AST.newId, afterId, blockId))
       }
     )
+
+    addDoWhileButton.addEventListener(
+      "click",
+      (event: dom.MouseEvent) => {
+        programModel.addDoWhile(Request.AddDoWhile(AST.newId, AST.newId, afterId, blockId))
+      }
+    )    
   }
 
 }

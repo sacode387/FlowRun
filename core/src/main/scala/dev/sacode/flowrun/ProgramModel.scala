@@ -25,7 +25,7 @@ class ProgramModel(
     currentFunctionId = fun.id
     flowrunChannel := FlowRun.Event.Deselected
     flowrunChannel := FlowRun.Event.FunctionUpdated
-  
+
   def addNewFunction(): Unit =
     val lastFunNum = ast.functions
       .map(_.name.substring(3))
@@ -136,10 +136,9 @@ class ProgramModel(
   }
 }
 
-
 object ProgramModel:
   import dev.sacode.flowrun.Expression.Type
-  
+
   val MainFunId = "fun-main"
 
   enum Request:
@@ -217,18 +216,15 @@ case class FunctionModel(
     doInsert(req.afterId, newStat, req.blockId)
 
   def addIf(req: AddIf): FunctionModel =
-    val newStat =
-      Statement.If(req.id, "true", Statement.Block(req.trueId), Statement.Block(req.falseId))
+    val newStat = Statement.If(req.id, "true", Statement.Block(req.trueId), Statement.Block(req.falseId))
     doInsert(req.afterId, newStat, req.blockId)
 
   def addWhile(req: AddWhile): FunctionModel =
-    val newStat =
-      Statement.While(req.id, "true", Statement.Block(req.bodyId))
+    val newStat = Statement.While(req.id, "false", Statement.Block(req.bodyId))
     doInsert(req.afterId, newStat, req.blockId)
 
   def addDoWhile(req: AddDoWhile): FunctionModel =
-    val newStat =
-      Statement.DoWhile(req.id, "true", Statement.Block(req.bodyId))
+    val newStat = Statement.DoWhile(req.id, "false", Statement.Block(req.bodyId))
     doInsert(req.afterId, newStat, req.blockId)
 
   def updateDeclare(req: UpdateDeclare): FunctionModel =
@@ -295,34 +291,35 @@ case class FunctionModel(
     val afterStatementIdx = statements.indexWhere(_.id == afterId)
     if (afterStatementIdx >= 0) {
       val afterStatement = statements(afterStatementIdx)
-      if blockId.startsWith("fun-") then
-        return statements.patch(afterStatementIdx + 1, List(newStatement), 0)
-      
+      if blockId.startsWith("fun-") then return statements.patch(afterStatementIdx + 1, List(newStatement), 0)
+
       afterStatement match {
-        case ifStatement: Statement.If =>
-          val newIfStatement =
-            if (ifStatement.trueBlock.id == blockId)
-              ifStatement.copy(trueBlock =
-                ifStatement.trueBlock
-                  .copy(statements = ifStatement.trueBlock.statements.prepended(newStatement))
+        case stmt: Statement.If =>
+          val newStmt =
+            if (stmt.trueBlock.id == blockId)
+              stmt.copy(trueBlock =
+                stmt.trueBlock
+                  .copy(statements = stmt.trueBlock.statements.prepended(newStatement))
               )
             else
-              ifStatement.copy(falseBlock =
-                ifStatement.falseBlock.copy(statements =
-                  ifStatement.falseBlock.statements.prepended(newStatement)
-                )
+              stmt.copy(falseBlock =
+                stmt.falseBlock.copy(statements = stmt.falseBlock.statements.prepended(newStatement))
               )
-          statements.updated(afterStatementIdx, newIfStatement)
-        case whileStatement: Statement.While =>
-          val newWhileStatement =
-            if (whileStatement.body.id == blockId)
-              whileStatement.copy(body =
-                whileStatement.body
-                  .copy(statements = whileStatement.body.statements.prepended(newStatement))
-              )
+          statements.updated(afterStatementIdx, newStmt)
+        case stmt: Statement.While =>
+          val newStmt =
+            if (stmt.body.id == blockId)
+              stmt.copy(body = stmt.body.copy(statements = stmt.body.statements.prepended(newStatement)))
             else
-              whileStatement
-          statements.updated(afterStatementIdx, newWhileStatement)
+              stmt
+          statements.updated(afterStatementIdx, newStmt)
+        case stmt: Statement.DoWhile =>
+          val newStmt =
+            if (stmt.body.id == blockId)
+              stmt.copy(body = stmt.body.copy(statements = stmt.body.statements.prepended(newStatement)))
+            else
+              stmt
+          statements.updated(afterStatementIdx, newStmt)
         case _ =>
           statements.patch(afterStatementIdx + 1, List(newStatement), 0)
       }
@@ -330,9 +327,8 @@ case class FunctionModel(
       statements.map {
         case ifStatement: Statement.If =>
           ifStatement.copy(
-            trueBlock = ifStatement.trueBlock.copy(statements =
-              insert(ifStatement.trueBlock.statements, afterId, newStatement, blockId)
-            ),
+            trueBlock = ifStatement.trueBlock
+              .copy(statements = insert(ifStatement.trueBlock.statements, afterId, newStatement, blockId)),
             falseBlock = ifStatement.falseBlock.copy(statements =
               insert(ifStatement.falseBlock.statements, afterId, newStatement, blockId)
             )
@@ -378,18 +374,16 @@ case class FunctionModel(
       statements.map {
         case ifStatement: Statement.If =>
           ifStatement.copy(
-            trueBlock = ifStatement.trueBlock.copy(statements =
-              update(ifStatement.trueBlock.statements, statementId, newStatement)
-            ),
-            falseBlock = ifStatement.falseBlock.copy(statements =
-              update(ifStatement.falseBlock.statements, statementId, newStatement)
+            trueBlock = ifStatement.trueBlock
+              .copy(statements = update(ifStatement.trueBlock.statements, statementId, newStatement)),
+            falseBlock = ifStatement.falseBlock.copy(
+              statements = update(ifStatement.falseBlock.statements, statementId, newStatement)
             )
           )
         case whileStatement: Statement.While =>
           whileStatement.copy(
-            body = whileStatement.body.copy(statements =
-              update(whileStatement.body.statements, statementId, newStatement)
-            )
+            body =
+              whileStatement.body.copy(statements = update(whileStatement.body.statements, statementId, newStatement))
           )
         case doWhileStatement: Statement.DoWhile =>
           doWhileStatement.copy(
@@ -411,17 +405,25 @@ case class FunctionModel(
     statements.flatMap {
       case Block(_, blockStats) =>
         delete(blockStats, statementId)
-      case ifStat @ If(id, expr, trueBlock, falseBlock) =>
+      case stat @ If(id, expr, trueBlock, falseBlock) =>
         if statementId == id then List.empty
         else
-          val newIfStat = ifStat
-            .copy(trueBlock =
-              trueBlock.copy(statements = delete(trueBlock.statements, statementId))
-            )
-            .copy(falseBlock =
-              falseBlock.copy(statements = delete(falseBlock.statements, statementId))
-            )
-          List(newIfStat)
+          val newStat = stat
+            .copy(trueBlock = trueBlock.copy(statements = delete(trueBlock.statements, statementId)))
+            .copy(falseBlock = falseBlock.copy(statements = delete(falseBlock.statements, statementId)))
+          List(newStat)
+      case stat @ While(id, expr, body) =>
+        if statementId == id then List.empty
+        else
+          val newStat = stat
+            .copy(body = body.copy(statements = delete(body.statements, statementId)))
+          List(newStat)
+      case stat @ DoWhile(id, expr, body) =>
+        if statementId == id then List.empty
+        else
+          val newStat = stat
+            .copy(body = body.copy(statements = delete(body.statements, statementId)))
+          List(newStat)
       case st =>
         Option.unless(st.id == statementId)(st)
     }
