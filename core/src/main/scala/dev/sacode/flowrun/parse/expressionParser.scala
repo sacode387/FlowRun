@@ -18,8 +18,7 @@ final class ExpressionParser(nodeId: String, allTokens: List[Token]) {
 
   def parse(): Expression =
     val res = expression()
-    if lookahead.tpe != Type.EOF then
-      error(s"Unexpected symbol '${lookahead.text}' found at index ${lookahead.pos}")
+    if lookahead.tpe != Type.EOF then error(s"Unexpected symbol '${lookahead.text}' found at index ${lookahead.pos}")
     else res
 
   private def expression(): Expression =
@@ -135,8 +134,7 @@ final class ExpressionParser(nodeId: String, allTokens: List[Token]) {
 
   private def eat(tpe: Type): Token =
     val res = lookahead
-    if lookahead.tpe != tpe then
-      error(s"Expected: $tpe, got: ${lookahead.tpe} at position ${lookahead.pos}")
+    if lookahead.tpe != tpe then error(s"Expected: $tpe, got: ${lookahead.tpe} at position ${lookahead.pos}")
     tokens = tokens.tail
     lookahead = tokens.head
     res

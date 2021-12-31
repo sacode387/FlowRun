@@ -72,8 +72,7 @@ class Scope(
 
   // we assume type is good here
   def add(nodeId: String, key: SymbolKey, tpe: Type, value: Option[Any]): Symbol =
-    if symbols.isDefinedAt(key) then
-      error(s"${key.kind.toString} with name '${key.name}' is already declared.", nodeId)
+    if symbols.isDefinedAt(key) then error(s"${key.kind.toString} with name '${key.name}' is already declared.", nodeId)
     val newSymbol = Symbol(key, tpe, value, this)
     symbols += (key -> newSymbol)
     flowrunChannel := FlowRun.Event.SymbolTableUpdated
@@ -137,11 +136,14 @@ case class SymbolKey(name: String, kind: Symbol.Kind) {
 
 object SymbolKey {
   val ReservedWords = Set("true", "false")
-  def apply(name: String, kind: Symbol.Kind, nodeId: String): SymbolKey = scala.util.Try {
-    SymbolKey(name, kind)
-  }.recover {
-    case e: IllegalArgumentException => throw EvalException(e.getMessage, nodeId)
-  }.get
+  def apply(name: String, kind: Symbol.Kind, nodeId: String): SymbolKey = scala.util
+    .Try {
+      SymbolKey(name, kind)
+    }
+    .recover { case e: IllegalArgumentException =>
+      throw EvalException(e.getMessage, nodeId)
+    }
+    .get
 }
 
 case class Symbol(key: SymbolKey, tpe: Type, value: Option[Any] = None, scope: Scope):

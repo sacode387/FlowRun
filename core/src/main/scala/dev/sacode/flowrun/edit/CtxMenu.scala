@@ -56,7 +56,7 @@ class CtxMenu(
               edgeContextMenu.style.left = s"${event.clientX}px"
               edgeContextMenu.style.top = s"${event.clientY}px"
               edgeContextMenu.classList.add("active")
-            
+
           case _ =>
         }
       }
@@ -84,7 +84,7 @@ class CtxMenu(
     else if afterId.startsWith("true_dummy_down_") then afterId = afterId.drop("true_dummy_down_".length)
     else if afterId.startsWith("false_dummy_up_") then afterId = afterId.drop("false_dummy_up_".length)
     else if afterId.startsWith("false_dummy_down_") then afterId = afterId.drop("false_dummy_down_".length)
-    
+
     true
   }
 
@@ -170,7 +170,7 @@ class CtxMenu(
       (event: dom.MouseEvent) => {
         programModel.addDoWhile(Request.AddDoWhile(AST.newId, AST.newId, afterId, blockId))
       }
-    )    
+    )
   }
 
 }

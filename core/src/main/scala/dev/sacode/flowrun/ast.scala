@@ -183,14 +183,14 @@ object Statement:
       if depth == 0 then wrMax + 1 else wlMax + wrMax + 1
     case stmt: While   => 1
     case stmt: DoWhile => 0
-    case _          => 0
+    case _             => 0
 
   def widthRight(statement: Statement, depth: Int): Int = statement match
     case stmt: If =>
       val wlMax = stmt.trueBlock.statements.map(s => widthLeft(s, depth + 1)).maxOption.getOrElse(0)
       val wrMax = stmt.trueBlock.statements.map(s => widthRight(s, depth + 1)).maxOption.getOrElse(0)
       if depth == 0 then wlMax + 1 else wlMax + wrMax + 1
-    case stmt: While   =>
+    case stmt: While =>
       val wlMax = stmt.body.statements.map(s => widthLeft(s, depth + 1)).maxOption.getOrElse(0)
       val wrMax = stmt.body.statements.map(s => widthRight(s, depth + 1)).maxOption.getOrElse(0)
       if depth == 0 then wlMax + 1 else wlMax + wrMax + 1
@@ -198,7 +198,7 @@ object Statement:
       val wlMax = stmt.body.statements.map(s => widthLeft(s, depth + 1)).maxOption.getOrElse(0)
       val wrMax = stmt.body.statements.map(s => widthRight(s, depth + 1)).maxOption.getOrElse(0)
       if depth == 0 then wlMax + 1 else wlMax + wrMax + 1
-    case _          => 0
+    case _ => 0
 
 end Statement
 

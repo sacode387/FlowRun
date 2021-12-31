@@ -46,7 +46,7 @@ case class FlowRunElements(
 
   def newDeleteParamButton: dom.html.Element =
     deleteParamButton.cloneNode(true).asInstanceOf[dom.html.Element]
-  
+
 }
 
 object FlowRunElements {

@@ -18,7 +18,7 @@ class OutputArea(
   def displayError(msg: String): Unit =
     flowRunElements.output.innerText = msg
     flowRunElements.output.classList.add("error")
-  
+
   def evalInput(nodeId: String, name: String): Unit = {
 
     val valueInputElem = flowRunElements.newInputText
@@ -59,7 +59,7 @@ class OutputArea(
 
     valueInputElem.focus()
     valueInputElem.onkeydown = (event) => {
-      if(event.key == "Enter") inputValueSubmitted()  
+      if (event.key == "Enter") inputValueSubmitted()
     }
 
     valueBtnElem.onclick = _ => inputValueSubmitted()

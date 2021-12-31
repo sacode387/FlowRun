@@ -81,8 +81,7 @@ final class Lexer(nodeId: String, input: String) {
         if i < input.length && input(i) == '.' then
           text += input(i)
           i += 1
-          if i < input.length && !input(i).isDigit then
-            error(s"""Expected digits but found '${input(i)}'""", i)
+          if i < input.length && !input(i).isDigit then error(s"""Expected digits but found '${input(i)}'""", i)
           while i < input.length && input(i).isDigit do
             text += input(i)
             i += 1

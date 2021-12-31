@@ -16,11 +16,11 @@ extension (any: Any) {
 extension (str: String) {
   def toGraphvizLbl: String =
     str.replace("\"", "\\\"")
-  
+
   def asInteger: Try[Long] =
     if str.trim.forall(_.isDigit) then Try(str.toLong)
     else Failure(new RuntimeException("Invalid integer"))
-  
+
   def asReal: Try[Double] =
     Try(str.toDouble)
 }
@@ -81,7 +81,6 @@ object NameUtils:
     else if ident.length > 30 then Some("Name can be longer than 100 characters")
     else if !ident.head.isLetter then Some("Name must start with a letter")
     else if ident.matches(".*\\s.*") then Some("Name must not contain spaces")
-    else if !ident.matches("[a-zA-Z0-9_]+") then
-      Some("Name must contain only letters, numbers or underscore.")
+    else if !ident.matches("[a-zA-Z0-9_]+") then Some("Name must contain only letters, numbers or underscore.")
     else if SymbolKey.ReservedWords(ident) then Some("Name must not be a reserved word")
     else None

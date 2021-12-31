@@ -307,7 +307,7 @@ class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[FlowRun.Ev
             }
           }
         )
-      else if realTry.isSuccess then 
+      else if realTry.isSuccess then
         execSequentially(
           realTry.get,
           factor.unaries,
@@ -321,8 +321,7 @@ class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[FlowRun.Ev
             }
           }
         )
-      else
-        Future.successful(tmp1)
+      else Future.successful(tmp1)
     }
 
   private def eval(id: String, unary: Unary): Future[Any] =

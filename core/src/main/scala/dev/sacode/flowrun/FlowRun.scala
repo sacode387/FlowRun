@@ -37,9 +37,9 @@ class FlowRun(mountElem: dom.Element, programJson: Option[String] = None) {
           "main",
           statements = List(Statement.Begin(AST.newId), Statement.Return(AST.newId))
           /*statements = List(
-          Statement.Begin(AST.newId), 
+          Statement.Begin(AST.newId),
           Statement.Declare(AST.newId, "x", Expression.Type.Integer, None),
-          
+
           Statement.If(
             AST.newId,
             "true",
