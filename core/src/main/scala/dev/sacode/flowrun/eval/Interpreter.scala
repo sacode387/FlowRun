@@ -251,6 +251,7 @@ class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[FlowRun.Ev
           term.factors,
           (acc, nextFactorOpt) => {
             eval(id, nextFactorOpt.factor).map { v =>
+              // TODO validate they ARE really numbers..
               val nextVal = v.toString.toLong
               nextFactorOpt.op.tpe match
                 case Token.Type.Plus => acc + nextVal
@@ -264,7 +265,7 @@ class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[FlowRun.Ev
           term.factors,
           (acc, nextFactorOpt) => {
             eval(id, nextFactorOpt.factor).map { v =>
-              val nextVal = v.toString.toDouble
+              val nextVal = v.toString.asReal.get
               nextFactorOpt.op.tpe match
                 case Token.Type.Plus => acc + nextVal
                 case _               => acc - nextVal

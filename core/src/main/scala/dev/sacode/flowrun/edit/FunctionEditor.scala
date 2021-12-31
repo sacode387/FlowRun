@@ -220,30 +220,29 @@ class FunctionEditor(
               |
               |${blockDOTs._1.mkString("\n")}
               |
-              |true_dummy_down_${stmt.id} [${pos(trueOffsetX, maxBranchY)} shape=point width=0]
-              |true_dummy_down_left_${stmt.id} [${pos(posX, maxBranchY)} shape=point width=0]
-              |false_dummy_down_${stmt.id} [${pos(falseOffsetX, maxBranchY + 1)} shape=point width=0]
-              |end_dummy_down_${stmt.id} [${pos(posX, maxBranchY + 1)} $group shape=point width=0]
+              |true_dummy_down_${stmt.id} [${pos(trueOffsetX, maxBranchY, -10)} shape=point width=0]
+              |true_dummy_down_left_${stmt.id} [${pos(posX, maxBranchY, -10)} shape=point width=0]
+              |false_dummy_down_${stmt.id} [${pos(falseOffsetX, maxBranchY)} shape=point width=0]
+              |end_dummy_down_${stmt.id} [${pos(posX, maxBranchY)} $group shape=point width=0]
               |
               |""".stripMargin
-        (dot, maxBranchY + 1)
+        (dot, maxBranchY)
 
       case stmt: DoWhile =>
         val lbl = stmt.label.toGraphvizLbl
         val doWhileEndId = s"end_${stmt.id}"
 
-        val (blockDOTs, trueOffsetX) = locally {
+        val blockDOTs = locally {
           val block = stmt.body
           val stmts = block.statements
-          val x = posX + widthRight(stmt, 0)
           val dots = stmts.foldLeft((List.empty[String], posY + 1)) { case ((prevDots, lastY), s) =>
-            val dot = nodeDOT(s, block.id, x, lastY)
+            val dot = nodeDOT(s, block.id, posX, lastY)
             (prevDots.appended(dot._1), dot._2 + 1)
           }
-          (dots, x)
+          dots
         }
 
-        val falseOffsetX = posX - 1
+        val trueOffsetX = posX + widthRight(stmt, 0)
 
         val maxBranchY = blockDOTs._2
 
@@ -256,8 +255,8 @@ class FunctionEditor(
               |${stmt.id} [id="$stmtId" ${pos(posX, maxBranchY)} ${dimensions(lbl, true)} $group 
               |label="$lbl" tooltip="$lbl" shape="diamond" fillcolor="yellow" fontcolor="black"]
               |
-              |true_dummy_up_${stmt.id} [${pos(posX + 1, posY)} shape=point width=0]
-              |true_dummy_down_${stmt.id} [${pos(posX + 1, maxBranchY)} shape=point width=0]
+              |true_dummy_up_${stmt.id} [${pos(trueOffsetX, posY)} shape=point width=0]
+              |true_dummy_down_${stmt.id} [${pos(trueOffsetX, maxBranchY)} shape=point width=0]
               |
               |""".stripMargin
         (dot, maxBranchY)
@@ -275,8 +274,8 @@ class FunctionEditor(
     val statementsDot = stmts
       .zip(stmts.tail)
       .map {
-        case (prev, next: Statement.DoWhile) => edgeDOT(prev, funId, s"end_${next.id}" ) 
-        case (prev, next) => edgeDOT(prev, funId, next.id) 
+        case (prev, next: Statement.DoWhile) => edgeDOT(prev, funId, s"end_${next.id}")
+        case (prev, next)                    => edgeDOT(prev, funId, next.id)
       }
       .mkString("\n")
     statementsDot
@@ -427,7 +426,7 @@ class FunctionEditor(
         val (trueEdgeDOTs, firstBlockNodeId, lastTrueNodeId) = locally {
           val block = stmt.body
           val stmts = block.statements
-          val nextStmtIds = block.statements.appended(stmt).drop(1).map(_.id) //
+          val nextStmtIds = block.statements.appended(stmt).drop(1).map(_.id)
 
           val statementsDot = stmts
             .zip(nextStmtIds)
@@ -461,9 +460,9 @@ class FunctionEditor(
   // Graphviz uses "mathematical" coordinates, with bottom left corner being (0,0)
   // https://stackoverflow.com/questions/55905661/how-to-force-neato-engine-to-reverse-node-order
   // it's easier here to have (0,0) at top-center (we just flip y axis that is..)
-  private def pos(x: Int, y: Int): String =
+  private def pos(x: Int, y: Int, yOff: Int = 0): String =
     val xPx: Double = if x == 0 then 0 else px2Inch(x * 120)
-    val yPx = if y == 0 then 0 else px2Inch(y * 70)
+    val yPx = if y == 0 then 0 else px2Inch(y * 70 + yOff)
     val realY = 10_000 - yPx
     s""" pos="$xPx,$realY!" """.trim
 
@@ -472,7 +471,7 @@ class FunctionEditor(
     px.toDouble / PxInInch
 
   private def dimensions(label: String, luft: Boolean = false): String =
-    val w = label.length * 0.15 + (if luft then 0.5 else 0)
+    val w = label.length * 0.11 + (if luft then 0.5 else 0.2)
     val width = w max 1
     val h = 0.3 + (if luft then 0.1 else 0)
     s"height=$h width=$width fixedsize=true"
