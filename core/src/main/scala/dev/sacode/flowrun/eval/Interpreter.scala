@@ -52,6 +52,7 @@ class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[FlowRun.Ev
         state = State.FAILED
         flowrunChannel := FlowRun.Event.EvalError(e.nodeId, e.getMessage)
       case Failure(e) =>
+        state = State.FAILED
         println(s"Unexpected error: $e")
     }
 

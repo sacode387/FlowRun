@@ -121,10 +121,12 @@ class FlowRun(mountElem: dom.Element, programJson: Option[String] = None) {
       var output = "Syntax Error: " + msg
       outputArea.displayError(output)
       functionEditor.enable()
-    case EvalError(_, msg) =>
+    case EvalError(nodeId, msg) =>
       var output = s"Started at: $lastRun"
       output += "\n\nError: " + msg
+      output += s"\n\nFinished at: $getNowTime"
       outputArea.displayError(output)
+      functionEditor.highlightError(nodeId)
       functionEditor.enable()
     case EvalOutput(output) =>
       val newOutput = pre(output).render

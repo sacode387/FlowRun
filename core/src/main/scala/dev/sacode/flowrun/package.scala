@@ -37,8 +37,8 @@ def getSvgNode(et: dom.EventTarget): (String, dom.svg.G) = {
   while (!js.isUndefined(node)) {
     node match {
       case g: dom.svg.G =>
-        if g.className.baseVal == "node" then return ("NODE", g)
-        else if g.className.baseVal == "edge" then return ("EDGE", g)
+        if g.className.baseVal.contains("node") then return ("NODE", g)
+        else if g.className.baseVal.contains("edge") then return ("EDGE", g)
         else node = g.parentNode
       case n: dom.Node =>
         node = n.parentNode
