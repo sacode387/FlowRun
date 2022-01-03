@@ -31,8 +31,6 @@ class StatementEditor(
     // skip Return if function doesn't return anything
     if nodeType == "Return" && programModel.currentFunction.tpe == Expression.Type.Void then return
 
-    println(s"Editing statement: $nodeType")
-
     // clear first, prepare for new inputs
     flowRunElements.stmtOutput.innerText = ""
     flowRunElements.stmtOutput.appendChild(div(s"Editing $nodeType:").render)

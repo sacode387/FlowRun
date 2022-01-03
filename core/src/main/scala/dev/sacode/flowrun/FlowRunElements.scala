@@ -17,12 +17,12 @@ class FlowRunElements(
   val functionsChooser: dom.Element = template.querySelector(".flowrun-fun-chooser")
   val drawArea: dom.Element = template.querySelector(".flowrun-draw")
 
-  val scratchpad: dom.Element = template.querySelector(".flowrun-scratchpad")//.cloneNode(true).asInstanceOf[dom.Element]
+  val scratchpad: dom.Element = template.querySelector(".flowrun-scratchpad")
   val stmtOutput: dom.Element = scratchpad.querySelector(".flowrun-output-statement")
   val syntaxOutput: dom.Element = scratchpad.querySelector(".flowrun-output-syntax")
   val runtimeOutput: dom.Element = scratchpad.querySelector(".flowrun-output-runtime")
-  
-  val debugVariables: dom.Element = template.querySelector(".flowrun-debug")
+  val debugVariables: dom.Element = scratchpad.querySelector(".flowrun-output-debug")
+
   val execBtns: dom.Element = template.querySelector(".flowrun-exec-btns")
 
   // singletons

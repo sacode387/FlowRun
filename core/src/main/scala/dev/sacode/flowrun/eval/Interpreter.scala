@@ -53,6 +53,7 @@ class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[FlowRun.Ev
         flowrunChannel := FlowRun.Event.EvalError(e.nodeId, e.getMessage)
       case Failure(e) =>
         state = State.FAILED
+        // this can be any JS failure, that's why we dont't print it to user
         println(s"Unexpected error: $e")
     }
 
@@ -369,7 +370,7 @@ class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[FlowRun.Ev
             val fun = allFunctions.find(_.name == name).get
             if args.size != fun.parameters.size then
               throw EvalException(
-                s"Wrong number of parameters. Expected: ${fun.parameters.size}, got ${args.size}",
+                s"Wrong number of arguments, expected: ${fun.parameters.size} but got ${args.size}",
                 id
               )
             val argsWithTypes = args.zip(fun.parameters).zipWithIndex.map { case ((arg, (paramName, paramTpe)), idx) =>

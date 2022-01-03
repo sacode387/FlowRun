@@ -69,10 +69,6 @@
             display: none;
         }
 
-        .flowrun-debug {
-            grid-area: flowrun-debug;
-        }
-
         @media screen and (min-width: 479px) {
             .flowrun-editor {
                 display: grid;
@@ -83,7 +79,6 @@
                     "flowrun-meta       flowrun-meta            flowrun-meta        "
                     "flowrun-exec-btns  flowrun-fun-chooser     .                   "
                     "flowrun-draw       flowrun-draw            flowrun-scratchpad  "
-                    "flowrun-draw       flowrun-draw            flowrun-debug       "
                 ;
             }
         }
@@ -112,6 +107,9 @@
 
         .flowrun-output-statement {
             background-color: paleturquoise;
+        }
+        .flowrun-output-debug {
+            background-color: papayawhip;
         }
 
         .flowrun--error {
@@ -196,12 +194,10 @@
             <div class="flowrun-output-statement"></div>
             <div class="flowrun-output-syntax"></div>
             <div class="flowrun-output-runtime"></div>
+            <div class="flowrun-output-debug"></div>
         </div>
 
         <div class="flowrun-fun-chooser"></div>
-
-        <div class="flowrun-debug"></div>
-
 
         <!-- this whole div will be deleted -->
         <div class="flowrun-template-transient">

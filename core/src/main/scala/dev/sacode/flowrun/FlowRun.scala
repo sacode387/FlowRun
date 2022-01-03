@@ -27,7 +27,6 @@ class FlowRun(mountElem: dom.Element, programJson: Option[String] = None) {
   mountElem.appendChild(flowRunElements.functionsChooser)
   mountElem.appendChild(flowRunElements.drawArea)
   mountElem.appendChild(flowRunElements.scratchpad)
-  mountElem.appendChild(flowRunElements.debugVariables)
 
   private val maybeJson = programJson.orElse(
     Option.when(mountElemText.nonEmpty)(mountElemText)
@@ -116,7 +115,7 @@ class FlowRun(mountElem: dom.Element, programJson: Option[String] = None) {
 
   flowRunElements.addFunButton.onclick = _ => programModel.addNewFunction()
 
-  dom.window.addEventListener(
+  flowRunElements.drawArea.addEventListener(
     "click",
     (event: dom.MouseEvent) => {
       event.preventDefault()
@@ -127,11 +126,7 @@ class FlowRun(mountElem: dom.Element, programJson: Option[String] = None) {
           val tpe = idParts(1)
           statementEditor.edit(nodeId, tpe)
         case _ =>
-          // deselect only if you click INSIDE and editor
-          val cr = flowRunElements.drawArea.getBoundingClientRect()
-          if cr.left <= event.clientX && event.clientX <= cr.right &&
-            cr.top <= event.clientY && event.clientY <= cr.bottom
-          then flowrunChannel := FlowRun.Event.Deselected
+          flowrunChannel := FlowRun.Event.Deselected
       }
     }
   )
@@ -156,9 +151,7 @@ class FlowRun(mountElem: dom.Element, programJson: Option[String] = None) {
   import FlowRun.Event.*
   flowrunChannel.attach {
     case EvalSuccess =>
-      flowRunElements.runtimeOutput.appendChild(br.render)
-      flowRunElements.runtimeOutput.appendChild(br.render)
-      flowRunElements.runtimeOutput.appendChild(s"Finished at: $getNowTime".render)
+      flowRunElements.runtimeOutput.appendChild(div(br, s"Finished at: $getNowTime").render)
       functionEditor.enable()
     case SyntaxSuccess =>
       outputArea.clearSyntax()
