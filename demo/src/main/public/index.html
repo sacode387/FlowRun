@@ -23,56 +23,58 @@
             width: 100%;
         }
 
+        /* -------------- AREAS ------------- */
+        /* container */
         .flowrun-editor {
-            min-height: 400px;
             max-height: 90vh;
-            display: flex;
             border: 1px solid black;
-            padding: 1rem;
-            margin-bottom: 1rem;
-        }
-
-        .flowrun-draw {
-            padding: 1rem;
-            background-color: rgb(243, 233, 233);
-            text-align: center;
-        }
-        .flowrun-draw svg {
-            max-height: 100%;
         }
 
         .flowrun-meta {
+            grid-area: flowrun-meta;
+        }
+
+        .flowrun-btn-run {
+            grid-area: flowrun-btn-run;
+        }
+
+        .flowrun-draw {
+            grid-area: flowrun-draw;
+            background-color: rgb(243, 233, 233);
             text-align: center;
-            text-transform: uppercase;
-            font-weight: bold;
-            font-size: 1.2rem;
-            padding-bottom: .5rem;
         }
 
-        .flowrun-output:not(:empty) {
-            padding: 1em;
+        .flowrun-fun-chooser {
+            grid-area: flowrun-fun-chooser;
+        }
+
+        .flowrun-scratchpad {
+            grid-area: flowrun-scratchpad;
             background-color: palegreen;
+            min-height: 50px;
         }
 
-        .flowrun-output.error {
-            background-color: rgb(223, 41, 41);
-            color: white;
+        .flowrun-debug {
+            grid-area: flowrun-debug;
         }
 
-        /* you need to have a tablet at least.. */
-        @media screen and (min-width: 481px) {
-            .flowrun-content {
-                display: flex;
+        @media screen and (min-width: 479px) {
+            .flowrun-editor {
+                display: grid;
                 width: 100%;
+                grid-template-columns: repeat(3, 1fr);
+                grid-template-rows: 50px minmax(200px, 1fr) auto;
+                grid-template-areas:
+                    "flowrun-meta   flowrun-btn-run flowrun-fun-chooser "
+                    "flowrun-draw   flowrun-draw    flowrun-scratchpad  "
+                    "flowrun-draw   flowrun-draw    flowrun-debug       "
+                ;
             }
+        }
 
-            .flowrun-content *:nth-child(1) {
-                flex: 1 1 330px;
-            }
-
-            .flowrun-content *:nth-child(2) {
-                flex: 1 1 150px;
-            }
+        /* ---------- OTHER --------------- */
+        .flowrun-draw svg {
+            max-height: 100%;
         }
 
         /* error styles */
@@ -81,6 +83,18 @@
             stroke-width: 3px;
             stroke-dasharray: 3 1;
             stroke-linejoin: round;
+        }
+
+        .flowrun-meta {
+            text-align: center;
+            text-transform: uppercase;
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+
+        .flowrun-scratchpad.error {
+            background-color: rgb(223, 41, 41);
+            color: white;
         }
     </style>
 
@@ -139,21 +153,18 @@
         </div>
     </div>
 
-    <div id="flowrun-template" class="flowrun-content" style="display: none;">
+    <div id="flowrun-template" style="display: none;">
+        <div class="flowrun-meta"></div>
+        <button class="flowrun-btn-run">Run</button>
+
         <div class="flowrun-draw"></div>
-        <div>
-            <div class="flowrun-meta"></div>
 
-            <div class="flowrun-fun-chooser"></div>
+        <div class="flowrun-scratchpad"></div>
 
-            <button class="flowrun-btn-run">Run</button>
+        <div class="flowrun-fun-chooser"></div>
 
-            <div class="flowrun-stmt-edit"></div>
+        <div class="flowrun-debug"></div>
 
-            <div class="flowrun-output"></div>
-
-            <div class="flowrun-debug"></div>
-        </div>
 
         <!-- this whole div will be deleted -->
         <div class="flowrun-template-transient">
@@ -170,8 +181,6 @@
 
     <!-- blank editor instance -->
     <div class="flowrun-editor"></div>
-
-    <button id="gencode">GEN</button>
 
     <!--
     <div class="flowrun-editor">

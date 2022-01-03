@@ -12,12 +12,12 @@ class OutputArea(
 ) {
 
   def clearErrors(): Unit =
-    flowRunElements.output.innerText = ""
-    flowRunElements.output.classList.remove("error")
+    flowRunElements.scratchpad.innerText = ""
+    flowRunElements.scratchpad.classList.remove("error")
 
   def displayError(msg: String): Unit =
-    flowRunElements.output.innerText = msg
-    flowRunElements.output.classList.add("error")
+    flowRunElements.scratchpad.innerText = msg
+    flowRunElements.scratchpad.classList.add("error")
 
   def evalInput(nodeId: String, name: String): Unit = {
 
@@ -25,12 +25,12 @@ class OutputArea(
     val valueBtnElem = flowRunElements.newEnterButton
     val enterValueDiv = div(
       label(
-        s"Please enter value for '$name': ",
+        pre(s"Please enter value for variable '$name': "),
         valueInputElem,
         valueBtnElem
       )
     ).render
-    flowRunElements.output.appendChild(enterValueDiv)
+    flowRunElements.scratchpad.appendChild(enterValueDiv)
 
     def inputValueSubmitted(): Unit = {
       val inputValue = valueInputElem.value.trim
@@ -46,9 +46,9 @@ class OutputArea(
         interpreter.symTab.setValue(nodeId, name, value)
         interpreter.continue()
 
-        val newOutput = pre(s"Please enter value for '$name': $inputValue").render
-        flowRunElements.output.removeChild(enterValueDiv)
-        flowRunElements.output.appendChild(newOutput)
+        val newOutput = pre(s"Your entered value $name = $inputValue").render
+        flowRunElements.scratchpad.removeChild(enterValueDiv)
+        flowRunElements.scratchpad.appendChild(newOutput)
       } catch {
         case (e: EvalException) => // from symbol table
           displayError(e.getMessage)

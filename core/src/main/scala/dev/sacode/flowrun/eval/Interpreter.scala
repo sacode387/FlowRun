@@ -314,7 +314,7 @@ class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[FlowRun.Ev
           factor.unaries,
           (acc, nextUnaryOpt) => {
             eval(id, nextUnaryOpt.unary).map { v =>
-              val nextVal = v.toString.toDouble
+              val nextVal = v.toString.asReal.get
               nextUnaryOpt.op.tpe match
                 case Token.Type.Times => acc * nextVal
                 case Token.Type.Div   => acc / nextVal
@@ -329,7 +329,11 @@ class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[FlowRun.Ev
     unary match
       case Unary.Prefixed(op, unary) =>
         eval(id, unary).map { next =>
-          if op.tpe == Token.Type.Minus then -next.asInstanceOf[Double]
+          if op.tpe == Token.Type.Minus then
+            val integerTry = next.toString.asInteger
+            val realTry = next.toString.asReal
+            if integerTry.isSuccess then -integerTry.get
+            else -realTry.get
           else !next.asInstanceOf[Boolean]
         }
       case Unary.Simple(atom) => eval(id, atom)

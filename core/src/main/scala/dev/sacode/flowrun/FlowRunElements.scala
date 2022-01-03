@@ -22,8 +22,7 @@ case class FlowRunElements(
   val functionsChooser: dom.Element = template.querySelector(".flowrun-fun-chooser")
   val runButton = template.querySelector(".flowrun-btn-run").asInstanceOf[dom.html.Element]
   val drawArea: dom.Element = template.querySelector(".flowrun-draw")
-  val editStatement: dom.Element = template.querySelector(".flowrun-stmt-edit")
-  val output: dom.Element = template.querySelector(".flowrun-output")
+  val scratchpad: dom.Element = template.querySelector(".flowrun-scratchpad")
   val debugVariables: dom.Element = template.querySelector(".flowrun-debug")
 
   template.querySelector(".flowrun-template-transient").remove()
@@ -31,8 +30,7 @@ case class FlowRunElements(
   metaData.innerText = ""
   functionsChooser.innerText = ""
   drawArea.innerText = ""
-  editStatement.innerText = ""
-  output.innerText = ""
+  scratchpad.innerText = ""
   debugVariables.innerText = ""
 
   def newInputText: dom.html.Input =
