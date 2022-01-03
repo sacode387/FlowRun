@@ -22,8 +22,8 @@ class FlowRun(mountElem: dom.Element, programJson: Option[String] = None) {
   private val flowRunElements = FlowRunElements.resolve(maybeTemplate)
   mountElem.innerText = ""
   mountElem.appendChild(flowRunElements.metaData)
-  mountElem.appendChild(flowRunElements.functionsChooser)
   mountElem.appendChild(flowRunElements.execBtns)
+  mountElem.appendChild(flowRunElements.functionsChooser)
   mountElem.appendChild(flowRunElements.drawArea)
   mountElem.appendChild(flowRunElements.scratchpad)
   mountElem.appendChild(flowRunElements.debugVariables)
@@ -75,7 +75,7 @@ class FlowRun(mountElem: dom.Element, programJson: Option[String] = None) {
   private var outputArea = OutputArea(interpreter, flowRunElements)
   private var debugArea = DebugArea(interpreter, flowRunElements)
 
-  private var lastRun: String = ""
+  private var startedTime: String = ""
 
   flowRunElements.metaData.innerText = program.name
 
@@ -94,14 +94,14 @@ class FlowRun(mountElem: dom.Element, programJson: Option[String] = None) {
 
   // run the program
   flowRunElements.runButton.onclick = _ => {
-    outputArea.clearErrors()
+    outputArea.clearAll()
     functionEditor.clearErrors()
 
-    lastRun = getNowTime
-    flowRunElements.scratchpad.innerText = ""
-    flowRunElements.scratchpad.appendChild(s"Started at: $lastRun".render)
-    flowRunElements.scratchpad.appendChild(br.render)
-    flowRunElements.scratchpad.appendChild(br.render)
+    startedTime = getNowTime
+    flowRunElements.runtimeOutput.innerText = ""
+    flowRunElements.runtimeOutput.appendChild(s"Started at: $startedTime".render)
+    flowRunElements.runtimeOutput.appendChild(br.render)
+    flowRunElements.runtimeOutput.appendChild(br.render)
 
     interpreter = Interpreter(programModel, flowrunChannel) // fresh SymTable etc
     outputArea = OutputArea(interpreter, flowRunElements)
@@ -116,26 +116,25 @@ class FlowRun(mountElem: dom.Element, programJson: Option[String] = None) {
   import FlowRun.Event.*
   flowrunChannel.attach {
     case EvalSuccess =>
-      flowRunElements.scratchpad.appendChild(br.render)
-      flowRunElements.scratchpad.appendChild(br.render)
-      flowRunElements.scratchpad.appendChild(s"Finished at: $getNowTime".render)
+      flowRunElements.runtimeOutput.classList.remove("flowrun--error")
+      flowRunElements.runtimeOutput.classList.add("flowrun--success")
+      flowRunElements.runtimeOutput.appendChild(br.render)
+      flowRunElements.runtimeOutput.appendChild(br.render)
+      flowRunElements.runtimeOutput.appendChild(s"Finished at: $getNowTime".render)
       functionEditor.enable()
     case SyntaxSuccess =>
+      outputArea.clearSyntax()
       functionEditor.loadCurrentFunction() // if function name updated
     case SyntaxError(msg) =>
-      var output = "Syntax Error: " + msg
-      outputArea.displayError(output)
+      outputArea.syntaxError(msg)
       functionEditor.enable()
     case EvalError(nodeId, msg) =>
-      var output = s"Started at: $lastRun"
-      output += "\n\nError: " + msg
-      output += s"\n\nFinished at: $getNowTime"
-      outputArea.displayError(output)
+      outputArea.runtimeError(msg, Some(startedTime), Some(getNowTime))
       functionEditor.highlightError(nodeId)
       functionEditor.enable()
     case EvalOutput(output) =>
       val newOutput = pre(output).render
-      flowRunElements.scratchpad.appendChild(newOutput)
+      flowRunElements.runtimeOutput.appendChild(newOutput)
     case EvalInput(nodeId, name) =>
       outputArea.evalInput(nodeId, name)
     case SymbolTableUpdated =>
@@ -144,7 +143,8 @@ class FlowRun(mountElem: dom.Element, programJson: Option[String] = None) {
       functionEditor.loadCurrentFunction()
       functionSelector.loadFunctions()
     case Deselected =>
-      flowRunElements.scratchpad.innerText = ""
+      outputArea.clearStmt()
+      outputArea.clearSyntax()
   }
 }
 

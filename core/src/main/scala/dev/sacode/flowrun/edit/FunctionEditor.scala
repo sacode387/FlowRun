@@ -25,11 +25,11 @@ class FunctionEditor(
   def enable(): Unit = {}
 
   def clearErrors(): Unit =
-    dom.window.document.querySelectorAll(s""" .node """).foreach(_.classList.remove("error"))
+    dom.window.document.querySelectorAll(s""" .node """).foreach(_.classList.remove("flowrun--error"))
     flowrunChannel := FlowRun.Event.Deselected
 
   def highlightError(nodeId: String): Unit =
-    dom.window.document.querySelector(s""" .node[id^="$nodeId"] """).classList.add("error")
+    dom.window.document.querySelector(s""" .node[id^="$nodeId"] """).classList.add("flowrun--error")
 
   def loadCurrentFunction(): Unit = {
     val graphviz = d3

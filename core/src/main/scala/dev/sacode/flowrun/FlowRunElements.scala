@@ -16,7 +16,12 @@ class FlowRunElements(
   val metaData: dom.Element = template.querySelector(".flowrun-meta")
   val functionsChooser: dom.Element = template.querySelector(".flowrun-fun-chooser")
   val drawArea: dom.Element = template.querySelector(".flowrun-draw")
-  val scratchpad: dom.Element = template.querySelector(".flowrun-scratchpad")
+
+  val scratchpad: dom.Element = template.querySelector(".flowrun-scratchpad")//.cloneNode(true).asInstanceOf[dom.Element]
+  val stmtOutput: dom.Element = scratchpad.querySelector(".flowrun-output-statement")
+  val syntaxOutput: dom.Element = scratchpad.querySelector(".flowrun-output-syntax")
+  val runtimeOutput: dom.Element = scratchpad.querySelector(".flowrun-output-runtime")
+  
   val debugVariables: dom.Element = template.querySelector(".flowrun-debug")
   val execBtns: dom.Element = template.querySelector(".flowrun-exec-btns")
 
@@ -40,7 +45,6 @@ class FlowRunElements(
   metaData.innerText = ""
   functionsChooser.innerText = ""
   drawArea.innerText = ""
-  scratchpad.innerText = ""
   debugVariables.innerText = ""
 
   def newInputText: dom.html.Input =

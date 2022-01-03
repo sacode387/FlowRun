@@ -11,13 +11,40 @@ class OutputArea(
     flowRunElements: FlowRunElements
 ) {
 
-  def clearErrors(): Unit =
-    flowRunElements.scratchpad.innerText = ""
-    flowRunElements.scratchpad.classList.remove("error")
+  def clearAll(): Unit =
+    clearStmt()
+    clearSyntax()
+    clearRuntime()
 
-  def displayError(msg: String): Unit =
-    flowRunElements.scratchpad.innerText = msg
-    flowRunElements.scratchpad.classList.add("error")
+  def clearStmt(): Unit =
+    flowRunElements.stmtOutput.innerText = ""
+    flowRunElements.stmtOutput.classList.remove("flowrun--error")
+
+  def clearSyntax(): Unit =
+    flowRunElements.syntaxOutput.innerText = ""
+    flowRunElements.syntaxOutput.classList.remove("flowrun--error")
+
+  def clearRuntime(): Unit =
+    flowRunElements.runtimeOutput.innerText = ""
+    flowRunElements.runtimeOutput.classList.remove("flowrun--error")
+    flowRunElements.runtimeOutput.classList.remove("flowrun--success")
+
+  def runtimeError(msg: String, startTime: Option[String] = None, endTime: Option[String] = None): Unit =
+    clearAll()
+    flowRunElements.runtimeOutput.appendChild(
+      div(
+        startTime.map(t => div(s"Started at: $t")),
+        br,
+        pre("Error: " + msg),
+        br,
+        endTime.map(t => div(s"Finished at: $t"))
+      ).render
+    )
+    flowRunElements.runtimeOutput.classList.add("flowrun--error")
+
+  def syntaxError(msg: String, startTime: Option[String] = None, endTime: Option[String] = None): Unit =
+    flowRunElements.syntaxOutput.innerText = "Syntax Error: " + msg
+    flowRunElements.syntaxOutput.classList.add("flowrun--error")
 
   def evalInput(nodeId: String, name: String): Unit = {
 
@@ -30,7 +57,7 @@ class OutputArea(
         valueBtnElem
       )
     ).render
-    flowRunElements.scratchpad.appendChild(enterValueDiv)
+    flowRunElements.runtimeOutput.appendChild(enterValueDiv)
 
     def inputValueSubmitted(): Unit = {
       val inputValue = valueInputElem.value.trim
@@ -47,13 +74,13 @@ class OutputArea(
         interpreter.continue()
 
         val newOutput = pre(s"Your entered value $name = $inputValue").render
-        flowRunElements.scratchpad.removeChild(enterValueDiv)
-        flowRunElements.scratchpad.appendChild(newOutput)
+        flowRunElements.runtimeOutput.removeChild(enterValueDiv)
+        flowRunElements.runtimeOutput.appendChild(newOutput)
       } catch {
         case (e: EvalException) => // from symbol table
-          displayError(e.getMessage)
+          runtimeError(e.getMessage)
         case e: (NumberFormatException | IllegalArgumentException) =>
-          displayError(s"Entered invalid ${sym.tpe}: '${inputValue}'")
+          runtimeError(s"Entered invalid ${sym.tpe}: '${inputValue}'")
       }
     }
 

@@ -27,7 +27,6 @@
         /* container */
         .flowrun-editor {
             max-height: 90vh;
-            border: 1px solid black;
         }
 
         .flowrun-meta {
@@ -36,22 +35,38 @@
 
         .flowrun-exec-btns {
             grid-area: flowrun-exec-btns;
+            padding: 5px;
         }
 
         .flowrun-draw {
             grid-area: flowrun-draw;
+            padding: 1rem;
             background-color: rgb(243, 233, 233);
             text-align: center;
         }
 
         .flowrun-fun-chooser {
             grid-area: flowrun-fun-chooser;
+            padding: 5px;
+            display: flex;
+            align-items: center;
         }
 
         .flowrun-scratchpad {
             grid-area: flowrun-scratchpad;
-            background-color: palegreen;
-            min-height: 50px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .flowrun-scratchpad>* {
+            flex: 1 1 auto;
+            padding: 1rem;
+            border-bottom: 1px solid sandybrown;
+        }
+
+        .flowrun-scratchpad>*:empty {
+            /* hide empty divs to fill in vertical space */
+            display: none;
         }
 
         .flowrun-debug {
@@ -65,10 +80,10 @@
                 grid-template-columns: repeat(3, 1fr);
                 grid-template-rows: 30px 30px minmax(200px, 1fr) auto;
                 grid-template-areas:
-                    "flowrun-meta   flowrun-meta      flowrun-meta        "
-                    "flowrun-exec-btns   flowrun-fun-chooser      .                        "
-                    "flowrun-draw   flowrun-draw       flowrun-scratchpad  "
-                    "flowrun-draw   flowrun-draw   flowrun-debug       "
+                    "flowrun-meta       flowrun-meta            flowrun-meta        "
+                    "flowrun-exec-btns  flowrun-fun-chooser     .                   "
+                    "flowrun-draw       flowrun-draw            flowrun-scratchpad  "
+                    "flowrun-draw       flowrun-draw            flowrun-debug       "
                 ;
             }
         }
@@ -78,7 +93,10 @@
             max-height: 100%;
         }
 
-        /* error styles */
+        .flowrun-fun-chooser>* {
+            margin-left: 1rem;
+        }
+
         .node.error polygon {
             stroke: red;
             stroke-width: 3px;
@@ -92,9 +110,21 @@
             font-size: 1.2rem;
         }
 
-        .flowrun-scratchpad.error {
+        .flowrun-output-statement {
+            background-color: paleturquoise;
+        }
+
+        .flowrun--error {
             background-color: rgb(223, 41, 41);
             color: white;
+        }
+
+        .flowrun-output-syntax.flowrun--error {
+            background-color: orange;
+        }
+
+        .flowrun-output-runtime.flowrun--success {
+            background-color: palegreen;
         }
     </style>
 
@@ -162,7 +192,11 @@
 
         <div class="flowrun-draw"></div>
 
-        <div class="flowrun-scratchpad"></div>
+        <div class="flowrun-scratchpad">
+            <div class="flowrun-output-statement"></div>
+            <div class="flowrun-output-syntax"></div>
+            <div class="flowrun-output-runtime"></div>
+        </div>
 
         <div class="flowrun-fun-chooser"></div>
 

@@ -51,8 +51,8 @@ class StatementEditor(
     println(s"Editing statement: $nodeType")
 
     // clear first, prepare for new inputs
-    flowRunElements.scratchpad.innerText = ""
-    flowRunElements.scratchpad.appendChild(div(s"Editing $nodeType:").render)
+    flowRunElements.stmtOutput.innerText = ""
+    flowRunElements.stmtOutput.appendChild(div(s"Editing $nodeType:").render)
 
     // name input
     val nameInputElem = flowRunElements.newInputText
@@ -81,7 +81,7 @@ class StatementEditor(
     var filledName = false
     if Statement.hasName(node, programModel.currentFunction.name) then
       filledName = nameInputElem.value.nonEmpty
-      flowRunElements.scratchpad.appendChild(nameInputElem)
+      flowRunElements.stmtOutput.appendChild(nameInputElem)
 
     // type input
     val typeSelectElem = flowRunElements.newInputSelect
@@ -102,8 +102,8 @@ class StatementEditor(
 
     if Statement.hasTpe(node, programModel.currentFunction.tpe.toString) then
       typeSelectElem.value = Statement.tpe(node, programModel.currentFunction.tpe.toString) // select appropriate type
-      flowRunElements.scratchpad.appendChild(span(": ").render)
-      flowRunElements.scratchpad.appendChild(typeSelectElem)
+      flowRunElements.stmtOutput.appendChild(span(": ").render)
+      flowRunElements.stmtOutput.appendChild(typeSelectElem)
 
     // expression input
     val exprInputElem = flowRunElements.newInputText
@@ -145,8 +145,8 @@ class StatementEditor(
     }
 
     if Statement.hasExpr(node) then
-      if Set("Declare", "Assign").contains(nodeType) then flowRunElements.scratchpad.appendChild(span(" = ").render)
-      flowRunElements.scratchpad.appendChild(exprInputElem)
+      if Set("Declare", "Assign").contains(nodeType) then flowRunElements.stmtOutput.appendChild(span(" = ").render)
+      flowRunElements.stmtOutput.appendChild(exprInputElem)
     end if
 
     // params inputs
@@ -161,7 +161,7 @@ class StatementEditor(
         val paramNameInput = getParamNameInput(nodeId, name, idx)
         val paramTpeInput = getParamTpeInput(nodeId, tpe, idx)
 
-        flowRunElements.scratchpad.appendChild(
+        flowRunElements.stmtOutput.appendChild(
           div(paramNameInput, paramTpeInput).render
         )
         paramNameInput.focus()
@@ -169,13 +169,13 @@ class StatementEditor(
           Request.UpdateFunction(nodeId, parameters = Some(newParams))
         )
       }
-      flowRunElements.scratchpad.appendChild(div(addParamElem).render)
+      flowRunElements.stmtOutput.appendChild(div(addParamElem).render)
 
       val params = getParams()
       params.zipWithIndex.foreach { case ((name, tpe), idx) =>
         val paramNameInput = getParamNameInput(nodeId, name, idx)
         val paramTpeInput = getParamTpeInput(nodeId, tpe, idx)
-        flowRunElements.scratchpad.appendChild(
+        flowRunElements.stmtOutput.appendChild(
           div(paramNameInput, paramTpeInput).render
         )
       }
