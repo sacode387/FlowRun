@@ -6,7 +6,6 @@ import scalajs.js.JSConverters.*
 import org.scalajs.dom
 import reactify.*
 import dev.sacode.flowrun.parse.*
-import dev.sacode.flowrun.edit.CtxMenu
 
 class FunctionEditor(
     programModel: ProgramModel,
@@ -17,8 +16,6 @@ class FunctionEditor(
   private val PxInInch = 96
 
   loadCurrentFunction()
-
-  CtxMenu(flowRunElements, programModel).init()
 
   def disable(): Unit = {}
 

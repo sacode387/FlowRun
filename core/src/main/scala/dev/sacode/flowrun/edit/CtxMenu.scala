@@ -22,50 +22,37 @@ class CtxMenu(
   private val DeleteableNodeTypes =
     Set("Declare", "Assign", "Input", "Output", "Call", "If", "While", "DoWhile")
 
-  def init(): Unit = {
-    val edgeContextMenu =
-      dom.document.getElementById("flowrun-edge-context-menu").asInstanceOf[dom.html.Element]
-    val nodeContextMenu =
-      dom.document.getElementById("flowrun-node-context-menu").asInstanceOf[dom.html.Element]
+  private val edgeContextMenu =
+    dom.document.getElementById("flowrun-edge-context-menu").asInstanceOf[dom.html.Element]
+  private val nodeContextMenu =
+    dom.document.getElementById("flowrun-node-context-menu").asInstanceOf[dom.html.Element]
 
-    flowRunElements.drawArea.addEventListener(
-      "contextmenu",
-      (event: dom.MouseEvent) => {
+  attachListeners()
 
-        event.preventDefault()
+  def handleClick(x: Double, y: Double, n: dom.svg.Element): Unit = {
+    // here we know which EDGE is clicked
+    // we save relevant ids, and then use them when a button is clicked
+    hideAllMenus()
 
-        // here we know which NODE/EDGE is right-clicked
-        // we save relevant ids, and then use them when a button is clicked
-
-        hideAllMenus()
-
-        getSvgNode(event.target) match {
-          case ("NODE", n) =>
-            val idParts = n.id.split("#")
-            nodeId = idParts(0)
-            val nodeTpe = idParts(1)
-            if DeleteableNodeTypes(nodeTpe) then {
-              nodeContextMenu.style.left = s"${event.clientX}px"
-              nodeContextMenu.style.top = s"${event.clientY}px"
-              nodeContextMenu.classList.add("active")
-            }
-
-          case ("EDGE", e) =>
-            val canActivate = setEdgeIds(e.id)
-            if canActivate then
-              edgeContextMenu.style.left = s"${event.clientX}px"
-              edgeContextMenu.style.top = s"${event.clientY}px"
-              edgeContextMenu.classList.add("active")
-
-          case _ =>
-        }
-      }
-    )
-
-    attachListeners()
+    val canActivate = setEdgeIds(n.id)
+    if canActivate then
+      edgeContextMenu.style.left = s"${x}px"
+      edgeContextMenu.style.top = s"${y}px"
+      edgeContextMenu.classList.add("active")
   }
 
-  private def hideAllMenus(): Unit =
+  def handleRightClick(event: dom.MouseEvent, nodeId: String, nodeTpe: String): Unit = {
+    // here we know which NODE is right-clicked
+    // we save relevant ids, and then use them when delete is clicked
+    hideAllMenus()
+    this.nodeId = nodeId
+    if DeleteableNodeTypes(nodeTpe) then
+      nodeContextMenu.style.left = s"${event.clientX}px"
+      nodeContextMenu.style.top = s"${event.clientY}px"
+      nodeContextMenu.classList.add("active")
+  }
+
+  def hideAllMenus(): Unit =
     dom.document
       .getElementsByClassName("flowrun-context-menu")
       .foreach { e =>
@@ -89,9 +76,7 @@ class CtxMenu(
   }
 
   private def attachListeners(): Unit = {
-    // close menu when clicked anywhere
-    dom.window.addEventListener("click", event => hideAllMenus())
-
+    
     val edgeContextMenu = dom.document.getElementById("flowrun-edge-context-menu").asInstanceOf[dom.html.Element]
     val nodeContextMenu = dom.document.getElementById("flowrun-node-context-menu").asInstanceOf[dom.html.Element]
 

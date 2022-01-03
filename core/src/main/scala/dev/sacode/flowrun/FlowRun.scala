@@ -12,6 +12,7 @@ import dev.sacode.flowrun.edit.FunctionSelector
 import dev.sacode.flowrun.edit.StatementEditor
 import dev.sacode.flowrun.edit.OutputArea
 import dev.sacode.flowrun.edit.DebugArea
+import dev.sacode.flowrun.edit.CtxMenu
 
 @JSExportTopLevel("FlowRun")
 class FlowRun(mountElem: dom.Element, programJson: Option[String] = None) {
@@ -71,6 +72,7 @@ class FlowRun(mountElem: dom.Element, programJson: Option[String] = None) {
   private val functionEditor = FunctionEditor(programModel, flowrunChannel, flowRunElements)
   private val functionSelector = FunctionSelector(programModel, flowrunChannel, flowRunElements)
   private val statementEditor = StatementEditor(programModel, flowrunChannel, flowRunElements)
+  private val ctxMenu = CtxMenu(flowRunElements, programModel)
   private var interpreter = Interpreter(programModel, flowrunChannel)
   private var outputArea = OutputArea(interpreter, flowRunElements)
   private var debugArea = DebugArea(interpreter, flowRunElements)
@@ -80,7 +82,6 @@ class FlowRun(mountElem: dom.Element, programJson: Option[String] = None) {
   flowRunElements.metaData.innerText = program.name
 
   functionSelector.loadFunctions()
-  statementEditor.setup()
 
   /*
   dom.document.getElementById("gencode").asInstanceOf[dom.html.Button].onclick = _ => {
@@ -98,8 +99,8 @@ class FlowRun(mountElem: dom.Element, programJson: Option[String] = None) {
     functionEditor.clearErrors()
 
     startedTime = getNowTime
-    flowRunElements.runtimeOutput.innerText = ""
     flowRunElements.runtimeOutput.appendChild(s"Started at: $startedTime".render)
+    flowRunElements.runtimeOutput.classList.add("flowrun--success")
     flowRunElements.runtimeOutput.appendChild(br.render)
     flowRunElements.runtimeOutput.appendChild(br.render)
 
@@ -113,11 +114,42 @@ class FlowRun(mountElem: dom.Element, programJson: Option[String] = None) {
 
   flowRunElements.addFunButton.onclick = _ => programModel.addNewFunction()
 
+  dom.window.addEventListener(
+    "click",
+    (event: dom.MouseEvent) => {
+      event.preventDefault()
+      getSvgNode(event.target) match {
+        case ("NODE", n) =>
+          val idParts = n.id.split("#")
+          val nodeId = idParts(0)
+          val tpe = idParts(1)
+          statementEditor.edit(nodeId, tpe)
+        case _ =>
+          flowrunChannel := FlowRun.Event.Deselected
+      }
+    }
+  )
+
+  flowRunElements.drawArea.addEventListener(
+    "contextmenu",
+    (event: dom.MouseEvent) => {
+      event.preventDefault()
+      getSvgNode(event.target) match {
+        case ("NODE", n) =>
+          val idParts = n.id.split("#")
+          val nodeId = idParts(0)
+          val tpe = idParts(1)
+          ctxMenu.handleRightClick(event, nodeId, tpe)
+        case ("EDGE", n) =>
+          ctxMenu.handleClick(event.clientX, event.clientY, n)
+        case _ =>
+      }
+    }
+  )
+
   import FlowRun.Event.*
   flowrunChannel.attach {
     case EvalSuccess =>
-      flowRunElements.runtimeOutput.classList.remove("flowrun--error")
-      flowRunElements.runtimeOutput.classList.add("flowrun--success")
       flowRunElements.runtimeOutput.appendChild(br.render)
       flowRunElements.runtimeOutput.appendChild(br.render)
       flowRunElements.runtimeOutput.appendChild(s"Finished at: $getNowTime".render)
@@ -145,6 +177,10 @@ class FlowRun(mountElem: dom.Element, programJson: Option[String] = None) {
     case Deselected =>
       outputArea.clearStmt()
       outputArea.clearSyntax()
+  }
+  flowrunChannel.attach { _ =>
+    // on any event hide menus
+    ctxMenu.hideAllMenus()
   }
 }
 

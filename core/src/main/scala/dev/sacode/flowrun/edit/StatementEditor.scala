@@ -18,27 +18,10 @@ class StatementEditor(
   private val EditableNodeTypes =
     Set("Begin", "Return", "Declare", "Assign", "Input", "Output", "Call", "If", "While", "DoWhile")
 
-  def setup(): Unit = {
-    flowRunElements.drawArea.addEventListener(
-      "click",
-      (event: dom.MouseEvent) => {
-        event.preventDefault()
+  def edit(nodeId : String,  nodeTpe: String): Unit = {
+    flowrunChannel := FlowRun.Event.SyntaxSuccess
+    if !EditableNodeTypes(nodeTpe) then return
 
-        getSvgNode(event.target) match {
-          case ("NODE", n) =>
-            flowrunChannel := FlowRun.Event.SyntaxSuccess
-            val idParts = n.id.split("#")
-            val nodeId = idParts(0)
-            val tpe = idParts(1)
-            if EditableNodeTypes(tpe) then doEdit(nodeId)
-          case _ =>
-            flowrunChannel := FlowRun.Event.Deselected
-        }
-      }
-    )
-  }
-
-  private def doEdit(nodeId: String): Unit = {
     val node = programModel.findStatement(nodeId)
     val nodeType = node.getClass.getSimpleName.filterNot(_ == '$')
 
@@ -135,7 +118,8 @@ class StatementEditor(
           else if nodeType == "While" then programModel.updateWhile(Request.UpdateWhile(nodeId, expr = newExprText))
           else if nodeType == "DoWhile" then
             programModel.updateDoWhile(Request.UpdateDoWhile(nodeId, expr = newExprText))
-          else if nodeType == "Call" then programModel.updateCall(Request.UpdateCall(nodeId, expr = newExprText))
+          else if nodeType == "Call" // TODO validate expr is Call()
+          then programModel.updateCall(Request.UpdateCall(nodeId, expr = newExprText))
           else if nodeType == "Return" then
             programModel.updateReturn(
               Request.UpdateReturn(nodeId, expr = Some(Some(newExprText)))
