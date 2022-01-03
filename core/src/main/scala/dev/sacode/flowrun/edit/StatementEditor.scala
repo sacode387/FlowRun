@@ -132,10 +132,10 @@ class StatementEditor(
     if nodeType == "Begin" then
       val addParamElem = flowRunElements.addParamButton
       addParamElem.onclick = _ => {
-        val name = ""
         val tpe = Expression.Type.Integer.toString
         val params = getParams()
         val idx = params.length
+        val name = s"p${idx + 1}"
         val newParams = params ++ List(name -> tpe)
         val paramNameInput = getParamNameInput(nodeId, name, idx)
         val paramTpeInput = getParamTpeInput(nodeId, tpe, idx)

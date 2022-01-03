@@ -123,11 +123,7 @@ class Scope(
     }
 
   private def error(msg: String, nodeId: String) =
-    val maybeFun =
-      if name == "GLOBAL" then " [in global scope]"
-      else if name.startsWith("fun") then s" [in function '$name']"
-      else ""
-    throw EvalException(msg + maybeFun, nodeId)
+    throw EvalException(msg, nodeId)
 end Scope
 
 case class SymbolKey(name: String, kind: Symbol.Kind) {
