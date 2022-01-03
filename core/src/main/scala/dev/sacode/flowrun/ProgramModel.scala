@@ -13,7 +13,8 @@ class ProgramModel(
   var ast = initAst
 
   // I'm too lazy to make this a request parameter :/
-  var currentFunctionId = MainFunId
+  var currentFunctionId: String = MainFunId
+  var currentStmtId: Option[String] = None
 
   def currentFunction: Function =
     if currentFunctionId == MainFunId then ast.main

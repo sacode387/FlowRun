@@ -7,7 +7,7 @@ import org.scalajs.dom
 import reactify.*
 import dev.sacode.flowrun.parse.*
 
-class FunctionEditor(
+class FlowchartPresenter(
     programModel: ProgramModel,
     flowRunElements: FlowRunElements
 ) {
@@ -22,6 +22,8 @@ class FunctionEditor(
 
   def clearErrors(): Unit =
     dom.window.document.querySelectorAll(s""" .node """).foreach(_.classList.remove("flowrun--error"))
+  def clearSelected(): Unit =
+    dom.window.document.querySelectorAll(s""" .node """).foreach(_.classList.remove("flowrun--selected"))
 
   def highlightError(nodeId: String): Unit =
     dom.window.document.querySelector(s""" .node[id^="$nodeId"] """).classList.add("flowrun--error")
@@ -40,11 +42,17 @@ class FunctionEditor(
     //println(dotSrc)
     graphviz
       .engine("neato")
-      .renderDot(dotSrc)
+      .renderDot(dotSrc, (gr: js.Dynamic) =>{
+        // select current node
+        clearSelected()
+        clearErrors()
+        programModel.currentStmtId.foreach { id=>
+          dom.window.document.querySelector(s""" .node[id^="${id}"] """).classList.add("flowrun--selected")
+        }
+      })
   }
 
-  private def funDOT: String = {
-
+  private def funDOT: String =
     s"""
     |digraph {
     |  bgcolor="transparent"
@@ -58,8 +66,6 @@ class FunctionEditor(
     |
     |}
     |""".stripMargin
-
-  }
 
   /* NODES */
   private def nodesDOT: String = {

@@ -7,7 +7,7 @@ import scalatags.JsDom.all.*
 import org.getshaka.nativeconverter.NativeConverter
 import reactify.*
 import dev.sacode.flowrun.eval.Interpreter
-import dev.sacode.flowrun.edit.FunctionEditor
+import dev.sacode.flowrun.edit.FlowchartPresenter
 import dev.sacode.flowrun.edit.FunctionSelector
 import dev.sacode.flowrun.edit.StatementEditor
 import dev.sacode.flowrun.edit.OutputArea
@@ -70,7 +70,7 @@ class FlowRun(mountElem: dom.Element, programJson: Option[String] = None) {
   private val programModel = ProgramModel(program, flowrunChannel)
   private var interpreter = Interpreter(programModel, flowrunChannel)
 
-  private val functionEditor = FunctionEditor(programModel, flowRunElements)
+  private val flowchartPresenter = FlowchartPresenter(programModel, flowRunElements)
   private val functionSelector = FunctionSelector(programModel, flowrunChannel, flowRunElements)
   private val statementEditor = StatementEditor(programModel, flowrunChannel, flowRunElements)
   private val ctxMenu = CtxMenu(programModel)
@@ -96,7 +96,8 @@ class FlowRun(mountElem: dom.Element, programJson: Option[String] = None) {
   // run the program
   flowRunElements.runButton.onclick = _ => {
     outputArea.clearAll()
-    functionEditor.clearErrors()
+    flowchartPresenter.clearErrors()
+    flowchartPresenter.clearSelected()
     flowrunChannel := FlowRun.Event.Deselected
 
     startedTime = getNowTime
@@ -110,7 +111,7 @@ class FlowRun(mountElem: dom.Element, programJson: Option[String] = None) {
     debugArea = DebugArea(interpreter, flowRunElements)
 
     interpreter.run()
-    functionEditor.disable()
+    flowchartPresenter.disable()
   }
 
   flowRunElements.addFunButton.onclick = _ => programModel.addNewFunction()
@@ -124,6 +125,8 @@ class FlowRun(mountElem: dom.Element, programJson: Option[String] = None) {
           val idParts = n.id.split("#")
           val nodeId = idParts(0)
           val tpe = idParts(1)
+          programModel.currentStmtId = Some(nodeId)
+          flowrunChannel := FlowRun.Event.SyntaxSuccess
           statementEditor.edit(nodeId, tpe)
         case _ =>
           flowrunChannel := FlowRun.Event.Deselected
@@ -152,17 +155,17 @@ class FlowRun(mountElem: dom.Element, programJson: Option[String] = None) {
   flowrunChannel.attach {
     case EvalSuccess =>
       flowRunElements.runtimeOutput.appendChild(div(br, s"Finished at: $getNowTime").render)
-      functionEditor.enable()
+      flowchartPresenter.enable()
     case SyntaxSuccess =>
       outputArea.clearSyntax()
-      functionEditor.loadCurrentFunction() // if function name updated
+      flowchartPresenter.loadCurrentFunction() // if function name updated
     case SyntaxError(msg) =>
       outputArea.syntaxError(msg)
-      functionEditor.enable()
+      flowchartPresenter.enable()
     case EvalError(nodeId, msg) =>
       outputArea.runtimeError(msg, Some(startedTime), Some(getNowTime))
-      functionEditor.highlightError(nodeId)
-      functionEditor.enable()
+      flowchartPresenter.highlightError(nodeId)
+      flowchartPresenter.enable()
     case EvalOutput(output) =>
       val newOutput = pre(output).render
       flowRunElements.runtimeOutput.appendChild(newOutput)
@@ -171,11 +174,18 @@ class FlowRun(mountElem: dom.Element, programJson: Option[String] = None) {
     case SymbolTableUpdated =>
       debugArea.showVariables()
     case FunctionUpdated =>
-      functionEditor.loadCurrentFunction()
+      flowchartPresenter.loadCurrentFunction()
       functionSelector.loadFunctions()
-    case Deselected =>
+    case FunctionSelected =>
+      programModel.currentStmtId = None
       outputArea.clearStmt()
       outputArea.clearSyntax()
+      flowchartPresenter.loadCurrentFunction()
+    case Deselected =>
+      programModel.currentStmtId = None
+      outputArea.clearStmt()
+      outputArea.clearSyntax()
+      flowchartPresenter.clearSelected()
   }
   flowrunChannel.attach { _ =>
     // on any event hide menus
@@ -194,5 +204,6 @@ object FlowRun:
     case SyntaxError(msg: String)
     case SymbolTableUpdated
     case FunctionUpdated
+    case FunctionSelected
     case Deselected
 end FlowRun

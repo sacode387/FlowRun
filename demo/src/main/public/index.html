@@ -31,6 +31,9 @@
 
         .flowrun-meta {
             grid-area: flowrun-meta;
+            text-align: center;
+            font-weight: bold;
+            font-size: 1.2rem;
         }
 
         .flowrun-exec-btns {
@@ -50,6 +53,10 @@
             padding: 5px;
             display: flex;
             align-items: center;
+        }
+
+        .flowrun-fun-chooser>*:not(:first-child) {
+            margin-left: 1rem;
         }
 
         .flowrun-scratchpad {
@@ -88,28 +95,20 @@
             max-height: 100%;
         }
 
-        .flowrun-fun-chooser>*:not(:first-child) {
-            margin-left: 1rem;
+
+        .node.flowrun--selected polygon {
+            stroke: rebeccapurple;
+            stroke-width: 2px;
+            stroke-dasharray: 10 3;
+            stroke-linejoin: round;
         }
+
 
         .node.flowrun--error polygon {
             stroke: red;
             stroke-width: 3px;
             stroke-dasharray: 3 1;
             stroke-linejoin: round;
-        }
-
-        .flowrun-meta {
-            text-align: center;
-            font-weight: bold;
-            font-size: 1.2rem;
-        }
-
-        .flowrun-output-statement {
-            background-color: paleturquoise;
-        }
-        .flowrun-output-debug {
-            background-color: papayawhip;
         }
 
         .flowrun--error {
@@ -119,6 +118,14 @@
 
         .flowrun-output-syntax.flowrun--error {
             background-color: orange;
+        }
+
+        .flowrun-output-statement {
+            background-color: paleturquoise;
+        }
+
+        .flowrun-output-debug {
+            background-color: papayawhip;
         }
 
         .flowrun-output-runtime.flowrun--success {

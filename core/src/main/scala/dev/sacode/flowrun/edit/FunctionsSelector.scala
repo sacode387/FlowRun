@@ -19,7 +19,7 @@ class FunctionSelector(
     functionSelector.onchange = { (e: dom.Event) =>
       val selectedFunId = e.target.asInstanceOf[dom.html.Input].value
       programModel.currentFunctionId = selectedFunId
-      flowrunChannel := FlowRun.Event.FunctionUpdated
+      flowrunChannel := FlowRun.Event.FunctionSelected
     }
     allFunctions.foreach { f =>
       val maybeSelected = Option.when(f.id == programModel.currentFunctionId)(selected)

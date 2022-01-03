@@ -18,8 +18,7 @@ class StatementEditor(
   private val EditableNodeTypes =
     Set("Begin", "Return", "Declare", "Assign", "Input", "Output", "Call", "If", "While", "DoWhile")
 
-  def edit(nodeId : String,  nodeTpe: String): Unit = {
-    flowrunChannel := FlowRun.Event.SyntaxSuccess
+  def edit(nodeId: String, nodeTpe: String): Unit = {
     if !EditableNodeTypes(nodeTpe) then return
 
     val node = programModel.findStatement(nodeId)
@@ -55,8 +54,9 @@ class StatementEditor(
           case _ => ()
         }
         flowrunChannel := FlowRun.Event.SyntaxSuccess
+      } else {
+        flowrunChannel := FlowRun.Event.SyntaxError(errorMsg.get)
       }
-      errorMsg.foreach(msg => flowrunChannel := FlowRun.Event.SyntaxError(msg))
     }
 
     var filledName = false
