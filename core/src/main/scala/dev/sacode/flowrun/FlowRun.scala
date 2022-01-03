@@ -126,7 +126,8 @@ class FlowRun(mountElem: dom.Element, programJson: Option[String] = None) {
           val nodeId = idParts(0)
           val tpe = idParts(1)
           programModel.currentStmtId = Some(nodeId)
-          flowrunChannel := FlowRun.Event.SyntaxSuccess
+          outputArea.clearSyntax()
+          flowchartPresenter.loadCurrentFunction() // to highlight new node..
           statementEditor.edit(nodeId, tpe)
         case _ =>
           flowrunChannel := FlowRun.Event.Deselected
@@ -159,6 +160,11 @@ class FlowRun(mountElem: dom.Element, programJson: Option[String] = None) {
     case SyntaxSuccess =>
       outputArea.clearSyntax()
       flowchartPresenter.loadCurrentFunction() // if function name updated
+    case StmtDeleted | StmtAdded =>
+      programModel.currentStmtId = None
+      outputArea.clearStmt()
+      outputArea.clearSyntax()
+      flowchartPresenter.loadCurrentFunction()
     case SyntaxError(msg) =>
       outputArea.syntaxError(msg)
       flowchartPresenter.enable()
@@ -201,6 +207,8 @@ object FlowRun:
     case EvalOutput(msg: String)
     case EvalInput(nodeId: String, name: String)
     case SyntaxSuccess
+    case StmtDeleted
+    case StmtAdded
     case SyntaxError(msg: String)
     case SymbolTableUpdated
     case FunctionUpdated

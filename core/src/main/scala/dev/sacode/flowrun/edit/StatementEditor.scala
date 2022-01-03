@@ -53,7 +53,6 @@ class StatementEditor(
             programModel.updateAssign(Request.UpdateAssign(nodeId, name = Some(newName)))
           case _ => ()
         }
-        flowrunChannel := FlowRun.Event.SyntaxSuccess
       } else {
         flowrunChannel := FlowRun.Event.SyntaxError(errorMsg.get)
       }
@@ -78,7 +77,6 @@ class StatementEditor(
       val newType = Expression.Type.valueOf(thisElem.value)
       if nodeType == "Declare" then programModel.updateDeclare(Request.UpdateDeclare(nodeId, tpe = Some(newType)))
       else programModel.updateFunction(Request.UpdateFunction(nodeId, tpe = Some(newType)))
-      flowrunChannel := FlowRun.Event.SyntaxSuccess
     }
 
     if Statement.hasTpe(node, programModel.currentFunction.tpe.toString) then
@@ -105,7 +103,6 @@ class StatementEditor(
             programModel.updateReturn(Request.UpdateReturn(nodeId, expr = Some(None)))
           else flowrunChannel := FlowRun.Event.SyntaxError(e.getMessage)
         case Success(_) =>
-          flowrunChannel := FlowRun.Event.SyntaxSuccess
           if nodeType == "Declare" then
             programModel.updateDeclare(
               Request.UpdateDeclare(nodeId, expr = Some(Some(newExprText)))

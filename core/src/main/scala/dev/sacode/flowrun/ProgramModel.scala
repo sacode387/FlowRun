@@ -66,63 +66,63 @@ class ProgramModel(
 
   /* per-function */
   def addDeclare(req: AddDeclare): Unit =
-    update(_.addDeclare(req))
+    update(_.addDeclare(req), FlowRun.Event.StmtAdded)
 
   def addAssign(req: AddAssign): Unit =
-    update(_.addAssign(req))
+    update(_.addAssign(req), FlowRun.Event.StmtAdded)
 
   def addOutput(req: AddOutput): Unit =
-    update(_.addOutput(req))
+    update(_.addOutput(req), FlowRun.Event.StmtAdded)
 
   def addInput(req: AddInput): Unit =
-    update(_.addInput(req))
+    update(_.addInput(req), FlowRun.Event.StmtAdded)
 
   def addCall(req: AddCall): Unit =
-    update(_.addCall(req))
+    update(_.addCall(req), FlowRun.Event.StmtAdded)
 
   def addIf(req: AddIf): Unit =
-    update(_.addIf(req))
+    update(_.addIf(req), FlowRun.Event.StmtAdded)
 
   def addWhile(req: AddWhile): Unit =
-    update(_.addWhile(req))
+    update(_.addWhile(req), FlowRun.Event.StmtAdded)
 
   def addDoWhile(req: AddDoWhile): Unit =
-    update(_.addDoWhile(req))
+    update(_.addDoWhile(req), FlowRun.Event.StmtAdded)
 
   def updateDeclare(req: UpdateDeclare): Unit =
-    update(_.updateDeclare(req))
+    update(_.updateDeclare(req), FlowRun.Event.SyntaxSuccess)
 
   def updateAssign(req: UpdateAssign): Unit =
-    update(_.updateAssign(req))
+    update(_.updateAssign(req), FlowRun.Event.SyntaxSuccess)
 
   def updateOutput(req: UpdateOutput): Unit =
-    update(_.updateOutput(req))
+    update(_.updateOutput(req), FlowRun.Event.SyntaxSuccess)
 
   def updateInput(req: UpdateInput): Unit =
-    update(_.updateInput(req))
+    update(_.updateInput(req), FlowRun.Event.SyntaxSuccess)
 
   def updateCall(req: UpdateCall): Unit =
-    update(_.updateCall(req))
+    update(_.updateCall(req), FlowRun.Event.SyntaxSuccess)
 
   def updateReturn(req: UpdateReturn): Unit =
-    update(_.updateReturn(req))
+    update(_.updateReturn(req), FlowRun.Event.SyntaxSuccess)
 
   def updateIf(req: UpdateIf): Unit =
-    update(_.updateIf(req))
+    update(_.updateIf(req), FlowRun.Event.SyntaxSuccess)
 
   def updateWhile(req: UpdateWhile): Unit =
-    update(_.updateWhile(req))
+    update(_.updateWhile(req), FlowRun.Event.SyntaxSuccess)
 
   def updateDoWhile(req: UpdateDoWhile): Unit =
-    update(_.updateDoWhile(req))
+    update(_.updateDoWhile(req), FlowRun.Event.SyntaxSuccess)
 
   def delete(req: Delete): Unit =
-    update(_.delete(req))
+    update(_.delete(req), FlowRun.Event.StmtDeleted)
 
   def findStatement(stmtId: String): Statement =
     FunctionModel(currentFunction).doFind(stmtId)
 
-  private def update(transform: FunctionModel => FunctionModel): Unit = {
+  private def update(transform: FunctionModel => FunctionModel, evt: FlowRun.Event): Unit = {
     val newFunction = transform(FunctionModel(currentFunction)).ast
     if currentFunction.isMain then ast = ast.copy(main = newFunction)
     else
@@ -133,7 +133,7 @@ class ProgramModel(
           val newFunctions = ast.functions.updated(idx, newFunction)
           ast = ast.copy(functions = newFunctions)
 
-    flowrunChannel := FlowRun.Event.SyntaxSuccess
+    flowrunChannel := evt
   }
 }
 
