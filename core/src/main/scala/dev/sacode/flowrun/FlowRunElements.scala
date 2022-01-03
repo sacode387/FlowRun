@@ -18,15 +18,17 @@ class FlowRunElements(
   val drawArea: dom.Element = template.querySelector(".flowrun-draw")
   val scratchpad: dom.Element = template.querySelector(".flowrun-scratchpad")
   val debugVariables: dom.Element = template.querySelector(".flowrun-debug")
+  val execBtns: dom.Element = template.querySelector(".flowrun-exec-btns")
 
   // singletons
-  val runButton = template.querySelector(".flowrun-btn-run").asInstanceOf[dom.html.Element]
+  val runButton: dom.html.Element = execBtns.querySelector(".flowrun-btn-run").asInstanceOf[dom.html.Element]
 
-  val addFunButton = template.querySelector(".flowrun-fun-add").asInstanceOf[dom.html.Element]
-  val deleteFunButton = template.querySelector(".flowrun-fun-delete").asInstanceOf[dom.html.Element]
+  val addFunButton: dom.html.Element = template.querySelector(".flowrun-fun-add").asInstanceOf[dom.html.Element]
+  val deleteFunButton: dom.html.Element = template.querySelector(".flowrun-fun-delete").asInstanceOf[dom.html.Element]
 
-  val addParamButton = template.querySelector(".flowrun-fun-add-param").asInstanceOf[dom.html.Element]
-  val deleteParamButton = template.querySelector(".flowrun-fun-delete-param").asInstanceOf[dom.html.Element]
+  val addParamButton: dom.html.Element = template.querySelector(".flowrun-fun-add-param").asInstanceOf[dom.html.Element]
+  val deleteParamButton: dom.html.Element =
+    template.querySelector(".flowrun-fun-delete-param").asInstanceOf[dom.html.Element]
 
   // general
   private val enterButton = template.querySelector(".flowrun-btn-enter").asInstanceOf[dom.html.Element]

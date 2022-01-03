@@ -34,8 +34,8 @@
             grid-area: flowrun-meta;
         }
 
-        .flowrun-exec {
-            grid-area: flowrun-exec;
+        .flowrun-exec-btns {
+            grid-area: flowrun-exec-btns;
         }
 
         .flowrun-draw {
@@ -63,10 +63,10 @@
                 display: grid;
                 width: 100%;
                 grid-template-columns: repeat(3, 1fr);
-                grid-template-rows: 50px 50px minmax(200px, 1fr) auto;
+                grid-template-rows: 30px 30px minmax(200px, 1fr) auto;
                 grid-template-areas:
                     "flowrun-meta   flowrun-meta      flowrun-meta        "
-                    "flowrun-exec   flowrun-fun-chooser      .                        "
+                    "flowrun-exec-btns   flowrun-fun-chooser      .                        "
                     "flowrun-draw   flowrun-draw       flowrun-scratchpad  "
                     "flowrun-draw   flowrun-draw   flowrun-debug       "
                 ;
@@ -88,7 +88,6 @@
 
         .flowrun-meta {
             text-align: center;
-            text-transform: uppercase;
             font-weight: bold;
             font-size: 1.2rem;
         }
@@ -157,7 +156,7 @@
     <div id="flowrun-template" style="display: none;">
         <div class="flowrun-meta"></div>
 
-        <div class="flowrun-exec">
+        <div class="flowrun-exec-btns">
             <button class="flowrun-btn-run">Run</button>
         </div>
 

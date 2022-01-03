@@ -23,7 +23,7 @@ class FlowRun(mountElem: dom.Element, programJson: Option[String] = None) {
   mountElem.innerText = ""
   mountElem.appendChild(flowRunElements.metaData)
   mountElem.appendChild(flowRunElements.functionsChooser)
-  mountElem.appendChild(flowRunElements.runButton)
+  mountElem.appendChild(flowRunElements.execBtns)
   mountElem.appendChild(flowRunElements.drawArea)
   mountElem.appendChild(flowRunElements.scratchpad)
   mountElem.appendChild(flowRunElements.debugVariables)
@@ -36,7 +36,7 @@ class FlowRun(mountElem: dom.Element, programJson: Option[String] = None) {
     case None =>
       Program(
         AST.newId,
-        "program",
+        "My Program",
         Function(
           "main",
           "main",
