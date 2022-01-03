@@ -158,7 +158,7 @@ class StatementEditor(
         val params = getParams()
         val idx = params.length
         val newParams = params ++ List(name -> tpe)
-        val paramNameInput = getParamNameInput(nodeId, "", idx)
+        val paramNameInput = getParamNameInput(nodeId, name, idx)
         val paramTpeInput = getParamTpeInput(nodeId, tpe, idx)
 
         flowRunElements.scratchpad.appendChild(

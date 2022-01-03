@@ -18,7 +18,7 @@ class FlowRun(mountElem: dom.Element, programJson: Option[String] = None) {
 
   private val mountElemText = mountElem.innerText.trim
 
-  private val maybeTemplate = dom.document.getElementById("flowrun-template")
+  private val maybeTemplate = dom.document.getElementById("flowrun-template").asInstanceOf[dom.html.Element]
   private val flowRunElements = FlowRunElements.resolve(maybeTemplate)
   mountElem.innerText = ""
   mountElem.appendChild(flowRunElements.metaData)
