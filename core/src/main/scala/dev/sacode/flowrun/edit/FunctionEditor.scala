@@ -9,7 +9,6 @@ import dev.sacode.flowrun.parse.*
 
 class FunctionEditor(
     programModel: ProgramModel,
-    flowrunChannel: Channel[FlowRun.Event],
     flowRunElements: FlowRunElements
 ) {
 
@@ -23,7 +22,6 @@ class FunctionEditor(
 
   def clearErrors(): Unit =
     dom.window.document.querySelectorAll(s""" .node """).foreach(_.classList.remove("flowrun--error"))
-    flowrunChannel := FlowRun.Event.Deselected
 
   def highlightError(nodeId: String): Unit =
     dom.window.document.querySelector(s""" .node[id^="$nodeId"] """).classList.add("flowrun--error")

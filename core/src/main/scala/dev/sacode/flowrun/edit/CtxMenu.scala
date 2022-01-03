@@ -1,17 +1,12 @@
 package dev.sacode.flowrun.edit
 
 import org.scalajs.dom
-import dev.sacode.flowrun.FlowRunElements
 import dev.sacode.flowrun.ProgramModel
 import dev.sacode.flowrun.ProgramModel.Request
 import dev.sacode.flowrun.Expression.Type
 import dev.sacode.flowrun.AST
-import dev.sacode.flowrun.getSvgNode
 
-class CtxMenu(
-    flowRunElements: FlowRunElements,
-    programModel: ProgramModel
-) {
+class CtxMenu(programModel: ProgramModel) {
 
   /** used for delete */
   private var nodeId = ""
@@ -76,7 +71,7 @@ class CtxMenu(
   }
 
   private def attachListeners(): Unit = {
-    
+
     val edgeContextMenu = dom.document.getElementById("flowrun-edge-context-menu").asInstanceOf[dom.html.Element]
     val nodeContextMenu = dom.document.getElementById("flowrun-node-context-menu").asInstanceOf[dom.html.Element]
 

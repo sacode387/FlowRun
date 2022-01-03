@@ -69,11 +69,12 @@ class FlowRun(mountElem: dom.Element, programJson: Option[String] = None) {
 
   private val flowrunChannel = Channel[FlowRun.Event]
   private val programModel = ProgramModel(program, flowrunChannel)
-  private val functionEditor = FunctionEditor(programModel, flowrunChannel, flowRunElements)
+  private var interpreter = Interpreter(programModel, flowrunChannel)
+
+  private val functionEditor = FunctionEditor(programModel, flowRunElements)
   private val functionSelector = FunctionSelector(programModel, flowrunChannel, flowRunElements)
   private val statementEditor = StatementEditor(programModel, flowrunChannel, flowRunElements)
-  private val ctxMenu = CtxMenu(flowRunElements, programModel)
-  private var interpreter = Interpreter(programModel, flowrunChannel)
+  private val ctxMenu = CtxMenu(programModel)
   private var outputArea = OutputArea(interpreter, flowRunElements)
   private var debugArea = DebugArea(interpreter, flowRunElements)
 
@@ -97,6 +98,7 @@ class FlowRun(mountElem: dom.Element, programJson: Option[String] = None) {
   flowRunElements.runButton.onclick = _ => {
     outputArea.clearAll()
     functionEditor.clearErrors()
+    flowrunChannel := FlowRun.Event.Deselected
 
     startedTime = getNowTime
     flowRunElements.runtimeOutput.appendChild(s"Started at: $startedTime".render)
@@ -125,7 +127,11 @@ class FlowRun(mountElem: dom.Element, programJson: Option[String] = None) {
           val tpe = idParts(1)
           statementEditor.edit(nodeId, tpe)
         case _ =>
-          flowrunChannel := FlowRun.Event.Deselected
+          // deselect only if you click INSIDE and editor
+          val cr = flowRunElements.drawArea.getBoundingClientRect()
+          if cr.left <= event.clientX && event.clientX <= cr.right &&
+            cr.top <= event.clientY && event.clientY <= cr.bottom
+          then flowrunChannel := FlowRun.Event.Deselected
       }
     }
   )

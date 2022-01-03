@@ -19,7 +19,6 @@ class FunctionSelector(
     functionSelector.onchange = { (e: dom.Event) =>
       val selectedFunId = e.target.asInstanceOf[dom.html.Input].value
       programModel.currentFunctionId = selectedFunId
-      flowrunChannel := FlowRun.Event.Deselected
       flowrunChannel := FlowRun.Event.FunctionUpdated
     }
     allFunctions.foreach { f =>
