@@ -182,6 +182,7 @@ class FlowRun(mountElem: dom.Element, programJson: Option[String] = None) {
     case FunctionUpdated =>
       flowchartPresenter.loadCurrentFunction()
       functionSelector.loadFunctions()
+      outputArea.clearSyntax()
     case FunctionSelected =>
       programModel.currentStmtId = None
       outputArea.clearStmt()

@@ -17,7 +17,7 @@ class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[FlowRun.Ev
 
   // TODO add predefined functions also.. :)
   // more general solution I guess...
-  private def allFunctions = List(programModel.ast.main) ++ programModel.ast.functions
+  private def allFunctions = programModel.ast.functions
 
   def run(): Future[Unit] = {
     //import js.JSConverters.*
@@ -35,7 +35,7 @@ class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[FlowRun.Ev
 
     val futureExec = for
       _ <- functionsFuture
-      res <- interpret(programModel.ast.main, List.empty)
+      res <- execSequentially((): Any, programModel.ast.main.statements, (_, s) => interpret(s))
     yield res
 
     futureExec.onComplete {

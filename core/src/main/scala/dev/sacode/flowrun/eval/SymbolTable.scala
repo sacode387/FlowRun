@@ -123,8 +123,10 @@ class Scope(
     }
 
   private def error(msg: String, nodeId: String) =
-    // TODO handle IF, WHILE blocks
-    val maybeFun = if name == "GLOBAL" then " [in global scope]" else s" [in function '$name']"
+    val maybeFun =
+      if name == "GLOBAL" then " [in global scope]"
+      else if name.startsWith("fun") then s" [in function '$name']"
+      else ""
     throw EvalException(msg + maybeFun, nodeId)
 end Scope
 
