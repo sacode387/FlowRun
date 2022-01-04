@@ -156,6 +156,7 @@ class FlowRun(mountElem: dom.Element, programJson: Option[String] = None) {
   flowrunChannel.attach {
     case EvalSuccess =>
       flowRunElements.runtimeOutput.appendChild(div(br, s"Finished at: $getNowTime").render)
+      flowRunElements.debugVariables.innerText = ""
       flowchartPresenter.enable()
     case SyntaxSuccess =>
       outputArea.clearSyntax()

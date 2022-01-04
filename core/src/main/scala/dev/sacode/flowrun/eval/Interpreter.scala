@@ -33,9 +33,10 @@ class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[FlowRun.Ev
       }
     }
 
+    // main is also just-a-function, with its own scope
     val futureExec = for
       _ <- functionsFuture
-      res <- execSequentially((): Any, programModel.ast.main.statements, (_, s) => interpret(s))
+      res <- interpret(programModel.ast.main, List.empty)
     yield res
 
     futureExec.onComplete {

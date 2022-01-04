@@ -187,7 +187,9 @@ class StatementEditor(
       val newParams = params.map { p =>
         if p.id == param.id then p.copy(name = paramNameInput.value) else p
       }
-      programModel.updateFunction(Request.UpdateFunction(nodeId, parameters = Some(newParams)))
+      val errorMsg: Option[String] = NameUtils.validateIdentifier(newName)
+      if errorMsg.isEmpty then programModel.updateFunction(Request.UpdateFunction(nodeId, parameters = Some(newParams)))
+      else flowrunChannel := FlowRun.Event.SyntaxError(errorMsg.get)
     }
     paramNameInput
   }
@@ -227,6 +229,6 @@ class StatementEditor(
   }
 
   private def isQuotedStringLiteral(str: String) =
-    str.length > 2 && str.head == '"' && str.last == '"'
+    str.length >= 2 && str.head == '"' && str.last == '"'
 
 }
