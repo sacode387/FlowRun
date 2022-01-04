@@ -5,7 +5,7 @@ import scalatags.JsDom.all.*
 
 /* UI sections and elements */
 class FlowRunElements(
-    template: dom.html.Element
+    val template: dom.html.Element
 ) {
   // template is CLONED, so we can use "Run button", "output" and other "single purpose" elements freely
 

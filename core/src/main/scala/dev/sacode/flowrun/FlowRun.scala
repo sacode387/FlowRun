@@ -20,13 +20,12 @@ class FlowRun(mountElem: dom.Element, programJson: Option[String] = None) {
   private val mountElemText = mountElem.innerText.trim
 
   private val maybeTemplate = dom.document.getElementById("flowrun-template").asInstanceOf[dom.html.Element]
+
   private val flowRunElements = FlowRunElements.resolve(maybeTemplate)
   mountElem.innerText = ""
-  mountElem.appendChild(flowRunElements.metaData)
-  mountElem.appendChild(flowRunElements.execBtns)
-  mountElem.appendChild(flowRunElements.functionsChooser)
-  mountElem.appendChild(flowRunElements.drawArea)
-  mountElem.appendChild(flowRunElements.scratchpad)
+  // https://stackoverflow.com/a/20910214/4496364
+  while flowRunElements.template.childNodes.length > 0 do
+    mountElem.appendChild(flowRunElements.template.childNodes.head)
 
   private val maybeJson = programJson.orElse(
     Option.when(mountElemText.nonEmpty)(mountElemText)

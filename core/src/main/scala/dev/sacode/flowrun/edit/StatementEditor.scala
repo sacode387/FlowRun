@@ -183,9 +183,10 @@ class StatementEditor(
     val paramNameInput = flowRunElements.newInputText
     paramNameInput.value = param.name
     paramNameInput.oninput = _ => {
+      val newName = paramNameInput.value.trim
       val params = getParams()
       val newParams = params.map { p =>
-        if p.id == param.id then p.copy(name = paramNameInput.value) else p
+        if p.id == param.id then p.copy(name = newName) else p
       }
       val errorMsg: Option[String] = NameUtils.validateIdentifier(newName)
       if errorMsg.isEmpty then programModel.updateFunction(Request.UpdateFunction(nodeId, parameters = Some(newParams)))
