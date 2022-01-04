@@ -373,14 +373,14 @@ class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[FlowRun.Ev
                 s"Wrong number of arguments, expected: ${fun.parameters.size} but got ${args.size}",
                 id
               )
-            val argsWithTypes = args.zip(fun.parameters).zipWithIndex.map { case ((arg, (paramName, paramTpe)), idx) =>
+            val argsWithTypes = args.zip(fun.parameters).zipWithIndex.map { case ((arg, p), idx) =>
               // validate expected type
-              if TypeUtils.getUpdateValue(id, paramName, paramTpe, arg).isFailure then
+              if TypeUtils.getUpdateValue(id, p.name, p.tpe, arg).isFailure then
                 throw EvalException(
-                  s"Expected: '${paramName}: ${paramTpe}' at index $idx, got value '$arg'",
+                  s"Expected: '${p.name}: ${p.tpe}' at index $idx, got value '$arg'",
                   id
                 )
-              (paramName, paramTpe, arg)
+              (p.name, p.tpe, arg)
             }
             interpret(fun, argsWithTypes)
         }

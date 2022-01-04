@@ -205,7 +205,7 @@ end Statement
 case class Function(
     rawId: String,
     name: String,
-    parameters: List[(String, Expression.Type)] = List.empty[(String, Expression.Type)],
+    parameters: List[Function.Parameter] = List.empty,
     tpe: Expression.Type = Expression.Type.Void,
     statements: List[Statement] = List.empty
 ) derives NativeConverter:
@@ -216,8 +216,11 @@ case class Function(
 
   def label: String =
     val title = if isMain then "begin" else name
-    val params = if isMain then "" else s"(${parameters.map((n, t) => s"$n: $t").mkString(", ")})"
+    val params = if isMain then "" else s"(${parameters.map(p => s"${p.name}: ${p.tpe}").mkString(", ")})"
     s"$title$params: $tpe"
+
+object Function:
+  case class Parameter(id: String, name: String, tpe: Expression.Type)
 
 case class Program(
     id: String,

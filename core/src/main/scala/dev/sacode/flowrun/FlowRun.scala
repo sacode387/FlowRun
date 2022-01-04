@@ -187,6 +187,7 @@ class FlowRun(mountElem: dom.Element, programJson: Option[String] = None) {
       programModel.currentStmtId = None
       outputArea.clearStmt()
       outputArea.clearSyntax()
+      functionSelector.loadFunctions()
       flowchartPresenter.loadCurrentFunction()
     case Deselected =>
       programModel.currentStmtId = None

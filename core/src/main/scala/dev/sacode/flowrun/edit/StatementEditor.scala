@@ -7,6 +7,7 @@ import scalatags.JsDom.all.{name => _, *}
 import reactify.*
 import dev.sacode.flowrun.ProgramModel.Request
 import dev.sacode.flowrun.parse.*
+import java.util.UUID
 
 /** Editor for selected statement. */
 class StatementEditor(
@@ -130,32 +131,30 @@ class StatementEditor(
 
     // params inputs
     if nodeType == "Begin" then
+
       val addParamElem = flowRunElements.addParamButton
       addParamElem.onclick = _ => {
-        val tpe = Expression.Type.Integer.toString
-        val params = getParams()
-        val idx = params.length
-        val name = s"p${idx + 1}"
-        val newParams = params ++ List(name -> tpe)
-        val paramNameInput = getParamNameInput(nodeId, name, idx)
-        val paramTpeInput = getParamTpeInput(nodeId, tpe, idx)
+        val newParam =
+          Function.Parameter(UUID.randomUUID().toString, s"p${getParams().length + 1}", Expression.Type.Integer)
+        val newParams = getParams() ++ List(newParam)
+        val paramNameInput = getParamNameInput(nodeId, newParam)
+        val paramTpeInput = getParamTpeInput(nodeId, newParam)
+        val paramDeleteBtn = getParamDeleteBtn(nodeId, newParam)
 
         flowRunElements.stmtOutput.appendChild(
-          div(paramNameInput, paramTpeInput).render
+          div(id := newParam.id)(paramNameInput, paramTpeInput, paramDeleteBtn).render
         )
         paramNameInput.focus()
-        programModel.updateFunction(
-          Request.UpdateFunction(nodeId, parameters = Some(newParams))
-        )
+        programModel.updateFunction(Request.UpdateFunction(nodeId, parameters = Some(newParams)))
       }
       flowRunElements.stmtOutput.appendChild(div(addParamElem).render)
 
-      val params = getParams()
-      params.zipWithIndex.foreach { case ((name, tpe), idx) =>
-        val paramNameInput = getParamNameInput(nodeId, name, idx)
-        val paramTpeInput = getParamTpeInput(nodeId, tpe, idx)
+      getParams().foreach { param =>
+        val paramNameInput = getParamNameInput(nodeId, param)
+        val paramTpeInput = getParamTpeInput(nodeId, param)
+        val paramDeleteBtn = getParamDeleteBtn(nodeId, param)
         flowRunElements.stmtOutput.appendChild(
-          div(paramNameInput, paramTpeInput).render
+          div(id := param.id)(paramNameInput, paramTpeInput, paramDeleteBtn).render
         )
       }
     end if
@@ -174,21 +173,20 @@ class StatementEditor(
       if isQuotedStringLiteral(exprStr) then exprInputElem.setSelectionRange(1, exprStr.length - 1)
   }
 
-  private def getParams(): List[(String, String)] = {
-    programModel.currentFunction.parameters.map((name, tpe) => (name, tpe.toString))
-  }
+  private def getParams(): List[Function.Parameter] =
+    programModel.currentFunction.parameters
 
   private def getParamNameInput(
       nodeId: String,
-      name: String,
-      idx: Int
+      param: Function.Parameter
   ) = {
     val paramNameInput = flowRunElements.newInputText
-    paramNameInput.value = name
+    paramNameInput.value = param.name
     paramNameInput.oninput = _ => {
       val params = getParams()
-      val newParam = params(idx).copy(_1 = paramNameInput.value)
-      val newParams = params.patch(idx, List(newParam), 1)
+      val newParams = params.map { p =>
+        if p.id == param.id then p.copy(name = paramNameInput.value) else p
+      }
       programModel.updateFunction(Request.UpdateFunction(nodeId, parameters = Some(newParams)))
     }
     paramNameInput
@@ -196,22 +194,36 @@ class StatementEditor(
 
   private def getParamTpeInput(
       nodeId: String,
-      selValue: String,
-      idx: Int
+      param: Function.Parameter
   ) = {
     val paramTpeInput = flowRunElements.newInputSelect
     Expression.Type.VarTypes.foreach { tpe =>
       val typeItem = option(value := tpe.toString)(tpe.toString).render
       paramTpeInput.add(typeItem)
     }
-    paramTpeInput.value = selValue
+    paramTpeInput.value = param.tpe.toString
     paramTpeInput.onchange = (e: dom.Event) => {
       val params = getParams()
-      val newParam = params(idx).copy(_2 = paramTpeInput.value)
-      val newParams = params.patch(idx, List(newParam), 1)
+      val newParams = params.map { p =>
+        if p.id == param.id then p.copy(tpe = Expression.Type.valueOf(paramTpeInput.value)) else p
+      }
       programModel.updateFunction(Request.UpdateFunction(nodeId, parameters = Some(newParams)))
     }
     paramTpeInput
+  }
+
+  private def getParamDeleteBtn(
+      nodeId: String,
+      param: Function.Parameter
+  ) = {
+    val paramNameInput = flowRunElements.newDeleteParamButton
+    paramNameInput.onclick = _ => {
+      val params = getParams()
+      val newParams = params.filterNot(_.id == param.id)
+      programModel.updateFunction(Request.UpdateFunction(nodeId, parameters = Some(newParams)))
+      dom.window.document.getElementById(param.id).remove()
+    }
+    paramNameInput
   }
 
   private def isQuotedStringLiteral(str: String) =

@@ -12,7 +12,7 @@ class ProgramModel(
 
   var ast = initAst
 
-  // I'm too lazy to make this a request parameter :/
+  // global vars go brrrrr
   var currentFunctionId: String = MainFunId
   var currentStmtId: Option[String] = None
 
@@ -55,8 +55,7 @@ class ProgramModel(
         req.name.foreach(n => updatedFun = updatedFun.copy(name = n))
         req.tpe.foreach(t => updatedFun = updatedFun.copy(tpe = t))
         req.parameters.foreach { params =>
-          val newParams = params.map((n, t) => (n, Expression.Type.valueOf(t)))
-          updatedFun = updatedFun.copy(parameters = newParams)
+          updatedFun = updatedFun.copy(parameters = params)
         }
         updatedFun
       else f
@@ -187,7 +186,7 @@ object ProgramModel:
         id: String,
         name: Option[String] = None,
         tpe: Option[Type] = None,
-        parameters: Option[List[(String, String)]] = None
+        parameters: Option[List[Function.Parameter]] = None
     )
 end ProgramModel
 

@@ -57,7 +57,7 @@ class FlowRunElements(
     enterButton.cloneNode(true).asInstanceOf[dom.html.Element]
 
   def newDeleteParamButton: dom.html.Element =
-    deleteParamButton.cloneNode(true).asInstanceOf[dom.html.Element]
+    deleteParamButton.cloneNode(true).asInstanceOf[dom.html.Button]
 
 }
 
