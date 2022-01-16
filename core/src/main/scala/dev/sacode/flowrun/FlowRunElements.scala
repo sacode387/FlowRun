@@ -16,6 +16,7 @@ class FlowRunElements(
   val metaData: dom.Element = template.querySelector(".flowrun-meta")
   val functionsChooser: dom.Element = template.querySelector(".flowrun-fun-chooser")
   val drawArea: dom.Element = template.querySelector(".flowrun-draw")
+  val codeArea: dom.Element = template.querySelector(".flowrun-code")
 
   val scratchpad: dom.Element = template.querySelector(".flowrun-scratchpad")
   val stmtOutput: dom.Element = scratchpad.querySelector(".flowrun-output-statement")
@@ -27,6 +28,7 @@ class FlowRunElements(
 
   // singletons
   val runButton: dom.html.Element = execBtns.querySelector(".flowrun-btn-run").asInstanceOf[dom.html.Element]
+  val flipTabButton: dom.html.Element = execBtns.querySelector(".flip-tab").asInstanceOf[dom.html.Button]
 
   val addFunButton: dom.html.Element = template.querySelector(".flowrun-fun-add").asInstanceOf[dom.html.Element]
   val deleteFunButton: dom.html.Element = template.querySelector(".flowrun-fun-delete").asInstanceOf[dom.html.Element]

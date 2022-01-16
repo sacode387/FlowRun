@@ -27,6 +27,16 @@ class FlowRun(mountElem: dom.Element, programJson: Option[String] = None) {
   while flowRunElements.template.childNodes.length > 0 do
     mountElem.appendChild(flowRunElements.template.childNodes.head)
 
+  // TODO move to DEMO CODE, 
+  // layout shouldnt be part of FlowRun
+  flowRunElements.flipTabButton.onclick = _ => {
+    val aktivan = "flowrun-active"
+    mountElem.querySelectorAll(".flowrun-tabs > *").foreach { tab =>
+      if tab.classList.contains(aktivan) then tab.classList.remove(aktivan)
+      else tab.classList.add(aktivan)
+    }
+  }
+
   private val maybeJson = programJson.orElse(
     Option.when(mountElemText.nonEmpty)(mountElemText)
   )
@@ -81,13 +91,6 @@ class FlowRun(mountElem: dom.Element, programJson: Option[String] = None) {
   flowRunElements.metaData.innerText = program.name
 
   functionSelector.loadFunctions()
-
-  /*
-  dom.document.getElementById("gencode").asInstanceOf[dom.html.Button].onclick = _ => {
-    val generator = new dev.sacode.flowrun.codegen.ScalaGenerator(programModel.ast)
-    println(generator.generate)
-  }
-   */
 
   def json(): js.Any =
     programModel.ast.toNative
@@ -198,6 +201,9 @@ class FlowRun(mountElem: dom.Element, programJson: Option[String] = None) {
   flowrunChannel.attach { _ =>
     // on any event hide menus
     ctxMenu.hideAllMenus()
+    // gen code always
+    val generator = new dev.sacode.flowrun.codegen.ScalaGenerator(programModel.ast)
+    flowRunElements.codeArea.innerText = generator.generate
   }
 }
 

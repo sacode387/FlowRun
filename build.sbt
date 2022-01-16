@@ -6,6 +6,8 @@ inThisBuild(
     evictionErrorLevel := Level.Warn,
     publish / skip := true,
     scalafmtSbt := true,
+    resolvers +=
+      "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots",
     // metadata
     organization := "dev.sacode",
     licenses := List("GPL-3.0" -> url("https://www.gnu.org/licenses/gpl-3.0.html")),
@@ -30,10 +32,8 @@ lazy val core = (project in file("core"))
   .settings(
     name := "FlowRun",
     libraryDependencies ++= Seq(
-      "com.lihaoyi" %%% "scalatags" % "0.10.0",
-      "com.lihaoyi" %%% "pprint" % "0.6.6" // sourcecode from scalatags is 2.13
-    ).map(_.cross(CrossVersion.for3Use2_13)),
-    libraryDependencies ++= Seq(
+      "com.lihaoyi" %%% "scalatags" % "0.11.0",
+      "com.lihaoyi" %%% "pprint" % "0.7.1",
       "com.outr" %%% "reactify" % "4.0.6",
       "org.getshaka" %%% "native-converter" % "0.5.2",
       "com.lihaoyi" %%% "utest" % "0.7.10" % Test

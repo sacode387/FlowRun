@@ -23,6 +23,9 @@ extension (str: String) {
 
   def asReal: Try[Double] =
     Try(str.toDouble)
+
+  def indented(x: Int): String =
+    " " * x + str
 }
 
 def getNowTime: String =

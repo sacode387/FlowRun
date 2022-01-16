@@ -41,8 +41,11 @@
             padding: 5px;
         }
 
+        .flowrun-tabs {
+            grid-area: flowrun-tabs;
+        }
+
         .flowrun-draw {
-            grid-area: flowrun-draw;
             padding: 1rem;
             background-color: rgb(243, 233, 233);
             text-align: center;
@@ -85,7 +88,7 @@
                 grid-template-areas:
                     "flowrun-meta       flowrun-meta            flowrun-meta        "
                     "flowrun-exec-btns  flowrun-fun-chooser     .                   "
-                    "flowrun-draw       flowrun-draw            flowrun-scratchpad  "
+                    "flowrun-tabs       flowrun-tabs            flowrun-scratchpad  "
                 ;
             }
         }
@@ -130,6 +133,16 @@
 
         .flowrun-output-runtime.flowrun--success {
             background-color: palegreen;
+        }
+
+        /* TABSssssss */
+        .flowrun-tabs>* {
+            display: none;
+            height: 100%;
+        }
+
+        .flowrun-tabs>.flowrun-active {
+            display: block;
         }
     </style>
 
@@ -193,9 +206,16 @@
 
         <div class="flowrun-exec-btns">
             <button class="flowrun-btn-run">▶ Run</button>
+            <button class="flip-tab">Flip tab</button>
         </div>
 
-        <div class="flowrun-draw"></div>
+        <div class="flowrun-fun-chooser"></div>
+
+        <div class="flowrun-tabs">
+            <div class="flowrun-draw flowrun-active"></div>
+            <pre class="flowrun-code"></pre>
+        </div>
+
 
         <div class="flowrun-scratchpad">
             <div class="flowrun-output-statement"></div>
@@ -203,8 +223,6 @@
             <div class="flowrun-output-runtime"></div>
             <div class="flowrun-output-debug"></div>
         </div>
-
-        <div class="flowrun-fun-chooser"></div>
 
         <!-- this whole div will be deleted -->
         <div class="flowrun-template-transient">
