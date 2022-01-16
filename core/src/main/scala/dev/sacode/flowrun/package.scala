@@ -11,18 +11,14 @@ import dev.sacode.flowrun.eval.SymbolKey
 
 extension (any: Any) {
   def asDyn: js.Dynamic = any.asInstanceOf[js.Dynamic]
+
+  def asDouble: Double =
+    java.lang.Double.parseDouble(any.toString)
 }
 
 extension (str: String) {
   def toGraphvizLbl: String =
     str.replace("\"", "\\\"")
-
-  def asInteger: Try[Long] =
-    if str.trim.forall(_.isDigit) then Try(str.toLong)
-    else Failure(new RuntimeException("Invalid integer"))
-
-  def asReal: Try[Double] =
-    Try(str.toDouble)
 
   def indented(x: Int): String =
     " " * x + str

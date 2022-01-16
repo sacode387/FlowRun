@@ -211,15 +211,13 @@ class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[FlowRun.Ev
 
   private def eval(id: String, numComparison: NumComparison): Future[Any] =
     eval(id, numComparison.term).flatMap { tmp1 =>
-      val integerTry = tmp1.toString.asInteger
-      val realTry = tmp1.toString.asReal
 
-      if integerTry.isSuccess then
-        val tmp = integerTry.get
+      if tmp1.isInstanceOf[Long] then
+        val tmp = tmp1.asInstanceOf[Long]
         numComparison.terms match
           case Some(nextTermOpt) =>
             eval(id, nextTermOpt.term).map { v =>
-              val nextVal = v.toString.asInteger.get
+              val nextVal = v.asInstanceOf[Long]
               nextTermOpt.op.tpe match
                 case Token.Type.Lt   => tmp < nextVal
                 case Token.Type.LtEq => tmp <= nextVal
@@ -227,12 +225,12 @@ class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[FlowRun.Ev
                 case _               => tmp >= nextVal
             }
           case None => Future.successful(tmp)
-      else if realTry.isSuccess then
-        val tmp = realTry.get
+      else if tmp1.isInstanceOf[Double] then
+        val tmp = tmp1.asDouble
         numComparison.terms match
           case Some(nextTermOpt) =>
             eval(id, nextTermOpt.term).map { v =>
-              val nextVal = v.toString.asReal.get
+              val nextVal = v.asDouble
               nextTermOpt.op.tpe match
                 case Token.Type.Lt   => tmp < nextVal
                 case Token.Type.LtEq => tmp <= nextVal
@@ -245,37 +243,34 @@ class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[FlowRun.Ev
 
   private def eval(id: String, term: Term): Future[Any] =
     eval(id, term.factor).flatMap { tmp1 =>
-      val integerTry = tmp1.toString.asInteger
-      val realTry = tmp1.toString.asReal
-      val isString = tmp1.isInstanceOf[String]
-      if integerTry.isSuccess then
+      if tmp1.isInstanceOf[Long] then
         execSequentially(
-          integerTry.get,
+          tmp1.asInstanceOf[Long],
           term.factors,
           (acc, nextFactorOpt) => {
             eval(id, nextFactorOpt.factor).map { v =>
               // TODO validate they ARE really numbers..
-              val nextVal = v.toString.toLong
+              val nextVal = v.asInstanceOf[Long]
               nextFactorOpt.op.tpe match
                 case Token.Type.Plus => acc + nextVal
                 case _               => acc - nextVal
             }
           }
         )
-      else if realTry.isSuccess then
+      else if tmp1.isInstanceOf[Double] then
         execSequentially(
-          realTry.get,
+          tmp1.asDouble,
           term.factors,
           (acc, nextFactorOpt) => {
             eval(id, nextFactorOpt.factor).map { v =>
-              val nextVal = v.toString.asReal.get
+              val nextVal = v.asDouble
               nextFactorOpt.op.tpe match
                 case Token.Type.Plus => acc + nextVal
                 case _               => acc - nextVal
             }
           }
         )
-      else if isString then
+      else if tmp1.isInstanceOf[String] then
         execSequentially(
           tmp1.toString,
           term.factors,
@@ -293,12 +288,9 @@ class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[FlowRun.Ev
 
   private def eval(id: String, factor: Factor): Future[Any] =
     eval(id, factor.unary).flatMap { tmp1 =>
-      val integerTry = tmp1.toString.asInteger
-      val realTry = tmp1.toString.asReal
-
-      if integerTry.isSuccess then
+      if tmp1.isInstanceOf[Long] then
         execSequentially(
-          integerTry.get,
+          tmp1.asInstanceOf[Long],
           factor.unaries,
           (acc, nextUnaryOpt) => {
             eval(id, nextUnaryOpt.unary).map { v =>
@@ -310,13 +302,13 @@ class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[FlowRun.Ev
             }
           }
         )
-      else if realTry.isSuccess then
+      else if tmp1.isInstanceOf[Double] then
         execSequentially(
-          realTry.get,
+          tmp1.asDouble,
           factor.unaries,
           (acc, nextUnaryOpt) => {
             eval(id, nextUnaryOpt.unary).map { v =>
-              val nextVal = v.toString.asReal.get
+              val nextVal = v.asDouble
               nextUnaryOpt.op.tpe match
                 case Token.Type.Times => acc * nextVal
                 case Token.Type.Div   => acc / nextVal
@@ -332,10 +324,8 @@ class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[FlowRun.Ev
       case Unary.Prefixed(op, unary) =>
         eval(id, unary).map { next =>
           if op.tpe == Token.Type.Minus then
-            val integerTry = next.toString.asInteger
-            val realTry = next.toString.asReal
-            if integerTry.isSuccess then -integerTry.get
-            else -realTry.get
+            if next.isInstanceOf[Long] then -next.asInstanceOf[Long]
+            else -next.asDouble
           else !next.asInstanceOf[Boolean]
         }
       case Unary.Simple(atom) => eval(id, atom)
@@ -343,8 +333,16 @@ class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[FlowRun.Ev
   private def eval(id: String, atom: Atom): Future[Any] =
     import Atom.*
     atom match
-      case IntegerLit(value)  => Future.successful(value)
-      case RealLit(value)     => Future.successful(value)
+      case IntegerLit(value) => Future.successful(value)
+      case RealLit(value)    =>
+        // add just a tinyyyyyyy bit to diferrentiate integer from double in runtime
+        val res = if value.isValidInt then {
+          println("YEPPPPPP")
+          value + 1e-308
+        }
+         else value
+        println(res)
+        Future.successful[Double](res)
       case StringLit(value)   => Future.successful(value)
       case Identifier(name)   => Future(symTab.getValue(id, name))
       case TrueLit            => Future.successful(true)
@@ -366,7 +364,7 @@ class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[FlowRun.Ev
           if name == "abs" then
             // TODO handle all predefined functions
             // TODO validate args..........
-            Future(Math.abs(args.head.asInstanceOf[Double]))
+            Future(Math.abs(args.head.asDouble))
           else
             val fun = allFunctions.find(_.name == name).get
             if args.size != fun.parameters.size then

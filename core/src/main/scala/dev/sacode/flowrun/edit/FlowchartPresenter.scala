@@ -42,14 +42,17 @@ class FlowchartPresenter(
     //println(dotSrc)
     graphviz
       .engine("neato")
-      .renderDot(dotSrc, (gr: js.Dynamic) =>{
-        // select current node
-        clearSelected()
-        clearErrors()
-        programModel.currentStmtId.foreach { id=>
-          dom.window.document.querySelector(s""" .node[id^="${id}"] """).classList.add("flowrun--selected")
+      .renderDot(
+        dotSrc,
+        (gr: js.Dynamic) => {
+          // select current node
+          clearSelected()
+          clearErrors()
+          programModel.currentStmtId.foreach { id =>
+            dom.window.document.querySelector(s""" .node[id^="${id}"] """).classList.add("flowrun--selected")
+          }
         }
-      })
+      )
   }
 
   private def funDOT: String =
