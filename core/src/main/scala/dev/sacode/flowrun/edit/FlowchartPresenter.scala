@@ -55,7 +55,7 @@ class FlowchartPresenter(
       )
   }
 
-  private def funDOT: String =
+  def funDOT: String =
     s"""
     |digraph {
     |  bgcolor="transparent"

@@ -87,8 +87,11 @@ class FlowRun(
 
   functionSelector.loadFunctions()
 
-  def json(): js.Any =
-    programModel.ast.toNative
+  def json(): String =
+    programModel.ast.toJson
+  
+  def funDOT(): String =
+    flowchartPresenter.funDOT
 
   // run the program
   flowRunElements.runButton.onclick = _ => {

@@ -30,6 +30,8 @@ import dev.sacode.flowrun.FlowRun
           if tab.classList.contains(aktivan) then tab.classList.remove(aktivan)
           else tab.classList.add(aktivan)
         }
+
+        println(flowRun.json())
       }
     end for
   }

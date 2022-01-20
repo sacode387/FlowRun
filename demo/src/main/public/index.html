@@ -145,6 +145,10 @@
         .flowrun-tabs>.flowrun-active {
             display: block;
         }*/
+        .flowrun-tabs {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+        }
     </style>
 
     <style>
@@ -220,10 +224,10 @@
         <div class="flowrun-fun-chooser"></div>
 
         <div class="flowrun-tabs">
-            <div class="flowrun-draw flowrun-active"></div>
             <pre class="flowrun-code">
                 <code></code>
             </pre>
+            <div class="flowrun-draw flowrun-active"></div>
         </div>
 
 
