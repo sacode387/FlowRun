@@ -15,7 +15,7 @@ import dev.sacode.flowrun.Expression.Type
 import scala.util.Try
 
 // TODO prettify empty lines
-class JavaGenerator(programAst: Program) {
+class JavaGenerator(programAst: Program) extends CodeGenerator {
 
   private val indent = 4
 

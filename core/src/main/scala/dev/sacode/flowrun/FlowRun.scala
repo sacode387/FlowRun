@@ -5,6 +5,7 @@ import scala.scalajs.js.annotation.JSExportTopLevel
 import org.scalajs.dom
 import scalatags.JsDom.all.*
 import org.getshaka.nativeconverter.NativeConverter
+import org.getshaka.nativeconverter.fromJson
 import reactify.*
 import dev.sacode.flowrun.eval.Interpreter
 import dev.sacode.flowrun.edit.FlowchartPresenter
@@ -13,13 +14,19 @@ import dev.sacode.flowrun.edit.StatementEditor
 import dev.sacode.flowrun.edit.OutputArea
 import dev.sacode.flowrun.edit.DebugArea
 import dev.sacode.flowrun.edit.CtxMenu
+import dev.sacode.flowrun.codegen.CodeGeneratorFactory
+import dev.sacode.flowrun.codegen.Language
 
 @JSExportTopLevel("FlowRun")
 class FlowRun(
     mountElem: dom.Element,
     programJson: Option[String] = None,
-    changeCallback: Option[js.Function1[(FlowRun, String), Unit]] = None
+    changeCallback: Option[js.Function1[FlowRun, Unit]] = None
 ) {
+
+  private val FlowRunConfigKey = "flowrun-config"
+  private val localConfig = initLocalConfig()
+  def config(): FlowRunConfig = localConfig.get
 
   private val mountElemText = mountElem.innerText.trim
 
@@ -68,9 +75,15 @@ class FlowRun(
 
   def json(): String =
     programModel.ast.toJson
-  
+
   def funDOT(): String =
     flowchartPresenter.funDOT
+
+  def codeText(): String =
+    val generator = CodeGeneratorFactory(localConfig.get.lang, programModel.ast)
+    val codeTry = generator.generate
+    if codeTry.isFailure then println(codeTry.failed)
+    codeTry.getOrElse("Error while generating code. Please fix errors in the program.")
 
   // run the program
   flowRunElements.runButton.onclick = _ => {
@@ -174,6 +187,7 @@ class FlowRun(
       outputArea.clearStmt()
       outputArea.clearSyntax()
       flowchartPresenter.clearSelected()
+    case ConfigChanged => // noop
   }
   flowrunChannel.attach { _ =>
     // on any event hide menus
@@ -185,15 +199,43 @@ class FlowRun(
   // trigger first time to get the ball rolling
   flowrunChannel := SyntaxSuccess
 
+  ///////////////////////////
+  dom.window.addEventListener(
+    "storage",
+    (event: dom.StorageEvent) => {
+      // When local storage changes set the config
+      val savedConfig = dom.window.localStorage.getItem(FlowRunConfigKey)
+      val savedTodos =
+        if (savedConfig == null) FlowRunConfig(Language.java)
+        else savedConfig.fromJson[FlowRunConfig]
+
+      localConfig.set(savedTodos)
+      flowrunChannel := ConfigChanged
+    }
+  )
+
   private def generateCode(): Unit = {
     // gen code always
-    val generator = new dev.sacode.flowrun.codegen.JavaGenerator(programModel.ast)
-    val codeTry = generator.generate
-    if codeTry.isFailure then println(codeTry.failed)
-    val codeText = codeTry.getOrElse("Error while generating code. Please fix errors in the program.")
     changeCallback match
-      case None     => flowRunElements.codeArea.innerText = codeText
-      case Some(cb) => cb((this,codeText))
+      case None     => flowRunElements.codeArea.innerText = codeText()
+      case Some(cb) => cb(this)
+  }
+
+  // TODO extract to config class
+  private def initLocalConfig(): Var[FlowRunConfig] = {
+
+    val config$ : Var[FlowRunConfig] = Var(null)
+    config$.attach { newValue =>
+      dom.window.localStorage.setItem(FlowRunConfigKey, newValue.toJson)
+    }
+
+    val savedConfig = dom.window.localStorage.getItem(FlowRunConfigKey)
+    val savedTodos =
+      if (savedConfig == null) FlowRunConfig(Language.java)
+      else savedConfig.fromJson[FlowRunConfig]
+
+    config$.set(savedTodos)
+    config$
   }
 }
 
@@ -212,4 +254,5 @@ object FlowRun:
     case FunctionUpdated
     case FunctionSelected
     case Deselected
+    case ConfigChanged
 end FlowRun

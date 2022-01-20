@@ -13,7 +13,7 @@ import dev.sacode.flowrun.eval.Symbol
 import dev.sacode.flowrun.Expression.Type
 import scala.util.Try
 
-class Scala2Generator(programAst: Program) {
+class Scala2Generator(programAst: Program) extends CodeGenerator {
 
   private val indent = 2
 

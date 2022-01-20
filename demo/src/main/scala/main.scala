@@ -13,10 +13,14 @@ import dev.sacode.flowrun.FlowRun
       // init FlowRun
       val flowRun: FlowRun = FlowRun(
         mountElem,
-        changeCallback = Some((fr, codeText) => {
+        changeCallback = Some(fr => {
           val codeArea = fr.flowRunElements.codeArea
           codeArea.innerText = ""
-          val codeElem = code(cls := "language-scala")(codeText).render
+          var lang = fr.config().lang.toString
+          if lang.startsWith("scala") then lang = "scala"
+          val codeElem = code(cls := s"language-$lang")(
+            fr.codeText()
+          ).render
           codeArea.appendChild(codeElem)
           js.Dynamic.global.hljs.highlightElement(codeElem)
         })
