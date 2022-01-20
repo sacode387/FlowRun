@@ -8,6 +8,10 @@ import scalajs.js
 import reactify.*
 import dev.sacode.flowrun.parse.{Token, parseExpr, ParseException, LexException}
 
+/*
+- at runtime we use Long and Double
+- we "widen" literals like 5.0 to 5.000000000000000000001 bcoz js sucks
+*/
 class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[FlowRun.Event]) {
   import Interpreter.*
 

@@ -202,8 +202,8 @@ class FlowRun(mountElem: dom.Element, programJson: Option[String] = None) {
     // on any event hide menus
     ctxMenu.hideAllMenus()
     // gen code always
-    val generator = new dev.sacode.flowrun.codegen.ScalaGenerator(programModel.ast)
-    flowRunElements.codeArea.innerText = generator.generate
+    val generator = new dev.sacode.flowrun.codegen.Scala2Generator(programModel.ast)
+    flowRunElements.codeArea.innerText = generator.generate.getOrElse("Error while generating code. Please fix errors in the program.")
   }
 }
 

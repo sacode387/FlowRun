@@ -17,11 +17,15 @@ extension (any: Any) {
 }
 
 extension (str: String) {
+  
   def toGraphvizLbl: String =
     str.replace("\"", "\\\"")
 
   def indented(x: Int): String =
-    " " * x + str
+    val spaces = " " * x
+    str.linesIterator.map { line =>
+      spaces + line
+    }.mkString("\n")
 }
 
 def getNowTime: String =
