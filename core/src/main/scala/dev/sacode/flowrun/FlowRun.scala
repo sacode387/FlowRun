@@ -15,14 +15,19 @@ import dev.sacode.flowrun.edit.DebugArea
 import dev.sacode.flowrun.edit.CtxMenu
 
 @JSExportTopLevel("FlowRun")
-class FlowRun(mountElem: dom.Element, programJson: Option[String] = None) {
+class FlowRun(
+    mountElem: dom.Element,
+    programJson: Option[String] = None,
+    changeCallback: Option[js.Function1[(FlowRun, String), Unit]] = None
+) {
 
   private val mountElemText = mountElem.innerText.trim
 
   private val maybeTemplate = dom.document.getElementById("flowrun-template").asInstanceOf[dom.html.Element]
 
-  private val flowRunElements = FlowRunElements.resolve(maybeTemplate)
+  val flowRunElements = FlowRunElements.resolve(maybeTemplate)
   mountElem.innerText = ""
+  // move all template children to mountElem
   // https://stackoverflow.com/a/20910214/4496364
   while flowRunElements.template.childNodes.length > 0 do
     mountElem.appendChild(flowRunElements.template.childNodes.head)
@@ -192,10 +197,21 @@ class FlowRun(mountElem: dom.Element, programJson: Option[String] = None) {
     // on any event hide menus
     ctxMenu.hideAllMenus()
     // gen code always
+    generateCode()
+  }
+
+  // trigger first time to get the ball rolling
+  flowrunChannel := SyntaxSuccess
+
+  private def generateCode(): Unit = {
+    // gen code always
     val generator = new dev.sacode.flowrun.codegen.Scala2Generator(programModel.ast)
     val codeTry = generator.generate
     if codeTry.isFailure then println(codeTry.failed)
-    flowRunElements.codeArea.innerText = codeTry.getOrElse("Error while generating code. Please fix errors in the program.")
+    val codeText = codeTry.getOrElse("Error while generating code. Please fix errors in the program.")
+    changeCallback match
+      case None     => flowRunElements.codeArea.innerText = codeText
+      case Some(cb) => cb((this,codeText))
   }
 }
 

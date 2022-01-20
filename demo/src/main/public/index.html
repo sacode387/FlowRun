@@ -99,7 +99,8 @@
         }
 
 
-        .node.flowrun--selected polygon, .node.flowrun--selected ellipse {
+        .node.flowrun--selected polygon,
+        .node.flowrun--selected ellipse {
             stroke: rebeccapurple;
             stroke-width: 2px;
             stroke-dasharray: 10 3;
@@ -135,7 +136,7 @@
             background-color: palegreen;
         }
 
-        /* TABSssssss */
+        /* TODO TABSssssss 
         .flowrun-tabs>* {
             display: none;
             height: 100%;
@@ -143,7 +144,7 @@
 
         .flowrun-tabs>.flowrun-active {
             display: block;
-        }
+        }*/
     </style>
 
     <style>
@@ -177,9 +178,12 @@
         }
     </style>
 
-<link rel="stylesheet"
-href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/11.4.0/styles/default.min.css">
-<script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/11.4.0/highlight.min.js"></script>
+    <!-- highlight code -->
+    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/11.4.0/styles/default.min.css">
+    <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/11.4.0/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.4.0/languages/scala.min.js"
+        integrity="sha512-K7SF4Dv51TV6pT3PvQdm60JGplWBAIkxVYmrtzJqyjQo4mqz1CasVCtEi02aHVXPqu8WZsmSUZ71JDP1tQARIQ=="
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 </head>
 
 <body>
@@ -217,7 +221,9 @@ href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/11.4.0/styles/default.min.cs
 
         <div class="flowrun-tabs">
             <div class="flowrun-draw flowrun-active"></div>
-            <pre class="flowrun-code"></pre>
+            <pre class="flowrun-code">
+                <code></code>
+            </pre>
         </div>
 
 
