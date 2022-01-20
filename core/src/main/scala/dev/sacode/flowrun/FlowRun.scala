@@ -42,30 +42,9 @@ class FlowRun(
         AST.newId,
         "My Program",
         Function(
-          "main",
+          "main", // don't touch!
           "main",
           statements = List(Statement.Begin(AST.newId), Statement.Return(AST.newId))
-          /*statements = List(
-          Statement.Begin(AST.newId),
-          Statement.Declare(AST.newId, "x", Expression.Type.Integer, None),
-
-          Statement.If(
-            AST.newId,
-            "true",
-            Statement.Block(AST.newId, List(
-              Statement.If(
-                AST.newId,
-                "true",
-                Statement.Block(AST.newId, List(
-                  Statement.Assign(AST.newId, "x", "2")
-                )), // true
-                Statement.Block(AST.newId, List(Statement.Assign(AST.newId, "x", "2"))) // false
-              )
-            )), // true
-            Statement.Block(AST.newId, List(Statement.Assign(AST.newId, "x", "2"))) // false
-          ),
-          Statement.Return(AST.newId)
-          )*/
         ),
         List.empty
       )
@@ -208,7 +187,7 @@ class FlowRun(
 
   private def generateCode(): Unit = {
     // gen code always
-    val generator = new dev.sacode.flowrun.codegen.Scala2Generator(programModel.ast)
+    val generator = new dev.sacode.flowrun.codegen.JavaGenerator(programModel.ast)
     val codeTry = generator.generate
     if codeTry.isFailure then println(codeTry.failed)
     val codeText = codeTry.getOrElse("Error while generating code. Please fix errors in the program.")

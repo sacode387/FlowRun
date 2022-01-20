@@ -21,6 +21,9 @@ extension (str: String) {
   def toGraphvizLbl: String =
     str.replace("\"", "\\\"")
 
+  def toIdentifier: String =
+    str.replaceAll("\\s", "")
+
   def indented(x: Int): String =
     val spaces = " " * x
     str.linesIterator.map { line =>

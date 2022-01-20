@@ -1,6 +1,7 @@
 package dev.sacode.flowrun.codegen
 
 import reactify.*
+import dev.sacode.flowrun.toIdentifier
 import dev.sacode.flowrun.Program
 import dev.sacode.flowrun.Function
 import dev.sacode.flowrun.Statement
@@ -13,22 +14,31 @@ import dev.sacode.flowrun.eval.Symbol
 import dev.sacode.flowrun.Expression.Type
 import scala.util.Try
 
-class Scala2Generator(programAst: Program) {
+// TODO prettify empty lines
+class JavaGenerator(programAst: Program) {
 
-  private val indent = 2
+  private val indent = 4
 
   private val dummyChannel = Channel[FlowRun.Event]
   private val symTab = SymbolTable(dummyChannel) // needed for types of vars
 
+  private var initInput = false
+
   def generate: Try[String] = Try {
 
-    val statements = programAst.main.statements.map(genStatement).filterNot(_.trim.isEmpty)
+    val statements = programAst.main.statements.map(genStatement).map(_.indented(indent)).filterNot(_.trim.isEmpty)
     val functions = programAst.functions.map(genFunction)
-    s"""|import scala.io.StdIn
+    val maybeScanner = if initInput then "static Scanner scanner = new Scanner(System.in);" else ""
+    s"""|import java.util.*;
         |
-        |object ${programAst.main.name} extends App {
+        |public class ${programAst.name.toIdentifier} {
+        |
+        |    $maybeScanner
+        |
+        |    public static void main(String args[]) {
         |
         |${statements.mkString("\n")}
+        |    }
         |
         |${functions.mkString("\n")}
         |}
@@ -40,7 +50,7 @@ class Scala2Generator(programAst: Program) {
     val statements = function.statements.map(genStatement).filterNot(_.trim.isEmpty)
     val params = function.parameters.map(p => s"${p.name}: ${getType(p.tpe)}").mkString(", ")
     symTab.exitScope()
-    s"""|def ${function.name}($params): ${getType(function.tpe)} = {
+    s"""|public static ${getType(function.tpe)} ${function.name}($params) {
         |${statements.mkString("\n")}
         |}
         |""".stripMargin.indented(indent)
@@ -54,25 +64,26 @@ class Scala2Generator(programAst: Program) {
       case Declare(id, name, tpe, maybeInitValue) =>
         val key = SymbolKey(name, Symbol.Kind.Variable, id)
         symTab.add(id, key, tpe, None)
-        val initValue = maybeInitValue.map(v => s" = $v").getOrElse(" = _")
-        s"var $name: ${getType(tpe)}$initValue".indented(indent)
+        val initValue = maybeInitValue.map(v => s" = $v").getOrElse("")
+        s"${getType(tpe)} $name$initValue;".indented(indent)
       case Assign(_, name, value) =>
-        s"$name = $value".indented(indent)
+        s"$name = $value;".indented(indent)
       case Call(_, value) =>
-        value.indented(indent)
+        s"$value;".indented(indent)
       case Input(_, name) =>
+        initInput = true
         val symOpt = getVarSym(name)
         val readFun = readFunction(symOpt.map(_.tpe))
-        s"$name = StdIn.$readFun()".indented(indent)
+        s"$name = scanner.$readFun();".indented(indent)
       case Output(_, value) =>
-        s"println($value)".indented(indent)
+        s"System.out.println($value);".indented(indent)
       case Block(blockId, statements) =>
         symTab.enterScope(blockId)
         val res = statements.map(genStatement).mkString("\n")
         symTab.exitScope()
         res
       case Return(_, maybeValue) =>
-        maybeValue.getOrElse("").indented(indent)
+        maybeValue.map(v => s"return $v;").getOrElse("").indented(indent)
       case If(_, condition, trueBlock, falseBlock) =>
         s"""|if ($condition) {
             |${genStatement(trueBlock)}
@@ -86,25 +97,25 @@ class Scala2Generator(programAst: Program) {
       case DoWhile(_, condition, block) =>
         s"""|do {
             |${genStatement(block)}
-            |} while ($condition)""".stripMargin.trim.indented(indent)
+            |} while ($condition);""".stripMargin.trim.indented(indent)
 
   private def getType(tpe: Expression.Type): String =
     import Expression.Type, Type._
     tpe match
-      case Void    => "Unit"
-      case Integer => "Int"
-      case Real    => "Double"
+      case Void    => "void"
+      case Integer => "int"
+      case Real    => "double"
       case String  => "String"
-      case Boolean => "Boolean"
+      case Boolean => "boolean"
 
   private def readFunction(tpeOpt: Option[Type]): String = tpeOpt match
-    case None => "readLine"
+    case None => "nextLine"
     case Some(tpe) =>
       tpe match
-        case Type.Integer => "readInt"
-        case Type.Real    => "readDouble"
-        case Type.Boolean => "readBoolean"
-        case _            => "readLine"
+        case Type.Integer => "nextInt"
+        case Type.Real    => "nextDouble"
+        case Type.Boolean => "nextBoolean"
+        case _            => "nextLine"
 
   private def getVarSym(name: String) = Try {
     val id = "dummy"
