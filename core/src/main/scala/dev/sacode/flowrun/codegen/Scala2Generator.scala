@@ -62,21 +62,17 @@ class Scala2Generator(programAst: Program) {
         s"$name = $value".indented(indent)
       case Call(_, value) =>
         value.indented(indent)
-      case Input(id, name) =>
-        val key = SymbolKey(name, Symbol.Kind.Variable, id)
-        val sym = symTab.getSymbol(id, key)
-        println(sym)
-        // TODO try-catch and then resolve.. :)
-        val readFun = sym.tpe match
-          case Type.Integer => "readInt"
-          case Type.Real    => "readDouble"
-          case Type.Boolean => "readBoolean"
-          case _            => "readLine"
+      case Input(_, name) =>
+        val symOpt = getVarSym(name)
+        val readFun = readFunction(symOpt.map(_.tpe))
         s"$name = StdIn.$readFun()".indented(indent)
       case Output(_, value) =>
         s"println($value)".indented(indent)
-      case Block(_, statements) =>
-        statements.map(genStatement).mkString("\n")
+      case Block(blockId, statements) =>
+        symTab.enterScope(blockId)
+        val res = statements.map(genStatement).mkString("\n")
+        symTab.exitScope()
+        res
       case Return(_, maybeValue) =>
         maybeValue.getOrElse("").indented(indent)
       case If(_, condition, trueBlock, falseBlock) =>
@@ -103,4 +99,18 @@ class Scala2Generator(programAst: Program) {
       case String  => "String"
       case Boolean => "Boolean"
 
+  private def readFunction(tpeOpt: Option[Type]): String = tpeOpt match
+    case None => "readLine"
+    case Some(tpe) =>
+      tpe match
+        case Type.Integer => "readInt"
+        case Type.Real    => "readDouble"
+        case Type.Boolean => "readBoolean"
+        case _            => "readLine"
+
+  private def getVarSym(name: String) = Try {
+    val id = "dummy"
+    val key = SymbolKey(name, Symbol.Kind.Variable, id)
+    symTab.getSymbol(id, key)
+  }.toOption
 }
