@@ -28,7 +28,6 @@ class FlowRunElements(
 
   // singletons
   val runButton: dom.html.Element = execBtns.querySelector(".flowrun-btn-run").asInstanceOf[dom.html.Element]
-  val flipTabButton: dom.html.Element = execBtns.querySelector(".flip-tab").asInstanceOf[dom.html.Button]
 
   val addFunButton: dom.html.Element = template.querySelector(".flowrun-fun-add").asInstanceOf[dom.html.Element]
   val deleteFunButton: dom.html.Element = template.querySelector(".flowrun-fun-delete").asInstanceOf[dom.html.Element]

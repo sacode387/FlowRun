@@ -27,16 +27,6 @@ class FlowRun(mountElem: dom.Element, programJson: Option[String] = None) {
   while flowRunElements.template.childNodes.length > 0 do
     mountElem.appendChild(flowRunElements.template.childNodes.head)
 
-  // TODO move to DEMO CODE, 
-  // layout shouldnt be part of FlowRun
-  flowRunElements.flipTabButton.onclick = _ => {
-    val aktivan = "flowrun-active"
-    mountElem.querySelectorAll(".flowrun-tabs > *").foreach { tab =>
-      if tab.classList.contains(aktivan) then tab.classList.remove(aktivan)
-      else tab.classList.add(aktivan)
-    }
-  }
-
   private val maybeJson = programJson.orElse(
     Option.when(mountElemText.nonEmpty)(mountElemText)
   )
