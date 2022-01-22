@@ -25,17 +25,5 @@ import dev.sacode.flowrun.FlowRun
           js.Dynamic.global.hljs.highlightElement(codeElem)
         })
       )
-
-      // setup tab button
-      val flipTabButton: dom.html.Element = mountElem.querySelector(".flip-tab").asInstanceOf[dom.html.Button]
-      flipTabButton.onclick = _ => {
-        val aktivan = "flowrun-active"
-        mountElem.querySelectorAll(".flowrun-tabs > *").foreach { tab =>
-          if tab.classList.contains(aktivan) then tab.classList.remove(aktivan)
-          else tab.classList.add(aktivan)
-        }
-
-        println(flowRun.json())
-      }
     end for
   }

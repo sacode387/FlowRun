@@ -37,15 +37,15 @@
         }
 
         .flowrun-exec-btns {
-            grid-area: flowrun-exec-btns;
+            position: absolute;
+            right: 0;
+            top: 0;
             padding: 5px;
         }
 
-        .flowrun-tabs {
-            grid-area: flowrun-tabs;
-        }
-
-        .flowrun-draw {
+        .flowrun-diagram {
+            grid-area: flowrun-diagram;
+            position: relative;
             padding: 1rem;
             background-color: rgb(243, 233, 233);
             text-align: center;
@@ -70,13 +70,21 @@
 
         .flowrun-scratchpad>* {
             flex: 1 1 auto;
-            padding: 1rem;
             border-bottom: 1px solid sandybrown;
+            padding: 1rem;
         }
 
         .flowrun-scratchpad>*:empty {
             /* hide empty divs to fill in vertical space */
             display: none;
+        }
+
+        .flowrun-code {
+            grid-area: flowrun-code;
+        }
+
+        .flowrun-code code {
+            height: 100%;
         }
 
         @media screen and (min-width: 479px) {
@@ -86,9 +94,10 @@
                 grid-template-columns: repeat(3, 1fr);
                 grid-template-rows: 30px 30px minmax(200px, 1fr) auto;
                 grid-template-areas:
-                    "flowrun-meta       flowrun-meta            flowrun-meta        "
-                    "flowrun-exec-btns  flowrun-fun-chooser     .                   "
-                    "flowrun-tabs       flowrun-tabs            flowrun-scratchpad  "
+                    "flowrun-meta          flowrun-meta            flowrun-meta        "
+                    "flowrun-fun-chooser   flowrun-fun-chooser     .        "
+                    "flowrun-diagram       flowrun-diagram            flowrun-code  "
+                    "flowrun-diagram       flowrun-diagram            flowrun-scratchpad  "
                 ;
             }
         }
@@ -134,20 +143,6 @@
 
         .flowrun-output-runtime.flowrun--success {
             background-color: palegreen;
-        }
-
-        /* TODO TABSssssss 
-        .flowrun-tabs>* {
-            display: none;
-            height: 100%;
-        }
-
-        .flowrun-tabs>.flowrun-active {
-            display: block;
-        }*/
-        .flowrun-tabs {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
         }
     </style>
 
@@ -199,11 +194,11 @@
         <div id="flowrun-add-input">⌨ Input</div>
         <div id="flowrun-add-output">🖥 Output</div>
         <hr>
-        <div id="flowrun-add-call">📞 Call</div>
-        <hr>
         <div id="flowrun-add-if">❔ If</div>
         <div id="flowrun-add-while">⥁ While</div>
         <div id="flowrun-add-do-while">⟲ Do While</div>
+        <hr>
+        <div id="flowrun-add-call">📞 Call</div>
         <hr>
     </div>
 
@@ -216,24 +211,25 @@
     <div id="flowrun-template" style="display: none;">
         <div class="flowrun-meta"></div>
 
-        <div class="flowrun-exec-btns">
-            <button class="flowrun-btn-run">▶ Run</button>
-            <button class="flip-tab">Flip tab</button>
-        </div>
-
         <div class="flowrun-fun-chooser"></div>
 
-        <div class="flowrun-tabs">
-            <pre class="flowrun-code">
-                <code></code>
-            </pre>
-            <div class="flowrun-draw flowrun-active"></div>
+        <div class="flowrun-diagram">
+            <div class="flowrun-draw"> </div>
+            <div class="flowrun-exec-btns">
+                <button class="flowrun-btn-run">▶ Run</button>
+                <button class="flowrun-btn-debug">▶ Debug</button>
+            </div>
         </div>
 
+
+        <pre class="flowrun-code">
+            <code></code>
+        </pre>
 
         <div class="flowrun-scratchpad">
             <div class="flowrun-output-statement"></div>
             <div class="flowrun-output-syntax"></div>
+
             <div class="flowrun-output-runtime"></div>
             <div class="flowrun-output-debug"></div>
         </div>

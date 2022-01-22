@@ -206,7 +206,7 @@ class FlowRun(
       // When local storage changes set the config
       val savedConfig = dom.window.localStorage.getItem(FlowRunConfigKey)
       val savedTodos =
-        if (savedConfig == null) FlowRunConfig(Language.java)
+        if (savedConfig == null) FlowRunConfig(Language.java, "")
         else savedConfig.fromJson[FlowRunConfig]
 
       localConfig.set(savedTodos)
@@ -231,7 +231,7 @@ class FlowRun(
 
     val savedConfig = dom.window.localStorage.getItem(FlowRunConfigKey)
     val savedTodos =
-      if (savedConfig == null) FlowRunConfig(Language.java)
+      if (savedConfig == null) FlowRunConfig(Language.java, "")
       else savedConfig.fromJson[FlowRunConfig]
 
     config$.set(savedTodos)
