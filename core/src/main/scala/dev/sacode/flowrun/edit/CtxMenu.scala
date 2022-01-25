@@ -15,7 +15,7 @@ class CtxMenu(programModel: ProgramModel) {
   private var blockId = ""
 
   private val DeleteableNodeTypes =
-    Set("Declare", "Assign", "Input", "Output", "Call", "If", "While", "DoWhile")
+    Set("Declare", "Assign", "Input", "Output", "Call", "If", "While", "DoWhile", "ForLoop")
 
   private val edgeContextMenu =
     dom.document.getElementById("flowrun-edge-context-menu").asInstanceOf[dom.html.Element]
@@ -84,6 +84,7 @@ class CtxMenu(programModel: ProgramModel) {
     val addIfButton = edgeContextMenu.querySelector("#flowrun-add-if").asInstanceOf[dom.html.Element]
     val addWhileButton = edgeContextMenu.querySelector("#flowrun-add-while").asInstanceOf[dom.html.Element]
     val addDoWhileButton = edgeContextMenu.querySelector("#flowrun-add-do-while").asInstanceOf[dom.html.Element]
+    val addForLoopButton = edgeContextMenu.querySelector("#flowrun-add-for").asInstanceOf[dom.html.Element]
 
     deleteButton.addEventListener(
       "click",
@@ -149,6 +150,13 @@ class CtxMenu(programModel: ProgramModel) {
       "click",
       (event: dom.MouseEvent) => {
         programModel.addDoWhile(Request.AddDoWhile(AST.newId, AST.newId, afterId, blockId))
+      }
+    )
+
+    addForLoopButton.addEventListener(
+      "click",
+      (event: dom.MouseEvent) => {
+        programModel.addForLoop(Request.AddForLoop(AST.newId, AST.newId, afterId, blockId))
       }
     )
   }

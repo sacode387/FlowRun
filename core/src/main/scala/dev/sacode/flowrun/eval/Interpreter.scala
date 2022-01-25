@@ -149,6 +149,27 @@ class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[FlowRun.Ev
             case condValue => throw EvalException(s"Not a valid condition: '$condValue'", id)
           }
         interpret(body).flatMap(_ => loop())
+      case forLoop @ ForLoop(id, varName, start, incr, end, body) =>
+        // new var is scoped only to for loop
+        symTab.enterScope(id)
+        // decl new var
+        val key = SymbolKey(varName, Symbol.Kind.Variable, id)
+        symTab.add(id, key, Expression.Type.Integer, Some(start))
+
+        val comparator = forLoop.comparator
+        val condition = s"$varName $comparator $end"
+        def loop(): Future[Any] =
+          eval(id, parseExpr(id, condition)).flatMap {
+            case condition: Boolean =>
+              if (condition) interpret(body).flatMap{_ => 
+                val current = symTab.getValue(id, varName)
+                symTab.setValue(id, varName, current.asInstanceOf[Int] + incr)
+                loop()
+              }
+              else Future.successful({})
+            case condValue => throw EvalException(s"Not a valid condition: '$condValue'", id)
+          }
+        loop().map(_ => symTab.exitScope())
       case block: Block =>
         symTab.enterScope(block.id)
         execSequentially((): Any, block.statements, (_, s) => interpret(s)).map { res =>

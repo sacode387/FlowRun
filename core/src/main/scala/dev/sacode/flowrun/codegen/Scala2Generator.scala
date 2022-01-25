@@ -87,6 +87,10 @@ class Scala2Generator(programAst: Program) extends CodeGenerator {
         s"""|do {
             |${genStatement(block)}
             |} while ($condition)""".stripMargin.trim.indented(indent)
+      case ForLoop(_, varName, start, incr, end, block) =>
+        s"""|for ($varName <- $start to $end) {
+            |${genStatement(block)}
+            |}""".stripMargin.trim.indented(indent)
 
   private def getType(tpe: Expression.Type): String =
     import Expression.Type, Type._

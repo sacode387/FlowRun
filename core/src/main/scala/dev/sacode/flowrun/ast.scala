@@ -133,6 +133,23 @@ object Statement:
       body: Block
   ) extends Statement(id):
     def label = condition.toString
+  
+  case class ForLoop(
+      override val id: String,
+      varName: String,
+      start: Int,
+      incr: Int,
+      end: Int,
+      body: Block
+  ) extends Statement(id):
+    if incr == 0 then
+      throw IllegalArgumentException("Increment can not be zero")
+    if start <= end && incr < 0 then
+      throw IllegalArgumentException("Increment must be positive when start<end")
+    if start >= end && incr > 0 then
+      throw IllegalArgumentException("Increment must be negative when start>end")
+    def label = s"$varName = $start to $end by $incr"
+    val comparator = if incr >= 0 then "<=" else ">="
 
   // utils
   def name(stmt: Statement, funName: String): String =
@@ -183,6 +200,7 @@ object Statement:
       if depth == 0 then wrMax + 1 else wlMax + wrMax + 1
     case stmt: While   => 1
     case stmt: DoWhile => 0
+    case stmt: ForLoop => 1
     case _             => 0
 
   def widthRight(statement: Statement, depth: Int): Int = statement match
@@ -195,6 +213,10 @@ object Statement:
       val wrMax = stmt.body.statements.map(s => widthRight(s, depth + 1)).maxOption.getOrElse(0)
       if depth == 0 then wlMax + 1 else wlMax + wrMax + 1
     case stmt: DoWhile =>
+      val wlMax = stmt.body.statements.map(s => widthLeft(s, depth + 1)).maxOption.getOrElse(0)
+      val wrMax = stmt.body.statements.map(s => widthRight(s, depth + 1)).maxOption.getOrElse(0)
+      if depth == 0 then wlMax + 1 else wlMax + wrMax + 1
+    case stmt: ForLoop =>
       val wlMax = stmt.body.statements.map(s => widthLeft(s, depth + 1)).maxOption.getOrElse(0)
       val wrMax = stmt.body.statements.map(s => widthRight(s, depth + 1)).maxOption.getOrElse(0)
       if depth == 0 then wlMax + 1 else wlMax + wrMax + 1

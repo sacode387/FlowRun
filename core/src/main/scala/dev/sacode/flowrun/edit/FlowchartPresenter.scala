@@ -266,6 +266,41 @@ class FlowchartPresenter(
               |
               |""".stripMargin
         (dot, maxBranchY)
+      
+      case stmt: ForLoop =>
+        val lbl = stmt.label.toGraphvizLbl
+
+        val (blockDOTs, trueOffsetX) = locally {
+          val block = stmt.body
+          val stmts = block.statements
+          val x = posX + widthRight(stmt, 0)
+          val dots = stmts.foldLeft((List.empty[String], posY + 1)) { case ((prevDots, lastY), s) =>
+            val dot = nodeDOT(s, block.id, x, lastY)
+            (prevDots.appended(dot._1), dot._2 + 1)
+          }
+          (dots, x)
+        }
+
+        val falseOffsetX = posX - 1
+
+        val maxBranchY = blockDOTs._2
+
+        val dot =
+          s"""|${stmt.id} [id="$stmtId" ${pos(posX, posY)} ${dimensions(lbl, true)} $group 
+              | label="$lbl" tooltip="$lbl" shape="diamond" fillcolor="yellow" fontcolor="black"]
+              |
+              |true_dummy_up_${stmt.id} [${pos(trueOffsetX, posY)} shape=point width=0]
+              |false_dummy_up_${stmt.id} [${pos(falseOffsetX, posY)} shape=point width=0]
+              |
+              |${blockDOTs._1.mkString("\n")}
+              |
+              |true_dummy_down_${stmt.id} [${pos(trueOffsetX, maxBranchY, -10)} shape=point width=0]
+              |true_dummy_down_left_${stmt.id} [${pos(posX, maxBranchY, -10)} shape=point width=0]
+              |false_dummy_down_${stmt.id} [${pos(falseOffsetX, maxBranchY)} shape=point width=0]
+              |end_dummy_down_${stmt.id} [${pos(posX, maxBranchY)} $group shape=point width=0]
+              |
+              |""".stripMargin
+        (dot, maxBranchY)
 
       case _: Block => ("", posY)
     }
@@ -455,6 +490,48 @@ class FlowchartPresenter(
             |
             |## FALSE
             |${stmt.id}:s -> $nextStmtId [id="${stmt.id}@${blockId}" ${edgeAttrs(nextStmtId)} taillabel="false" fontcolor="red" labeldistance=2 labelangle=-80]
+            |
+            |""".stripMargin
+          
+      case stmt: ForLoop => // TODO same as While, delete?
+        val trueDummyUpId = s"true_dummy_up_${stmt.id}"
+        val trueDummyDownId = s"true_dummy_down_${stmt.id}"
+        val trueDummyDownLeftId = s"true_dummy_down_left_${stmt.id}"
+        val falseDummyUpId = s"false_dummy_up_${stmt.id}"
+        val falseDummyDownId = s"false_dummy_down_${stmt.id}"
+        val endDummyDownId = s"end_dummy_down_${stmt.id}"
+
+        val (trueEdgeDOTs, firstTrueNodeId, lastTrueNodeId) = locally {
+          val block = stmt.body
+          val stmts = block.statements
+          val nextStmtIds = block.statements.drop(1).map(_.id) ++ List(s"true_dummy_down_${stmt.id}")
+
+          val statementsDot = stmts
+            .zip(nextStmtIds)
+            .map { (prev, nextId) => edgeDOT(prev, block.id, nextId) }
+            .mkString("\n")
+
+          val first = stmts.headOption.map(_.id).getOrElse(s"true_dummy_down_${stmt.id}")
+          val last = stmts.lastOption.map(_.id).getOrElse(stmt.id)
+          (statementsDot, first, last)
+        }
+
+        s"""|## TRUE
+            |${stmt.id}:e -> $trueDummyUpId [id="${stmt.id}@${stmt.body.id}" ${edgeAttrs(trueDummyUpId)} taillabel="true" fontcolor="forestgreen"]
+            |$trueDummyUpId -> $firstTrueNodeId:n [id="${stmt.id}@${stmt.body.id}" ${edgeAttrs(firstTrueNodeId)}]
+            |
+            |$trueEdgeDOTs
+            |
+            |$trueDummyDownId -> $trueDummyDownLeftId [id="${lastTrueNodeId}@${stmt.body.id}" ${edgeAttrs(
+          trueDummyDownLeftId
+        )}]
+            |$trueDummyDownLeftId -> ${stmt.id}:s [id="${lastTrueNodeId}@${stmt.body.id}" ${edgeAttrs(stmt.id)}]
+            |
+            |## FALSE
+            |${stmt.id}:w -> $falseDummyUpId [id="${stmt.id}@${blockId}" ${edgeAttrs(falseDummyUpId)} taillabel="false" fontcolor="red"]
+            |$falseDummyUpId -> $falseDummyDownId [id="${stmt.id}@${blockId}" ${edgeAttrs(falseDummyDownId)}]
+            |$falseDummyDownId -> $endDummyDownId [id="${stmt.id}@${blockId}" ${edgeAttrs(endDummyDownId)}]
+            |$endDummyDownId -> $nextStmtId [id="${stmt.id}@${blockId}" ${edgeAttrs(nextStmtId)}]
             |
             |""".stripMargin
 

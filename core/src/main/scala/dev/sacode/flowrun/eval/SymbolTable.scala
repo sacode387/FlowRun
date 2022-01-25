@@ -35,7 +35,7 @@ class SymbolTable(flowrunChannel: Channel[FlowRun.Event]) {
 
   def setValue(nodeId: String, name: String, value: Any): Unit =
     currentScope.setValue(nodeId, name, value)
-
+  
   def getValue(nodeId: String, name: String): Any =
     currentScope.getValue(nodeId, name)
 

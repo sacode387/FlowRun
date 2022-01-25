@@ -87,7 +87,10 @@ class ProgramModel(
 
   def addDoWhile(req: AddDoWhile): Unit =
     update(_.addDoWhile(req), FlowRun.Event.StmtAdded)
-
+  
+  def addForLoop(req: AddForLoop): Unit =
+    update(_.addForLoop(req), FlowRun.Event.StmtAdded)
+  
   def updateDeclare(req: UpdateDeclare): Unit =
     update(_.updateDeclare(req), FlowRun.Event.SyntaxSuccess)
 
@@ -167,6 +170,12 @@ object ProgramModel:
         afterId: String,
         blockId: String
     )
+    case AddForLoop(
+        id: String,
+        bodyId: String,
+        afterId: String,
+        blockId: String
+    )
 
     case UpdateDeclare(
         id: String,
@@ -225,6 +234,10 @@ case class FunctionModel(
 
   def addDoWhile(req: AddDoWhile): FunctionModel =
     val newStat = Statement.DoWhile(req.id, "false", Statement.Block(req.bodyId))
+    doInsert(req.afterId, newStat, req.blockId)
+  
+  def addForLoop(req: AddForLoop): FunctionModel =
+    val newStat = Statement.ForLoop(req.id, "i", 0, 1, 10, Statement.Block(req.bodyId))
     doInsert(req.afterId, newStat, req.blockId)
 
   def updateDeclare(req: UpdateDeclare): FunctionModel =
@@ -320,6 +333,13 @@ case class FunctionModel(
             else
               stmt
           statements.updated(afterStatementIdx, newStmt)
+        case stmt: Statement.ForLoop =>
+          val newStmt =
+            if (stmt.body.id == blockId)
+              stmt.copy(body = stmt.body.copy(statements = stmt.body.statements.prepended(newStatement)))
+            else
+              stmt
+          statements.updated(afterStatementIdx, newStmt)
         case _ =>
           statements.patch(afterStatementIdx + 1, List(newStatement), 0)
       }
@@ -343,6 +363,12 @@ case class FunctionModel(
           doWhileStatement.copy(
             body = doWhileStatement.body.copy(statements =
               insert(doWhileStatement.body.statements, afterId, newStatement, blockId)
+            )
+          )
+        case stmt: Statement.ForLoop =>
+          stmt.copy(
+            body = stmt.body.copy(statements =
+              insert(stmt.body.statements, afterId, newStatement, blockId)
             )
           )
         case simple =>
@@ -390,6 +416,11 @@ case class FunctionModel(
             body = doWhileStatement.body.copy(statements =
               update(doWhileStatement.body.statements, statementId, newStatement)
             )
+          )
+        case stmt: Statement.ForLoop =>
+          stmt.copy(
+            body =
+              stmt.body.copy(statements = update(stmt.body.statements, statementId, newStatement))
           )
         case simple =>
           simple
@@ -452,6 +483,10 @@ case class FunctionModel(
       case doWhileStat @ DoWhile(id, expr, body) =>
         Option
           .when(statementId == id)(doWhileStat)
+          .orElse(findById(body.statements, statementId))
+      case whileStat @ ForLoop(id, _, _, _, _, body) =>
+        Option
+          .when(statementId == id)(whileStat)
           .orElse(findById(body.statements, statementId))
       case stmt =>
         Option.when(stmt.id == statementId)(stmt)
