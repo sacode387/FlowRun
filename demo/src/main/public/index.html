@@ -8,6 +8,8 @@
 
     <title>FlowRun</title>
 
+    
+
     <style>
         * {
             margin: 0;
@@ -36,19 +38,11 @@
             font-size: 1.2rem;
         }
 
-        .flowrun-exec-btns {
-            position: absolute;
-            right: 0;
-            top: 0;
-            padding: 5px;
-        }
-
         .flowrun-diagram {
             grid-area: flowrun-diagram;
             position: relative;
             padding: 1rem;
-            background-color: rgb(243, 233, 233);
-            text-align: center;
+            background-color: #fcfbfb;
         }
 
         .flowrun-fun-chooser {
@@ -70,6 +64,8 @@
 
         .flowrun-scratchpad>* {
             flex: 1 1 auto;
+            max-height: 30vh;
+            overflow: auto;
             border-bottom: 1px solid sandybrown;
             padding: 1rem;
         }
@@ -81,6 +77,9 @@
 
         .flowrun-code {
             grid-area: flowrun-code;
+            max-height: 60vh;
+            border-bottom: 2px brown solid;
+            margin-bottom: 5px;
         }
 
         .flowrun-code code {
@@ -144,6 +143,28 @@
         .flowrun-output-runtime.flowrun--success {
             background-color: palegreen;
         }
+
+        /* */
+        .flowrun-exec-btns {
+            position: absolute;
+            right: 0;
+            top: 0;
+            display: flex;
+            gap: 1rem;
+            padding: 5px;
+        }
+
+        .flowrun-exec-btns [class^="flowrun-btn"] {
+            display: flex;
+            padding: 0.1rem;
+            border: 1px solid grey;
+            border-radius: 3px;
+            cursor: pointer;
+            user-select: none;
+        }
+        .flowrun-exec-btns [class^="flowrun-btn"]:hover {
+            background-color: gold;
+        }
     </style>
 
     <style>
@@ -162,9 +183,10 @@
         }
 
         .flowrun-context-menu>div {
-            padding: 8px 10px;
+            padding: 4px 10px;
             font-size: 15px;
             color: #eee;
+            background: linear-gradient(to bottom left, #1b1a1a, #4b4646);
         }
 
         .flowrun-context-menu>*:hover {
@@ -173,7 +195,12 @@
 
         .flowrun-context-menu hr {
             margin: 2px 0px;
-            border-color: #555;
+            border-color: #000;
+        }
+
+        .flowrun-context-menu>[id^="flowrun-add"] {
+            display: flex;
+            gap: 5px;
         }
     </style>
 
@@ -183,24 +210,38 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.4.0/languages/scala.min.js"
         integrity="sha512-K7SF4Dv51TV6pT3PvQdm60JGplWBAIkxVYmrtzJqyjQo4mqz1CasVCtEi02aHVXPqu8WZsmSUZ71JDP1tQARIQ=="
         crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&family=Encode+Sans&display=swap');
+
+        body {
+            font-family: 'Encode Sans', sans-serif;
+        }
+
+        pre,
+        pre>* {
+            /* using Courier since Graphviz only supports that monospace font */
+            font-family: 'Courier Prime', monospace;
+        }
+    </style>
+    
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 </head>
 
 <body>
 
     <div id="flowrun-edge-context-menu" class="flowrun-context-menu">
-        <div id="flowrun-add-declare">❕ Declare</div>
-        <div id="flowrun-add-assign">≔ Assign</div>
+        <div id="flowrun-add-declare"><span class="material-icons">add</span> Declare</div>
+        <div id="flowrun-add-assign"><span class="material-icons">sync_alt</span> Assign</div>
         <hr>
-        <div id="flowrun-add-input">⌨ Input</div>
-        <div id="flowrun-add-output">🖥 Output</div>
+        <div id="flowrun-add-input"><span class="material-icons">keyboard</span> Input</div>
+        <div id="flowrun-add-output"><span class="material-icons">desktop_windows</span> Output</div>
         <hr>
-        <div id="flowrun-add-if">❔ If</div>
-        <div id="flowrun-add-while">⥁ While</div>
-        <div id="flowrun-add-do-while">⟲ Do While</div>
-        <div id="flowrun-add-for">⟲ For loop</div>
+        <div id="flowrun-add-if"><span class="material-icons">call_split</span> If</div>
+        <div id="flowrun-add-while"><span class="material-icons">repeat</span> While</div>
+        <div id="flowrun-add-do-while"><span class="material-icons">repeat</span> Do While</div>
+        <div id="flowrun-add-for"><span class="material-icons">repeat</span> For loop</div>
         <hr>
-        <div id="flowrun-add-call">📞 Call</div>
-        <hr>
+        <div id="flowrun-add-call"><span class="material-icons">call</span> Call</div>
     </div>
 
     <div id="flowrun-node-context-menu" class="flowrun-context-menu">
@@ -217,8 +258,8 @@
         <div class="flowrun-diagram">
             <div class="flowrun-draw"> </div>
             <div class="flowrun-exec-btns">
-                <button class="flowrun-btn-run">▶ Run</button>
-                <button class="flowrun-btn-debug">▶ Debug</button>
+                <div class="flowrun-btn-run"><span class="material-icons">play_arrow</span> Run</div>
+                <div class="flowrun-btn-debug"><span class="material-icons">bug_report</span> Debug</div>
             </div>
         </div>
 

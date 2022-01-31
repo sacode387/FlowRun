@@ -7,9 +7,14 @@ import org.scalajs.dom
 import reactify.*
 import dev.sacode.flowrun.parse.*
 
+/*
+- color==border_color, fillcolor==.. https://stackoverflow.com/questions/9106079/graphviz-how-to-change-border-color
+- https://colorhunt.co/palette/000957344cb7577bc1ebe645
+*/
 class FlowchartPresenter(
     programModel: ProgramModel,
-    flowRunElements: FlowRunElements
+    flowRunElements: FlowRunElements,
+    colorScheme: ColorScheme = ColorScheme.default
 ) {
 
   private val PxInInch = 96
@@ -49,7 +54,7 @@ class FlowchartPresenter(
           clearSelected()
           clearErrors()
           programModel.currentStmtId.foreach { id =>
-            dom.window.document.querySelector(s""" .node[id^="${id}"] """).classList.add("flowrun--selected")
+            dom.window.document.querySelectorAll(s""" .node[id*="${id}"] """).foreach(_.classList.add("flowrun--selected"))
           }
         }
       )
@@ -61,7 +66,7 @@ class FlowchartPresenter(
     |  bgcolor="transparent"
     |
     |  node [penwidth=0.5 fontsize="12" shape="box" style="filled" fontcolor="white" fontname="Courier New"]
-    |  edge [penwidth=1.5 fontsize="12" arrowsize=0.8]
+    |  edge [penwidth=1.5 fontsize="12" color="#0A1931" arrowsize=0.8]
     |
     |  $nodesDOT
     |
@@ -100,7 +105,7 @@ class FlowchartPresenter(
         val lbl = if programModel.currentFunction.isMain then "Begin" else programModel.currentFunction.label
         val dot =
           s"""|${stmt.id} [id="$stmtId" ${pos(posX, posY)} ${dimensions(lbl)} $group 
-              | label="$lbl" tooltip="$lbl" shape="ellipse" fillcolor="aqua" fontcolor="black"]
+              | label="$lbl" tooltip="$lbl" shape="ellipse" ${colorScheme.startEndNode.graphvizColors}]
               |""".stripMargin.replaceAll("\n", " ")
         (dot, posY)
 
@@ -108,7 +113,7 @@ class FlowchartPresenter(
         val lbl = if programModel.currentFunction.isMain then "End" else stmt.label
         val dot =
           s"""|${stmt.id} [id="$stmtId" ${pos(posX, posY)} ${dimensions(lbl)} $group 
-              | label="$lbl" tooltip="$lbl" shape="ellipse" fillcolor="aqua" fontcolor="black"]
+              | label="$lbl" tooltip="$lbl" shape="ellipse" ${colorScheme.startEndNode.graphvizColors}]
               |""".stripMargin.replaceAll("\n", " ")
         (dot, posY)
 
@@ -116,7 +121,7 @@ class FlowchartPresenter(
         val lbl = stmt.label.toGraphvizLbl
         val dot =
           s"""|${stmt.id} [id="$stmtId" ${pos(posX, posY)} ${dimensions(lbl)} $group 
-              | label="$lbl" tooltip="$lbl" fillcolor="cornsilk" fontcolor="black"]
+              | label="$lbl" tooltip="$lbl" ${colorScheme.declareNode.graphvizColors}]
               |""".stripMargin.replaceAll("\n", " ")
         (dot, posY)
 
@@ -124,7 +129,7 @@ class FlowchartPresenter(
         val lbl = stmt.label.toGraphvizLbl
         val dot =
           s"""|${stmt.id} [id="$stmtId" ${pos(posX, posY)} ${dimensions(lbl)} $group 
-              | label="$lbl" tooltip="$lbl" fillcolor="red" fontcolor="white"]
+              | label="$lbl" tooltip="$lbl" ${colorScheme.assignNode.graphvizColors}]
               |""".stripMargin.replaceAll("\n", " ")
         (dot, posY)
 
@@ -132,7 +137,7 @@ class FlowchartPresenter(
         val lbl = stmt.label.toGraphvizLbl
         val dot =
           s"""|${stmt.id} [id="$stmtId" ${pos(posX, posY)} ${dimensions(lbl)} $group 
-              | label="$lbl" tooltip="$lbl" shape="invtrapezium" fillcolor="mediumblue"]
+              | label="$lbl" tooltip="$lbl" shape="invtrapezium" ${colorScheme.ioNode.graphvizColors}]
               |""".stripMargin.replaceAll("\n", " ")
         (dot, posY)
 
@@ -140,7 +145,7 @@ class FlowchartPresenter(
         val lbl = stmt.label.toGraphvizLbl
         val dot =
           s"""|${stmt.id} [id="$stmtId" ${pos(posX, posY)} ${dimensions(lbl)} $group 
-              | label="$lbl" tooltip="$lbl" shape="trapezium" fillcolor="mediumblue"]
+              | label="$lbl" tooltip="$lbl" shape="trapezium" ${colorScheme.ioNode.graphvizColors}]
               |""".stripMargin.replaceAll("\n", " ")
         (dot, posY)
 
@@ -148,7 +153,7 @@ class FlowchartPresenter(
         val lbl = stmt.label.toGraphvizLbl
         val dot =
           s"""|${stmt.id} [id="$stmtId" ${pos(posX, posY)} ${dimensions(lbl)} $group 
-              | label="$lbl" tooltip="$lbl" fillcolor="mediumblue"]
+              | label="$lbl" tooltip="$lbl" ${colorScheme.callNode.graphvizColors}]
               |""".stripMargin.replaceAll("\n", " ")
         (dot, posY)
 
@@ -182,7 +187,7 @@ class FlowchartPresenter(
 
         val dot =
           s"""|${stmt.id} [id="$stmtId" ${pos(posX, posY)} ${dimensions(lbl, true)} $group 
-              | label="$lbl" tooltip="$lbl" shape="diamond" fillcolor="gold" fontcolor="black"]
+              | label="$lbl" tooltip="$lbl" shape="diamond" ${colorScheme.loopNode.graphvizColors}]
               |
               |true_dummy_up_${stmt.id} [ ${pos(trueOffsetX, posY)} shape=point width=0]
               |false_dummy_up_${stmt.id} [ ${pos(falseOffsetX, posY)} shape=point width=0]
@@ -193,8 +198,8 @@ class FlowchartPresenter(
               |true_dummy_down_${stmt.id} [ ${pos(trueOffsetX, maxBranchY)} shape=point width=0]
               |false_dummy_down_${stmt.id} [ ${pos(falseOffsetX, maxBranchY)} shape=point width=0]
               |
-              |$ifEndId [id="$ifEndId#IfEnd" ${pos(posX, maxBranchY)} $group 
-              | label="" tooltip=" " shape="circle" fillcolor="black" fixedsize=true width=0.2 height=0.2]
+              |$ifEndId [id="$ifEndId#IfEnd" ${pos(posX, maxBranchY)} $group ${colorScheme.loopNode.graphvizColors}
+              | label="" tooltip=" " shape="circle" fixedsize=true width=0.2 height=0.2]
               |
               |""".stripMargin
         (dot, maxBranchY)
@@ -219,7 +224,7 @@ class FlowchartPresenter(
 
         val dot =
           s"""|${stmt.id} [id="$stmtId" ${pos(posX, posY)} ${dimensions(lbl, true)} $group 
-              | label="$lbl" tooltip="$lbl" shape="diamond" fillcolor="yellow" fontcolor="black"]
+              | label="$lbl" tooltip="$lbl" shape="diamond" ${colorScheme.loopNode.graphvizColors}]
               |
               |true_dummy_up_${stmt.id} [${pos(trueOffsetX, posY)} shape=point width=0]
               |false_dummy_up_${stmt.id} [${pos(falseOffsetX, posY)} shape=point width=0]
@@ -254,7 +259,7 @@ class FlowchartPresenter(
 
         val dot =
           s"""|$doWhileEndId [id="$doWhileEndId#DoWhileEndId" ${pos(posX, posY)} $group 
-              | label="" tooltip=" " shape="circle" fillcolor="black" fixedsize=true width=0.2 height=0.2]
+              | label="" tooltip=" " shape="circle" fixedsize=true width=0.2 height=0.2 ${colorScheme.loopNode.graphvizColors}]
               |
               |${blockDOTs._1.mkString("\n")}
               |
@@ -287,7 +292,7 @@ class FlowchartPresenter(
 
         val dot =
           s"""|${stmt.id} [id="$stmtId" ${pos(posX, posY)} ${dimensions(lbl, true)} $group 
-              | label="$lbl" tooltip="$lbl" shape="diamond" fillcolor="yellow" fontcolor="black"]
+              | label="$lbl" tooltip="$lbl" shape="diamond" ${colorScheme.loopNode.graphvizColors}]
               |
               |true_dummy_up_${stmt.id} [${pos(trueOffsetX, posY)} shape=point width=0]
               |false_dummy_up_${stmt.id} [${pos(falseOffsetX, posY)} shape=point width=0]
