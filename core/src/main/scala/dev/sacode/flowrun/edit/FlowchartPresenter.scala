@@ -9,7 +9,6 @@ import dev.sacode.flowrun.parse.*
 
 /*
 - color==border_color, fillcolor==.. https://stackoverflow.com/questions/9106079/graphviz-how-to-change-border-color
-- https://colorhunt.co/palette/000957344cb7577bc1ebe645
 */
 class FlowchartPresenter(
     programModel: ProgramModel,

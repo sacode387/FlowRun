@@ -11,6 +11,19 @@
 
 
     <style>
+        :root {
+            --flowrun-green: #52aa5e;
+            --flowrun-green-darker: #214426;
+            --flowrun-yellow: #ffd166;
+            --flowrun-yellow-darker: #8f6400;
+            --flowrun-light_blue: #8de4ff;
+            --flowrun-light_blue-darker: #00799e;
+            --flowrun-blue: #006992;
+            --flowrun-blue-darker: #002a3a;
+            --flowrun-red: #fb4d3d;
+            --flowrun-red-darker: #7a0d03;
+        }
+
         * {
             margin: 0;
             padding: 0;
@@ -43,7 +56,7 @@
             grid-area: flowrun-diagram;
             position: relative;
             padding: 1rem;
-            background-color: #fcfbfb;
+            border: 1px solid var(--flowrun-blue-darker);
         }
 
         .flowrun-fun-chooser {
@@ -83,25 +96,24 @@
         @media screen and (min-width: 479px) {
             .flowrun-editor {
                 display: grid;
+                gap: 5px;
                 width: 100%;
                 grid-template-columns: 10rem 1fr 1fr;
                 grid-template-rows: 30px 1fr 1fr;
                 grid-template-areas:
-                    ".          flowrun-meta            .        "
-                    "flowrun-fun-chooser   flowrun-diagram         flowrun-scratchpad     "
-                    "flowrun-fun-chooser   flowrun-diagram         flowrun-code     "
+                ".             flowrun-meta                        .                    "
+                    "flowrun-fun-chooser   flowrun-diagram         flowrun-scratchpad   "
+                    "flowrun-fun-chooser   flowrun-diagram         flowrun-code         "
                 ;
             }
         }
 
-        .flowrun-editor > * {
-            margin: 5px;
-        }
 
         /* ---------- OTHER --------------- */
         .flowrun-draw {
             /* move a bit from top so that buttons can be seen on mobile */
-            margin-top: 2rem;
+            padding-top: 2rem;
+            height: 100%;
         }
 
         .flowrun-draw svg {
@@ -139,31 +151,31 @@
 
 
         .node.flowrun--error polygon {
-            stroke: red;
+            stroke: var(--flowrun-red);
             stroke-width: 3px;
             stroke-dasharray: 3 1;
             stroke-linejoin: round;
         }
 
         .flowrun--error {
-            background-color: rgb(223, 41, 41);
+            background-color: var(--flowrun-red);
             color: white;
         }
 
         .flowrun-output-syntax.flowrun--error {
-            background-color: orange;
+            background-color: var(--flowrun-red);
         }
 
         .flowrun-output-statement {
-            background-color: paleturquoise;
+            background-color: #f3f3f3;
         }
 
         .flowrun-output-debug {
-            background-color: papayawhip;
+            background-color: #f3f3f3;
         }
 
         .flowrun-output-runtime.flowrun--success {
-            background-color: palegreen;
+            background-color: var(--flowrun-light_blue);
         }
 
         /* */
@@ -171,22 +183,24 @@
             position: absolute;
             right: 0;
             top: 0;
-            display: flex;
-            gap: 1rem;
             padding: 5px;
+            margin: 2px;
+            border-radius: 3px;
         }
 
         .flowrun-exec-btns [class^="flowrun-btn"] {
-            display: flex;
-            padding: 0.1rem;
-            border: 1px solid grey;
-            border-radius: 3px;
             cursor: pointer;
             user-select: none;
+
+            color: var(--flowrun-green);
+            filter: brightness(95%);
+            
+            border: transparent;
+            border-radius: 3px;
         }
 
         .flowrun-exec-btns [class^="flowrun-btn"]:hover {
-            background-color: gold;
+            filter: brightness(80%);
         }
     </style>
 
@@ -281,8 +295,8 @@
         <div class="flowrun-diagram">
             <div class="flowrun-draw"> </div>
             <div class="flowrun-exec-btns">
-                <div class="flowrun-btn-run"><span class="material-icons">play_arrow</span> Run</div>
-                <div class="flowrun-btn-debug"><span class="material-icons">bug_report</span> Debug</div>
+                <button class="flowrun-btn-run"><span class="material-icons">play_arrow</span></button>
+                <button class="flowrun-btn-debug"><span class="material-icons">bug_report</span></button>
             </div>
         </div>
 
