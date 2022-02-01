@@ -14,7 +14,10 @@ class ProgramModel(
 
   // global vars go brrrrr
   var currentFunctionId: String = MainFunId
+  // currently selected node
   var currentStmtId: Option[String] = None
+  // currently selected/rclicked edge
+  var currentEdgeId: Option[String] = None
 
   def currentFunction: Function =
     if currentFunctionId == MainFunId then ast.main

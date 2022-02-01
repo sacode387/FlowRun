@@ -8,7 +8,7 @@
 
     <title>FlowRun</title>
 
-    
+
 
     <style>
         * {
@@ -28,7 +28,8 @@
         /* -------------- AREAS ------------- */
         /* container */
         .flowrun-editor {
-            max-height: 90vh;
+            height: 90vh;
+            /* FIX height coz it's easier to work with */
         }
 
         .flowrun-meta {
@@ -64,9 +65,7 @@
 
         .flowrun-scratchpad>* {
             flex: 1 1 auto;
-            max-height: 30vh;
             overflow: auto;
-            border-bottom: 1px solid sandybrown;
             padding: 1rem;
         }
 
@@ -77,40 +76,63 @@
 
         .flowrun-code {
             grid-area: flowrun-code;
-            max-height: 60vh;
-            border-bottom: 2px brown solid;
-            margin-bottom: 5px;
+        }
+
+
+
+        @media screen and (min-width: 479px) {
+            .flowrun-editor {
+                display: grid;
+                width: 100%;
+                grid-template-columns: 10rem 1fr 1fr;
+                grid-template-rows: 30px 1fr 1fr;
+                grid-template-areas:
+                    ".          flowrun-meta            .        "
+                    "flowrun-fun-chooser   flowrun-diagram         flowrun-scratchpad     "
+                    "flowrun-fun-chooser   flowrun-diagram         flowrun-code     "
+                ;
+            }
+        }
+
+        .flowrun-editor > * {
+            margin: 5px;
+        }
+
+        /* ---------- OTHER --------------- */
+        .flowrun-draw {
+            /* move a bit from top so that buttons can be seen on mobile */
+            margin-top: 2rem;
+        }
+
+        .flowrun-draw svg {
+            max-height: 100%;
         }
 
         .flowrun-code code {
             height: 100%;
         }
 
-        @media screen and (min-width: 479px) {
-            .flowrun-editor {
-                display: grid;
-                width: 100%;
-                grid-template-columns: repeat(3, 1fr);
-                grid-template-rows: 30px 30px minmax(200px, 1fr) auto;
-                grid-template-areas:
-                    "flowrun-meta          flowrun-meta            flowrun-meta        "
-                    "flowrun-fun-chooser   flowrun-fun-chooser     .        "
-                    "flowrun-diagram       flowrun-diagram            flowrun-code  "
-                    "flowrun-diagram       flowrun-diagram            flowrun-scratchpad  "
-                ;
-            }
+
+        .edge.flowrun--selected path,
+        .edge.flowrun--selected polygon,
+        .edge:hover path,
+        .edge:hover polygon {
+            stroke-width: 2;
         }
 
-        /* ---------- OTHER --------------- */
-        .flowrun-draw svg {
-            max-height: 100%;
+        .node:hover polygon,
+        .node:hover ellipse {
+            stroke: rgb(130, 79, 182);
+            stroke-width: 1.5;
+            stroke-dasharray: 10 3;
+            stroke-linejoin: round;
         }
 
 
         .node.flowrun--selected polygon,
         .node.flowrun--selected ellipse {
             stroke: rebeccapurple;
-            stroke-width: 2px;
+            stroke-width: 2;
             stroke-dasharray: 10 3;
             stroke-linejoin: round;
         }
@@ -162,6 +184,7 @@
             cursor: pointer;
             user-select: none;
         }
+
         .flowrun-exec-btns [class^="flowrun-btn"]:hover {
             background-color: gold;
         }
@@ -223,7 +246,7 @@
             font-family: 'Courier Prime', monospace;
         }
     </style>
-    
+
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 </head>
 

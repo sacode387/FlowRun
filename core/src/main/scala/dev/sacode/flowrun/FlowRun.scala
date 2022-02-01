@@ -138,7 +138,11 @@ class FlowRun(
           val tpe = idParts(1)
           ctxMenu.handleRightClick(event, nodeId, tpe)
         case ("EDGE", n) =>
+          programModel.currentEdgeId = Some(n.id)
           ctxMenu.handleClick(event.clientX, event.clientY, n)
+          programModel.currentEdgeId.foreach { id =>
+            dom.window.document.querySelectorAll(s""" .edge[id*="${id}"] """).foreach(_.classList.add("flowrun--selected"))
+          }
         case _ =>
       }
     }
@@ -155,6 +159,7 @@ class FlowRun(
       flowchartPresenter.loadCurrentFunction() // if function name updated
     case StmtDeleted | StmtAdded =>
       programModel.currentStmtId = None
+      programModel.currentEdgeId = None
       outputArea.clearStmt()
       outputArea.clearSyntax()
       flowchartPresenter.loadCurrentFunction()
@@ -178,12 +183,14 @@ class FlowRun(
       outputArea.clearSyntax()
     case FunctionSelected =>
       programModel.currentStmtId = None
+      programModel.currentEdgeId = None
       outputArea.clearStmt()
       outputArea.clearSyntax()
       functionSelector.loadFunctions()
       flowchartPresenter.loadCurrentFunction()
     case Deselected =>
       programModel.currentStmtId = None
+      programModel.currentEdgeId = None
       outputArea.clearStmt()
       outputArea.clearSyntax()
       flowchartPresenter.clearSelected()

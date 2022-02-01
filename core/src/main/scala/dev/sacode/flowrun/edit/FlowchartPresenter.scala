@@ -27,8 +27,9 @@ class FlowchartPresenter(
 
   def clearErrors(): Unit =
     dom.window.document.querySelectorAll(s""" .node """).foreach(_.classList.remove("flowrun--error"))
+
   def clearSelected(): Unit =
-    dom.window.document.querySelectorAll(s""" .node """).foreach(_.classList.remove("flowrun--selected"))
+    dom.window.document.querySelectorAll(s""" .flowrun--selected """).foreach(_.classList.remove("flowrun--selected"))
 
   def highlightError(nodeId: String): Unit =
     dom.window.document.querySelector(s""" .node[id^="$nodeId"] """).classList.add("flowrun--error")
