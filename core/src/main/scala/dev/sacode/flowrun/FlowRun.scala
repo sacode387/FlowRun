@@ -93,9 +93,7 @@ class FlowRun(
     flowrunChannel := FlowRun.Event.Deselected
 
     startedTime = getNowTime
-    flowRunElements.runtimeOutput.appendChild(s"Started at: $startedTime".render)
-    flowRunElements.runtimeOutput.classList.add("flowrun--success")
-    flowRunElements.runtimeOutput.appendChild(br.render)
+    flowRunElements.runtimeOutput.appendChild(pre(s"Started at: $startedTime").render)
     flowRunElements.runtimeOutput.appendChild(br.render)
 
     interpreter = Interpreter(programModel, flowrunChannel) // fresh SymTable etc
@@ -151,7 +149,7 @@ class FlowRun(
   import FlowRun.Event.*
   flowrunChannel.attach {
     case EvalSuccess =>
-      flowRunElements.runtimeOutput.appendChild(div(br, s"Finished at: $getNowTime").render)
+      flowRunElements.runtimeOutput.appendChild(div(br, pre(s"Finished at: $getNowTime")).render)
       flowRunElements.debugVariables.innerText = ""
       flowchartPresenter.enable()
     case SyntaxSuccess =>

@@ -27,17 +27,16 @@ class OutputArea(
   def clearRuntime(): Unit =
     flowRunElements.runtimeOutput.innerText = ""
     flowRunElements.runtimeOutput.classList.remove("flowrun--error")
-    flowRunElements.runtimeOutput.classList.remove("flowrun--success")
 
   def runtimeError(msg: String, startTime: Option[String] = None, endTime: Option[String] = None): Unit =
     clearAll()
     flowRunElements.runtimeOutput.appendChild(
       div(
-        startTime.map(t => div(s"Started at: $t")),
+        startTime.map(t => pre(s"Started at: $t")),
         br,
         pre("Error: " + msg),
         br,
-        endTime.map(t => div(s"Finished at: $t"))
+        endTime.map(t => pre(s"Finished at: $t"))
       ).render
     )
     flowRunElements.runtimeOutput.classList.add("flowrun--error")

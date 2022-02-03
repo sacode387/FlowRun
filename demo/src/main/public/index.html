@@ -8,8 +8,6 @@
 
     <title>FlowRun</title>
 
-
-
     <style>
         :root {
             --flowrun-green: #52aa5e;
@@ -18,10 +16,11 @@
             --flowrun-yellow-darker: #8f6400;
             --flowrun-light_blue: #8de4ff;
             --flowrun-light_blue-darker: #00799e;
-            --flowrun-blue: #006992;
+            --flowrun-blue: #015692;
             --flowrun-blue-darker: #002a3a;
             --flowrun-red: #fb4d3d;
             --flowrun-red-darker: #7a0d03;
+            --flowrun-grey: #f6f6f6;
         }
 
         * {
@@ -46,6 +45,7 @@
         }
 
         .flowrun-meta {
+            /* TODO prebacit u media query ove areas */
             grid-area: flowrun-meta;
             text-align: center;
             font-weight: bold;
@@ -56,7 +56,7 @@
             grid-area: flowrun-diagram;
             position: relative;
             padding: 1rem;
-            border: 1px solid var(--flowrun-blue-darker);
+            background-color: var(--flowrun-grey);
         }
 
         .flowrun-fun-chooser {
@@ -74,6 +74,8 @@
             grid-area: flowrun-scratchpad;
             display: flex;
             flex-direction: column;
+            gap: 3px;
+            background-color: var(--flowrun-grey);
         }
 
         .flowrun-scratchpad>* {
@@ -101,7 +103,7 @@
                 grid-template-columns: 10rem 1fr 1fr;
                 grid-template-rows: 30px 1fr 1fr;
                 grid-template-areas:
-                ".             flowrun-meta                        .                    "
+                    ".             flowrun-meta                        .                    "
                     "flowrun-fun-chooser   flowrun-diagram         flowrun-scratchpad   "
                     "flowrun-fun-chooser   flowrun-diagram         flowrun-code         "
                 ;
@@ -166,18 +168,6 @@
             background-color: var(--flowrun-red);
         }
 
-        .flowrun-output-statement {
-            background-color: #f3f3f3;
-        }
-
-        .flowrun-output-debug {
-            background-color: #f3f3f3;
-        }
-
-        .flowrun-output-runtime.flowrun--success {
-            background-color: var(--flowrun-light_blue);
-        }
-
         /* */
         .flowrun-exec-btns {
             position: absolute;
@@ -193,14 +183,27 @@
             user-select: none;
 
             color: var(--flowrun-green);
-            filter: brightness(95%);
-            
+            filter: drop-shadow(2px 3px 1px rgb(197, 194, 194));
+
             border: transparent;
             border-radius: 3px;
         }
 
         .flowrun-exec-btns [class^="flowrun-btn"]:hover {
             filter: brightness(80%);
+        }
+
+        /* debug */
+        .flowrun-output-debug {
+            position: absolute;
+            right: 0;
+            bottom: 0;
+            padding: 5px;
+            filter: brightness(80%);
+        }
+        .flowrun-output-debug:empty {
+            /* hide when empty */
+            display: none;
         }
     </style>
 
@@ -222,8 +225,8 @@
         .flowrun-context-menu>div {
             padding: 4px 10px;
             font-size: 15px;
-            color: #eee;
-            background: linear-gradient(to bottom left, #1b1a1a, #4b4646);
+            color: black;
+            background: lavenderblush;
         }
 
         .flowrun-context-menu>*:hover {
@@ -232,7 +235,7 @@
 
         .flowrun-context-menu hr {
             margin: 2px 0px;
-            border-color: #000;
+            border-color: transparent;
         }
 
         .flowrun-context-menu>[id^="flowrun-add"] {
@@ -242,11 +245,13 @@
     </style>
 
     <!-- highlight code -->
-    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/11.4.0/styles/default.min.css">
-    <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/11.4.0/highlight.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.4.0/languages/scala.min.js"
-        integrity="sha512-K7SF4Dv51TV6pT3PvQdm60JGplWBAIkxVYmrtzJqyjQo4mqz1CasVCtEi02aHVXPqu8WZsmSUZ71JDP1tQARIQ=="
-        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.4.0/styles/default.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.4.0/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.4.0/languages/scala.min.js"></script>
+    <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.4.0/styles/stackoverflow-light.min.css"
+        />
+
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&family=Encode+Sans&display=swap');
 
@@ -295,23 +300,21 @@
         <div class="flowrun-diagram">
             <div class="flowrun-draw"> </div>
             <div class="flowrun-exec-btns">
-                <button class="flowrun-btn-run"><span class="material-icons">play_arrow</span></button>
-                <button class="flowrun-btn-debug"><span class="material-icons">bug_report</span></button>
+                <span class="flowrun-btn-run material-icons" title="Run">play_arrow</span>
+                <span class="flowrun-btn-debug material-icons" title="Debug">bug_report</span>
             </div>
+            <div class="flowrun-output-debug"></div>
         </div>
-
-
-        <pre class="flowrun-code">
-            <code></code>
-        </pre>
 
         <div class="flowrun-scratchpad">
             <div class="flowrun-output-statement"></div>
             <div class="flowrun-output-syntax"></div>
-
             <div class="flowrun-output-runtime"></div>
-            <div class="flowrun-output-debug"></div>
         </div>
+
+        <pre class="flowrun-code">
+            <code></code>
+        </pre>
 
         <!-- this whole div will be deleted -->
         <div class="flowrun-template-transient">
