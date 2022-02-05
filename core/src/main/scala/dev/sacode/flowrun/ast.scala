@@ -90,7 +90,7 @@ object Statement:
   ) extends Statement(id):
     def label =
       val maybeExprText = initValue.map(e => s" = $e").getOrElse("")
-      s"$name: $tpe$maybeExprText"
+      s"$name$maybeExprText"
   case class Assign(override val id: String, name: String, value: String) extends Statement(id):
     def label = s"$name = $value"
 
@@ -238,8 +238,8 @@ case class Function(
 
   def label: String =
     val title = if isMain then "begin" else name
-    val params = if isMain then "" else s"(${parameters.map(p => s"${p.name}: ${p.tpe}").mkString(", ")})"
-    s"$title$params: $tpe"
+    val params = if isMain then "" else s"(${parameters.map(p => s"${p.name}").mkString(", ")})"
+    s"$title$params"
 
 object Function:
   case class Parameter(id: String, name: String, tpe: Expression.Type)

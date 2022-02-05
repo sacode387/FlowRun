@@ -8,9 +8,14 @@
 
     <title>FlowRun</title>
 
+    <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.4.0/styles/stackoverflow-light.min.css" />
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
+
     <style>
         :root {
-            --flowrun-green: #52aa5e;
+            --flowrun-green: #258139;
             --flowrun-green-darker: #214426;
             --flowrun-yellow: #ffd166;
             --flowrun-yellow-darker: #8f6400;
@@ -31,6 +36,9 @@
 
         body {
             padding: 1rem;
+            width: 80%;
+            margin: auto;
+            background-color: #8de4ff3b;
         }
 
         svg {
@@ -47,13 +55,13 @@
         .flowrun-meta {
             text-align: center;
             font-weight: bold;
-            font-size: 1.2rem;
+            font-size: 1.4rem;
         }
 
         .flowrun-diagram {
             position: relative;
             padding: 1rem;
-            background-color: var(--flowrun-grey);
+            background-color: white;
         }
 
         .flowrun-functions-list {
@@ -64,7 +72,7 @@
             display: flex;
             flex-direction: column;
             gap: 3px;
-            background-color: var(--flowrun-grey);
+            background-color: white;
         }
 
         .flowrun-scratchpad>* {
@@ -124,7 +132,7 @@
             }
         }
 
-        
+
 
 
         /* ---------- OTHER --------------- */
@@ -142,7 +150,12 @@
             height: 100%;
         }
 
-        /* function chooser */
+        /* Functions */
+        .flowrun-functions-list {
+            background-color: white;
+            padding: 1rem;
+        }
+
         .flowrun-functions-list>div {
             padding-top: 1rem;
             padding-left: 1rem;
@@ -158,8 +171,9 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            background-color: var(--flowrun-grey);
+            background: var(--flowrun-light_blue);
             padding: 0.33rem;
+            padding-left: 1rem;
         }
 
         .flowrun-fun-chooser>div>label {
@@ -174,21 +188,25 @@
             cursor: pointer;
         }
 
-        
-        .flowrun-fun-chooser .material-icons { font-size: 20px; }
+
+        .flowrun-fun-chooser .material-icons {
+            font-size: 20px;
+            color: var(--flowrun-red-darker);
+        }
 
         .flowrun-fun-add {
             width: 100%;
             text-align: center;
-            background-color: var(--flowrun-grey);
+            background-color: white;
         }
 
         .flowrun-input-radio {
-            visibility: hidden;
+            display: none;
         }
 
         .flowrun-input-radio:checked~span {
             font-weight: bold;
+            font-size: 1.07em;
         }
 
 
@@ -257,7 +275,7 @@
         .flowrun-exec-btns [class^="flowrun-btn"]:hover,
         .flowrun-fun-add:hover,
         .flowrun-fun-delete:hover {
-            background-color: rgb(214, 210, 210);
+            background-color: var(--flowrun-grey);
         }
 
         /* debug */
@@ -274,6 +292,9 @@
             display: none;
         }
 
+        .hljs {
+            background: white;
+        }
     </style>
 
     <style>
@@ -282,7 +303,7 @@
             position: fixed;
             z-index: 10000;
             width: 150px;
-            
+
             transform: scale(0);
             transform-origin: top left;
         }
@@ -292,30 +313,25 @@
         }
 
         .flowrun-context-menu>div {
+            display: flex;
+            align-items: center;
+            gap: 5px;
             padding: 4px 10px;
             font-size: 15px;
-            color: white;
             background: var(--flowrun-blue);
-            border-bottom: 1px var(--flowrun-blue-darker) solid;
+            color: white;
+            border: 1px var(--flowrun-blue-darker) solid;
         }
 
         .flowrun-context-menu>*:hover {
             background: var(--flowrun-blue-darker);
         }
-
-        .flowrun-context-menu>[id^="flowrun-add"] {
-            display: flex;
-            gap: 5px;
-        }
-
     </style>
 
     <!-- highlight code -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.4.0/styles/default.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.4.0/highlight.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.4.0/languages/scala.min.js"></script>
-    <link rel="stylesheet"
-        href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.4.0/styles/stackoverflow-light.min.css" />
+
 
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&family=Encode+Sans&display=swap');
@@ -331,13 +347,13 @@
         }
     </style>
 
-    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
 </head>
 
 <body>
 
     <div id="flowrun-edge-context-menu" class="flowrun-context-menu">
-        <div id="flowrun-add-declare"><span class="material-icons">add</span> Declare</div>
+        <div id="flowrun-add-declare"><span class="material-icons">post_add</span> Declare</div>
         <div id="flowrun-add-assign"><span class="material-icons">sync_alt</span> Assign</div>
         <div id="flowrun-add-input"><span class="material-icons">keyboard</span> Input</div>
         <div id="flowrun-add-output"><span class="material-icons">desktop_windows</span> Output</div>
@@ -349,8 +365,8 @@
     </div>
 
     <div id="flowrun-node-context-menu" class="flowrun-context-menu">
-        <div class="item" id="flowrun-delete">
-            <span class="flowrun-fun-delete-param material-icons">remove</span> Delete
+        <div id="flowrun-delete">
+            <span class="material-icons">remove</span> Delete
         </div>
     </div>
 
@@ -358,7 +374,7 @@
         <div class="flowrun-meta"></div>
 
         <div class="flowrun-functions-list">
-            <h4>Functions:</h4>
+            <span>Functions:</span>
             <div class="flowrun-fun-chooser"></div>
             <div>
                 <span class="flowrun-fun-add material-icons">add</span>
