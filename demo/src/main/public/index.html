@@ -30,7 +30,7 @@
         }
 
         body {
-            margin: 1rem;
+            padding: 1rem;
         }
 
         svg {
@@ -41,37 +41,26 @@
         /* container */
         .flowrun-editor {
             height: 90vh;
-            /* FIX height coz it's easier to work with */
+            /* FIXED height coz it's easier to work with */
         }
 
         .flowrun-meta {
-            /* TODO prebacit u media query ove areas */
-            grid-area: flowrun-meta;
             text-align: center;
             font-weight: bold;
             font-size: 1.2rem;
         }
 
         .flowrun-diagram {
-            grid-area: flowrun-diagram;
             position: relative;
             padding: 1rem;
             background-color: var(--flowrun-grey);
         }
 
-        .flowrun-fun-chooser {
-            grid-area: flowrun-fun-chooser;
+        .flowrun-functions-list {
             padding: 5px;
-            display: flex;
-            align-items: center;
-        }
-
-        .flowrun-fun-chooser>*:not(:first-child) {
-            margin-left: 1rem;
         }
 
         .flowrun-scratchpad {
-            grid-area: flowrun-scratchpad;
             display: flex;
             flex-direction: column;
             gap: 3px;
@@ -89,26 +78,53 @@
             display: none;
         }
 
-        .flowrun-code {
-            grid-area: flowrun-code;
+        .flowrun-editor>* {
+            margin-top: 1rem;
+            border-bottom: 1px brown solid;
         }
 
+        @media screen and (min-width: 800px) {
+            .flowrun-meta {
+                grid-area: flowrun-meta;
+            }
 
+            .flowrun-functions-list {
+                grid-area: flowrun-functions-list;
+            }
 
-        @media screen and (min-width: 479px) {
+            .flowrun-scratchpad {
+                grid-area: flowrun-scratchpad;
+            }
+
+            .flowrun-diagram {
+                grid-area: flowrun-diagram;
+            }
+
+            .flowrun-code {
+                grid-area: flowrun-code;
+            }
+
             .flowrun-editor {
                 display: grid;
                 gap: 5px;
+                padding: 1rem;
                 width: 100%;
-                grid-template-columns: 10rem 1fr 1fr;
+                grid-template-columns: 20% 50% 30%;
                 grid-template-rows: 30px 1fr 1fr;
                 grid-template-areas:
                     ".             flowrun-meta                        .                    "
-                    "flowrun-fun-chooser   flowrun-diagram         flowrun-scratchpad   "
-                    "flowrun-fun-chooser   flowrun-diagram         flowrun-code         "
+                    "flowrun-functions-list   flowrun-diagram         flowrun-scratchpad   "
+                    "flowrun-functions-list   flowrun-diagram         flowrun-code         "
                 ;
             }
+
+            .flowrun-editor>* {
+                margin-top: 0;
+                border-bottom: none;
+            }
         }
+
+        
 
 
         /* ---------- OTHER --------------- */
@@ -126,7 +142,57 @@
             height: 100%;
         }
 
+        /* function chooser */
+        .flowrun-functions-list>div {
+            padding-top: 1rem;
+            padding-left: 1rem;
+        }
 
+        .flowrun-fun-chooser {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .flowrun-fun-chooser>div {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background-color: var(--flowrun-grey);
+            padding: 0.33rem;
+        }
+
+        .flowrun-fun-chooser>div>label {
+            display: block;
+            width: 80%;
+            cursor: pointer;
+        }
+
+        .flowrun-fun-chooser>div>label {
+            display: block;
+            width: 80%;
+            cursor: pointer;
+        }
+
+        
+        .flowrun-fun-chooser .material-icons { font-size: 20px; }
+
+        .flowrun-fun-add {
+            width: 100%;
+            text-align: center;
+            background-color: var(--flowrun-grey);
+        }
+
+        .flowrun-input-radio {
+            visibility: hidden;
+        }
+
+        .flowrun-input-radio:checked~span {
+            font-weight: bold;
+        }
+
+
+        /* nodes and edges */
         .edge.flowrun--selected path,
         .edge.flowrun--selected polygon,
         .edge:hover path,
@@ -136,7 +202,7 @@
 
         .node:hover polygon,
         .node:hover ellipse {
-            stroke: rgb(130, 79, 182);
+            stroke: var(--flowrun-light_blue-darker);
             stroke-width: 1.5;
             stroke-dasharray: 10 3;
             stroke-linejoin: round;
@@ -145,7 +211,7 @@
 
         .node.flowrun--selected polygon,
         .node.flowrun--selected ellipse {
-            stroke: rebeccapurple;
+            stroke: var(--flowrun-blue-darker);
             stroke-width: 2;
             stroke-dasharray: 10 3;
             stroke-linejoin: round;
@@ -171,26 +237,27 @@
         /* */
         .flowrun-exec-btns {
             position: absolute;
-            right: 0;
-            top: 0;
+            right: 5px;
+            top: 5px;
             padding: 5px;
-            margin: 2px;
-            border-radius: 3px;
         }
 
-        .flowrun-exec-btns [class^="flowrun-btn"] {
+
+        .flowrun-exec-btns [class^="flowrun-btn"],
+        .flowrun-fun-add,
+        .flowrun-fun-delete,
+        .flowrun-fun-add-param,
+        .flowrun-fun-delete-param {
             cursor: pointer;
             user-select: none;
-
             color: var(--flowrun-green);
-            filter: drop-shadow(2px 3px 1px rgb(197, 194, 194));
-
-            border: transparent;
-            border-radius: 3px;
+            font-size: 1.8rem;
         }
 
-        .flowrun-exec-btns [class^="flowrun-btn"]:hover {
-            filter: brightness(80%);
+        .flowrun-exec-btns [class^="flowrun-btn"]:hover,
+        .flowrun-fun-add:hover,
+        .flowrun-fun-delete:hover {
+            background-color: rgb(214, 210, 210);
         }
 
         /* debug */
@@ -201,10 +268,12 @@
             padding: 5px;
             filter: brightness(80%);
         }
+
         .flowrun-output-debug:empty {
             /* hide when empty */
             display: none;
         }
+
     </style>
 
     <style>
@@ -213,7 +282,7 @@
             position: fixed;
             z-index: 10000;
             width: 150px;
-            background: #1b1a1a;
+            
             transform: scale(0);
             transform-origin: top left;
         }
@@ -225,23 +294,20 @@
         .flowrun-context-menu>div {
             padding: 4px 10px;
             font-size: 15px;
-            color: black;
-            background: lavenderblush;
+            color: white;
+            background: var(--flowrun-blue);
+            border-bottom: 1px var(--flowrun-blue-darker) solid;
         }
 
         .flowrun-context-menu>*:hover {
-            background: #555;
-        }
-
-        .flowrun-context-menu hr {
-            margin: 2px 0px;
-            border-color: transparent;
+            background: var(--flowrun-blue-darker);
         }
 
         .flowrun-context-menu>[id^="flowrun-add"] {
             display: flex;
             gap: 5px;
         }
+
     </style>
 
     <!-- highlight code -->
@@ -249,8 +315,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.4.0/highlight.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.4.0/languages/scala.min.js"></script>
     <link rel="stylesheet"
-        href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.4.0/styles/stackoverflow-light.min.css"
-        />
+        href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.4.0/styles/stackoverflow-light.min.css" />
 
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&family=Encode+Sans&display=swap');
@@ -274,28 +339,31 @@
     <div id="flowrun-edge-context-menu" class="flowrun-context-menu">
         <div id="flowrun-add-declare"><span class="material-icons">add</span> Declare</div>
         <div id="flowrun-add-assign"><span class="material-icons">sync_alt</span> Assign</div>
-        <hr>
         <div id="flowrun-add-input"><span class="material-icons">keyboard</span> Input</div>
         <div id="flowrun-add-output"><span class="material-icons">desktop_windows</span> Output</div>
-        <hr>
         <div id="flowrun-add-if"><span class="material-icons">call_split</span> If</div>
         <div id="flowrun-add-while"><span class="material-icons">repeat</span> While</div>
         <div id="flowrun-add-do-while"><span class="material-icons">repeat</span> Do While</div>
         <div id="flowrun-add-for"><span class="material-icons">repeat</span> For loop</div>
-        <hr>
         <div id="flowrun-add-call"><span class="material-icons">call</span> Call</div>
     </div>
 
     <div id="flowrun-node-context-menu" class="flowrun-context-menu">
         <div class="item" id="flowrun-delete">
-            <i class="fa fa-trash-o"></i>✖ Delete
+            <span class="flowrun-fun-delete-param material-icons">remove</span> Delete
         </div>
     </div>
 
     <div id="flowrun-template" style="display: none;">
         <div class="flowrun-meta"></div>
 
-        <div class="flowrun-fun-chooser"></div>
+        <div class="flowrun-functions-list">
+            <h4>Functions:</h4>
+            <div class="flowrun-fun-chooser"></div>
+            <div>
+                <span class="flowrun-fun-add material-icons">add</span>
+            </div>
+        </div>
 
         <div class="flowrun-diagram">
             <div class="flowrun-draw"> </div>
@@ -318,13 +386,14 @@
 
         <!-- this whole div will be deleted -->
         <div class="flowrun-template-transient">
-            <button class="flowrun-fun-add">➕ Add</button>
-            <button class="flowrun-fun-delete">➖ Delete</button>
-            <button class="flowrun-fun-add-param">➕ Add parameter</button>
-            <button class="flowrun-fun-delete-param">➖</button>
+
+            <span class="flowrun-fun-delete material-icons">remove</span>
+            <span class="flowrun-fun-add-param material-icons">add</span>r
+            <span class="flowrun-fun-delete-param material-icons">remove</span>
 
             <input class="flowrun-input-text" type="text" size="10">
             <select class="flowrun-input-select"></select>
+            <input type="radio" class="flowrun-input-radio">
             <button class="flowrun-btn-enter">Enter</button>
         </div>
     </div>

@@ -16,8 +16,8 @@ object ColorScheme:
   // #90ee90, #ffd166, #8de4ff, #015692, #fb4d3d
   val default = ColorScheme(
     startEndNode = NodeColor("#8de4ff", "#00799e", "#982b13"),
-    declareNode = NodeColor("#90ee90", "#214426", "white"),
-    assignNode = NodeColor("#fb4d3d", "#7a0d03", "white"),
+    declareNode = NodeColor("#015692", "#002a3a", "white"),
+    assignNode = NodeColor("#002a3a", "#001117", "white"),
     ioNode = NodeColor("#015692", "#002a3a", "white"),
     loopNode = NodeColor("#ffd166", "#8f6400", "black"),
     callNode = NodeColor("#015692", "#002a3a", "white")

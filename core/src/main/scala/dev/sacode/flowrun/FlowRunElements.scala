@@ -29,7 +29,7 @@ class FlowRunElements(
   val runButton: dom.html.Element = execBtns.querySelector(".flowrun-btn-run").asInstanceOf[dom.html.Element]
 
   val addFunButton: dom.html.Element = template.querySelector(".flowrun-fun-add").asInstanceOf[dom.html.Element]
-  val deleteFunButton: dom.html.Element = template.querySelector(".flowrun-fun-delete").asInstanceOf[dom.html.Element]
+  private val deleteFunButton: dom.html.Element = template.querySelector(".flowrun-fun-delete").asInstanceOf[dom.html.Element]
 
   val addParamButton: dom.html.Element = template.querySelector(".flowrun-fun-add-param").asInstanceOf[dom.html.Element]
   val deleteParamButton: dom.html.Element =
@@ -39,6 +39,7 @@ class FlowRunElements(
   private val enterButton = template.querySelector(".flowrun-btn-enter").asInstanceOf[dom.html.Element]
   private val inputText = template.querySelector(".flowrun-input-text").asInstanceOf[dom.html.Input]
   private val inputSelect = template.querySelector(".flowrun-input-select").asInstanceOf[dom.html.Select]
+  private val inputRadio = template.querySelector(".flowrun-input-radio").asInstanceOf[dom.html.Input]
 
   // clean up
   template.querySelector(".flowrun-template-transient").remove()
@@ -52,9 +53,15 @@ class FlowRunElements(
 
   def newInputSelect: dom.html.Select =
     inputSelect.cloneNode(true).asInstanceOf[dom.html.Select]
+  
+  def newInputRadio: dom.html.Input =
+    inputRadio.cloneNode(true).asInstanceOf[dom.html.Input]
 
   def newEnterButton: dom.html.Element =
     enterButton.cloneNode(true).asInstanceOf[dom.html.Element]
+  
+  def newDeleteFunButton: dom.html.Element =
+    deleteFunButton.cloneNode(true).asInstanceOf[dom.html.Button]
 
   def newDeleteParamButton: dom.html.Element =
     deleteParamButton.cloneNode(true).asInstanceOf[dom.html.Button]

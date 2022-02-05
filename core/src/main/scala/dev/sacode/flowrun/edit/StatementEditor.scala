@@ -147,8 +147,8 @@ class StatementEditor(
         paramNameInput.focus()
         programModel.updateFunction(Request.UpdateFunction(nodeId, parameters = Some(newParams)))
       }
-      flowRunElements.stmtOutput.appendChild(div(addParamElem).render)
-
+      
+      flowRunElements.stmtOutput.appendChild(div("Parameters:").render)
       getParams().foreach { param =>
         val paramNameInput = getParamNameInput(nodeId, param)
         val paramTpeInput = getParamTpeInput(nodeId, param)
@@ -157,6 +157,7 @@ class StatementEditor(
           div(id := param.id)(paramNameInput, paramTpeInput, paramDeleteBtn).render
         )
       }
+      flowRunElements.stmtOutput.appendChild(div(addParamElem).render)
     end if
 
     // focus

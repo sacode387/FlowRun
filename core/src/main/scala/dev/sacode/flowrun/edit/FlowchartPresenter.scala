@@ -264,7 +264,7 @@ class FlowchartPresenter(
               |${blockDOTs._1.mkString("\n")}
               |
               |${stmt.id} [id="$stmtId" ${pos(posX, maxBranchY)} ${dimensions(lbl, true)} $group 
-              |label="$lbl" tooltip="$lbl" shape="diamond" fillcolor="yellow" fontcolor="black"]
+              |label="$lbl" tooltip="$lbl" shape="diamond" ${colorScheme.loopNode.graphvizColors}]
               |
               |true_dummy_up_${stmt.id} [${pos(trueOffsetX, posY)} shape=point width=0]
               |true_dummy_down_${stmt.id} [${pos(trueOffsetX, maxBranchY)} shape=point width=0]
