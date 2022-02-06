@@ -33,7 +33,9 @@ class StatementEditor(
 
     // clear first, prepare for new inputs
     flowRunElements.stmtOutput.innerText = ""
-    flowRunElements.stmtOutput.appendChild(div(s"Editing $nodeType:").render)
+
+    // fill in this element with name/type/expression, coz it's just one line (flex)
+    val stmtElems = div(cls:="flowrun-stmt-inputs").render
 
     // name input
     val nameInputElem = flowRunElements.newInputText
@@ -62,7 +64,7 @@ class StatementEditor(
     var filledName = false
     if Statement.hasName(node, programModel.currentFunction.name) then
       filledName = nameInputElem.value.nonEmpty
-      flowRunElements.stmtOutput.appendChild(nameInputElem)
+      stmtElems.appendChild(nameInputElem)
 
     // type input
     val typeSelectElem = flowRunElements.newInputSelect
@@ -82,8 +84,7 @@ class StatementEditor(
 
     if Statement.hasTpe(node, programModel.currentFunction.tpe.toString) then
       typeSelectElem.value = Statement.tpe(node, programModel.currentFunction.tpe.toString) // select appropriate type
-      flowRunElements.stmtOutput.appendChild(span(": ").render)
-      flowRunElements.stmtOutput.appendChild(typeSelectElem)
+      stmtElems.appendChild(typeSelectElem)
 
     // expression input
     val exprInputElem = flowRunElements.newInputText
@@ -125,13 +126,18 @@ class StatementEditor(
     }
 
     if Statement.hasExpr(node) then
-      if Set("Declare", "Assign").contains(nodeType) then flowRunElements.stmtOutput.appendChild(span(" = ").render)
-      flowRunElements.stmtOutput.appendChild(exprInputElem)
+      if Set("Declare", "Assign").contains(nodeType) then {
+        stmtElems.appendChild(span(" = ").render)
+      }
+      stmtElems.appendChild(exprInputElem)
     end if
+
+    flowRunElements.stmtOutput.appendChild(stmtElems)
 
     // params inputs
     if nodeType == "Begin" then
 
+      val paramsListElem = div().render
       val addParamElem = flowRunElements.addParamButton
       addParamElem.onclick = _ => {
         val newParam =
@@ -141,22 +147,24 @@ class StatementEditor(
         val paramTpeInput = getParamTpeInput(nodeId, newParam)
         val paramDeleteBtn = getParamDeleteBtn(nodeId, newParam)
 
-        flowRunElements.stmtOutput.appendChild(
-          div(id := newParam.id)(paramNameInput, paramTpeInput, paramDeleteBtn).render
+        paramsListElem.appendChild(
+          div(id := newParam.id, cls := "flowrun-param-inputs")(paramNameInput, paramTpeInput, paramDeleteBtn).render
         )
         paramNameInput.focus()
         programModel.updateFunction(Request.UpdateFunction(nodeId, parameters = Some(newParams)))
       }
-      
-      flowRunElements.stmtOutput.appendChild(div("Parameters:").render)
+
       getParams().foreach { param =>
         val paramNameInput = getParamNameInput(nodeId, param)
         val paramTpeInput = getParamTpeInput(nodeId, param)
         val paramDeleteBtn = getParamDeleteBtn(nodeId, param)
-        flowRunElements.stmtOutput.appendChild(
-          div(id := param.id)(paramNameInput, paramTpeInput, paramDeleteBtn).render
+        paramsListElem.appendChild(
+          div(id := param.id, cls := "flowrun-param-inputs")(paramNameInput, paramTpeInput, paramDeleteBtn).render
         )
       }
+
+      flowRunElements.stmtOutput.appendChild(div(br, small("Parameters:")).render)
+      flowRunElements.stmtOutput.appendChild(paramsListElem)
       flowRunElements.stmtOutput.appendChild(div(addParamElem).render)
     end if
 

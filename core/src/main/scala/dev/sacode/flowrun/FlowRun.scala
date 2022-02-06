@@ -112,13 +112,15 @@ class FlowRun(
       event.preventDefault()
       getSvgNode(event.target) match {
         case ("NODE", n) =>
-          val idParts = n.id.split("#")
+          val idParts = n.id.split("#", -1)
           val nodeId = idParts(0)
           val tpe = idParts(1)
-          programModel.currentStmtId = Some(nodeId)
-          outputArea.clearSyntax()
-          flowchartPresenter.loadCurrentFunction() // to highlight new node..
-          statementEditor.edit(nodeId, tpe)
+          val nodeFlags = if idParts.length > 2 then idParts(2) else ""
+          if !nodeFlags.contains("NE") then
+            programModel.currentStmtId = Some(nodeId)
+            outputArea.clearSyntax()
+            flowchartPresenter.loadCurrentFunction() // to highlight new node..
+            statementEditor.edit(nodeId, tpe)
         case _ =>
           flowrunChannel := FlowRun.Event.Deselected
       }
@@ -131,7 +133,7 @@ class FlowRun(
       event.preventDefault()
       getSvgNode(event.target) match {
         case ("NODE", n) =>
-          val idParts = n.id.split("#")
+          val idParts = n.id.split("#", -1)
           val nodeId = idParts(0)
           val tpe = idParts(1)
           ctxMenu.handleRightClick(event, nodeId, tpe)
@@ -139,7 +141,7 @@ class FlowRun(
           programModel.currentEdgeId = Some(n.id)
           ctxMenu.handleClick(event.clientX, event.clientY, n)
           programModel.currentEdgeId.foreach { id =>
-            dom.window.document.querySelectorAll(s""" .edge[id*="${id}"] """).foreach(_.classList.add("flowrun--selected"))
+            dom.window.document.querySelectorAll(s""" .edge[id*="$id"] """).foreach(_.classList.add("flowrun--selected"))
           }
         case _ =>
       }

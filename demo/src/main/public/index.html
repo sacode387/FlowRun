@@ -70,6 +70,7 @@
         .flowrun-output {
             background-color: white;
             padding: 1rem;
+            overflow: auto;
         }
 
         .flowrun-scratchpad {
@@ -81,8 +82,8 @@
 
         .flowrun-scratchpad>* {
             flex: 1 1 auto;
-            overflow: auto;
-            padding: 1rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid var(--flowrun-grey);
         }
 
         .flowrun-scratchpad>*:empty {
@@ -91,7 +92,7 @@
         }
 
         .flowrun-editor>* {
-            margin-top: 1rem;
+            margin-bottom: 1rem;
         }
 
         .flowrun--panel {
@@ -127,10 +128,9 @@
             .flowrun-editor {
                 display: grid;
                 gap: 0.5rem;
-                padding: 1rem;
                 width: 100%;
                 grid-template-columns: 20% 50% 30%;
-                grid-template-rows: 10% 45% 45%;
+                grid-template-rows: 2rem 50% calc(50% - 2rem);
                 grid-template-areas:
                     ".                        flowrun-meta            .                    "
                     "flowrun-functions-list   flowrun-diagram         flowrun-output   "
@@ -168,15 +168,11 @@
             padding: 1rem;
         }
 
-        .flowrun-functions-list>div {
-            padding-top: 1rem;
-            padding-left: 1rem;
-        }
-
         .flowrun-fun-chooser {
             display: flex;
             flex-direction: column;
             gap: 0.5rem;
+            margin-bottom: 1rem;
         }
 
         .flowrun-fun-chooser>div {
@@ -209,7 +205,6 @@
         .flowrun-fun-add {
             width: 100%;
             text-align: center;
-            background-color: white;
         }
 
         .flowrun-input-radio {
@@ -222,7 +217,7 @@
         }
 
 
-        /* nodes and edges */
+        /* edges */
         .edge.flowrun--selected path,
         .edge.flowrun--selected polygon,
         .edge:hover path,
@@ -230,14 +225,14 @@
             stroke-width: 2;
         }
 
-        .node:hover polygon,
-        .node:hover ellipse {
+        /* nodes */
+        .node:not([id$="#NE"]):not(.flowrun--selected):hover polygon,
+        .node:not([id$="#NE"]):not(.flowrun--selected):hover ellipse {
             stroke: var(--flowrun-light_blue-darker);
             stroke-width: 1.5;
             stroke-dasharray: 10 3;
             stroke-linejoin: round;
         }
-
 
         .node.flowrun--selected polygon,
         .node.flowrun--selected ellipse {
@@ -288,6 +283,13 @@
         .flowrun-fun-add:hover,
         .flowrun-fun-delete:hover {
             background-color: var(--flowrun-grey);
+        }
+
+        .flowrun-stmt-inputs,
+        .flowrun-param-inputs {
+            display: flex;
+            align-items: center;
+            gap: 5px;
         }
 
         /* debug */
@@ -387,7 +389,6 @@
         <div class="flowrun-meta"></div>
 
         <div class="flowrun-functions-list flowrun--panel">
-            <span>Functions:</span>
             <div class="flowrun-fun-chooser"></div>
             <div>
                 <span class="flowrun-fun-add material-icons">add</span>
@@ -404,7 +405,6 @@
         </div>
 
         <div class="flowrun-output flowrun--panel">
-            <span>Output:</span>
             <div class="flowrun-scratchpad">
                 <div class="flowrun-output-statement"></div>
                 <div class="flowrun-output-syntax"></div>

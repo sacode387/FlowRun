@@ -6,6 +6,7 @@ import scalajs.js.JSConverters.*
 import org.scalajs.dom
 import reactify.*
 import dev.sacode.flowrun.parse.*
+import dev.sacode.flowrun.Expression.Type
 
 /*
 - color==border_color, fillcolor==.. https://stackoverflow.com/questions/9106079/graphviz-how-to-change-border-color
@@ -99,20 +100,23 @@ class FlowchartPresenter(
     // group puts elements of one branch in a straight line
     val group = s""" group="$blockId" """.trim
 
+    
     val stmtId = s"${stmt.id}#${stmt.getClass.getSimpleName}"
     stmt match {
       case _: Begin =>
+        val nodeFlags = if programModel.currentFunction.isMain then "NE" else "" // NE-NotEditable
         val lbl = if programModel.currentFunction.isMain then "Begin" else programModel.currentFunction.label
         val dot =
-          s"""|${stmt.id} [id="$stmtId" ${pos(posX, posY)} ${dimensions(lbl)} $group 
+          s"""|${stmt.id} [id="$stmtId#$nodeFlags" ${pos(posX, posY)} ${dimensions(lbl)} $group 
               | label="$lbl" tooltip="$lbl" shape="ellipse" ${colorScheme.startEndNode.graphvizColors}]
               |""".stripMargin.replaceAll("\n", " ")
         (dot, posY)
 
-      case _: Return =>
+      case retStmt: Return =>
+        val nodeFlags = if programModel.currentFunction.isMain || programModel.currentFunction.tpe == Type.Void then "NE" else "" // NE-NotEditable
         val lbl = if programModel.currentFunction.isMain then "End" else stmt.label
         val dot =
-          s"""|${stmt.id} [id="$stmtId" ${pos(posX, posY)} ${dimensions(lbl)} $group 
+          s"""|${stmt.id} [id="$stmtId#$nodeFlags" ${pos(posX, posY)} ${dimensions(lbl)} $group 
               | label="$lbl" tooltip="$lbl" shape="ellipse" ${colorScheme.startEndNode.graphvizColors}]
               |""".stripMargin.replaceAll("\n", " ")
         (dot, posY)
