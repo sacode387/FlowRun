@@ -36,8 +36,6 @@
 
         body {
             padding: 1rem;
-            width: 90%;
-            margin: auto;
             background-color: #8de4ff3b;
         }
 
@@ -62,6 +60,7 @@
             position: relative;
             padding: 1rem;
             background-color: white;
+            user-select: none;
         }
 
         .flowrun-functions-list {
@@ -77,7 +76,7 @@
             display: flex;
             flex-direction: column;
             gap: 3px;
-            
+
         }
 
         .flowrun-scratchpad>* {
@@ -93,10 +92,18 @@
 
         .flowrun-editor>* {
             margin-top: 1rem;
-            border-bottom: 1px brown solid;
+        }
+
+        .flowrun--panel {
+            box-shadow: 2px 1px 5px grey;
         }
 
         @media screen and (min-width: 800px) {
+            body {
+                width: 90%;
+                margin: auto;
+            }
+
             .flowrun-meta {
                 grid-area: flowrun-meta;
             }
@@ -119,11 +126,11 @@
 
             .flowrun-editor {
                 display: grid;
-                gap: 5px;
+                gap: 0.5rem;
                 padding: 1rem;
                 width: 100%;
                 grid-template-columns: 20% 50% 30%;
-                grid-template-rows: 30px 50% 50%;
+                grid-template-rows: 10% 45% 45%;
                 grid-template-areas:
                     ".                        flowrun-meta            .                    "
                     "flowrun-functions-list   flowrun-diagram         flowrun-output   "
@@ -308,6 +315,7 @@
             position: fixed;
             z-index: 10000;
             width: 150px;
+            user-select: none;
 
             transform: scale(0);
             transform-origin: top left;
@@ -378,7 +386,7 @@
     <div id="flowrun-template" style="display: none;">
         <div class="flowrun-meta"></div>
 
-        <div class="flowrun-functions-list">
+        <div class="flowrun-functions-list flowrun--panel">
             <span>Functions:</span>
             <div class="flowrun-fun-chooser"></div>
             <div>
@@ -386,7 +394,7 @@
             </div>
         </div>
 
-        <div class="flowrun-diagram">
+        <div class="flowrun-diagram flowrun--panel">
             <div class="flowrun-draw"> </div>
             <div class="flowrun-exec-btns">
                 <span class="flowrun-btn-run material-icons" title="Run">play_arrow</span>
@@ -395,7 +403,7 @@
             <div class="flowrun-output-debug"></div>
         </div>
 
-        <div class="flowrun-output">
+        <div class="flowrun-output flowrun--panel">
             <span>Output:</span>
             <div class="flowrun-scratchpad">
                 <div class="flowrun-output-statement"></div>
@@ -405,7 +413,7 @@
         </div>
 
 
-        <pre class="flowrun-code">
+        <pre class="flowrun-code flowrun--panel">
             <code></code>
         </pre>
 
