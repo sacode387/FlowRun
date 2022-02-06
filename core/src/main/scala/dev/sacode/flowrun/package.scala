@@ -6,8 +6,11 @@ import scala.util.Failure
 import scalajs.js
 import org.scalajs.dom
 import org.scalajs.dom.window
+import scalatags.JsDom.all._
 
 import dev.sacode.flowrun.eval.SymbolKey
+
+val samp = tag("samp")
 
 extension (any: Any) {
   def asDyn: js.Dynamic = any.asInstanceOf[js.Dynamic]

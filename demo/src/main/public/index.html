@@ -23,7 +23,8 @@
             --flowrun-light_blue-darker: #00799e;
             --flowrun-blue: #015692;
             --flowrun-blue-darker: #002a3a;
-            --flowrun-red: #fb4d3d;
+            --flowrun-red-lighter: #ff7139;
+            --flowrun-red: #ff4a39;
             --flowrun-red-darker: #7a0d03;
             --flowrun-grey: #f6f6f6;
         }
@@ -58,7 +59,6 @@
 
         .flowrun-diagram {
             position: relative;
-            padding: 1rem;
             background-color: white;
             user-select: none;
         }
@@ -69,21 +69,20 @@
 
         .flowrun-output {
             background-color: white;
-            padding: 1rem;
             overflow: auto;
         }
 
         .flowrun-scratchpad {
             display: flex;
             flex-direction: column;
-            gap: 3px;
+            gap: 5px;
 
         }
 
         .flowrun-scratchpad>* {
             flex: 1 1 auto;
-            padding-bottom: 1rem;
-            border-bottom: 2px solid var(--flowrun-grey);
+            padding: 0.5rem;
+            background-color: var(--flowrun-grey);
         }
 
         .flowrun-scratchpad>*:empty {
@@ -96,6 +95,7 @@
         }
 
         .flowrun--panel {
+            padding: 1rem;
             box-shadow: 2px 1px 5px grey;
         }
 
@@ -123,6 +123,7 @@
 
             .flowrun-code {
                 grid-area: flowrun-code;
+                padding: 0;
             }
 
             .flowrun-editor {
@@ -139,8 +140,7 @@
             }
 
             .flowrun-editor>* {
-                margin-top: 0;
-                border-bottom: none;
+                margin-bottom: 0;
             }
         }
 
@@ -165,7 +165,6 @@
         /* Functions */
         .flowrun-functions-list {
             background-color: white;
-            padding: 1rem;
         }
 
         .flowrun-fun-chooser {
@@ -252,11 +251,10 @@
 
         .flowrun--error {
             background-color: var(--flowrun-red);
-            color: white;
         }
 
         .flowrun-output-syntax.flowrun--error {
-            background-color: var(--flowrun-red);
+            background-color: var(--flowrun-red-lighter);
         }
 
         /* */

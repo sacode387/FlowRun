@@ -32,11 +32,13 @@ class OutputArea(
     clearAll()
     flowRunElements.runtimeOutput.appendChild(
       div(
-        startTime.map(t => pre(s"Started at: $t")),
+        startTime.map(t => samp(s"Started at: $t")),
         br,
-        pre("Error: " + msg),
         br,
-        endTime.map(t => pre(s"Finished at: $t"))
+        samp("Error: " + msg),
+        br,
+        br,
+        endTime.map(t => samp(s"Finished at: $t"))
       ).render
     )
     flowRunElements.runtimeOutput.classList.add("flowrun--error")
@@ -50,8 +52,9 @@ class OutputArea(
     val valueInputElem = flowRunElements.newInputText
     val valueBtnElem = flowRunElements.newEnterButton
     val enterValueDiv = div(
+      br,
       label(
-        pre(s"Please enter '$name': "),
+        samp(s"Please enter '$name': "),
         valueInputElem,
         valueBtnElem
       )
@@ -72,9 +75,13 @@ class OutputArea(
         interpreter.symTab.setValue(nodeId, name, value)
         interpreter.continue()
 
-        val newOutput = pre(s"Your entered value $name = $inputValue").render
         flowRunElements.runtimeOutput.removeChild(enterValueDiv)
-        flowRunElements.runtimeOutput.appendChild(newOutput)
+        flowRunElements.runtimeOutput.appendChild(
+          div(
+            br,
+            samp(s"Your entered value $name = $inputValue")
+          ).render
+        )
       } catch {
         case (e: EvalException) => // from symbol table
           runtimeError(e.getMessage)
