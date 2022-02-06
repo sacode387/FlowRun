@@ -36,7 +36,7 @@
 
         body {
             padding: 1rem;
-            width: 80%;
+            width: 90%;
             margin: auto;
             background-color: #8de4ff3b;
         }
@@ -68,11 +68,16 @@
             padding: 5px;
         }
 
+        .flowrun-output {
+            background-color: white;
+            padding: 1rem;
+        }
+
         .flowrun-scratchpad {
             display: flex;
             flex-direction: column;
             gap: 3px;
-            background-color: white;
+            
         }
 
         .flowrun-scratchpad>* {
@@ -100,8 +105,8 @@
                 grid-area: flowrun-functions-list;
             }
 
-            .flowrun-scratchpad {
-                grid-area: flowrun-scratchpad;
+            .flowrun-output {
+                grid-area: flowrun-output;
             }
 
             .flowrun-diagram {
@@ -118,10 +123,10 @@
                 padding: 1rem;
                 width: 100%;
                 grid-template-columns: 20% 50% 30%;
-                grid-template-rows: 30px 1fr 1fr;
+                grid-template-rows: 30px 50% 50%;
                 grid-template-areas:
-                    ".             flowrun-meta                        .                    "
-                    "flowrun-functions-list   flowrun-diagram         flowrun-scratchpad   "
+                    ".                        flowrun-meta            .                    "
+                    "flowrun-functions-list   flowrun-diagram         flowrun-output   "
                     "flowrun-functions-list   flowrun-diagram         flowrun-code         "
                 ;
             }
@@ -390,11 +395,15 @@
             <div class="flowrun-output-debug"></div>
         </div>
 
-        <div class="flowrun-scratchpad">
-            <div class="flowrun-output-statement"></div>
-            <div class="flowrun-output-syntax"></div>
-            <div class="flowrun-output-runtime"></div>
+        <div class="flowrun-output">
+            <span>Output:</span>
+            <div class="flowrun-scratchpad">
+                <div class="flowrun-output-statement"></div>
+                <div class="flowrun-output-syntax"></div>
+                <div class="flowrun-output-runtime"></div>
+            </div>
         </div>
+
 
         <pre class="flowrun-code">
             <code></code>

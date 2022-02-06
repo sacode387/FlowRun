@@ -150,8 +150,6 @@ class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[FlowRun.Ev
           }
         interpret(body).flatMap(_ => loop())
       case forLoop @ ForLoop(id, varName, start, incr, end, body) =>
-        // new var is scoped only to for loop
-        symTab.enterScope(id)
         // decl new var
         val key = SymbolKey(varName, Symbol.Kind.Variable, id)
         symTab.add(id, key, Expression.Type.Integer, Some(start))
@@ -169,13 +167,9 @@ class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[FlowRun.Ev
               else Future.successful({})
             case condValue => throw EvalException(s"Not a valid condition: '$condValue'", id)
           }
-        loop().map(_ => symTab.exitScope())
+        loop()
       case block: Block =>
-        symTab.enterScope(block.id)
-        execSequentially((): Any, block.statements, (_, s) => interpret(s)).map { res =>
-          symTab.exitScope()
-          res
-        }
+        execSequentially((): Any, block.statements, (_, s) => interpret(s))
       case Return(id, maybeExpr) =>
         maybeExpr match
           case None       => Future.successful(())

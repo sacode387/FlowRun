@@ -67,10 +67,7 @@ class Scala2Generator(programAst: Program) extends CodeGenerator {
       case Output(_, value) =>
         s"println($value)".indented(indent)
       case Block(blockId, statements) =>
-        symTab.enterScope(blockId)
-        val res = statements.map(genStatement).mkString("\n")
-        symTab.exitScope()
-        res
+        statements.map(genStatement).mkString("\n")
       case Return(_, maybeValue) =>
         maybeValue.getOrElse("").indented(indent)
       case If(_, condition, trueBlock, falseBlock) =>

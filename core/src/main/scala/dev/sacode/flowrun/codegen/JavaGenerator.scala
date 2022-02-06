@@ -78,10 +78,7 @@ class JavaGenerator(programAst: Program) extends CodeGenerator {
       case Output(_, value) =>
         s"System.out.println($value);".indented(indent)
       case Block(blockId, statements) =>
-        symTab.enterScope(blockId)
-        val res = statements.map(genStatement).mkString("\n")
-        symTab.exitScope()
-        res
+        statements.map(genStatement).mkString("\n")
       case Return(_, maybeValue) =>
         maybeValue.map(v => s"return $v;").getOrElse("").indented(indent)
       case If(_, condition, trueBlock, falseBlock) =>

@@ -51,7 +51,7 @@ class OutputArea(
     val valueBtnElem = flowRunElements.newEnterButton
     val enterValueDiv = div(
       label(
-        pre(s"Please enter value for variable '$name': "),
+        pre(s"Please enter '$name': "),
         valueInputElem,
         valueBtnElem
       )
