@@ -76,6 +76,7 @@ enum Atom derives NativeConverter:
 
 sealed trait Statement(val id: String) derives NativeConverter:
   def label: String
+  def verboseLabel: String = label
 
 object Statement:
 
@@ -91,6 +92,9 @@ object Statement:
     def label =
       val maybeExprText = initValue.map(e => s" = $e").getOrElse("")
       s"$name$maybeExprText"
+    override def verboseLabel =
+      val maybeExprText = initValue.map(e => s" = $e").getOrElse("")
+      s"$name: $tpe$maybeExprText"
   case class Assign(override val id: String, name: String, value: String) extends Statement(id):
     def label = s"$name = $value"
 
@@ -240,6 +244,10 @@ case class Function(
     val title = if isMain then "begin" else name
     val params = if isMain then "" else s"(${parameters.map(p => s"${p.name}").mkString(", ")})"
     s"$title$params"
+  def verboseLabel =
+    val title = if isMain then "begin" else name
+    val params = if isMain then "" else s"(${parameters.map(p => s"${p.name}: ${p.tpe}").mkString(", ")})"
+    s"$title$params: $tpe"
 
 object Function:
   case class Parameter(id: String, name: String, tpe: Expression.Type)

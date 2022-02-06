@@ -45,6 +45,12 @@
         }
 
         /* -------------- AREAS ------------- */
+        .flowrun--panel {
+            padding: 1rem;
+            box-shadow: 2px 1px 5px grey;
+            background-color: white;
+        }
+
         /* container */
         .flowrun-editor {
             height: 90vh;
@@ -59,7 +65,6 @@
 
         .flowrun-diagram {
             position: relative;
-            background-color: white;
             user-select: none;
         }
 
@@ -68,7 +73,7 @@
         }
 
         .flowrun-output {
-            background-color: white;
+            background-color: var(--flowrun-grey);
             overflow: auto;
         }
 
@@ -82,7 +87,7 @@
         .flowrun-scratchpad>* {
             flex: 1 1 auto;
             padding: 0.5rem;
-            background-color: var(--flowrun-grey);
+            background-color: white;
         }
 
         .flowrun-scratchpad>*:empty {
@@ -94,10 +99,7 @@
             margin-bottom: 1rem;
         }
 
-        .flowrun--panel {
-            padding: 1rem;
-            box-shadow: 2px 1px 5px grey;
-        }
+        
 
         @media screen and (min-width: 800px) {
             body {
@@ -124,6 +126,7 @@
             .flowrun-code {
                 grid-area: flowrun-code;
                 padding: 0;
+                background-color: var(--flowrun-grey);
             }
 
             .flowrun-editor {
@@ -277,9 +280,7 @@
             font-size: 1.8rem;
         }
 
-        .flowrun-exec-btns [class^="flowrun-btn"]:hover,
-        .flowrun-fun-add:hover,
-        .flowrun-fun-delete:hover {
+        .flowrun-editor .material-icons:hover {
             background-color: var(--flowrun-grey);
         }
 
@@ -304,9 +305,6 @@
             display: none;
         }
 
-        .hljs {
-            background: white;
-        }
     </style>
 
     <style>

@@ -106,9 +106,10 @@ class FlowchartPresenter(
       case _: Begin =>
         val nodeFlags = if programModel.currentFunction.isMain then "NE" else "" // NE-NotEditable
         val lbl = if programModel.currentFunction.isMain then "Begin" else programModel.currentFunction.label
+        val tooltip = if programModel.currentFunction.isMain then "Begin" else programModel.currentFunction.verboseLabel
         val dot =
           s"""|${stmt.id} [id="$stmtId#$nodeFlags" ${pos(posX, posY)} ${dimensions(lbl)} $group 
-              | label="$lbl" tooltip="$lbl" shape="ellipse" ${colorScheme.startEndNode.graphvizColors}]
+              | label="$lbl" tooltip="$tooltip" shape="ellipse" ${colorScheme.startEndNode.graphvizColors}]
               |""".stripMargin.replaceAll("\n", " ")
         (dot, posY)
 
@@ -125,7 +126,7 @@ class FlowchartPresenter(
         val lbl = stmt.label.toGraphvizLbl
         val dot =
           s"""|${stmt.id} [id="$stmtId" ${pos(posX, posY)} ${dimensions(lbl)} $group 
-              | label="$lbl" tooltip="$lbl" ${colorScheme.declareNode.graphvizColors}]
+              | label="$lbl" tooltip="${stmt.verboseLabel.toGraphvizLbl}" ${colorScheme.declareNode.graphvizColors}]
               |""".stripMargin.replaceAll("\n", " ")
         (dot, posY)
 
