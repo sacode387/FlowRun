@@ -8,7 +8,8 @@ import dev.sacode.flowrun.eval.*
 
 class OutputArea(
     interpreter: Interpreter,
-    flowRunElements: FlowRunElements
+    flowRunElements: FlowRunElements,
+    flowrunChannel: Channel[FlowRun.Event]
 ) {
 
   def clearAll(): Unit =
@@ -28,32 +29,27 @@ class OutputArea(
     flowRunElements.runtimeOutput.innerText = ""
     flowRunElements.runtimeOutput.classList.remove("flowrun--error")
 
-  def runtimeError(msg: String, startTime: Option[String] = None, endTime: Option[String] = None): Unit =
+  def runtimeError(msg: String, startTime: String, endTime: String): Unit =
     clearAll()
     flowRunElements.runtimeOutput.appendChild(
       div(
-        startTime.map(t => samp(s"Started at: $t")),
-        br,
-        br,
-        samp("Error: " + msg),
-        br,
-        br,
-        endTime.map(t => samp(s"Finished at: $t"))
+        samp(s"Started at: $startTime", br, br, "Error: " + msg, br, br, s"Finished at: $endTime")
       ).render
     )
     flowRunElements.runtimeOutput.classList.add("flowrun--error")
 
   def syntaxError(msg: String, startTime: Option[String] = None, endTime: Option[String] = None): Unit =
-    flowRunElements.syntaxOutput.innerText = "Syntax Error: " + msg
+    flowRunElements.syntaxOutput.innerText = ""
+    flowRunElements.syntaxOutput.appendChild(samp("Syntax Error: " + msg).render)
     flowRunElements.syntaxOutput.classList.add("flowrun--error")
 
-  def evalInput(nodeId: String, name: String): Unit = {
+  def evalInput(nodeId: String, name: String, startedTime: String): Unit = {
 
     val valueInputElem = flowRunElements.newInputText
     val valueBtnElem = flowRunElements.newEnterButton
     val enterValueDiv = div(
       br,
-      label(
+      label(cls := "flowrun-user-inputs")(
         samp(s"Please enter '$name': "),
         valueInputElem,
         valueBtnElem
@@ -78,15 +74,14 @@ class OutputArea(
         flowRunElements.runtimeOutput.removeChild(enterValueDiv)
         flowRunElements.runtimeOutput.appendChild(
           div(
-            br,
-            samp(s"Your entered value $name = $inputValue")
+            samp(br, s"Your entered value $name = $inputValue")
           ).render
         )
       } catch {
         case (e: EvalException) => // from symbol table
-          runtimeError(e.getMessage)
+          flowrunChannel := FlowRun.Event.EvalError(nodeId, e.getMessage)
         case e: (NumberFormatException | IllegalArgumentException) =>
-          runtimeError(s"Entered invalid ${sym.tpe}: '${inputValue}'")
+          flowrunChannel := FlowRun.Event.EvalError(nodeId, s"Entered invalid ${sym.tpe}: '${inputValue}'")
       }
     }
 

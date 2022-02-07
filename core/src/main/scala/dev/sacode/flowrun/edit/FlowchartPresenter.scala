@@ -566,7 +566,7 @@ class FlowchartPresenter(
   private def dimensions(label: String, luft: Boolean = false): String =
     val w = label.length * 0.11 + (if luft then 0.5 else 0.2)
     val width = w max 1
-    val h = 0.3 + (if luft then 0.1 else 0)
+    val h = 0.3 + (if luft then 0.2 else 0)
     s"height=$h width=$width fixedsize=true"
 
   private def edgeAttrs(nextStmtId: String): String =

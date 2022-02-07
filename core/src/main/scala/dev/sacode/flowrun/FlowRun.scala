@@ -64,7 +64,7 @@ class FlowRun(
   private val functionSelector = FunctionSelector(programModel, flowrunChannel, flowRunElements)
   private val statementEditor = StatementEditor(programModel, flowrunChannel, flowRunElements)
   private val ctxMenu = CtxMenu(programModel)
-  private var outputArea = OutputArea(interpreter, flowRunElements)
+  private var outputArea = OutputArea(interpreter, flowRunElements, flowrunChannel)
   private var debugArea = DebugArea(interpreter, flowRunElements)
 
   private var startedTime: String = ""
@@ -93,11 +93,10 @@ class FlowRun(
     flowrunChannel := FlowRun.Event.Deselected
 
     startedTime = getNowTime
-    flowRunElements.runtimeOutput.appendChild(samp(s"Started at: $startedTime").render)
-    flowRunElements.runtimeOutput.appendChild(br.render)
+    flowRunElements.runtimeOutput.appendChild(samp(s"Started at: $startedTime", br).render)
 
     interpreter = Interpreter(programModel, flowrunChannel) // fresh SymTable etc
-    outputArea = OutputArea(interpreter, flowRunElements)
+    outputArea = OutputArea(interpreter, flowRunElements, flowrunChannel)
     debugArea = DebugArea(interpreter, flowRunElements)
 
     interpreter.run()
@@ -151,7 +150,7 @@ class FlowRun(
   import FlowRun.Event.*
   flowrunChannel.attach {
     case EvalSuccess =>
-      flowRunElements.runtimeOutput.appendChild(div(br, samp(s"Finished at: $getNowTime")).render)
+      flowRunElements.runtimeOutput.appendChild(samp(br, s"Finished at: $getNowTime").render)
       flowRunElements.debugVariables.innerText = ""
       flowchartPresenter.enable()
     case SyntaxSuccess =>
@@ -167,14 +166,14 @@ class FlowRun(
       outputArea.syntaxError(msg)
       flowchartPresenter.enable()
     case EvalError(nodeId, msg) =>
-      outputArea.runtimeError(msg, Some(startedTime), Some(getNowTime))
+      outputArea.runtimeError(msg, startedTime, getNowTime)
       flowchartPresenter.highlightError(nodeId)
       flowchartPresenter.enable()
     case EvalOutput(output) =>
-      val newOutput = samp(output).render
+      val newOutput = samp(br, output).render
       flowRunElements.runtimeOutput.appendChild(newOutput)
     case EvalInput(nodeId, name) =>
-      outputArea.evalInput(nodeId, name)
+      outputArea.evalInput(nodeId, name, startedTime)
     case SymbolTableUpdated =>
       debugArea.showVariables()
     case FunctionUpdated =>

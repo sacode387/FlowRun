@@ -12,6 +12,20 @@
         href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.4.0/styles/stackoverflow-light.min.css" />
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;700&display=swap');
+
+        body {
+            font-family: 'Open Sans', sans-serif;
+        }
+
+        pre,
+        pre>* {
+            /* using Courier since Graphviz only supports that monospace font */
+            font-family: 'Courier Prime', monospace;
+        }
+    </style>
 
     <style>
         :root {
@@ -24,9 +38,10 @@
             --flowrun-blue: #015692;
             --flowrun-blue-darker: #002a3a;
             --flowrun-red-lighter: #ff7139;
-            --flowrun-red: #ff4a39;
+            --flowrun-red: #d43627;
             --flowrun-red-darker: #7a0d03;
             --flowrun-grey: #f6f6f6;
+            --flowrun-grey-darker: #dfdfdf;
         }
 
         * {
@@ -68,26 +83,37 @@
             user-select: none;
         }
 
-        .flowrun-functions-list {
-            padding: 5px;
+        .flowrun-output {
+            overflow: auto;
         }
 
-        .flowrun-output {
-            background-color: var(--flowrun-grey);
-            overflow: auto;
+        .flowrun-output-statement {
+            border-left: 3px var(--flowrun-grey-darker) solid;
+        }
+
+        .flowrun-output-runtime {
+            border-left: 3px var(--flowrun-green) solid;
+        }
+
+        .flowrun-output-runtime.flowrun--error {
+            color: var(--flowrun-red);
+            border-left: 3px var(--flowrun-red) solid;
+        }
+
+        .flowrun-output-syntax.flowrun--error {
+            color: var(--flowrun-red-lighter);
+            border-left: 3px var(--flowrun-red-lighter) solid;
         }
 
         .flowrun-scratchpad {
             display: flex;
             flex-direction: column;
             gap: 5px;
-
         }
 
         .flowrun-scratchpad>* {
             flex: 1 1 auto;
             padding: 0.5rem;
-            background-color: white;
         }
 
         .flowrun-scratchpad>*:empty {
@@ -99,7 +125,7 @@
             margin-bottom: 1rem;
         }
 
-        
+
 
         @media screen and (min-width: 800px) {
             body {
@@ -126,7 +152,10 @@
             .flowrun-code {
                 grid-area: flowrun-code;
                 padding: 0;
-                background-color: var(--flowrun-grey);
+            }
+
+            .hljs {
+                background-color: white;
             }
 
             .flowrun-editor {
@@ -157,6 +186,10 @@
             height: 100%;
         }
 
+        samp {
+            font-size: 0.9rem;
+        }
+
         .flowrun-draw svg {
             max-height: 100%;
         }
@@ -182,14 +215,15 @@
             align-items: center;
             justify-content: space-between;
             background: var(--flowrun-light_blue);
-            padding: 0.33rem;
-            padding-left: 1rem;
+            padding-right: 0.33rem;
         }
 
         .flowrun-fun-chooser>div>label {
             display: block;
             width: 80%;
             cursor: pointer;
+            padding: 0.33rem;
+            padding-left: 1rem;
         }
 
         .flowrun-fun-chooser>div>label {
@@ -252,13 +286,7 @@
             stroke-linejoin: round;
         }
 
-        .flowrun--error {
-            background-color: var(--flowrun-red);
-        }
-
-        .flowrun-output-syntax.flowrun--error {
-            background-color: var(--flowrun-red-lighter);
-        }
+        
 
         /* */
         .flowrun-exec-btns {
@@ -285,7 +313,8 @@
         }
 
         .flowrun-stmt-inputs,
-        .flowrun-param-inputs {
+        .flowrun-param-inputs,
+        .flowrun-user-inputs {
             display: flex;
             align-items: center;
             gap: 5px;
@@ -304,7 +333,6 @@
             /* hide when empty */
             display: none;
         }
-
     </style>
 
     <style>
@@ -344,19 +372,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.4.0/languages/scala.min.js"></script>
 
 
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&family=Encode+Sans&display=swap');
 
-        body {
-            font-family: 'Encode Sans', sans-serif;
-        }
-
-        pre,
-        pre>* {
-            /* using Courier since Graphviz only supports that monospace font */
-            font-family: 'Courier Prime', monospace;
-        }
-    </style>
 
 
 </head>
