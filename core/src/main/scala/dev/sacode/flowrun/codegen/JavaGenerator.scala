@@ -48,7 +48,7 @@ class JavaGenerator(programAst: Program) extends CodeGenerator {
   private def genFunction(function: Function): String = {
     symTab.enterScope(function.name)
     val statements = function.statements.map(genStatement).filterNot(_.trim.isEmpty)
-    val params = function.parameters.map(p => s"${p.name}: ${getType(p.tpe)}").mkString(", ")
+    val params = function.parameters.map(p => s"${getType(p.tpe)} ${p.name}").mkString(", ")
     symTab.exitScope()
     s"""|public static ${getType(function.tpe)} ${function.name}($params) {
         |${statements.mkString("\n")}

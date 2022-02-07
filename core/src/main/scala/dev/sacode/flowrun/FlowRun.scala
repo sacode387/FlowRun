@@ -88,6 +88,7 @@ class FlowRun(
   // run the program
   flowRunElements.runButton.onclick = _ => {
     outputArea.clearAll()
+    outputArea.running()
     flowchartPresenter.clearErrors()
     flowchartPresenter.clearSelected()
     flowrunChannel := FlowRun.Event.Deselected
@@ -101,6 +102,7 @@ class FlowRun(
 
     interpreter.run()
     flowchartPresenter.disable()
+    functionSelector.disable()
   }
 
   flowRunElements.addFunButton.onclick = _ => programModel.addNewFunction()
@@ -153,6 +155,8 @@ class FlowRun(
       flowRunElements.runtimeOutput.appendChild(samp(br, s"Finished at: $getNowTime").render)
       flowRunElements.debugVariables.innerText = ""
       flowchartPresenter.enable()
+      functionSelector.enable()
+      outputArea.finished()
     case SyntaxSuccess =>
       outputArea.clearSyntax()
       flowchartPresenter.loadCurrentFunction() // if function name updated
@@ -165,10 +169,14 @@ class FlowRun(
     case SyntaxError(msg) =>
       outputArea.syntaxError(msg)
       flowchartPresenter.enable()
+      functionSelector.enable()
+      outputArea.finished()
     case EvalError(nodeId, msg) =>
       outputArea.runtimeError(msg, startedTime, getNowTime)
       flowchartPresenter.highlightError(nodeId)
       flowchartPresenter.enable()
+      functionSelector.enable()
+      outputArea.finished()
     case EvalOutput(output) =>
       val newOutput = samp(br, output).render
       flowRunElements.runtimeOutput.appendChild(newOutput)

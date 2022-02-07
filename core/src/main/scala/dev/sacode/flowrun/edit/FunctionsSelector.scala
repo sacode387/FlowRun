@@ -11,6 +11,12 @@ class FunctionSelector(
     flowRunElements: FlowRunElements
 ) {
 
+  def disable(): Unit =
+    flowRunElements.functionsList.classList.add("flowrun--disabled")
+
+  def enable(): Unit =
+    flowRunElements.functionsList.classList.remove("flowrun--disabled")
+
   def allFunctions = List(programModel.ast.main) ++ programModel.ast.functions
 
   def loadFunctions(): Unit =
@@ -31,7 +37,7 @@ class FunctionSelector(
       }
 
       div(
-        label(radio, span(s" ${f.name}")),
+        label(title := f.verboseLabel)(radio, span(f.label)),
         Option.unless(f.isMain)(deleteFunButton)
       )
     }

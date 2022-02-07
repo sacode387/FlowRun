@@ -10,7 +10,7 @@ import dev.sacode.flowrun.Expression.Type
 
 /*
 - color==border_color, fillcolor==.. https://stackoverflow.com/questions/9106079/graphviz-how-to-change-border-color
-*/
+ */
 class FlowchartPresenter(
     programModel: ProgramModel,
     flowRunElements: FlowRunElements,
@@ -21,9 +21,11 @@ class FlowchartPresenter(
 
   loadCurrentFunction()
 
-  def disable(): Unit = {}
+  def disable(): Unit =
+    flowRunElements.drawArea.classList.add("flowrun--disabled")
 
-  def enable(): Unit = {}
+  def enable(): Unit =
+    flowRunElements.drawArea.classList.remove("flowrun--disabled")
 
   def clearErrors(): Unit =
     dom.window.document.querySelectorAll(s""" .node """).foreach(_.classList.remove("flowrun--error"))
@@ -55,7 +57,9 @@ class FlowchartPresenter(
           clearSelected()
           clearErrors()
           programModel.currentStmtId.foreach { id =>
-            dom.window.document.querySelectorAll(s""" .node[id*="${id}"] """).foreach(_.classList.add("flowrun--selected"))
+            dom.window.document
+              .querySelectorAll(s""" .node[id*="${id}"] """)
+              .foreach(_.classList.add("flowrun--selected"))
           }
         }
       )
@@ -100,7 +104,6 @@ class FlowchartPresenter(
     // group puts elements of one branch in a straight line
     val group = s""" group="$blockId" """.trim
 
-    
     val stmtId = s"${stmt.id}#${stmt.getClass.getSimpleName}"
     stmt match {
       case _: Begin =>
@@ -114,7 +117,9 @@ class FlowchartPresenter(
         (dot, posY)
 
       case retStmt: Return =>
-        val nodeFlags = if programModel.currentFunction.isMain || programModel.currentFunction.tpe == Type.Void then "NE" else "" // NE-NotEditable
+        val nodeFlags =
+          if programModel.currentFunction.isMain || programModel.currentFunction.tpe == Type.Void then "NE"
+          else "" // NE-NotEditable
         val lbl = if programModel.currentFunction.isMain then "End" else stmt.label
         val dot =
           s"""|${stmt.id} [id="$stmtId#$nodeFlags" ${pos(posX, posY)} ${dimensions(lbl)} $group 
@@ -276,7 +281,7 @@ class FlowchartPresenter(
               |
               |""".stripMargin
         (dot, maxBranchY)
-      
+
       case stmt: ForLoop =>
         val lbl = stmt.label.toGraphvizLbl
 
@@ -502,7 +507,7 @@ class FlowchartPresenter(
             |${stmt.id}:s -> $nextStmtId [id="${stmt.id}@${blockId}" ${edgeAttrs(nextStmtId)} taillabel="false" fontcolor="red" labeldistance=2 labelangle=-80]
             |
             |""".stripMargin
-          
+
       case stmt: ForLoop => // TODO same as While, delete?
         val trueDummyUpId = s"true_dummy_up_${stmt.id}"
         val trueDummyDownId = s"true_dummy_down_${stmt.id}"

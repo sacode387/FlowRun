@@ -12,6 +12,12 @@ class OutputArea(
     flowrunChannel: Channel[FlowRun.Event]
 ) {
 
+  def running(): Unit=
+    flowRunElements.output.classList.add("flowrun--running")    
+  
+  def finished(): Unit=
+    flowRunElements.output.classList.remove("flowrun--running")
+
   def clearAll(): Unit =
     clearStmt()
     clearSyntax()

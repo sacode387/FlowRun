@@ -241,11 +241,11 @@ case class Function(
   def isMain: Boolean = rawId == "main"
 
   def label: String =
-    val title = if isMain then "begin" else name
+    val title = if isMain then "main" else name
     val params = if isMain then "" else s"(${parameters.map(p => s"${p.name}").mkString(", ")})"
     s"$title$params"
   def verboseLabel =
-    val title = if isMain then "begin" else name
+    val title = if isMain then "main" else name
     val params = if isMain then "" else s"(${parameters.map(p => s"${p.name}: ${p.tpe}").mkString(", ")})"
     s"$title$params: $tpe"
 

@@ -185,6 +185,14 @@
             padding-top: 2rem;
             height: 100%;
         }
+        .flowrun--disabled {
+            pointer-events: none;
+            opacity: 0.5;
+        }
+
+        .flowrun--running {
+            border: 3px var(--flowrun-red-lighter) solid;
+        }
 
         samp {
             font-size: 0.9rem;
@@ -411,7 +419,7 @@
             <div class="flowrun-draw"> </div>
             <div class="flowrun-exec-btns">
                 <span class="flowrun-btn-run material-icons" title="Run">play_arrow</span>
-                <span class="flowrun-btn-debug material-icons" title="Debug">bug_report</span>
+                <span class="flowrun-btn-debug material-icons" title="Pause">pause</span>
             </div>
             <div class="flowrun-output-debug"></div>
         </div>
