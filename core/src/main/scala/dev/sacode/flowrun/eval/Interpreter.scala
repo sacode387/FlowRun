@@ -10,8 +10,8 @@ import dev.sacode.flowrun.parse.{Token, parseExpr, ParseException, LexException}
 
 /*
 - at runtime we use Long and Double
-- we "widen" literals like 5.0 to 5.000000000000000000001 bcoz js sucks
-*/
+  we "widen" literals like 5.0 to 5.000000000000000000001 bcoz IDK better
+ */
 class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[FlowRun.Event]) {
   import Interpreter.*
 
@@ -24,9 +24,6 @@ class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[FlowRun.Ev
   private def allFunctions = programModel.ast.functions
 
   def run(): Future[Unit] = {
-    //import js.JSConverters.*
-    //pprint.pprintln(programModel.ast)
-    println(programModel.ast.toJson)
 
     state = State.RUNNING
 
@@ -45,7 +42,6 @@ class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[FlowRun.Ev
 
     futureExec.onComplete {
       case Success(_) =>
-        println("DONE")
         state = State.FINISHED_SUCCESS
         flowrunChannel := FlowRun.Event.EvalSuccess
       case Failure(e: EvalException) =>
@@ -160,7 +156,7 @@ class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[FlowRun.Ev
         def loop(): Future[Any] =
           eval(id, parseExpr(id, condition)).flatMap {
             case condition: Boolean =>
-              if (condition) interpret(body).flatMap{_ => 
+              if (condition) interpret(body).flatMap { _ =>
                 val current = symTab.getValue(id, varName)
                 symTab.setValue(id, varName, current.asInstanceOf[Int] + incr)
                 loop()
@@ -231,7 +227,6 @@ class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[FlowRun.Ev
 
   private def eval(id: String, numComparison: NumComparison): Future[Any] =
     eval(id, numComparison.term).flatMap { tmp1 =>
-
       if tmp1.isInstanceOf[Long] then
         val tmp = tmp1.asInstanceOf[Long]
         numComparison.terms match
@@ -357,11 +352,8 @@ class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[FlowRun.Ev
       case RealLit(value)    =>
         // add just a tinyyyyyyy bit to diferrentiate integer from double in runtime
         val res = if value.isValidInt then {
-          println("YEPPPPPP")
           value + 1e-308
-        }
-         else value
-        println(res)
+        } else value
         Future.successful[Double](res)
       case StringLit(value)   => Future.successful(value)
       case Identifier(name)   => Future(symTab.getValue(id, name))

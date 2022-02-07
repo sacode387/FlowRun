@@ -16,18 +16,12 @@
         @import url('https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&display=swap');
         @import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;700&display=swap');
 
-        body {
-            font-family: 'Open Sans', sans-serif;
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
 
-        pre,
-        pre>* {
-            /* using Courier since Graphviz only supports that monospace font */
-            font-family: 'Courier Prime', monospace;
-        }
-    </style>
-
-    <style>
         :root {
             --flowrun-green: #258139;
             --flowrun-green-darker: #214426;
@@ -44,47 +38,189 @@
             --flowrun-grey-darker: #dfdfdf;
         }
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
         body {
+            font-family: 'Open Sans', sans-serif;
             padding: 1rem;
             background-color: #8de4ff3b;
         }
 
-        svg {
-            width: 100%;
-        }
-
-        /* -------------- AREAS ------------- */
-        .flowrun--panel {
-            padding: 1rem;
-            box-shadow: 2px 1px 5px grey;
-            background-color: white;
+        #flowrun-template {
+            display: none;
         }
 
         /* container */
         .flowrun-editor {
-            height: 90vh;
             /* FIXED height coz it's easier to work with */
+            height: 90vh;
         }
 
+        .flowrun-editor>* {
+            margin-bottom: 1rem;
+        }
+
+        @media screen and (min-width: 800px) {
+            body {
+                width: 90%;
+                margin: auto;
+            }
+
+            .flowrun-meta {
+                grid-area: flowrun-meta;
+            }
+
+            .flowrun-functions-list {
+                grid-area: flowrun-functions-list;
+            }
+
+            .flowrun-output {
+                grid-area: flowrun-output;
+            }
+
+            .flowrun-diagram {
+                grid-area: flowrun-diagram;
+            }
+
+            .flowrun-code {
+                grid-area: flowrun-code;
+                padding: 0;
+            }
+
+            pre,
+            pre>* {
+                /* using Courier since Graphviz only supports that monospace font */
+                font-family: 'Courier Prime', monospace;
+            }
+
+            .hljs {
+                background-color: white;
+            }
+
+            .flowrun-editor {
+                display: grid;
+                gap: 0.5rem;
+                width: 100%;
+                grid-template-columns: 20% 45% 35%;
+                grid-template-rows: 2rem 50% calc(50% - 2rem);
+                grid-template-areas:
+                    ".                        flowrun-meta            .                    "
+                    "flowrun-functions-list   flowrun-diagram         flowrun-output   "
+                    "flowrun-functions-list   flowrun-diagram         flowrun-code         "
+                ;
+            }
+
+            .flowrun-editor>* {
+                margin-bottom: 0;
+            }
+        }
+
+        /**************************/
+        /* METADATA */
+        /**************************/
         .flowrun-meta {
             text-align: center;
             font-weight: bold;
             font-size: 1.4rem;
         }
 
+
+        /****************************/
+        /* FUNCTIONS */
+        /****************************/
+        .flowrun-functions-list {
+            background-color: white;
+        }
+
+        .flowrun-fun-chooser {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .flowrun-fun-chooser>div {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: var(--flowrun-light_blue);
+            padding-right: 0.33rem;
+        }
+
+        .flowrun-fun-chooser>div>label {
+            display: block;
+            width: 80%;
+            cursor: pointer;
+            padding: 0.33rem;
+            padding-left: 1rem;
+        }
+
+        .flowrun-fun-chooser>div>label {
+            display: block;
+            width: 80%;
+            cursor: pointer;
+        }
+
+        .flowrun-fun-chooser .material-icons {
+            font-size: 20px;
+            color: var(--flowrun-red-darker);
+        }
+
+        .flowrun-fun-add {
+            width: 100%;
+            text-align: center;
+        }
+
+        .flowrun-input-radio {
+            display: none;
+        }
+
+        .flowrun-input-radio:checked~span {
+            font-weight: bold;
+            font-size: 1.07em;
+        }
+
+        /**************************/
+        /* DIAGRAM */
+        /**************************/
         .flowrun-diagram {
             position: relative;
             user-select: none;
         }
 
+        .flowrun-draw {
+            /* move a bit from top so that buttons can be seen on mobile */
+            padding-top: 2rem;
+            height: 100%;
+        }
+
+        .flowrun-draw svg {
+            width: 100%;
+            max-height: 100%;
+        }
+
+        /* debug variables */
+        .flowrun-output-debug {
+            position: absolute;
+            right: 0;
+            bottom: 0;
+            padding: 5px;
+            filter: brightness(80%);
+        }
+
+        .flowrun-output-debug:empty {
+            /* hide when empty */
+            display: none;
+        }
+
+
+        /**************************/
+        /* OUTPUT */
+        /**************************/
         .flowrun-output {
             overflow: auto;
+        }
+
+        .flowrun-output samp {
+            font-size: 0.9rem;
         }
 
         .flowrun-output-statement {
@@ -121,146 +257,17 @@
             display: none;
         }
 
-        .flowrun-editor>* {
-            margin-bottom: 1rem;
-        }
 
-
-
-        @media screen and (min-width: 800px) {
-            body {
-                width: 90%;
-                margin: auto;
-            }
-
-            .flowrun-meta {
-                grid-area: flowrun-meta;
-            }
-
-            .flowrun-functions-list {
-                grid-area: flowrun-functions-list;
-            }
-
-            .flowrun-output {
-                grid-area: flowrun-output;
-            }
-
-            .flowrun-diagram {
-                grid-area: flowrun-diagram;
-            }
-
-            .flowrun-code {
-                grid-area: flowrun-code;
-                padding: 0;
-            }
-
-            .hljs {
-                background-color: white;
-            }
-
-            .flowrun-editor {
-                display: grid;
-                gap: 0.5rem;
-                width: 100%;
-                grid-template-columns: 20% 45% 35%;
-                grid-template-rows: 2rem 50% calc(50% - 2rem);
-                grid-template-areas:
-                    ".                        flowrun-meta            .                    "
-                    "flowrun-functions-list   flowrun-diagram         flowrun-output   "
-                    "flowrun-functions-list   flowrun-diagram         flowrun-code         "
-                ;
-            }
-
-            .flowrun-editor>* {
-                margin-bottom: 0;
-            }
-        }
-
-
-
-
-        /* ---------- OTHER --------------- */
-        .flowrun-draw {
-            /* move a bit from top so that buttons can be seen on mobile */
-            padding-top: 2rem;
-            height: 100%;
-        }
-        .flowrun--disabled {
-            pointer-events: none;
-            opacity: 0.5;
-        }
-
-        .flowrun--running {
-            border: 3px var(--flowrun-red-lighter) solid;
-        }
-
-        samp {
-            font-size: 0.9rem;
-        }
-
-        .flowrun-draw svg {
-            max-height: 100%;
-        }
-
+        /**************************/
+        /* CODEGEN */
+        /**************************/
         .flowrun-code code {
             height: 100%;
         }
 
-        /* Functions */
-        .flowrun-functions-list {
-            background-color: white;
-        }
-
-        .flowrun-fun-chooser {
-            display: flex;
-            flex-direction: column;
-            gap: 0.5rem;
-            margin-bottom: 1rem;
-        }
-
-        .flowrun-fun-chooser>div {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            background: var(--flowrun-light_blue);
-            padding-right: 0.33rem;
-        }
-
-        .flowrun-fun-chooser>div>label {
-            display: block;
-            width: 80%;
-            cursor: pointer;
-            padding: 0.33rem;
-            padding-left: 1rem;
-        }
-
-        .flowrun-fun-chooser>div>label {
-            display: block;
-            width: 80%;
-            cursor: pointer;
-        }
-
-
-        .flowrun-fun-chooser .material-icons {
-            font-size: 20px;
-            color: var(--flowrun-red-darker);
-        }
-
-        .flowrun-fun-add {
-            width: 100%;
-            text-align: center;
-        }
-
-        .flowrun-input-radio {
-            display: none;
-        }
-
-        .flowrun-input-radio:checked~span {
-            font-weight: bold;
-            font-size: 1.07em;
-        }
-
-        /* nodes */
+        /**************************/
+        /* NODES */
+        /**************************/
         .node:not([id$="#NE"]):not(.flowrun--selected):hover polygon,
         .node:not([id$="#NE"]):not(.flowrun--selected):hover ellipse {
             stroke: var(--flowrun-light_blue-darker);
@@ -277,7 +284,6 @@
             stroke-linejoin: round;
         }
 
-
         .node.flowrun--error polygon {
             stroke: var(--flowrun-red);
             stroke-width: 3px;
@@ -285,9 +291,9 @@
             stroke-linejoin: round;
         }
 
-        
-
-        /* */
+        /**************************/
+        /* BUTTONS */
+        /**************************/
         .flowrun-exec-btns {
             position: absolute;
             right: 5px;
@@ -319,23 +325,27 @@
             gap: 5px;
         }
 
-        /* debug */
-        .flowrun-output-debug {
-            position: absolute;
-            right: 0;
-            bottom: 0;
-            padding: 5px;
-            filter: brightness(80%);
+        /**************************/
+        /* MISC */
+        /**************************/
+        .flowrun--disabled {
+            pointer-events: none;
+            opacity: 0.5;
         }
 
-        .flowrun-output-debug:empty {
-            /* hide when empty */
-            display: none;
+        .flowrun--running {
+            border: 3px var(--flowrun-red-lighter) solid;
         }
-    </style>
 
-    <style>
-        /* CTX menu styles */
+        .flowrun--panel {
+            padding: 1rem;
+            box-shadow: 2px 1px 5px grey;
+            background-color: white;
+        }
+
+        /**************************/
+        /* CTX menu */
+        /**************************/
         .flowrun-context-menu {
             position: fixed;
             z-index: 10000;
@@ -365,15 +375,6 @@
             background: var(--flowrun-blue-darker);
         }
     </style>
-
-    <!-- highlight code -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.4.0/highlight.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.4.0/languages/scala.min.js"></script>
-
-
-
-
-
 </head>
 
 <body>
@@ -396,7 +397,7 @@
         </div>
     </div>
 
-    <div id="flowrun-template" style="display: none;">
+    <div id="flowrun-template">
         <div class="flowrun-meta"></div>
 
         <div class="flowrun-functions-list flowrun--panel">
@@ -446,9 +447,14 @@
     <!-- blank editor instance -->
     <div class="flowrun-editor"></div>
 
+    <!-- graphviz -->
     <script src="https://unpkg.com/@hpcc-js/wasm@0.3.11/dist/index.min.js"></script>
     <script src="https://d3js.org/d3.v5.min.js"></script>
     <script src="https://unpkg.com/d3-graphviz@3.0.5/build/d3-graphviz.js"></script>
+
+    <!-- highlight code -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.4.0/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.4.0/languages/scala.min.js"></script>
 
     <script type="module" src="scripts/main.js"></script>
 </body>

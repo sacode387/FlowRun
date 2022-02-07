@@ -303,7 +303,7 @@ case class FunctionModel(
       newStatement: Statement,
       blockId: String
   ): List[Statement] = {
-    println(s"insert $newStatement after $afterId in block $blockId")
+    //println(s"insert $newStatement after $afterId in block $blockId")
     val afterStatementIdx = statements.indexWhere(_.id == afterId)
     if (afterStatementIdx >= 0) {
       val afterStatement = statements(afterStatementIdx)
