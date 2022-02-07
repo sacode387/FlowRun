@@ -71,7 +71,7 @@ class FlowchartPresenter(
     |  bgcolor="transparent"
     |
     |  node [penwidth=0.5 fontsize="12" shape="box" style="filled" fontcolor="white" fontname="Courier New"]
-    |  edge [penwidth=1.5 fontsize="12" color="#0A1931" arrowsize=0.8]
+    |  edge [penwidth=2 fontsize="12" color="#0A1931" arrowsize=0.8]
     |
     |  $nodesDOT
     |
@@ -560,7 +560,7 @@ class FlowchartPresenter(
   // it's easier here to have (0,0) at top-center (we just flip y axis that is..)
   private def pos(x: Int, y: Int, yOff: Int = 0): String =
     val xPx: Double = if x == 0 then 0 else px2Inch(x * 120)
-    val yPx = if y == 0 then 0 else px2Inch(y * 70 + yOff)
+    val yPx = if y == 0 then 0 else px2Inch(y * 90 + yOff)
     val realY = 10_000 - yPx
     s""" pos="$xPx,$realY!" """.trim
 
@@ -571,7 +571,7 @@ class FlowchartPresenter(
   private def dimensions(label: String, luft: Boolean = false): String =
     val w = label.length * 0.11 + (if luft then 0.5 else 0.2)
     val width = w max 1
-    val h = 0.3 + (if luft then 0.2 else 0)
+    val h = 0.4 + (if luft then 0.1 else 0)
     s"height=$h width=$width fixedsize=true"
 
   private def edgeAttrs(nextStmtId: String): String =

@@ -17,7 +17,7 @@ class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[FlowRun.Ev
 
   val symTab = SymbolTable(flowrunChannel)
 
-  private var state = State.INITIALIZED
+  var state = State.INITIALIZED
 
   // TODO add predefined functions also.. :)
   // more general solution I guess...

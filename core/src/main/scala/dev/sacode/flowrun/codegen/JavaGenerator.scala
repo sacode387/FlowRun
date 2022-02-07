@@ -13,11 +13,12 @@ import dev.sacode.flowrun.eval.SymbolKey
 import dev.sacode.flowrun.eval.Symbol
 import dev.sacode.flowrun.Expression.Type
 import scala.util.Try
+import dev.sacode.flowrun.spaces
 
 // TODO prettify empty lines
 class JavaGenerator(programAst: Program) extends CodeGenerator {
 
-  private val indent = 4
+  private val indent = 2
 
   private val dummyChannel = Channel[FlowRun.Event]
   private val symTab = SymbolTable(dummyChannel) // needed for types of vars
@@ -33,12 +34,12 @@ class JavaGenerator(programAst: Program) extends CodeGenerator {
         |
         |public class ${programAst.name.toIdentifier} {
         |
-        |    $maybeScanner
+        |${maybeScanner.indented(indent)}
         |
-        |    public static void main(String args[]) {
+        |${indent.spaces}public static void main(String args[]) {
         |
         |${statements.mkString("\n")}
-        |    }
+        |${indent.spaces}}
         |
         |${functions.mkString("\n")}
         |}

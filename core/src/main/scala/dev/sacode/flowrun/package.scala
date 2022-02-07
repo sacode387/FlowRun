@@ -34,6 +34,11 @@ extension (str: String) {
     }.mkString("\n")
 }
 
+extension (integer: Int) {
+  def spaces: String =
+    " " * integer
+}
+
 def getNowTime: String =
   val now = new js.Date()
   now.toLocaleTimeString

@@ -162,7 +162,7 @@
                 display: grid;
                 gap: 0.5rem;
                 width: 100%;
-                grid-template-columns: 20% 50% 30%;
+                grid-template-columns: 20% 45% 35%;
                 grid-template-rows: 2rem 50% calc(50% - 2rem);
                 grid-template-areas:
                     ".                        flowrun-meta            .                    "
@@ -258,15 +258,6 @@
         .flowrun-input-radio:checked~span {
             font-weight: bold;
             font-size: 1.07em;
-        }
-
-
-        /* edges */
-        .edge.flowrun--selected path,
-        .edge.flowrun--selected polygon,
-        .edge:hover path,
-        .edge:hover polygon {
-            stroke-width: 2;
         }
 
         /* nodes */
@@ -419,7 +410,7 @@
             <div class="flowrun-draw"> </div>
             <div class="flowrun-exec-btns">
                 <span class="flowrun-btn-run material-icons" title="Run">play_arrow</span>
-                <span class="flowrun-btn-debug material-icons" title="Pause">pause</span>
+                <span class="flowrun-btn-debug material-icons flowrun--disabled" title="Stop">stop</span>
             </div>
             <div class="flowrun-output-debug"></div>
         </div>

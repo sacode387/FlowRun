@@ -12,10 +12,10 @@ class OutputArea(
     flowrunChannel: Channel[FlowRun.Event]
 ) {
 
-  def running(): Unit=
-    flowRunElements.output.classList.add("flowrun--running")    
-  
-  def finished(): Unit=
+  def running(): Unit =
+    flowRunElements.output.classList.add("flowrun--running")
+
+  def finished(): Unit =
     flowRunElements.output.classList.remove("flowrun--running")
 
   def clearAll(): Unit =
@@ -39,7 +39,7 @@ class OutputArea(
     clearAll()
     flowRunElements.runtimeOutput.appendChild(
       div(
-        samp(s"Started at: $startTime", br, br, "Error: " + msg, br, br, s"Finished at: $endTime")
+        samp(s"Started at: $startTime"), br, br, samp("Error: " + msg), br, br, samp(s"Finished at: $endTime")
       ).render
     )
     flowRunElements.runtimeOutput.classList.add("flowrun--error")
@@ -79,9 +79,7 @@ class OutputArea(
 
         flowRunElements.runtimeOutput.removeChild(enterValueDiv)
         flowRunElements.runtimeOutput.appendChild(
-          div(
-            samp(br, s"Your entered value $name = $inputValue")
-          ).render
+          div(br, samp(s"You entered value $name = $inputValue")).render
         )
       } catch {
         case (e: EvalException) => // from symbol table

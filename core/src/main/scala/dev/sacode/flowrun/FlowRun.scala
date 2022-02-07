@@ -16,6 +16,8 @@ import dev.sacode.flowrun.edit.DebugArea
 import dev.sacode.flowrun.edit.CtxMenu
 import dev.sacode.flowrun.codegen.CodeGeneratorFactory
 import dev.sacode.flowrun.codegen.Language
+import scala.compiletime.ops.int
+import dev.sacode.flowrun.eval.Interpreter.State
 
 @JSExportTopLevel("FlowRun")
 class FlowRun(
@@ -94,15 +96,23 @@ class FlowRun(
     flowrunChannel := FlowRun.Event.Deselected
 
     startedTime = getNowTime
-    flowRunElements.runtimeOutput.appendChild(samp(s"Started at: $startedTime", br).render)
+    flowRunElements.runtimeOutput.appendChild(div(samp(s"Started at: $startedTime"), br).render)
 
     interpreter = Interpreter(programModel, flowrunChannel) // fresh SymTable etc
     outputArea = OutputArea(interpreter, flowRunElements, flowrunChannel)
     debugArea = DebugArea(interpreter, flowRunElements)
 
     interpreter.run()
-    flowchartPresenter.disable()
-    functionSelector.disable()
+    dom.window.setTimeout(
+      () => {
+        // check after delay if it's running, to avoid flicker
+        if Set(State.RUNNING, State.PAUSED).contains(interpreter.state) then
+          flowchartPresenter.disable()
+          functionSelector.disable()
+      },
+      100
+    )
+
   }
 
   flowRunElements.addFunButton.onclick = _ => programModel.addNewFunction()
@@ -142,7 +152,9 @@ class FlowRun(
           programModel.currentEdgeId = Some(n.id)
           ctxMenu.handleClick(event.clientX, event.clientY, n)
           programModel.currentEdgeId.foreach { id =>
-            dom.window.document.querySelectorAll(s""" .edge[id*="$id"] """).foreach(_.classList.add("flowrun--selected"))
+            dom.window.document
+              .querySelectorAll(s""" .edge[id*="$id"] """)
+              .foreach(_.classList.add("flowrun--selected"))
           }
         case _ =>
       }
@@ -152,7 +164,7 @@ class FlowRun(
   import FlowRun.Event.*
   flowrunChannel.attach {
     case EvalSuccess =>
-      flowRunElements.runtimeOutput.appendChild(samp(br, s"Finished at: $getNowTime").render)
+      flowRunElements.runtimeOutput.appendChild(div(br, samp(s"Finished at: $getNowTime")).render)
       flowRunElements.debugVariables.innerText = ""
       flowchartPresenter.enable()
       functionSelector.enable()
@@ -178,7 +190,7 @@ class FlowRun(
       functionSelector.enable()
       outputArea.finished()
     case EvalOutput(output) =>
-      val newOutput = samp(br, output).render
+      val newOutput = div(br,samp( output)).render
       flowRunElements.runtimeOutput.appendChild(newOutput)
     case EvalInput(nodeId, name) =>
       outputArea.evalInput(nodeId, name, startedTime)
