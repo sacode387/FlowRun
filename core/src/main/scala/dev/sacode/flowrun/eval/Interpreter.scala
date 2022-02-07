@@ -45,19 +45,20 @@ class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[FlowRun.Ev
 
     futureExec.onComplete {
       case Success(_) =>
-        state = State.FINISHED
+        println("DONE")
+        state = State.FINISHED_SUCCESS
         flowrunChannel := FlowRun.Event.EvalSuccess
       case Failure(e: EvalException) =>
-        state = State.FAILED
+        state = State.FINISHED_FAILED
         flowrunChannel := FlowRun.Event.EvalError(e.nodeId, e.getMessage)
       case Failure(e: ParseException) =>
-        state = State.FAILED
+        state = State.FINISHED_FAILED
         flowrunChannel := FlowRun.Event.EvalError(e.nodeId, e.getMessage)
       case Failure(e: LexException) =>
-        state = State.FAILED
+        state = State.FINISHED_FAILED
         flowrunChannel := FlowRun.Event.EvalError(e.nodeId, e.getMessage)
       case Failure(e) =>
-        state = State.FAILED
+        state = State.FINISHED_FAILED
         // this can be any JS failure, that's why we dont't print it to user
         println(s"Unexpected error: $e")
     }
@@ -407,7 +408,9 @@ class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[FlowRun.Ev
   private def waitForContinue(): Future[Unit] = {
     val p = Promise[Unit]()
     val pingHandle: js.timers.SetIntervalHandle = js.timers.setInterval(10) {
-      if state == State.RUNNING && !p.isCompleted then p.success(())
+      if !p.isCompleted then {
+        if state == State.RUNNING || state == State.FINISHED_STOPPED then p.success(())
+      }
     }
     val f = p.future
     f.onComplete { _ =>
@@ -433,4 +436,4 @@ class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[FlowRun.Ev
 
 object Interpreter:
   enum State:
-    case INITIALIZED, RUNNING, PAUSED, FINISHED, FAILED
+    case INITIALIZED, RUNNING, PAUSED, FINISHED_SUCCESS, FINISHED_STOPPED, FINISHED_FAILED

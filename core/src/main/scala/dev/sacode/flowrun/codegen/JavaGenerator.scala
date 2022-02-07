@@ -29,21 +29,18 @@ class JavaGenerator(programAst: Program) extends CodeGenerator {
 
     val statements = programAst.main.statements.map(genStatement).map(_.indented(indent)).filterNot(_.trim.isEmpty)
     val functions = programAst.functions.map(genFunction)
-    val maybeScanner = if initInput then "static Scanner scanner = new Scanner(System.in);" else ""
+    val maybeScanner = if initInput then "\nstatic Scanner scanner = new Scanner(System.in);\n\n" else ""
     s"""|import java.util.*;
         |
         |public class ${programAst.name.toIdentifier} {
-        |
         |${maybeScanner.indented(indent)}
-        |
         |${indent.spaces}public static void main(String args[]) {
-        |
         |${statements.mkString("\n")}
         |${indent.spaces}}
         |
-        |${functions.mkString("\n")}
+        |${functions.mkString("\n\n")}
         |}
-        |""".stripMargin
+        |""".stripMargin.trim
   }
 
   private def genFunction(function: Function): String = {

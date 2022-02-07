@@ -112,7 +112,10 @@ class FlowRun(
       },
       100
     )
+  }
 
+  flowRunElements.stopButton.onclick = _ => {
+    interpreter.state = State.FINISHED_STOPPED
   }
 
   flowRunElements.addFunButton.onclick = _ => programModel.addNewFunction()

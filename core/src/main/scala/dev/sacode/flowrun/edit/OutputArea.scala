@@ -17,6 +17,7 @@ class OutputArea(
 
   def finished(): Unit =
     flowRunElements.output.classList.remove("flowrun--running")
+    flowRunElements.output.querySelectorAll(".flowrun-user-inputs").foreach(_.remove())
 
   def clearAll(): Unit =
     clearStmt()
@@ -39,7 +40,13 @@ class OutputArea(
     clearAll()
     flowRunElements.runtimeOutput.appendChild(
       div(
-        samp(s"Started at: $startTime"), br, br, samp("Error: " + msg), br, br, samp(s"Finished at: $endTime")
+        samp(s"Started at: $startTime"),
+        br,
+        br,
+        samp("Error: " + msg),
+        br,
+        br,
+        samp(s"Finished at: $endTime")
       ).render
     )
     flowRunElements.runtimeOutput.classList.add("flowrun--error")

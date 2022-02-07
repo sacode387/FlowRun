@@ -23,15 +23,19 @@ class FlowchartPresenter(
 
   def disable(): Unit =
     flowRunElements.drawArea.classList.add("flowrun--disabled")
+    flowRunElements.runButton.classList.add("flowrun--disabled")
+    flowRunElements.stopButton.classList.remove("flowrun--disabled")
 
   def enable(): Unit =
     flowRunElements.drawArea.classList.remove("flowrun--disabled")
+    flowRunElements.runButton.classList.remove("flowrun--disabled")
+    flowRunElements.stopButton.classList.add("flowrun--disabled")
 
   def clearErrors(): Unit =
-    dom.window.document.querySelectorAll(s""" .node """).foreach(_.classList.remove("flowrun--error"))
+    dom.window.document.querySelectorAll(".node ").foreach(_.classList.remove("flowrun--error"))
 
   def clearSelected(): Unit =
-    dom.window.document.querySelectorAll(s""" .flowrun--selected """).foreach(_.classList.remove("flowrun--selected"))
+    dom.window.document.querySelectorAll(".flowrun--selected").foreach(_.classList.remove("flowrun--selected"))
 
   def highlightError(nodeId: String): Unit =
     dom.window.document.querySelector(s""" .node[id^="$nodeId"] """).classList.add("flowrun--error")
