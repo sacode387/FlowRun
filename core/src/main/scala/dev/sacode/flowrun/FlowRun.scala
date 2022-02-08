@@ -84,7 +84,7 @@ class FlowRun(
   def codeText(): String =
     val generator = CodeGeneratorFactory(localConfig.get.lang, programModel.ast)
     val codeTry = generator.generate
-    if codeTry.isFailure then println(codeTry.failed)
+    if codeTry.isFailure then println("Failed to generate code: " + codeTry.failed)
     codeTry.getOrElse("Error while generating code. Please fix errors in the program.")
 
   // run the program

@@ -175,6 +175,8 @@ class FlowchartPresenter(
         val lbl = stmt.label.toGraphvizLbl
         val ifEndId = s"end_${stmt.id}"
 
+        // ovdje nać width pa proslijedit
+
         val (trueNodeDOTs, trueOffsetX) = locally {
           val block = stmt.trueBlock
           val stmts = block.statements

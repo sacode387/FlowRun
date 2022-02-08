@@ -94,7 +94,7 @@ class JavaGenerator(programAst: Program) extends CodeGenerator {
             |${genStatement(block)}
             |} while ($condition);""".stripMargin.trim.indented(indent)
       case ForLoop(_, varName, start, incr, end, block) =>
-        s"""|for (int $varName = $start; i < $end; i += $incr) {
+        s"""|for (int $varName = $start; i <= $end; i += $incr) {
             |${genStatement(block)}
             |}""".stripMargin.trim.indented(indent)
 

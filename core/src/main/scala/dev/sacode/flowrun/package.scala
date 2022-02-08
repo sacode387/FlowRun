@@ -15,8 +15,10 @@ val samp = tag("samp")
 extension (any: Any) {
   def asDyn: js.Dynamic = any.asInstanceOf[js.Dynamic]
 
-  def asDouble: Double =
+  def toReal: Double =
     java.lang.Double.parseDouble(any.toString)
+  def toInteger: Long =
+    toReal.floor.toLong
 }
 
 extension (str: String) {

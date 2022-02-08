@@ -164,9 +164,9 @@ class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[FlowRun.Ev
           incrAny <- eval(id, parseExpr(id, incrExpr))
           endAny <- eval(id, parseExpr(id, endExpr))
 
-          start = startAny.asInstanceOf[Long]
-          incr = incrAny.asInstanceOf[Long]
-          end = endAny.asInstanceOf[Long]
+          start = startAny.toInteger
+          incr = incrAny.toInteger
+          end = endAny.toInteger
 
           // maybe declare a new var
           _ =
@@ -256,11 +256,11 @@ class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[FlowRun.Ev
             }
           case None => Future.successful(tmp)
       else if tmp1.isInstanceOf[Double] then
-        val tmp = tmp1.asDouble
+        val tmp = tmp1.toReal
         numComparison.terms match
           case Some(nextTermOpt) =>
             eval(id, nextTermOpt.term).map { v =>
-              val nextVal = v.asDouble
+              val nextVal = v.toReal
               nextTermOpt.op.tpe match
                 case Token.Type.Lt   => tmp < nextVal
                 case Token.Type.LtEq => tmp <= nextVal
@@ -289,11 +289,11 @@ class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[FlowRun.Ev
         )
       else if tmp1.isInstanceOf[Double] then
         execSequentially(
-          tmp1.asDouble,
+          tmp1.toReal,
           term.factors,
           (acc, nextFactorOpt) => {
             eval(id, nextFactorOpt.factor).map { v =>
-              val nextVal = v.asDouble
+              val nextVal = v.toReal
               nextFactorOpt.op.tpe match
                 case Token.Type.Plus => acc + nextVal
                 case _               => acc - nextVal
@@ -334,11 +334,11 @@ class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[FlowRun.Ev
         )
       else if tmp1.isInstanceOf[Double] then
         execSequentially(
-          tmp1.asDouble,
+          tmp1.toReal,
           factor.unaries,
           (acc, nextUnaryOpt) => {
             eval(id, nextUnaryOpt.unary).map { v =>
-              val nextVal = v.asDouble
+              val nextVal = v.toReal
               nextUnaryOpt.op.tpe match
                 case Token.Type.Times => acc * nextVal
                 case Token.Type.Div   => acc / nextVal
@@ -355,7 +355,7 @@ class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[FlowRun.Ev
         eval(id, unary).map { next =>
           if op.tpe == Token.Type.Minus then
             if next.isInstanceOf[Long] then -next.asInstanceOf[Long]
-            else -next.asDouble
+            else -next.toReal
           else !next.asInstanceOf[Boolean]
         }
       case Unary.Simple(atom) => eval(id, atom)
@@ -391,7 +391,7 @@ class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[FlowRun.Ev
           if name == "abs" then
             // TODO handle all predefined functions
             // TODO validate args..........
-            Future(Math.abs(args.head.asDouble))
+            Future(Math.abs(args.head.toReal))
           else
             val fun = allFunctions.find(_.name == name).get
             if args.size != fun.parameters.size then
