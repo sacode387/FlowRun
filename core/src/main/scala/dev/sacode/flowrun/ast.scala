@@ -137,23 +137,16 @@ object Statement:
       body: Block
   ) extends Statement(id):
     def label = condition.toString
-  
+
   case class ForLoop(
       override val id: String,
       varName: String,
-      start: Int,
-      incr: Int,
-      end: Int,
+      start: String,
+      incr: String,
+      end: String,
       body: Block
   ) extends Statement(id):
-    if incr == 0 then
-      throw IllegalArgumentException("Increment can not be zero")
-    if start <= end && incr < 0 then
-      throw IllegalArgumentException("Increment must be positive when start<end")
-    if start >= end && incr > 0 then
-      throw IllegalArgumentException("Increment must be negative when start>end")
     def label = s"$varName = $start to $end by $incr"
-    val comparator = if incr >= 0 then "<=" else ">="
 
   // utils
   def name(stmt: Statement, funName: String): String =
@@ -162,11 +155,12 @@ object Statement:
     getName(stmt, funName).isDefined
 
   private def getName(stmt: Statement, funName: String): Option[String] = stmt match
-    case _: Begin               => Some(funName)
-    case Declare(_, name, _, _) => Some(name)
-    case Assign(_, name, _)     => Some(name)
-    case Input(_, name)         => Some(name)
-    case _                      => None
+    case _: Begin                     => Some(funName)
+    case Declare(_, name, _, _)       => Some(name)
+    case Assign(_, name, _)           => Some(name)
+    case Input(_, name)               => Some(name)
+    case ForLoop(_, name, _, _, _, _) => Some(name)
+    case _                            => None
 
   def tpe(stmt: Statement, funTpe: String): String =
     getTpe(stmt, funTpe).getOrElse("")
@@ -184,15 +178,16 @@ object Statement:
     getExpr(stmt).isDefined
 
   private def getExpr(stmt: Statement): Option[String] = stmt match
-    case Declare(_, _, _, expr) => Some(expr.getOrElse(""))
-    case Assign(_, _, expr)     => Some(expr)
-    case Output(_, expr)        => Some(expr)
-    case Call(_, expr)          => Some(expr)
-    case Return(_, expr)        => Some(expr.getOrElse(""))
-    case If(_, expr, _, _)      => Some(expr)
-    case While(_, expr, _)      => Some(expr)
-    case DoWhile(_, expr, _)    => Some(expr)
-    case _                      => None
+    case Declare(_, _, _, expr)           => Some(expr.getOrElse(""))
+    case Assign(_, _, expr)               => Some(expr)
+    case Output(_, expr)                  => Some(expr)
+    case Call(_, expr)                    => Some(expr)
+    case Return(_, expr)                  => Some(expr.getOrElse(""))
+    case If(_, expr, _, _)                => Some(expr)
+    case While(_, expr, _)                => Some(expr)
+    case DoWhile(_, expr, _)              => Some(expr)
+    case ForLoop(_, _, start, _, _, _) => Some(start)
+    case _                                => None
 
   // umm, this logic is a bit hard to explain
   // best to concentrate on it visually

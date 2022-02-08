@@ -146,25 +146,40 @@ class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[FlowRun.Ev
             case condValue => throw EvalException(s"Not a valid condition: '$condValue'", id)
           }
         interpret(body).flatMap(_ => loop())
-      case forLoop @ ForLoop(id, varName, start, incr, end, body) =>
-        // decl new var
-        val key = SymbolKey(varName, Symbol.Kind.Variable, id)
-        symTab.add(id, key, Expression.Type.Integer, Some(start))
-
-        val comparator = forLoop.comparator
-        val condition = s"$varName $comparator $end"
-        def loop(): Future[Any] =
-          eval(id, parseExpr(id, condition)).flatMap {
+      case forLoop @ ForLoop(id, varName, startExpr, incrExpr, endExpr, body) =>
+        def loop(conditionExpr: String, incr: Long): Future[Any] =
+          eval(id, parseExpr(id, conditionExpr)).flatMap {
             case condition: Boolean =>
               if (condition) interpret(body).flatMap { _ =>
                 val current = symTab.getValue(id, varName)
-                symTab.setValue(id, varName, current.asInstanceOf[Int] + incr)
-                loop()
+                symTab.setValue(id, varName, current.asInstanceOf[Long] + incr)
+                loop(conditionExpr, incr)
               }
               else Future.successful({})
             case condValue => throw EvalException(s"Not a valid condition: '$condValue'", id)
           }
-        loop()
+
+        for {
+          startAny <- eval(id, parseExpr(id, startExpr))
+          incrAny <- eval(id, parseExpr(id, incrExpr))
+          endAny <- eval(id, parseExpr(id, endExpr))
+
+          start = startAny.asInstanceOf[Long]
+          incr = incrAny.asInstanceOf[Long]
+          end = endAny.asInstanceOf[Long]
+
+          // maybe declare a new var
+          _ =
+            if symTab.isDeclaredVar(varName) then symTab.setValue(id, varName, start)
+            else
+              val key = SymbolKey(varName, Symbol.Kind.Variable, id)
+              symTab.add(id, key, Expression.Type.Integer, Some(start))
+
+          comparator = if incr >= 0 then "<=" else ">="
+          conditionExpr = s"$varName $comparator $end"
+          _ <- loop(conditionExpr, incr)
+        } yield ()
+
       case block: Block =>
         execSequentially((): Any, block.statements, (_, s) => interpret(s))
       case Return(id, maybeExpr) =>

@@ -37,12 +37,10 @@ class OutputArea(
     flowRunElements.runtimeOutput.classList.remove("flowrun--error")
 
   def runtimeError(msg: String, startTime: String, endTime: String): Unit =
-    clearAll()
+    clearStmt()
+    clearSyntax()
     flowRunElements.runtimeOutput.appendChild(
       div(
-        samp(s"Started at: $startTime"),
-        br,
-        br,
         samp("Error: " + msg),
         br,
         br,
@@ -58,7 +56,7 @@ class OutputArea(
 
   def evalInput(nodeId: String, name: String, startedTime: String): Unit = {
 
-    val valueInputElem = flowRunElements.newInputText
+    val valueInputElem = flowRunElements.newInputText()
     val valueBtnElem = flowRunElements.newEnterButton
     val enterValueDiv = div(
       br,

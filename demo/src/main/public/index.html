@@ -48,7 +48,25 @@
             display: none;
         }
 
-        /* container */
+        /**************************/
+        /* MISC */
+        /* these are on top coz we override them as needed */
+        /**************************/
+        .flowrun--disabled {
+            pointer-events: none;
+            opacity: 0.5;
+        }
+
+        .flowrun--running {
+            border: 3px var(--flowrun-red-lighter) solid;
+        }
+
+        .flowrun--panel {
+            padding: 1rem;
+            box-shadow: 2px 1px 5px grey;
+            background-color: white;
+        }
+
         .flowrun-editor {
             /* FIXED height coz it's easier to work with */
             height: 90vh;
@@ -82,17 +100,6 @@
 
             .flowrun-code {
                 grid-area: flowrun-code;
-                padding: 0;
-            }
-
-            pre,
-            pre>* {
-                /* using Courier since Graphviz only supports that monospace font */
-                font-family: 'Courier Prime', monospace;
-            }
-
-            .hljs {
-                background-color: white;
             }
 
             .flowrun-editor {
@@ -198,15 +205,15 @@
         }
 
         /* debug variables */
-        .flowrun-output-debug {
+        .flowrun-debug-vars {
             position: absolute;
             right: 0;
             bottom: 0;
             padding: 5px;
-            filter: brightness(80%);
+            background-color: var(--flowrun-grey-darker);
         }
 
-        .flowrun-output-debug:empty {
+        .flowrun-debug-vars:empty {
             /* hide when empty */
             display: none;
         }
@@ -217,6 +224,7 @@
         /**************************/
         .flowrun-output {
             overflow: auto;
+            min-height: 7rem;
         }
 
         .flowrun-output samp {
@@ -225,6 +233,10 @@
 
         .flowrun-output-statement {
             border-left: 3px var(--flowrun-grey-darker) solid;
+        }
+
+        .flowrun-output-statement * {
+            font-family: 'Courier Prime';
         }
 
         .flowrun-output-runtime {
@@ -261,8 +273,22 @@
         /**************************/
         /* CODEGEN */
         /**************************/
+        .flowrun-code {
+            padding: 0;
+        }
+
         .flowrun-code code {
             height: 100%;
+        }
+
+        pre,
+        pre>* {
+            /* using Courier since Graphviz only supports that monospace font */
+            font-family: 'Courier Prime', monospace;
+        }
+
+        .hljs {
+            background-color: white;
         }
 
         /**************************/
@@ -325,23 +351,7 @@
             gap: 5px;
         }
 
-        /**************************/
-        /* MISC */
-        /**************************/
-        .flowrun--disabled {
-            pointer-events: none;
-            opacity: 0.5;
-        }
 
-        .flowrun--running {
-            border: 3px var(--flowrun-red-lighter) solid;
-        }
-
-        .flowrun--panel {
-            padding: 1rem;
-            box-shadow: 2px 1px 5px grey;
-            background-color: white;
-        }
 
         /**************************/
         /* CTX menu */
@@ -413,7 +423,7 @@
                 <span class="flowrun-btn-run material-icons" title="Run">play_arrow</span>
                 <span class="flowrun-btn-stop material-icons flowrun--disabled" title="Stop">stop</span>
             </div>
-            <div class="flowrun-output-debug"></div>
+            <div class="flowrun-debug-vars"></div>
         </div>
 
         <div class="flowrun-output flowrun--panel">
@@ -437,7 +447,6 @@
             <span class="flowrun-fun-delete-param material-icons">remove</span>
 
             <input class="flowrun-input-text" type="text" size="10">
-            <input class="flowrun-input-number" type="number" step="1">
             <select class="flowrun-input-select"></select>
             <input type="radio" class="flowrun-input-radio">
             <button class="flowrun-btn-enter">Enter</button>

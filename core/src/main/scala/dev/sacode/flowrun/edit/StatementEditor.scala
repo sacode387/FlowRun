@@ -8,6 +8,7 @@ import reactify.*
 import dev.sacode.flowrun.ProgramModel.Request
 import dev.sacode.flowrun.parse.*
 import java.util.UUID
+import dev.sacode.flowrun.Statement.ForLoop
 
 /** Editor for selected statement. */
 class StatementEditor(
@@ -17,7 +18,7 @@ class StatementEditor(
 ) {
 
   private val EditableNodeTypes =
-    Set("Begin", "Return", "Declare", "Assign", "Input", "Output", "Call", "If", "While", "DoWhile")
+    Set("Begin", "Return", "Declare", "Assign", "Input", "Output", "Call", "If", "While", "DoWhile", "ForLoop")
 
   def edit(nodeId: String, nodeTpe: String): Unit = {
     if !EditableNodeTypes(nodeTpe) then return
@@ -35,10 +36,11 @@ class StatementEditor(
     flowRunElements.stmtOutput.innerText = ""
 
     // fill in this element with name/type/expression, coz it's just one line (flex)
-    val stmtElems = div(cls:="flowrun-stmt-inputs").render
+    val stmtElems = div(cls := "flowrun-stmt-inputs").render
 
     // name input
-    val nameInputElem = flowRunElements.newInputText
+    val nameInputSize = if nodeType == "ForLoop" then 3 else 10
+    val nameInputElem = flowRunElements.newInputText(nameInputSize)
     nameInputElem.value = Statement.name(node, programModel.currentFunction.name)
     nameInputElem.placeholder = if nodeType == "Begin" then "myFun" else "x"
     nameInputElem.oninput = { (_: dom.Event) =>
@@ -54,6 +56,8 @@ class StatementEditor(
             programModel.updateFunction(Request.UpdateFunction(nodeId, name = Some(newName)))
           case _: Statement.Assign =>
             programModel.updateAssign(Request.UpdateAssign(nodeId, name = Some(newName)))
+          case _: Statement.ForLoop =>
+            programModel.updateForLoop(Request.UpdateForLoop(nodeId, varName = Some(newName)))
           case _ => ()
         }
       } else {
@@ -87,7 +91,8 @@ class StatementEditor(
       stmtElems.appendChild(typeSelectElem)
 
     // expression input
-    val exprInputElem = flowRunElements.newInputText
+    val exprInputSize = if nodeType == "ForLoop" then 3 else 10
+    val exprInputElem = flowRunElements.newInputText(exprInputSize)
     exprInputElem.value = Statement.expr(node)
     exprInputElem.placeholder =
       if nodeType == "Output" then "\"Hello!\""
@@ -118,25 +123,63 @@ class StatementEditor(
           else if nodeType == "Call" // TODO validate expr is Call()
           then programModel.updateCall(Request.UpdateCall(nodeId, expr = newExprText))
           else if nodeType == "Return" then
-            programModel.updateReturn(
-              Request.UpdateReturn(nodeId, expr = Some(Some(newExprText)))
-            )
+            programModel.updateReturn(Request.UpdateReturn(nodeId, expr = Some(Some(newExprText))))
+          else if nodeType == "ForLoop" then
+            programModel.updateForLoop(Request.UpdateForLoop(nodeId, start = Some(newExprText)))
           else programModel.updateOutput(Request.UpdateOutput(nodeId, newExprText))
       }
     }
 
     if Statement.hasExpr(node) then
-      if Set("Declare", "Assign").contains(nodeType) then {
+      if Set("Declare", "Assign", "ForLoop").contains(nodeType) then {
         stmtElems.appendChild(span(" = ").render)
       }
       stmtElems.appendChild(exprInputElem)
+    end if
+
+    // for loop additional inputs
+    if nodeType == "ForLoop" then
+      val forLoop = node.asInstanceOf[Statement.ForLoop]
+      val toInputElem = flowRunElements.newInputText(exprInputSize)
+      toInputElem.value = forLoop.end
+      toInputElem.placeholder = "10"
+      toInputElem.oninput = _ => {
+        import scala.util.*
+        val newExprText = toInputElem.value.trim
+        val maybeNewExpr = Try(parseExpr(nodeId, newExprText))
+        maybeNewExpr match {
+          case Failure(e) =>
+            flowrunChannel := FlowRun.Event.SyntaxError(e.getMessage)
+          case Success(_) =>
+            programModel.updateForLoop(Request.UpdateForLoop(nodeId, end = Some(newExprText)))
+        }
+      }
+
+      val byInputElem = flowRunElements.newInputText(exprInputSize)
+      byInputElem.value = forLoop.incr
+      byInputElem.placeholder = "11"
+      byInputElem.oninput = _ => {
+        import scala.util.*
+        val newExprText = byInputElem.value.trim
+        val maybeNewExpr = Try(parseExpr(nodeId, newExprText))
+        maybeNewExpr match {
+          case Failure(e) =>
+            flowrunChannel := FlowRun.Event.SyntaxError(e.getMessage)
+          case Success(_) =>
+            programModel.updateForLoop(Request.UpdateForLoop(nodeId, incr = Some(newExprText)))
+        }
+      }
+
+      stmtElems.appendChild(span(" to ").render)
+      stmtElems.appendChild(toInputElem)
+      stmtElems.appendChild(span(" by ").render)
+      stmtElems.appendChild(byInputElem)
     end if
 
     flowRunElements.stmtOutput.appendChild(stmtElems)
 
     // params inputs
     if nodeType == "Begin" then
-
       val paramsListElem = div().render
       val addParamElem = flowRunElements.addParamButton
       addParamElem.onclick = _ => {
@@ -189,7 +232,7 @@ class StatementEditor(
       nodeId: String,
       param: Function.Parameter
   ) = {
-    val paramNameInput = flowRunElements.newInputText
+    val paramNameInput = flowRunElements.newInputText()
     paramNameInput.value = param.name
     paramNameInput.oninput = _ => {
       val newName = paramNameInput.value.trim

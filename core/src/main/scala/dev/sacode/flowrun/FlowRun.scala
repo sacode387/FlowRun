@@ -193,7 +193,7 @@ class FlowRun(
       functionSelector.enable()
       outputArea.finished()
     case EvalOutput(output) =>
-      val newOutput = div(br,samp( output)).render
+      val newOutput = div(samp( output)).render
       flowRunElements.runtimeOutput.appendChild(newOutput)
     case EvalInput(nodeId, name) =>
       outputArea.evalInput(nodeId, name, startedTime)

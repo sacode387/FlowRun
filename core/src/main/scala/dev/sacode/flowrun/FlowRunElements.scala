@@ -19,13 +19,16 @@ class FlowRunElements(
   val functionsChooser: dom.Element = template.querySelector(".flowrun-fun-chooser")
 
   val drawArea: dom.Element = template.querySelector(".flowrun-draw")
+  
+  val debugVariables: dom.Element = template.querySelector(".flowrun-debug-vars")
+
   val codeArea: dom.Element = template.querySelector(".flowrun-code")
 
   val output: dom.Element = template.querySelector(".flowrun-output")
   val stmtOutput: dom.Element = template.querySelector(".flowrun-output-statement")
   val syntaxOutput: dom.Element = template.querySelector(".flowrun-output-syntax")
   val runtimeOutput: dom.Element = template.querySelector(".flowrun-output-runtime")
-  val debugVariables: dom.Element = template.querySelector(".flowrun-output-debug")
+  
 
   val execBtns: dom.Element = template.querySelector(".flowrun-exec-btns")
 
@@ -44,7 +47,6 @@ class FlowRunElements(
   // general
   private val enterButton = template.querySelector(".flowrun-btn-enter").asInstanceOf[dom.html.Element]
   private val inputText = template.querySelector(".flowrun-input-text").asInstanceOf[dom.html.Input]
-  private val inputNumber = template.querySelector(".flowrun-input-number").asInstanceOf[dom.html.Input]
   private val inputSelect = template.querySelector(".flowrun-input-select").asInstanceOf[dom.html.Select]
   private val inputRadio = template.querySelector(".flowrun-input-radio").asInstanceOf[dom.html.Input]
 
@@ -55,11 +57,10 @@ class FlowRunElements(
   drawArea.innerText = ""
   debugVariables.innerText = ""
 
-  def newInputText: dom.html.Input =
-    inputText.cloneNode(true).asInstanceOf[dom.html.Input]
-
-  def newInputNumber: dom.html.Input =
-    inputNumber.cloneNode(true).asInstanceOf[dom.html.Input]
+  def newInputText(size: Int = 10): dom.html.Input =
+    val res = inputText.cloneNode(true).asInstanceOf[dom.html.Input]
+    res.size = size
+    res
 
   def newInputSelect: dom.html.Select =
     inputSelect.cloneNode(true).asInstanceOf[dom.html.Select]

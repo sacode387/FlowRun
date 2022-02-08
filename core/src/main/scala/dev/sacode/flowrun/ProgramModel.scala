@@ -90,10 +90,10 @@ class ProgramModel(
 
   def addDoWhile(req: AddDoWhile): Unit =
     update(_.addDoWhile(req), FlowRun.Event.StmtAdded)
-  
+
   def addForLoop(req: AddForLoop): Unit =
     update(_.addForLoop(req), FlowRun.Event.StmtAdded)
-  
+
   def updateDeclare(req: UpdateDeclare): Unit =
     update(_.updateDeclare(req), FlowRun.Event.SyntaxSuccess)
 
@@ -120,6 +120,9 @@ class ProgramModel(
 
   def updateDoWhile(req: UpdateDoWhile): Unit =
     update(_.updateDoWhile(req), FlowRun.Event.SyntaxSuccess)
+  
+  def updateForLoop(req: UpdateForLoop): Unit =
+    update(_.updateForLoop(req), FlowRun.Event.SyntaxSuccess)
 
   def delete(req: Delete): Unit =
     update(_.delete(req), FlowRun.Event.StmtDeleted)
@@ -194,6 +197,13 @@ object ProgramModel:
     case UpdateIf(id: String, expr: String)
     case UpdateWhile(id: String, expr: String)
     case UpdateDoWhile(id: String, expr: String)
+    case UpdateForLoop(
+        id: String,
+        varName: Option[String] = None,
+        start: Option[String] = None,
+        incr: Option[String] = None,
+        end: Option[String] = None
+    )
     case UpdateFunction(
         id: String,
         name: Option[String] = None,
@@ -238,9 +248,9 @@ case class FunctionModel(
   def addDoWhile(req: AddDoWhile): FunctionModel =
     val newStat = Statement.DoWhile(req.id, "false", Statement.Block(req.bodyId))
     doInsert(req.afterId, newStat, req.blockId)
-  
+
   def addForLoop(req: AddForLoop): FunctionModel =
-    val newStat = Statement.ForLoop(req.id, "i", 0, 1, 10, Statement.Block(req.bodyId))
+    val newStat = Statement.ForLoop(req.id, "i", "0", "1", "10", Statement.Block(req.bodyId))
     doInsert(req.afterId, newStat, req.blockId)
 
   def updateDeclare(req: UpdateDeclare): FunctionModel =
@@ -274,18 +284,26 @@ case class FunctionModel(
     doUpdate(req.id, updatedStat)
 
   def updateIf(req: UpdateIf): FunctionModel =
-    var updatedStat: Statement.If = doFind(req.id).asInstanceOf[Statement.If]
+    var updatedStat = doFind(req.id).asInstanceOf[Statement.If]
     updatedStat = updatedStat.copy(condition = req.expr)
     doUpdate(req.id, updatedStat)
 
   def updateWhile(req: UpdateWhile): FunctionModel =
-    var updatedStat: Statement.While = doFind(req.id).asInstanceOf[Statement.While]
+    var updatedStat = doFind(req.id).asInstanceOf[Statement.While]
     updatedStat = updatedStat.copy(condition = req.expr)
     doUpdate(req.id, updatedStat)
 
   def updateDoWhile(req: UpdateDoWhile): FunctionModel =
-    var updatedStat: Statement.DoWhile = doFind(req.id).asInstanceOf[Statement.DoWhile]
+    var updatedStat = doFind(req.id).asInstanceOf[Statement.DoWhile]
     updatedStat = updatedStat.copy(condition = req.expr)
+    doUpdate(req.id, updatedStat)
+  
+  def updateForLoop(req: UpdateForLoop): FunctionModel =
+    var updatedStat = doFind(req.id).asInstanceOf[Statement.ForLoop]
+    req.varName.foreach(n => updatedStat = updatedStat.copy(varName = n))
+    req.start.foreach(e => updatedStat = updatedStat.copy(start = e))
+    req.incr.foreach(e => updatedStat = updatedStat.copy(incr = e))
+    req.end.foreach(e => updatedStat = updatedStat.copy(end = e))
     doUpdate(req.id, updatedStat)
 
   def delete(req: Delete): FunctionModel =
@@ -370,9 +388,7 @@ case class FunctionModel(
           )
         case stmt: Statement.ForLoop =>
           stmt.copy(
-            body = stmt.body.copy(statements =
-              insert(stmt.body.statements, afterId, newStatement, blockId)
-            )
+            body = stmt.body.copy(statements = insert(stmt.body.statements, afterId, newStatement, blockId))
           )
         case simple =>
           simple
@@ -422,8 +438,7 @@ case class FunctionModel(
           )
         case stmt: Statement.ForLoop =>
           stmt.copy(
-            body =
-              stmt.body.copy(statements = update(stmt.body.statements, statementId, newStatement))
+            body = stmt.body.copy(statements = update(stmt.body.statements, statementId, newStatement))
           )
         case simple =>
           simple
