@@ -29,12 +29,13 @@ class FlowRunElements(
   val syntaxOutput: dom.Element = template.querySelector(".flowrun-output-syntax")
   val runtimeOutput: dom.Element = template.querySelector(".flowrun-output-runtime")
   
-
-  val execBtns: dom.Element = template.querySelector(".flowrun-exec-btns")
-
   // singletons
-  val runButton: dom.html.Element = execBtns.querySelector(".flowrun-btn-run").asInstanceOf[dom.html.Element]
-  val stopButton: dom.html.Element = execBtns.querySelector(".flowrun-btn-stop").asInstanceOf[dom.html.Element]
+  val runButton: dom.html.Element = template.querySelector(".flowrun-btn-run").asInstanceOf[dom.html.Element]
+  val stopButton: dom.html.Element = template.querySelector(".flowrun-btn-stop").asInstanceOf[dom.html.Element]
+  val copySourceButton: dom.html.Element = template.querySelector(".flowrun-btn-copy-source").asInstanceOf[dom.html.Element]
+  val copyDotButton: dom.html.Element = template.querySelector(".flowrun-btn-copy-dot").asInstanceOf[dom.html.Element]
+  val copyGencodeButton: dom.html.Element = template.querySelector(".flowrun-btn-copy-gencode").asInstanceOf[dom.html.Element]
+  
 
   val addFunButton: dom.html.Element = template.querySelector(".flowrun-fun-add").asInstanceOf[dom.html.Element]
   private val deleteFunButton: dom.html.Element =
@@ -52,6 +53,7 @@ class FlowRunElements(
 
   // clean up
   template.querySelector(".flowrun-template-transient").remove()
+
   metaData.innerText = ""
   functionsChooser.innerText = ""
   drawArea.innerText = ""

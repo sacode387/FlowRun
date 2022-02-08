@@ -118,6 +118,18 @@ class FlowRun(
     interpreter.state = State.FINISHED_STOPPED
   }
 
+  flowRunElements.copySourceButton.onclick = _ => {
+    dom.window.navigator.clipboard.writeText(json())
+  }
+
+  flowRunElements.copyDotButton.onclick = _ => {
+    dom.window.navigator.clipboard.writeText(flowchartPresenter.funDOT)
+  }
+
+  flowRunElements.copyGencodeButton.onclick = _ => {
+    dom.window.navigator.clipboard.writeText(codeText())
+  }
+
   flowRunElements.addFunButton.onclick = _ => programModel.addNewFunction()
 
   flowRunElements.drawArea.addEventListener(

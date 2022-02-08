@@ -98,8 +98,9 @@
                 grid-area: flowrun-diagram;
             }
 
-            .flowrun-code {
-                grid-area: flowrun-code;
+            .flowrun-gen-code {
+                grid-area: flowrun-gen-code;
+                position: relative;
             }
 
             .flowrun-editor {
@@ -111,7 +112,7 @@
                 grid-template-areas:
                     ".                        flowrun-meta            .                    "
                     "flowrun-functions-list   flowrun-diagram         flowrun-output   "
-                    "flowrun-functions-list   flowrun-diagram         flowrun-code         "
+                    "flowrun-functions-list   flowrun-diagram         flowrun-gen-code         "
                 ;
             }
 
@@ -275,6 +276,7 @@
         /**************************/
         .flowrun-code {
             padding: 0;
+            height: 100%;
         }
 
         .flowrun-code code {
@@ -320,7 +322,21 @@
         /**************************/
         /* BUTTONS */
         /**************************/
-        .flowrun-exec-btns {
+        .flowrun-draw-exec-btns {
+            position: absolute;
+            right: 5px;
+            top: 5px;
+            padding: 5px;
+        }
+
+        .flowrun-draw-copy-btns {
+            position: absolute;
+            left: 5px;
+            top: 5px;
+            padding: 5px;
+        }
+
+        .flowrun-gencode-copy-btns {
             position: absolute;
             right: 5px;
             top: 5px;
@@ -328,7 +344,9 @@
         }
 
 
-        .flowrun-exec-btns [class^="flowrun-btn"],
+        .flowrun-draw-exec-btns .material-icons,
+        .flowrun-draw-copy-btns .material-icons,
+        .flowrun-gencode-copy-btns .material-icons,
         .flowrun-fun-add,
         .flowrun-fun-delete,
         .flowrun-fun-add-param,
@@ -337,6 +355,10 @@
             user-select: none;
             color: var(--flowrun-green);
             font-size: 1.8rem;
+        }
+
+        .flowrun-draw-copy-btns .material-icons {
+            font-size: 1.6rem;
         }
 
         .flowrun-editor .material-icons:hover {
@@ -419,9 +441,13 @@
 
         <div class="flowrun-diagram flowrun--panel">
             <div class="flowrun-draw"> </div>
-            <div class="flowrun-exec-btns">
+            <div class="flowrun-draw-exec-btns">
                 <span class="flowrun-btn-run material-icons" title="Run">play_arrow</span>
                 <span class="flowrun-btn-stop material-icons flowrun--disabled" title="Stop">stop</span>
+            </div>
+            <div class="flowrun-draw-copy-btns">
+                <span class="flowrun-btn-copy-source material-icons" title="Copy Source">source</span>
+                <span class="flowrun-btn-copy-dot material-icons" title="Copy DOT">account_tree</span>
             </div>
             <div class="flowrun-debug-vars"></div>
         </div>
@@ -434,10 +460,12 @@
             </div>
         </div>
 
-
-        <pre class="flowrun-code flowrun--panel">
-            <code></code>
-        </pre>
+        <div class="flowrun-gen-code flowrun--panel">
+            <pre class="flowrun-code"></pre>
+            <div class="flowrun-gencode-copy-btns">
+                <span class="flowrun-btn-copy-gencode material-icons" title="Copy Generated Code">code</span>
+            </div>
+        </div>
 
         <!-- this whole div will be deleted -->
         <div class="flowrun-template-transient">
