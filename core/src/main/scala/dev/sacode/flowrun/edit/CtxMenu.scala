@@ -88,76 +88,53 @@ class CtxMenu(programModel: ProgramModel) {
 
     deleteButton.addEventListener(
       "click",
-      (event: dom.MouseEvent) => {
-        programModel.delete(Request.Delete(nodeId))
-      }
+      (event: dom.MouseEvent) => programModel.delete(Request.Delete(nodeId))
     )
 
     addDeclareButton.addEventListener(
       "click",
-      (event: dom.MouseEvent) => {
-        programModel.addDeclare(
-          Request.AddDeclare(AST.newId, "x", Type.Integer, afterId, blockId)
-        )
-      }
+      (event: dom.MouseEvent) =>
+        programModel.addDeclare(Request.AddDeclare(AST.newId, "x", Type.Integer, afterId, blockId))
     )
 
     addAssignButton.addEventListener(
       "click",
-      (event: dom.MouseEvent) => {
-        programModel.addAssign(Request.AddAssign(AST.newId, afterId, blockId))
-      }
+      (event: dom.MouseEvent) => programModel.addAssign(Request.AddAssign(AST.newId, afterId, blockId))
     )
 
     addInputButton.addEventListener(
       "click",
-      (event: dom.MouseEvent) => {
-        programModel.addInput(Request.AddInput(AST.newId, afterId, blockId))
-      }
+      (event: dom.MouseEvent) => programModel.addInput(Request.AddInput(AST.newId, afterId, blockId))
     )
 
     addOutputButton.addEventListener(
       "click",
-      (event: dom.MouseEvent) => {
-        programModel.addOutput(Request.AddOutput(AST.newId, afterId, blockId))
-      }
+      (event: dom.MouseEvent) => programModel.addOutput(Request.AddOutput(AST.newId, afterId, blockId))
     )
 
     addCallButton.addEventListener(
       "click",
-      (event: dom.MouseEvent) => {
-        programModel.addCall(Request.AddCall(AST.newId, afterId, blockId))
-      }
+      (event: dom.MouseEvent) => programModel.addCall(Request.AddCall(AST.newId, afterId, blockId))
     )
 
     addIfButton.addEventListener(
       "click",
-      (event: dom.MouseEvent) => {
-        programModel.addIf(
-          Request.AddIf(AST.newId, AST.newId, AST.newId, afterId, blockId)
-        )
-      }
+      (event: dom.MouseEvent) => programModel.addIf(Request.AddIf(AST.newId, AST.newId, AST.newId, afterId, blockId))
     )
 
     addWhileButton.addEventListener(
       "click",
-      (event: dom.MouseEvent) => {
-        programModel.addWhile(Request.AddWhile(AST.newId, AST.newId, afterId, blockId))
-      }
+      (event: dom.MouseEvent) => programModel.addWhile(Request.AddWhile(AST.newId, AST.newId, afterId, blockId))
     )
 
     addDoWhileButton.addEventListener(
       "click",
-      (event: dom.MouseEvent) => {
-        programModel.addDoWhile(Request.AddDoWhile(AST.newId, AST.newId, afterId, blockId))
-      }
+      (event: dom.MouseEvent) => programModel.addDoWhile(Request.AddDoWhile(AST.newId, AST.newId, afterId, blockId))
     )
 
     addForLoopButton.addEventListener(
       "click",
-      (event: dom.MouseEvent) => {
-        programModel.addForLoop(Request.AddForLoop(AST.newId, AST.newId, afterId, blockId))
-      }
+      (event: dom.MouseEvent) => programModel.addForLoop(Request.AddForLoop(AST.newId, AST.newId, afterId, blockId))
     )
   }
 

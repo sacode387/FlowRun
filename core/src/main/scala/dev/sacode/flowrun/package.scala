@@ -22,7 +22,7 @@ extension (any: Any) {
 }
 
 extension (str: String) {
-  
+
   def toGraphvizLbl: String =
     str.replace("\"", "\\\"")
 
@@ -31,9 +31,11 @@ extension (str: String) {
 
   def indented(x: Int): String =
     val spaces = " " * x
-    str.linesIterator.map { line =>
-      spaces + line
-    }.mkString("\n")
+    str.linesIterator
+      .map { line =>
+        spaces + line
+      }
+      .mkString("\n")
 }
 
 extension (integer: Int) {
@@ -44,26 +46,6 @@ extension (integer: Int) {
 def getNowTime: String =
   val now = new js.Date()
   now.toLocaleTimeString
-
-def isTouchDevice: Boolean =
-  dom.window.matchMedia("(pointer: coarse)").matches
-
-def getSvgNode(et: dom.EventTarget): (String, dom.svg.G) = {
-  var node: dom.EventTarget = et
-  while (!js.isUndefined(node)) {
-    node match {
-      case g: dom.svg.G =>
-        if g.className.baseVal.contains("node") then return ("NODE", g)
-        else if g.className.baseVal.contains("edge") then return ("EDGE", g)
-        else node = g.parentNode
-      case n: dom.Node =>
-        node = n.parentNode
-      case _ =>
-        return ("", null)
-    }
-  }
-  ("", null)
-}
 
 object TypeUtils:
   import Expression.Type
@@ -101,3 +83,42 @@ object NameUtils:
     else if !ident.matches("[a-zA-Z0-9_]+") then Some("Name must contain only letters, numbers or underscore.")
     else if SymbolKey.ReservedWords(ident) then Some("Name must not be a reserved word")
     else None
+
+object DomUtils {
+
+  def isTouchDevice: Boolean =
+    dom.window.matchMedia("(pointer: coarse)").matches
+
+  def getNearestSvgNode(event: dom.MouseEvent): (String, dom.svg.G) = {
+    getSvgNode(event.target).getOrElse {
+      for (i <- 1 to 7) {
+        val nearNodes = List(
+          dom.document.elementFromPoint(event.pageX + i, event.pageY),
+          dom.document.elementFromPoint(event.pageX, event.pageY + i),
+          dom.document.elementFromPoint(event.pageX - i, event.pageY),
+          dom.document.elementFromPoint(event.pageX, event.pageY - i)
+        ).flatMap(getSvgNode)
+        val maybeNode = nearNodes.headOption
+        if maybeNode.isDefined && maybeNode.get._1 == "EDGE" then return maybeNode.get
+      }
+      ("", null)
+    }
+  }
+
+  private def getSvgNode(et: dom.EventTarget): Option[(String, dom.svg.G)] = {
+    var node: dom.EventTarget = et
+    while (!js.isUndefined(node)) {
+      node match {
+        case g: dom.svg.G =>
+          if g.className.baseVal.contains("node") then return Some(("NODE", g))
+          else if g.className.baseVal.contains("edge") then return Some(("EDGE", g))
+          else node = g.parentNode
+        case n: dom.Node =>
+          node = n.parentNode
+        case _ =>
+          return None
+      }
+    }
+    None
+  }
+}

@@ -50,12 +50,10 @@ class FlowchartPresenter(
         )
       )
 
-    val dotSrc = funDOT
-    //println(dotSrc)
     graphviz
       .engine("neato")
       .renderDot(
-        dotSrc,
+        funDOT,
         (gr: js.Dynamic) => {
           // select current node
           clearSelected()
@@ -74,7 +72,7 @@ class FlowchartPresenter(
     |digraph {
     |  bgcolor="transparent"
     |
-    |  node [penwidth=0.5 fontsize="12" shape="box" style="filled" fontcolor="white" fontname="Courier New"]
+    |  node [penwidth=0.5 fontsize="12" shape="box" style="filled" fontcolor="white" fontname="Courier Prime"]
     |  edge [penwidth=2 fontsize="12" color="#0A1931" arrowsize=0.8]
     |
     |  $nodesDOT
@@ -111,6 +109,7 @@ class FlowchartPresenter(
     val stmtId = s"${stmt.id}#${stmt.getClass.getSimpleName}"
     stmt match {
       case _: Begin =>
+        // TODO može class="not_editable" aaaaaaaaaa
         val nodeFlags = if programModel.currentFunction.isMain then "NE" else "" // NE-NotEditable
         val lbl = if programModel.currentFunction.isMain then "Begin" else programModel.currentFunction.label
         val tooltip = if programModel.currentFunction.isMain then "Begin" else programModel.currentFunction.verboseLabel
@@ -205,8 +204,8 @@ class FlowchartPresenter(
           s"""|${stmt.id} [id="$stmtId" ${pos(posX, posY)} ${dimensions(lbl, true)} $group 
               | label="$lbl" tooltip="$lbl" shape="diamond" ${colorScheme.loopNode.graphvizColors}]
               |
-              |true_dummy_up_${stmt.id} [ ${pos(trueOffsetX, posY)} shape=point width=0]
-              |false_dummy_up_${stmt.id} [ ${pos(falseOffsetX, posY)} shape=point width=0]
+              |true_dummy_up_${stmt.id} [${pos(trueOffsetX, posY)} shape=point width=0]
+              |false_dummy_up_${stmt.id} [${pos(falseOffsetX, posY)} shape=point width=0]
               |
               |${trueNodeDOTs._1.mkString("\n")}
               |${falseNodeDOTs._1.mkString("\n")}
@@ -214,7 +213,7 @@ class FlowchartPresenter(
               |true_dummy_down_${stmt.id} [ ${pos(trueOffsetX, maxBranchY)} shape=point width=0]
               |false_dummy_down_${stmt.id} [ ${pos(falseOffsetX, maxBranchY)} shape=point width=0]
               |
-              |$ifEndId [id="$ifEndId#IfEnd" ${pos(posX, maxBranchY)} $group ${colorScheme.loopNode.graphvizColors}
+              |$ifEndId [id="$ifEndId#IfEnd#NE" ${pos(posX, maxBranchY)} $group ${colorScheme.loopNode.graphvizColors}
               | label="" tooltip=" " shape="circle" fixedsize=true width=0.2 height=0.2]
               |
               |""".stripMargin
@@ -274,7 +273,7 @@ class FlowchartPresenter(
         val maxBranchY = blockDOTs._2
 
         val dot =
-          s"""|$doWhileEndId [id="$doWhileEndId#DoWhileEndId" ${pos(posX, posY)} $group 
+          s"""|$doWhileEndId [id="$doWhileEndId#DoWhileEndId#NE" ${pos(posX, posY)} $group 
               | label="" tooltip=" " shape="circle" fixedsize=true width=0.2 height=0.2 ${colorScheme.loopNode.graphvizColors}]
               |
               |${blockDOTs._1.mkString("\n")}

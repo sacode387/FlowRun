@@ -136,7 +136,7 @@ class FlowRun(
     "click",
     (event: dom.MouseEvent) => {
       event.preventDefault()
-      getSvgNode(event.target) match {
+      DomUtils.getNearestSvgNode(event) match {
         case ("NODE", n) =>
           val idParts = n.id.split("#", -1)
           val nodeId = idParts(0)
@@ -157,7 +157,7 @@ class FlowRun(
     "contextmenu",
     (event: dom.MouseEvent) => {
       event.preventDefault()
-      getSvgNode(event.target) match {
+      DomUtils.getNearestSvgNode(event) match {
         case ("NODE", n) =>
           val idParts = n.id.split("#", -1)
           val nodeId = idParts(0)
