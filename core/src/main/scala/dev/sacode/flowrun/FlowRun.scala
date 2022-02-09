@@ -16,7 +16,7 @@ import dev.sacode.flowrun.edit.DebugArea
 import dev.sacode.flowrun.edit.CtxMenu
 import dev.sacode.flowrun.codegen.CodeGeneratorFactory
 import dev.sacode.flowrun.codegen.Language
-import scala.compiletime.ops.int
+import dev.sacode.flowrun.toastify.*
 import dev.sacode.flowrun.eval.Interpreter.State
 
 @JSExportTopLevel("FlowRun")
@@ -120,14 +120,17 @@ class FlowRun(
 
   flowRunElements.copySourceButton.onclick = _ => {
     dom.window.navigator.clipboard.writeText(json())
+    Toastify(ToastifyOptions("Copied program source to clipboard.")).showToast()
   }
 
   flowRunElements.copyDotButton.onclick = _ => {
     dom.window.navigator.clipboard.writeText(flowchartPresenter.funDOT)
+    Toastify(ToastifyOptions("Copied DOT to clipboard.")).showToast()
   }
 
   flowRunElements.copyGencodeButton.onclick = _ => {
     dom.window.navigator.clipboard.writeText(codeText())
+    Toastify(ToastifyOptions("Copied generated code to clipboard.")).showToast()
   }
 
   flowRunElements.addFunButton.onclick = _ => programModel.addNewFunction()

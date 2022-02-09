@@ -11,6 +11,7 @@
     <link rel="stylesheet"
         href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.4.0/styles/stackoverflow-light.min.css" />
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
 
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&display=swap');
@@ -101,7 +102,6 @@
 
             .flowrun-gen-code {
                 grid-area: flowrun-gen-code;
-                position: relative;
             }
 
             .flowrun-editor {
@@ -282,6 +282,10 @@
 
         .flowrun-code code {
             height: 100%;
+        }
+
+        .flowrun-gen-code {
+            position: relative;
         }
 
         pre,
@@ -493,6 +497,8 @@
     <!-- highlight code -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.4.0/highlight.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.4.0/languages/scala.min.js"></script>
+
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
 
     <script type="module" src="scripts/main.js"></script>
 </body>
