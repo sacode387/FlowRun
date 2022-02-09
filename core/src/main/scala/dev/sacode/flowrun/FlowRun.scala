@@ -144,8 +144,7 @@ class FlowRun(
           val idParts = n.id.split("#", -1)
           val nodeId = idParts(0)
           val tpe = idParts(1)
-          val nodeFlags = if idParts.length > 2 then idParts(2) else ""
-          if !nodeFlags.contains("NE") then
+          if !n.classList.contains("flowrun-not-selectable") then
             programModel.currentStmtId = Some(nodeId)
             outputArea.clearSyntax()
             flowchartPresenter.loadCurrentFunction() // to highlight new node..
@@ -175,6 +174,7 @@ class FlowRun(
               .foreach(_.classList.add("flowrun--selected"))
           }
         case _ =>
+          flowrunChannel := FlowRun.Event.Deselected
       }
     }
   )
@@ -182,7 +182,7 @@ class FlowRun(
   flowRunElements.drawArea.addEventListener(
     "dblclick",
     (event: dom.MouseEvent) => {
-      Toastify(ToastifyOptions("Please right click on arrow to add more nodes. (long press on touchscreens)")).showToast()
+      Toastify(ToastifyOptions("Please right click on arrow to add more nodes. (Long press on touchscreen)")).showToast()
     }
   )
 

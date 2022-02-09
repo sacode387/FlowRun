@@ -1,13 +1,15 @@
 package dev.sacode.flowrun
 package edit
 
+import java.util.UUID
+
 import scalajs.js
 import org.scalajs.dom
 import scalatags.JsDom.all.{name => _, *}
 import reactify.*
 import dev.sacode.flowrun.ProgramModel.Request
 import dev.sacode.flowrun.parse.*
-import java.util.UUID
+import dev.sacode.flowrun.toastify.*
 import dev.sacode.flowrun.Statement.ForLoop
 
 /** Editor for selected statement. */
@@ -27,10 +29,18 @@ class StatementEditor(
     val nodeType = node.getClass.getSimpleName.filterNot(_ == '$')
 
     // skip Begin if main function
-    if nodeType == "Begin" && programModel.currentFunction.isMain then return
+    if nodeType == "Begin" && programModel.currentFunction.isMain then
+      // TODO warning boja
+      Toastify(ToastifyOptions("Begin is not editable.")).showToast()
+      return
 
     // skip Return if function doesn't return anything
-    if nodeType == "Return" && programModel.currentFunction.tpe == Expression.Type.Void then return
+    if nodeType == "Return" then
+      if programModel.currentFunction.isMain then
+        Toastify(ToastifyOptions("End is not editable.")).showToast()
+      else if programModel.currentFunction.tpe == Expression.Type.Void then
+        Toastify(ToastifyOptions("Void functions dont return any value.")).showToast()
+      return
 
     // clear first, prepare for new inputs
     flowRunElements.stmtOutput.innerText = ""

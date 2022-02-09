@@ -109,23 +109,18 @@ class FlowchartPresenter(
     val stmtId = s"${stmt.id}#${stmt.getClass.getSimpleName}"
     stmt match {
       case _: Begin =>
-        // TODO može class="not_editable" aaaaaaaaaa
-        val nodeFlags = if programModel.currentFunction.isMain then "NE" else "" // NE-NotEditable
         val lbl = if programModel.currentFunction.isMain then "Begin" else programModel.currentFunction.label
         val tooltip = if programModel.currentFunction.isMain then "Begin" else programModel.currentFunction.verboseLabel
         val dot =
-          s"""|${stmt.id} [id="$stmtId#$nodeFlags" ${pos(posX, posY)} ${dimensions(lbl)} $group 
+          s"""|${stmt.id} [id="$stmtId" ${pos(posX, posY)} ${dimensions(lbl)} $group 
               | label="$lbl" tooltip="$tooltip" shape="ellipse" ${colorScheme.startEndNode.graphvizColors}]
               |""".stripMargin.replaceAll("\n", " ")
         (dot, posY)
 
       case retStmt: Return =>
-        val nodeFlags =
-          if programModel.currentFunction.isMain || programModel.currentFunction.tpe == Type.Void then "NE"
-          else "" // NE-NotEditable
         val lbl = if programModel.currentFunction.isMain then "End" else stmt.label
         val dot =
-          s"""|${stmt.id} [id="$stmtId#$nodeFlags" ${pos(posX, posY)} ${dimensions(lbl)} $group 
+          s"""|${stmt.id} [id="$stmtId" ${pos(posX, posY)} ${dimensions(lbl)} $group 
               | label="$lbl" tooltip="$lbl" shape="ellipse" ${colorScheme.startEndNode.graphvizColors}]
               |""".stripMargin.replaceAll("\n", " ")
         (dot, posY)
@@ -213,7 +208,7 @@ class FlowchartPresenter(
               |true_dummy_down_${stmt.id} [ ${pos(trueOffsetX, maxBranchY)} shape=point width=0]
               |false_dummy_down_${stmt.id} [ ${pos(falseOffsetX, maxBranchY)} shape=point width=0]
               |
-              |$ifEndId [id="$ifEndId#IfEnd#NE" ${pos(posX, maxBranchY)} $group ${colorScheme.loopNode.graphvizColors}
+              |$ifEndId [id="$ifEndId#IfEnd" class="flowrun-not-selectable" ${pos(posX, maxBranchY)} $group ${colorScheme.loopNode.graphvizColors}
               | label="" tooltip=" " shape="circle" fixedsize=true width=0.2 height=0.2]
               |
               |""".stripMargin
@@ -273,7 +268,7 @@ class FlowchartPresenter(
         val maxBranchY = blockDOTs._2
 
         val dot =
-          s"""|$doWhileEndId [id="$doWhileEndId#DoWhileEndId#NE" ${pos(posX, posY)} $group 
+          s"""|$doWhileEndId [id="$doWhileEndId#DoWhileEndId" class="flowrun-not-selectable" ${pos(posX, posY)} $group 
               | label="" tooltip=" " shape="circle" fixedsize=true width=0.2 height=0.2 ${colorScheme.loopNode.graphvizColors}]
               |
               |${blockDOTs._1.mkString("\n")}

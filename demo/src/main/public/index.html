@@ -301,8 +301,8 @@
         /**************************/
         /* NODES */
         /**************************/
-        .node:not([id$="#NE"]):not(.flowrun--selected):hover polygon,
-        .node:not([id$="#NE"]):not(.flowrun--selected):hover ellipse {
+        .node:not(.flowrun-not-selectable):not(.flowrun--selected):hover polygon,
+        .node:not(.flowrun-not-selectable):not(.flowrun--selected):hover ellipse {
             stroke: var(--flowrun-light_blue-darker);
             stroke-width: 1.5;
             stroke-dasharray: 10 3;
