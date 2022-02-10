@@ -37,9 +37,10 @@ class StatementEditor(
     if nodeType == "Return" then
       if programModel.currentFunction.isMain then
         Toastify(ToastifyOptions("End is not editable.", Color.yellow)).showToast()
+        return
       else if programModel.currentFunction.tpe == Expression.Type.Void then
         Toastify(ToastifyOptions("Void functions dont return any value.", Color.yellow)).showToast()
-      return
+        return
 
     // clear first, prepare for new inputs
     flowRunElements.stmtOutput.innerText = ""

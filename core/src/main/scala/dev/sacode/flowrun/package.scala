@@ -18,7 +18,7 @@ extension (any: Any) {
   def toReal: Double =
     java.lang.Double.parseDouble(any.toString)
   def toInteger: Int =
-    toReal.floor.toInt
+    any.toString.toInt
 }
 
 extension (str: String) {

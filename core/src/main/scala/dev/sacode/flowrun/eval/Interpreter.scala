@@ -402,7 +402,6 @@ class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[FlowRun.Ev
         futureArgs.flatMap { args =>
           if name == "abs" then
             // TODO handle all predefined functions
-            // TODO validate args..........
             Future(Math.abs(args.head.toReal))
           else
             val fun = allFunctions.find(_.name == name).get

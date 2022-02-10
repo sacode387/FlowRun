@@ -4,7 +4,6 @@ import scala.scalajs.js
 import scala.scalajs.js.annotation.JSExportTopLevel
 import org.scalajs.dom
 import scalatags.JsDom.all.*
-import org.getshaka.nativeconverter.NativeConverter
 import org.getshaka.nativeconverter.fromJson
 import reactify.*
 import dev.sacode.flowrun.eval.Interpreter
@@ -22,13 +21,10 @@ import dev.sacode.flowrun.eval.Interpreter.State
 @JSExportTopLevel("FlowRun")
 class FlowRun(
     mountElem: dom.Element,
+    editable: Boolean = true,
     programJson: Option[String] = None,
     changeCallback: Option[js.Function1[FlowRun, Unit]] = None
 ) {
-
-  private val FlowRunConfigKey = "flowrun-config"
-  private val localConfig = initLocalConfig()
-  def config(): FlowRunConfig = localConfig.get
 
   private val mountElemText = mountElem.innerText.trim
 
@@ -45,7 +41,7 @@ class FlowRun(
     Option.when(mountElemText.nonEmpty)(mountElemText)
   )
   private val program = maybeJson match
-    case Some(json) => NativeConverter[Program].fromNative(js.JSON.parse(json))
+    case Some(json) => json.fromJson[Program]
     case None =>
       Program(
         AST.newId,
@@ -58,22 +54,38 @@ class FlowRun(
         List.empty
       )
 
+  private val flowRunConfig = FlowRunConfig.resolve()
+
   private val flowrunChannel = Channel[FlowRun.Event]
   private val programModel = ProgramModel(program, flowrunChannel)
   private var interpreter = Interpreter(programModel, flowrunChannel)
 
   private val flowchartPresenter = FlowchartPresenter(programModel, flowRunElements)
-  private val functionSelector = FunctionSelector(programModel, flowrunChannel, flowRunElements)
-  private val statementEditor = StatementEditor(programModel, flowrunChannel, flowRunElements)
-  private val ctxMenu = CtxMenu(programModel)
   private var outputArea = OutputArea(interpreter, flowRunElements, flowrunChannel)
   private var debugArea = DebugArea(interpreter, flowRunElements)
+
+  private val functionSelector = FunctionSelector(editable, programModel, flowrunChannel, flowRunElements)
+  private val statementEditor = StatementEditor(programModel, flowrunChannel, flowRunElements)
+  private val ctxMenu = CtxMenu(programModel)
 
   private var startedTime: String = ""
 
   flowRunElements.metaData.innerText = program.name
 
+  if editable then
+    ctxMenu.init()
+    attachEditListeners()
+  else 
+    flowRunElements.addFunButton.remove()
+  
   functionSelector.loadFunctions()
+
+  flowRunConfig.attach { _ =>
+    flowrunChannel := FlowRun.Event.ConfigChanged
+  }
+
+  def config(): FlowRunConfig =
+    flowRunConfig.get
 
   def json(): String =
     programModel.ast.toJson
@@ -82,12 +94,11 @@ class FlowRun(
     flowchartPresenter.funDOT
 
   def codeText(): String =
-    val generator = CodeGeneratorFactory(localConfig.get.lang, programModel.ast)
+    val generator = CodeGeneratorFactory(flowRunConfig.get.lang, programModel.ast)
     val codeTry = generator.generate
     if codeTry.isFailure then println("Failed to generate code: " + codeTry.failed)
     codeTry.getOrElse("Error while generating code. Please fix errors in the program.")
 
-  // run the program
   flowRunElements.runButton.onclick = _ => {
     outputArea.clearAll()
     outputArea.running()
@@ -132,60 +143,6 @@ class FlowRun(
     dom.window.navigator.clipboard.writeText(codeText())
     Toastify(ToastifyOptions("Copied generated code to clipboard.", Color.green)).showToast()
   }
-
-  flowRunElements.addFunButton.onclick = _ => programModel.addNewFunction()
-
-  flowRunElements.drawArea.addEventListener(
-    "click",
-    (event: dom.MouseEvent) => {
-      event.preventDefault()
-      DomUtils.getNearestSvgNode(event) match {
-        case ("NODE", n) =>
-          val idParts = n.id.split("#", -1)
-          val nodeId = idParts(0)
-          val tpe = idParts(1)
-          if !n.classList.contains("flowrun-not-selectable") then
-            programModel.currentStmtId = Some(nodeId)
-            outputArea.clearSyntax()
-            flowchartPresenter.loadCurrentFunction() // to highlight new node..
-            statementEditor.edit(nodeId, tpe)
-        case _ =>
-          flowrunChannel := FlowRun.Event.Deselected
-      }
-    }
-  )
-
-  flowRunElements.drawArea.addEventListener(
-    "contextmenu",
-    (event: dom.MouseEvent) => {
-      event.preventDefault()
-      DomUtils.getNearestSvgNode(event) match {
-        case ("NODE", n) =>
-          val idParts = n.id.split("#", -1)
-          val nodeId = idParts(0)
-          val tpe = idParts(1)
-          ctxMenu.handleRightClick(event, nodeId, tpe)
-        case ("EDGE", n) =>
-          programModel.currentEdgeId = Some(n.id)
-          ctxMenu.handleClick(event.clientX, event.clientY, n)
-          programModel.currentEdgeId.foreach { id =>
-            dom.window.document
-              .querySelectorAll(s""" .edge[id*="$id"] """)
-              .foreach(_.classList.add("flowrun--selected"))
-          }
-        case _ =>
-          flowrunChannel := FlowRun.Event.Deselected
-      }
-    }
-  )
-
-  flowRunElements.drawArea.addEventListener(
-    "dblclick",
-    (event: dom.MouseEvent) => {
-      Toastify(ToastifyOptions("Please right click on arrow to add more nodes. (Long press on touchscreen)"))
-        .showToast()
-    }
-  )
 
   import FlowRun.Event.*
   flowrunChannel.attach {
@@ -251,20 +208,61 @@ class FlowRun(
   // trigger first time to get the ball rolling
   flowrunChannel := SyntaxSuccess
 
-  ///////////////////////////
-  dom.window.addEventListener(
-    "storage",
-    (event: dom.StorageEvent) => {
-      // When local storage changes set the config
-      val savedConfig = dom.window.localStorage.getItem(FlowRunConfigKey)
-      val savedTodos =
-        if (savedConfig == null) FlowRunConfig(Language.java, "")
-        else savedConfig.fromJson[FlowRunConfig]
+  private def attachEditListeners(): Unit = {
+    flowRunElements.addFunButton.onclick = _ => programModel.addNewFunction()
 
-      localConfig.set(savedTodos)
-      flowrunChannel := ConfigChanged
-    }
-  )
+    flowRunElements.drawArea.addEventListener(
+      "click",
+      (event: dom.MouseEvent) => {
+        event.preventDefault()
+        DomUtils.getNearestSvgNode(event) match {
+          case ("NODE", n) =>
+            val idParts = n.id.split("#", -1)
+            val nodeId = idParts(0)
+            val tpe = idParts(1)
+            if !n.classList.contains("flowrun-not-selectable") then
+              programModel.currentStmtId = Some(nodeId)
+              outputArea.clearSyntax()
+              flowchartPresenter.loadCurrentFunction() // to highlight new node..
+              statementEditor.edit(nodeId, tpe)
+          case _ =>
+            flowrunChannel := FlowRun.Event.Deselected
+        }
+      }
+    )
+
+    flowRunElements.drawArea.addEventListener(
+      "contextmenu",
+      (event: dom.MouseEvent) => {
+        event.preventDefault()
+        DomUtils.getNearestSvgNode(event) match {
+          case ("NODE", n) =>
+            val idParts = n.id.split("#", -1)
+            val nodeId = idParts(0)
+            val tpe = idParts(1)
+            ctxMenu.handleRightClick(event, nodeId, tpe)
+          case ("EDGE", n) =>
+            programModel.currentEdgeId = Some(n.id)
+            ctxMenu.handleClick(event.clientX, event.clientY, n)
+            programModel.currentEdgeId.foreach { id =>
+              dom.window.document
+                .querySelectorAll(s""" .edge[id*="$id"] """)
+                .foreach(_.classList.add("flowrun--selected"))
+            }
+          case _ =>
+            flowrunChannel := FlowRun.Event.Deselected
+        }
+      }
+    )
+
+    flowRunElements.drawArea.addEventListener(
+      "dblclick",
+      (event: dom.MouseEvent) => {
+        Toastify(ToastifyOptions("Please right click on arrow to add more nodes. (Long press on touchscreen)"))
+          .showToast()
+      }
+    )
+  }
 
   private def generateCode(): Unit = {
     // gen code always
@@ -273,22 +271,6 @@ class FlowRun(
       case Some(cb) => cb(this)
   }
 
-  // TODO extract to config class
-  private def initLocalConfig(): Var[FlowRunConfig] = {
-
-    val config$ : Var[FlowRunConfig] = Var(null)
-    config$.attach { newValue =>
-      dom.window.localStorage.setItem(FlowRunConfigKey, newValue.toJson)
-    }
-
-    val savedConfig = dom.window.localStorage.getItem(FlowRunConfigKey)
-    val savedTodos =
-      if (savedConfig == null) FlowRunConfig(Language.java, "")
-      else savedConfig.fromJson[FlowRunConfig]
-
-    config$.set(savedTodos)
-    config$
-  }
 }
 
 object FlowRun:

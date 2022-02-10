@@ -22,7 +22,8 @@ class CtxMenu(programModel: ProgramModel) {
   private val nodeContextMenu =
     dom.document.getElementById("flowrun-node-context-menu").asInstanceOf[dom.html.Element]
 
-  attachListeners()
+  def init(): Unit =
+    attachListeners()
 
   def handleClick(x: Double, y: Double, n: dom.svg.Element): Unit = {
     // here we know which EDGE is clicked
