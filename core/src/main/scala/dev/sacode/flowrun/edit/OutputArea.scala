@@ -5,6 +5,7 @@ import org.scalajs.dom
 import reactify.*
 import scalatags.JsDom.all.*
 import dev.sacode.flowrun.eval.*
+import dev.sacode.flowrun.Expression.Type
 
 class OutputArea(
     interpreter: Interpreter,
@@ -59,7 +60,6 @@ class OutputArea(
     val valueInputElem = flowRunElements.newInputText()
     val valueBtnElem = flowRunElements.newEnterButton
     val enterValueDiv = div(
-      br,
       label(cls := "flowrun-user-inputs")(
         samp(s"Please enter '$name': "),
         valueInputElem,
@@ -70,28 +70,14 @@ class OutputArea(
 
     def inputValueSubmitted(): Unit = {
       val inputValue = valueInputElem.value.trim
-      val key = SymbolKey(name, Symbol.Kind.Variable, nodeId)
-      val sym = interpreter.symTab.getSymbol(null, key)
-      try {
-        val value = sym.tpe match
-          case Expression.Type.Integer => inputValue.toInt
-          case Expression.Type.Real    => inputValue.toDouble
-          case Expression.Type.Boolean => inputValue.toBoolean
-          case Expression.Type.String  => inputValue
-          case Expression.Type.Void    => ()
-        interpreter.symTab.setValue(nodeId, name, value)
-        interpreter.continue()
-
+      val res = interpreter.setValue(nodeId, name, inputValue)
+      res.foreach { (tpe, _) =>
+        val printVal = if tpe == Type.String then s""" "$inputValue" """ else inputValue
         flowRunElements.runtimeOutput.removeChild(enterValueDiv)
         flowRunElements.runtimeOutput.appendChild(
-          div(br, samp(s"You entered value $name = $inputValue")).render
+          div(samp(s"You entered $name = $printVal")).render
         )
-      } catch {
-        case (e: EvalException) => // from symbol table
-          flowrunChannel := FlowRun.Event.EvalError(nodeId, e.getMessage)
-        case e: (NumberFormatException | IllegalArgumentException) =>
-          flowrunChannel := FlowRun.Event.EvalError(nodeId, s"Entered invalid ${sym.tpe}: '${inputValue}'")
-      }
+      }        
     }
 
     valueInputElem.focus()

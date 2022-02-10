@@ -66,7 +66,7 @@ object TypeUtils:
       case (expectedType, _) =>
         val valueStr = if valueType == "String" then s"\"$value\"" else value
         throw eval.EvalException(
-          s"Expected type '$expectedType' but got type '$valueType' for value $valueStr ",
+          s"Expected '$expectedType' but got '$valueType' for value $valueStr ",
           nodeId
         )
     }
@@ -91,11 +91,11 @@ object DomUtils {
 
   def getNearestSvgNode(event: dom.MouseEvent): (String, dom.svg.G) = {
     getSvgNode(event.target).getOrElse {
-      for (i <- 1 to 7) {
+      for (i <- 1 to 15) { // search around mouse click for nearby edges
         val nearNodes = List(
           dom.document.elementFromPoint(event.pageX + i, event.pageY),
-          dom.document.elementFromPoint(event.pageX, event.pageY + i),
           dom.document.elementFromPoint(event.pageX - i, event.pageY),
+          dom.document.elementFromPoint(event.pageX, event.pageY + i),
           dom.document.elementFromPoint(event.pageX, event.pageY - i)
         ).flatMap(getSvgNode)
         val maybeNode = nearNodes.headOption

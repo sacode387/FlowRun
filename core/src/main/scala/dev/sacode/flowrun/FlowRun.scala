@@ -96,7 +96,7 @@ class FlowRun(
     flowrunChannel := FlowRun.Event.Deselected
 
     startedTime = getNowTime
-    flowRunElements.runtimeOutput.appendChild(div(samp(s"Started at: $startedTime"), br).render)
+    flowRunElements.runtimeOutput.appendChild(div(samp(s"Started at: $startedTime"), br, br).render)
 
     interpreter = Interpreter(programModel, flowrunChannel) // fresh SymTable etc
     outputArea = OutputArea(interpreter, flowRunElements, flowrunChannel)
@@ -182,14 +182,15 @@ class FlowRun(
   flowRunElements.drawArea.addEventListener(
     "dblclick",
     (event: dom.MouseEvent) => {
-      Toastify(ToastifyOptions("Please right click on arrow to add more nodes. (Long press on touchscreen)")).showToast()
+      Toastify(ToastifyOptions("Please right click on arrow to add more nodes. (Long press on touchscreen)"))
+        .showToast()
     }
   )
 
   import FlowRun.Event.*
   flowrunChannel.attach {
     case EvalSuccess =>
-      flowRunElements.runtimeOutput.appendChild(div(br, samp(s"Finished at: $getNowTime")).render)
+      flowRunElements.runtimeOutput.appendChild(div(samp(s"Finished at: $getNowTime")).render)
       flowRunElements.debugVariables.innerText = ""
       flowchartPresenter.enable()
       functionSelector.enable()
@@ -215,7 +216,7 @@ class FlowRun(
       functionSelector.enable()
       outputArea.finished()
     case EvalOutput(output) =>
-      val newOutput = div(samp(output)).render
+      val newOutput = div(samp(output), br).render
       flowRunElements.runtimeOutput.appendChild(newOutput)
     case EvalInput(nodeId, name) =>
       outputArea.evalInput(nodeId, name, startedTime)

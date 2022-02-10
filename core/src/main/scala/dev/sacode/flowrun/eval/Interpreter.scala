@@ -62,8 +62,29 @@ class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[FlowRun.Ev
     futureExec.mapTo[Unit]
   }
 
-  def continue(): Unit =
-    state = State.RUNNING
+  def setValue(nodeId: String, name: String, inputValue: String): Option[(Expression.Type, Any)] =
+    val key = SymbolKey(name, Symbol.Kind.Variable, nodeId)
+    val sym = symTab.getSymbol(nodeId, key)
+    try {
+      val value = sym.tpe match
+        case Expression.Type.Integer => inputValue.toInteger
+        case Expression.Type.Real    => inputValue.toReal
+        case Expression.Type.Boolean => inputValue.toBoolean
+        case Expression.Type.String  => inputValue
+        case Expression.Type.Void    => null
+      symTab.setValue(nodeId, name, value)
+      state = State.RUNNING
+      Some((sym.tpe, value))
+    } catch {
+      case (e: EvalException) => // from symbol table
+        state = State.FINISHED_FAILED
+        flowrunChannel := FlowRun.Event.EvalError(nodeId, e.getMessage)
+        None
+      case e: (NumberFormatException | IllegalArgumentException) =>
+        state = State.FINISHED_FAILED
+        flowrunChannel := FlowRun.Event.EvalError(nodeId, s"You entered invalid ${sym.tpe}: ${inputValue}")
+        None
+    }
 
   private def interpret(
       fun: Function,
