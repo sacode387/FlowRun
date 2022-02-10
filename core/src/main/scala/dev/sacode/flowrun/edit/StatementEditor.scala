@@ -30,16 +30,15 @@ class StatementEditor(
 
     // skip Begin if main function
     if nodeType == "Begin" && programModel.currentFunction.isMain then
-      // TODO warning boja
-      Toastify(ToastifyOptions("Begin is not editable.")).showToast()
+      Toastify(ToastifyOptions("Begin is not editable.", Color.yellow)).showToast()
       return
 
     // skip Return if function doesn't return anything
     if nodeType == "Return" then
       if programModel.currentFunction.isMain then
-        Toastify(ToastifyOptions("End is not editable.")).showToast()
+        Toastify(ToastifyOptions("End is not editable.", Color.yellow)).showToast()
       else if programModel.currentFunction.tpe == Expression.Type.Void then
-        Toastify(ToastifyOptions("Void functions dont return any value.")).showToast()
+        Toastify(ToastifyOptions("Void functions dont return any value.", Color.yellow)).showToast()
       return
 
     // clear first, prepare for new inputs

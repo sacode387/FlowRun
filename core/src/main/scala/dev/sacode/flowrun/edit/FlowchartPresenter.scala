@@ -508,7 +508,7 @@ class FlowchartPresenter(
             |
             |""".stripMargin
 
-      case stmt: ForLoop => // TODO same as While, delete?
+      case stmt: ForLoop =>
         val trueDummyUpId = s"true_dummy_up_${stmt.id}"
         val trueDummyDownId = s"true_dummy_down_${stmt.id}"
         val trueDummyDownLeftId = s"true_dummy_down_left_${stmt.id}"

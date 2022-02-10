@@ -19,16 +19,19 @@ trait ToastifyOptions extends js.Object {
 }
 
 object ToastifyOptions {
-  def apply(text: String): ToastifyOptions = apply(text, "bottom", "center")
+  def apply(text: String): ToastifyOptions = apply(text, "bottom", "center", Color.blue)
 
-  def apply(text: String, gravity: String, position: String): ToastifyOptions = {
+  def apply(text: String, color: Color): ToastifyOptions = apply(text, "bottom", "center", color)
+
+  def apply(text: String, gravity: String, position: String, color: Color): ToastifyOptions = {
     js.Dynamic
       .literal(
         text = text,
         gravity = gravity,
         position = position,
         style = js.Dynamic.literal(
-          background = "#015692"
+          background = color.fill,
+          color = color.font,
         ),
         offset = js.Dynamic.literal(
           y = "5rem"

@@ -120,17 +120,17 @@ class FlowRun(
 
   flowRunElements.copySourceButton.onclick = _ => {
     dom.window.navigator.clipboard.writeText(json())
-    Toastify(ToastifyOptions("Copied program source to clipboard.")).showToast()
+    Toastify(ToastifyOptions("Copied program source to clipboard.", Color.green)).showToast()
   }
 
   flowRunElements.copyDotButton.onclick = _ => {
     dom.window.navigator.clipboard.writeText(flowchartPresenter.funDOT)
-    Toastify(ToastifyOptions("Copied DOT to clipboard.")).showToast()
+    Toastify(ToastifyOptions("Copied DOT to clipboard.", Color.green)).showToast()
   }
 
   flowRunElements.copyGencodeButton.onclick = _ => {
     dom.window.navigator.clipboard.writeText(codeText())
-    Toastify(ToastifyOptions("Copied generated code to clipboard.")).showToast()
+    Toastify(ToastifyOptions("Copied generated code to clipboard.", Color.green)).showToast()
   }
 
   flowRunElements.addFunButton.onclick = _ => programModel.addNewFunction()
