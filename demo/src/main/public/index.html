@@ -109,7 +109,7 @@
                 display: grid;
                 /* must deduct gap with calc! */
                 gap: 0.5rem;
-                
+
                 grid-template-columns: 20% calc(45% - 1rem) 35%;
                 grid-template-rows: 2rem 50% calc(50% - 3rem);
                 grid-template-areas:
@@ -125,6 +125,20 @@
                     ".                       flowrun-meta     ."
                     "flowrun-functions-list  flowrun-diagram  flowrun-output"
                 ;
+            }
+
+            .flowrun-instance.flowrun-layout-d-o {
+                grid-template-columns: calc(50% - 0.5rem) 50%;
+                grid-template-rows: 2rem calc(100% - 3rem);
+                grid-template-areas:
+                    "flowrun-meta     ."
+                    "flowrun-diagram  flowrun-output"
+                ;
+            }
+
+            .flowrun-instance.flowrun-layout-d_o {
+                height: initial;
+                display: block;
             }
 
             .flowrun-instance>* {
@@ -147,6 +161,11 @@
         /****************************/
         .flowrun-functions-list {
             background-color: white;
+        }
+
+        .flowrun-instance.flowrun-layout-d-o .flowrun-functions-list,
+        .flowrun-instance.flowrun-layout-d_o .flowrun-functions-list {
+            display: none;
         }
 
         .flowrun-fun-chooser {
@@ -288,7 +307,9 @@
             position: relative;
         }
 
-        .flowrun-instance.flowrun-layout-f-d-o .flowrun-gen-code {
+        .flowrun-instance.flowrun-layout-f-d-o .flowrun-gen-code,
+        .flowrun-instance.flowrun-layout-d-o .flowrun-gen-code,
+        .flowrun-instance.flowrun-layout-d_o .flowrun-gen-code {
             display: none;
         }
 
@@ -489,7 +510,7 @@
             <span class="flowrun-fun-add-param material-icons">add</span>r
             <span class="flowrun-fun-delete-param material-icons">remove</span>
 
-            <input class="flowrun-input-text" type="text" size="10">
+            <input class="flowrun-input-text" type="text" size="10" novalidate>
             <select class="flowrun-input-select"></select>
             <input type="radio" class="flowrun-input-radio">
             <button class="flowrun-btn-enter">Enter</button>
@@ -502,7 +523,7 @@
     <hr>
 
     <!-- readonly instance -->
-    <div class="flowrun-instance flowrun-layout-f-d-o ">
+    <div class="flowrun-instance flowrun-layout-d_o ">
         {"id":"id_aa0ba1e5_c403_4ff1_b488_2c655e668f61","name":"Hello
         world","main":{"rawId":"main","name":"main","parameters":[],"tpe":"Void","statements":[{"id":"id_434df7c3_6bcf_44ec_85c6_382da8b5bd69","@type":"Begin"},{"id":"id_853f827d_4d68_409c_97f8_18c5e117cad8","name":"name","tpe":"String","initValue":null,"@type":"Declare"},{"id":"id_f4afeee4_e014_4d1b_83be_27d21b87bb71","name":"name","@type":"Input"},{"id":"id_cc0d7f5f_fbb8_496c_8c4a_3b52be2db81c","value":"\"Hello
         \" + name +

@@ -103,7 +103,10 @@ final class ExpressionParser(nodeId: String, allTokens: List[Token]) {
         FalseLit
       case Type.Integer =>
         val num = eat(Type.Integer)
-        IntegerLit(num.text.toInt)
+        val bigintValue = BigInt(num.text)
+        if !bigintValue.isValidInt then 
+          error("Integer out of range[-2147483648,2147483647]: " + num.text)
+        IntegerLit(bigintValue.toInt)
       case Type.Real =>
         val num = eat(Type.Real)
         RealLit(num.text.toDouble)
