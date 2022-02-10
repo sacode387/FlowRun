@@ -69,16 +69,13 @@
             border-radius: 0.25rem;
         }
 
-        .flowrun-instance {
-            /* FIXED height coz it's easier to work with */
-            height: 80vh;
-        }
+
 
         .flowrun-instance>* {
             margin-bottom: 1rem;
         }
 
-        @media screen and (min-width: 800px) {
+        @media screen and (min-width: 800px) and (orientation: landscape) {
             body {
                 width: 90%;
                 margin: auto;
@@ -105,35 +102,33 @@
             }
 
             .flowrun-instance {
-                display: grid;
-                gap: 0.5rem;
-                /* need to deduct this with calc! */
+                /* FIXED height coz it's easier to work with */
+                height: 90vh;
                 width: 100%;
+
+                display: grid;
+                /* must deduct gap with calc! */
+                gap: 0.5rem;
+                
                 grid-template-columns: 20% calc(45% - 1rem) 35%;
-                grid-template-rows: 2rem 50% calc(50% - 2rem - 1rem);
+                grid-template-rows: 2rem 50% calc(50% - 3rem);
                 grid-template-areas:
-                    ".                        flowrun-meta            .                    "
-                    "flowrun-functions-list   flowrun-diagram         flowrun-output   "
-                    "flowrun-functions-list   flowrun-diagram         flowrun-gen-code         "
+                    ".                       flowrun-meta     .               "
+                    "flowrun-functions-list  flowrun-diagram  flowrun-output  "
+                    "flowrun-functions-list  flowrun-diagram  flowrun-gen-code"
+                ;
+            }
+
+            .flowrun-instance.flowrun-layout-f-d-o {
+                grid-template-rows: 2rem calc(100% - 3rem);
+                grid-template-areas:
+                    ".                       flowrun-meta     ."
+                    "flowrun-functions-list  flowrun-diagram  flowrun-output"
                 ;
             }
 
             .flowrun-instance>* {
                 margin-bottom: 0;
-            }
-
-            .flowrun-preview {
-                display: grid;
-                gap: 0.5rem;
-                /* need to deduct this with calc! */
-                width: 100%;
-                grid-template-columns: 1fr 3fr;
-                grid-template-rows: 2rem 3fr 1fr;
-                grid-template-areas:
-                    ".                        flowrun-meta            .                    "
-                    "flowrun-functions-list   flowrun-diagram         flowrun-output   "
-                    "flowrun-functions-list   flowrun-diagram         flowrun-gen-code         "
-                ;
             }
         }
 
@@ -241,7 +236,6 @@
         /**************************/
         .flowrun-output {
             overflow: auto;
-            min-height: 7rem;
         }
 
         .flowrun-output samp {
@@ -294,7 +288,7 @@
             position: relative;
         }
 
-        .flowrun-preview .flowrun-gen-code {
+        .flowrun-instance.flowrun-layout-f-d-o .flowrun-gen-code {
             display: none;
         }
 
@@ -504,19 +498,21 @@
 
     <!-- blank editor instance -->
     <div class="flowrun-instance flowrun--editable"></div>
+    <br>
+    <hr>
 
-    <br><br>
-
-    <div class="flowrun-instance">
+    <!-- readonly instance -->
+    <div class="flowrun-instance flowrun-layout-f-d-o ">
         {"id":"id_aa0ba1e5_c403_4ff1_b488_2c655e668f61","name":"Hello
         world","main":{"rawId":"main","name":"main","parameters":[],"tpe":"Void","statements":[{"id":"id_434df7c3_6bcf_44ec_85c6_382da8b5bd69","@type":"Begin"},{"id":"id_853f827d_4d68_409c_97f8_18c5e117cad8","name":"name","tpe":"String","initValue":null,"@type":"Declare"},{"id":"id_f4afeee4_e014_4d1b_83be_27d21b87bb71","name":"name","@type":"Input"},{"id":"id_cc0d7f5f_fbb8_496c_8c4a_3b52be2db81c","value":"\"Hello
         \" + name +
         \"!\"","@type":"Output"},{"id":"id_0c2fd103_5b75_4bf7_a01d_f5f88c5b0170","maybeValue":null,"@type":"Return"}]},"functions":[]}
     </div>
+    <br>
+    <hr>
 
-    <div class="flowrun-instance">
-        {"id":"id_3e6e500f_323e_4a1e_be60_ec3b268b42a6","name":"My
-        Program","main":{"rawId":"main","name":"main","parameters":[],"tpe":"Void","statements":[{"id":"id_7b132625_7a51_4f4d_9020_98dafa2ce447","@type":"Begin"},{"id":"id_42746d42_6ac6_40a8_b9d3_26bdf1ffcb45","name":"n","tpe":"Integer","initValue":null,"@type":"Declare"},{"id":"id_fa69c7ba_b0ce_4491_8e82_e10b65c44155","name":"n","@type":"Input"},{"id":"id_e0627030_93f1_4a70_a7ed_01d5654ab3a7","value":"\"Fib
+    <div class="flowrun-instance flowrun-layout-f-d-o">
+        {"id":"id_3e6e500f_323e_4a1e_be60_ec3b268b42a6","name":"Fibonacci","main":{"rawId":"main","name":"main","parameters":[],"tpe":"Void","statements":[{"id":"id_7b132625_7a51_4f4d_9020_98dafa2ce447","@type":"Begin"},{"id":"id_42746d42_6ac6_40a8_b9d3_26bdf1ffcb45","name":"n","tpe":"Integer","initValue":null,"@type":"Declare"},{"id":"id_fa69c7ba_b0ce_4491_8e82_e10b65c44155","name":"n","@type":"Input"},{"id":"id_e0627030_93f1_4a70_a7ed_01d5654ab3a7","value":"\"Fib
         of \" + n + \" is \" +
         fib(n)","@type":"Output"},{"id":"id_d032972a_9b50_4afa_86f3_e35f4fc94e93","maybeValue":null,"@type":"Return"}]},"functions":[{"rawId":"id_1b20456d_5a50_4e62_a292_f11bfdbd8cff","name":"fib","parameters":[{"id":"7c6820f3-0f79-4033-ae07-61d66c5bcdea","name":"n","tpe":"Integer"}],"tpe":"Integer","statements":[{"id":"id_ced81cf5_85b7_4144_9555_4c06ae3b9692","@type":"Begin"},{"id":"id_8064141f_1459_42e5_9215_a62f8dfcf7ae","name":"res","tpe":"Integer","initValue":null,"@type":"Declare"},{"id":"id_a812529f_c57c_4de3_862f_d388720f9f62","condition":"n
         <= 2","trueBlock":{"id":"id_17599d19_7b85_4aaa_a264_ec14411b4257","statements":[{"id":"id_cd1322b7_b780_48bf_9d10_11505ca1891d","name":"res","value":"1","@type":"Assign"}]},"falseBlock":{"id":"id_ecc75be4_d1c7_4bd5_aa63_9169e2f699c8","statements":[{"id":"id_43aa3ba3_9b12_4f6c_acad_ebdb7ad92c6e","name":"res","value":"fib(n-1)
