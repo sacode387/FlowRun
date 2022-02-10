@@ -120,7 +120,7 @@ class ProgramModel(
 
   def updateDoWhile(req: UpdateDoWhile): Unit =
     update(_.updateDoWhile(req), FlowRun.Event.SyntaxSuccess)
-  
+
   def updateForLoop(req: UpdateForLoop): Unit =
     update(_.updateForLoop(req), FlowRun.Event.SyntaxSuccess)
 
@@ -297,7 +297,7 @@ case class FunctionModel(
     var updatedStat = doFind(req.id).asInstanceOf[Statement.DoWhile]
     updatedStat = updatedStat.copy(condition = req.expr)
     doUpdate(req.id, updatedStat)
-  
+
   def updateForLoop(req: UpdateForLoop): FunctionModel =
     var updatedStat = doFind(req.id).asInstanceOf[Statement.ForLoop]
     req.varName.foreach(n => updatedStat = updatedStat.copy(varName = n))
@@ -472,6 +472,12 @@ case class FunctionModel(
         else
           val newStat = stat
             .copy(body = body.copy(statements = delete(body.statements, statementId)))
+          List(newStat)
+      case stat: ForLoop =>
+        if statementId == stat.id then List.empty
+        else
+          val newStat = stat
+            .copy(body = stat.body.copy(statements = delete(stat.body.statements, statementId)))
           List(newStat)
       case st =>
         Option.unless(st.id == statementId)(st)
