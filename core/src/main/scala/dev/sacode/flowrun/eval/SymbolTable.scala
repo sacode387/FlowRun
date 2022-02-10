@@ -87,7 +87,7 @@ class Scope(
   def setValue(nodeId: String, name: String, value: Any): Unit =
     val key = SymbolKey(name, Symbol.Kind.Variable, nodeId)
     val sym = getSymbol(nodeId, key)
-    val updateValue = TypeUtils.getUpdateValue(nodeId, name, sym.tpe, value).get
+    val updateValue = TypeUtils.getValue(nodeId, sym.tpe, value).get
     val updatedSym = sym.copy(value = Some(updateValue))
     sym.scope.set(key, updatedSym)
     flowrunChannel := FlowRun.Event.SymbolTableUpdated

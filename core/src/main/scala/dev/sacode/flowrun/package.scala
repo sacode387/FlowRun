@@ -17,8 +17,8 @@ extension (any: Any) {
 
   def toReal: Double =
     java.lang.Double.parseDouble(any.toString)
-  def toInteger: Long =
-    toReal.floor.toLong
+  def toInteger: Int =
+    toReal.floor.toInt
 }
 
 extension (str: String) {
@@ -51,7 +51,7 @@ object TypeUtils:
   import Expression.Type
 
   // check if assignable, and optionally casts the type
-  def getUpdateValue(nodeId: String, name: String, expectedType: Type, value: Any): Try[Any] = Try {
+  def getValue(nodeId: String, expectedType: Type, value: Any): Try[Any] = Try {
     // prevent small numbers to be shown as Byte,Short etc
     val valueType = value.getClass.getSimpleName match
       case "Byte" | "Short" | "Integer" | "Long" => "Integer"
@@ -69,7 +69,7 @@ object TypeUtils:
           s"Expected '$expectedType' but got '$valueType' for value $valueStr ",
           nodeId
         )
-    }
+    }      
   }
 
 object NameUtils:

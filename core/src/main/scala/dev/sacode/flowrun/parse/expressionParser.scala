@@ -103,7 +103,7 @@ final class ExpressionParser(nodeId: String, allTokens: List[Token]) {
         FalseLit
       case Type.Integer =>
         val num = eat(Type.Integer)
-        IntegerLit(num.text.toLong)
+        IntegerLit(num.text.toInt)
       case Type.Real =>
         val num = eat(Type.Real)
         RealLit(num.text.toDouble)

@@ -9,7 +9,7 @@ import reactify.*
 import dev.sacode.flowrun.parse.{Token, parseExpr, ParseException, LexException}
 
 /*
-- at runtime we use Long and Double
+- at runtime we use Int and Double
   we "widen" literals like 5.0 to 5.000000000000000000001 bcoz IDK better
  */
 class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[FlowRun.Event]) {
@@ -105,6 +105,7 @@ class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[FlowRun.Ev
     import Statement.*
 
     stmt match {
+
       case Declare(id, name, tpe, initValue) =>
         val maybeInitValueExpr = initValue.map(iv => parseExpr(id, iv))
         maybeInitValueExpr match
@@ -114,66 +115,74 @@ class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[FlowRun.Ev
               symTab.add(id, key, tpe, None)
             }
           case Some(expr) =>
-            eval(id, expr).map { v =>
-              TypeUtils.getUpdateValue(id, name, tpe, v).get // validate
+            evalExpr(id, expr).map { v =>
+              TypeUtils.getValue(id, tpe, v).get // validate
               val key = SymbolKey(name, Symbol.Kind.Variable, id)
               symTab.add(id, key, tpe, Some(v))
               ()
             }
+
       case Assign(id, name, expr) =>
         if !symTab.isDeclaredVar(name) then throw EvalException(s"Variable '$name' is not declared.", id)
         val key = SymbolKey(name, Symbol.Kind.Variable, id)
         val sym = symTab.getSymbol(id, key)
-        eval(id, parseExpr(id, expr)).map { exprValue =>
+        evalExpr(id, parseExpr(id, expr)).map { exprValue =>
           if exprValue.toString.isEmpty && sym.tpe != Expression.Type.String then
             throw EvalException(s"Assign expression cannot be empty.", id)
           symTab.setValue(id, name, exprValue)
         }
+
       case Call(id, expr) =>
-        eval(id, parseExpr(id, expr)).map(_ => ())
+        evalExpr(id, parseExpr(id, expr)).map(_ => ())
+
       case Input(id, name) =>
         if !symTab.isDeclaredVar(name) then throw EvalException(s"Variable '$name' is not declared.", id)
         state = State.PAUSED
         flowrunChannel := FlowRun.Event.EvalInput(id, name)
         waitForContinue()
+
       case Output(id, expr) =>
-        eval(id, parseExpr(id, expr)).map { outputValue =>
+        evalExpr(id, parseExpr(id, expr)).map { outputValue =>
           val newOutput = Option(outputValue).getOrElse("null").toString
           flowrunChannel := FlowRun.Event.EvalOutput(newOutput)
           ()
         }
+
       case If(id, condition, ifTrueStatements, ifFalseStatements) =>
-        eval(id, parseExpr(id, condition)).flatMap {
+        evalExpr(id, parseExpr(id, condition)).flatMap {
           case condition: Boolean =>
             if (condition) interpret(ifTrueStatements)
             else interpret(ifFalseStatements)
           case condValue => throw EvalException(s"Not a valid condition: '$condValue'", id)
         }
+
       case While(id, condition, body) =>
         def loop(): Future[Any] =
-          eval(id, parseExpr(id, condition)).flatMap {
+          evalExpr(id, parseExpr(id, condition)).flatMap {
             case condition: Boolean =>
               if (condition) interpret(body).flatMap(_ => loop())
               else Future.successful({})
             case condValue => throw EvalException(s"Not a valid condition: '$condValue'", id)
           }
         loop()
+
       case DoWhile(id, condition, body) =>
         def loop(): Future[Any] =
-          eval(id, parseExpr(id, condition)).flatMap {
+          evalExpr(id, parseExpr(id, condition)).flatMap {
             case condition: Boolean =>
               if (condition) interpret(body).flatMap(_ => loop())
               else Future.successful({})
             case condValue => throw EvalException(s"Not a valid condition: '$condValue'", id)
           }
         interpret(body).flatMap(_ => loop())
-      case forLoop @ ForLoop(id, varName, startExpr, incrExpr, endExpr, body) =>
-        def loop(conditionExpr: String, incr: Long): Future[Any] =
-          eval(id, parseExpr(id, conditionExpr)).flatMap {
+
+      case ForLoop(id, varName, startExpr, incrExpr, endExpr, body) =>
+        def loop(conditionExpr: String, incr: Int): Future[Any] =
+          evalExpr(id, parseExpr(id, conditionExpr)).flatMap {
             case condition: Boolean =>
               if (condition) interpret(body).flatMap { _ =>
                 val current = symTab.getValue(id, varName)
-                symTab.setValue(id, varName, current.asInstanceOf[Long] + incr)
+                symTab.setValue(id, varName, current.toInteger + incr)
                 loop(conditionExpr, incr)
               }
               else Future.successful({})
@@ -181,9 +190,9 @@ class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[FlowRun.Ev
           }
 
         for {
-          startAny <- eval(id, parseExpr(id, startExpr))
-          incrAny <- eval(id, parseExpr(id, incrExpr))
-          endAny <- eval(id, parseExpr(id, endExpr))
+          startAny <- evalExpr(id, parseExpr(id, startExpr))
+          incrAny <- evalExpr(id, parseExpr(id, incrExpr))
+          endAny <- evalExpr(id, parseExpr(id, endExpr))
 
           start = startAny.toInteger
           incr = incrAny.toInteger
@@ -203,17 +212,19 @@ class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[FlowRun.Ev
 
       case block: Block =>
         execSequentially((): Any, block.statements, (_, s) => interpret(s))
+
       case Return(id, maybeExpr) =>
         maybeExpr match
           case None       => Future.successful(())
-          case Some(expr) => eval(id, parseExpr(id, expr))
+          case Some(expr) => evalExpr(id, parseExpr(id, expr))
+
       case Begin(_) => // noop
         Future.successful({})
     }
   }
 
-  private def eval(id: String, expr: Expression): Future[Any] =
-    eval(id, expr.boolOrComparison).flatMap { tmp1 =>
+  private def evalExpr(id: String, expr: Expression): Future[Any] =
+    evalBoolOrComparison(id, expr.boolOrComparison).flatMap { tmp1 =>
       if !tmp1.isInstanceOf[Boolean] then Future.successful(tmp1)
       else
         val first = tmp1.asInstanceOf[Boolean]
@@ -221,7 +232,8 @@ class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[FlowRun.Ev
           first,
           expr.boolOrComparisons,
           (acc, nextBoolOrOpt) => {
-            eval(id, nextBoolOrOpt.boolAndComparison).map { v =>
+            evalBoolAndComparison(id, nextBoolOrOpt.boolAndComparison).map { v =>
+              TypeUtils.getValue(id, Expression.Type.Boolean, v).get // validate
               val nextVal = v.asInstanceOf[Boolean]
               acc || nextVal
             }
@@ -229,8 +241,8 @@ class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[FlowRun.Ev
         )
     }
 
-  private def eval(id: String, boolOrComparison: BoolOrComparison): Future[Any] =
-    eval(id, boolOrComparison.boolAndComparison).flatMap { tmp1 =>
+  private def evalBoolOrComparison(id: String, boolOrComparison: BoolOrComparison): Future[Any] =
+    evalBoolAndComparison(id, boolOrComparison.boolAndComparison).flatMap { tmp1 =>
       if !tmp1.isInstanceOf[Boolean] then Future.successful(tmp1)
       else
         val first = tmp1.asInstanceOf[Boolean]
@@ -238,7 +250,8 @@ class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[FlowRun.Ev
           first,
           boolOrComparison.boolAndComparisons,
           (acc, nextBoolAndOpt) => {
-            eval(id, nextBoolAndOpt.numComparison).map { v =>
+            evalNumComparison(id, nextBoolAndOpt.numComparison).map { v =>
+              TypeUtils.getValue(id, Expression.Type.Boolean, v).get // validate
               val nextVal = v.asInstanceOf[Boolean]
               acc && nextVal
             }
@@ -246,13 +259,13 @@ class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[FlowRun.Ev
         )
     }
 
-  private def eval(id: String, boolAndComparison: BoolAndComparison): Future[Any] =
-    eval(id, boolAndComparison.numComparison).flatMap { first =>
+  private def evalBoolAndComparison(id: String, boolAndComparison: BoolAndComparison): Future[Any] =
+    evalNumComparison(id, boolAndComparison.numComparison).flatMap { first =>
       execSequentially(
         first,
         boolAndComparison.numComparisons,
         (acc, nextNumCompOpt) => {
-          eval(id, nextNumCompOpt.numComparison).map { nextVal =>
+          evalNumComparison(id, nextNumCompOpt.numComparison).map { nextVal =>
             nextNumCompOpt.op.tpe match
               case Token.Type.EqualsEquals => acc == nextVal
               case _                       => acc != nextVal
@@ -261,26 +274,13 @@ class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[FlowRun.Ev
       )
     }
 
-  private def eval(id: String, numComparison: NumComparison): Future[Any] =
-    eval(id, numComparison.term).flatMap { tmp1 =>
-      if tmp1.isInstanceOf[Long] then
-        val tmp = tmp1.asInstanceOf[Long]
-        numComparison.terms match
-          case Some(nextTermOpt) =>
-            eval(id, nextTermOpt.term).map { v =>
-              val nextVal = v.asInstanceOf[Long]
-              nextTermOpt.op.tpe match
-                case Token.Type.Lt   => tmp < nextVal
-                case Token.Type.LtEq => tmp <= nextVal
-                case Token.Type.Gt   => tmp > nextVal
-                case _               => tmp >= nextVal
-            }
-          case None => Future.successful(tmp)
-      else if tmp1.isInstanceOf[Double] then
+  private def evalNumComparison(id: String, numComparison: NumComparison): Future[Any] =
+    evalTerm(id, numComparison.term).flatMap { tmp1 =>
+      if tmp1.isInstanceOf[Int] || tmp1.isInstanceOf[Double] then
         val tmp = tmp1.toReal
         numComparison.terms match
           case Some(nextTermOpt) =>
-            eval(id, nextTermOpt.term).map { v =>
+            evalTerm(id, nextTermOpt.term).map { v =>
               val nextVal = v.toReal
               nextTermOpt.op.tpe match
                 case Token.Type.Lt   => tmp < nextVal
@@ -292,28 +292,14 @@ class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[FlowRun.Ev
       else Future.successful(tmp1)
     }
 
-  private def eval(id: String, term: Term): Future[Any] =
-    eval(id, term.factor).flatMap { tmp1 =>
-      if tmp1.isInstanceOf[Long] then
-        execSequentially(
-          tmp1.asInstanceOf[Long],
-          term.factors,
-          (acc, nextFactorOpt) => {
-            eval(id, nextFactorOpt.factor).map { v =>
-              // TODO validate they ARE really numbers..
-              val nextVal = v.asInstanceOf[Long]
-              nextFactorOpt.op.tpe match
-                case Token.Type.Plus => acc + nextVal
-                case _               => acc - nextVal
-            }
-          }
-        )
-      else if tmp1.isInstanceOf[Double] then
+  private def evalTerm(id: String, term: Term): Future[Any] =
+    evalFactor(id, term.factor).flatMap { tmp1 =>
+      if tmp1.isInstanceOf[Int] || tmp1.isInstanceOf[Double] then
         execSequentially(
           tmp1.toReal,
           term.factors,
           (acc, nextFactorOpt) => {
-            eval(id, nextFactorOpt.factor).map { v =>
+            evalFactor(id, nextFactorOpt.factor).map { v =>
               val nextVal = v.toReal
               nextFactorOpt.op.tpe match
                 case Token.Type.Plus => acc + nextVal
@@ -326,7 +312,7 @@ class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[FlowRun.Ev
           tmp1.toString,
           term.factors,
           (acc, nextFactorOpt) => {
-            eval(id, nextFactorOpt.factor).map { v =>
+            evalFactor(id, nextFactorOpt.factor).map { v =>
               val nextVal = v.toString
               nextFactorOpt.op.tpe match
                 case Token.Type.Plus => acc + nextVal
@@ -337,15 +323,16 @@ class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[FlowRun.Ev
       else Future.successful(tmp1)
     }
 
-  private def eval(id: String, factor: Factor): Future[Any] =
-    eval(id, factor.unary).flatMap { tmp1 =>
-      if tmp1.isInstanceOf[Long] then
+  private def evalFactor(id: String, factor: Factor): Future[Any] =
+    evalUnary(id, factor.unary).flatMap { tmp1 =>
+      if tmp1.isInstanceOf[Int] then
         execSequentially(
-          tmp1.asInstanceOf[Long],
+          tmp1.toInteger,
           factor.unaries,
           (acc, nextUnaryOpt) => {
-            eval(id, nextUnaryOpt.unary).map { v =>
-              val nextVal = v.toString.toLong
+            evalUnary(id, nextUnaryOpt.unary).map { v =>
+              TypeUtils.getValue(id, Expression.Type.Integer, v).get // validate
+              val nextVal = v.toInteger
               nextUnaryOpt.op.tpe match
                 case Token.Type.Times => acc * nextVal
                 case Token.Type.Div   => acc / nextVal
@@ -358,7 +345,10 @@ class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[FlowRun.Ev
           tmp1.toReal,
           factor.unaries,
           (acc, nextUnaryOpt) => {
-            eval(id, nextUnaryOpt.unary).map { v =>
+            evalUnary(id, nextUnaryOpt.unary).map { v =>
+              TypeUtils.getValue(id, Expression.Type.Real, v).getOrElse {
+                TypeUtils.getValue(id, Expression.Type.Integer, v).get
+              } // validate
               val nextVal = v.toReal
               nextUnaryOpt.op.tpe match
                 case Token.Type.Times => acc * nextVal
@@ -370,22 +360,23 @@ class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[FlowRun.Ev
       else Future.successful(tmp1)
     }
 
-  private def eval(id: String, unary: Unary): Future[Any] =
+  private def evalUnary(id: String, unary: Unary): Future[Any] =
     unary match
       case Unary.Prefixed(op, unary) =>
-        eval(id, unary).map { next =>
+        evalUnary(id, unary).map { next =>
           if op.tpe == Token.Type.Minus then
-            if next.isInstanceOf[Long] then -next.asInstanceOf[Long]
+            if next.isInstanceOf[Int] then -next.toInteger
             else -next.toReal
           else !next.asInstanceOf[Boolean]
         }
-      case Unary.Simple(atom) => eval(id, atom)
+      case Unary.Simple(atom) => evalAtom(id, atom)
 
-  private def eval(id: String, atom: Atom): Future[Any] =
+  private def evalAtom(id: String, atom: Atom): Future[Any] =
     import Atom.*
     atom match
-      case IntegerLit(value) => Future.successful(value)
-      case RealLit(value)    =>
+      case IntegerLit(value) =>
+        Future.successful(value)
+      case RealLit(value) =>
         // add just a tinyyyyyyy bit to diferrentiate integer from double in runtime
         val res = if value.isValidInt then {
           value + 1e-308
@@ -395,7 +386,7 @@ class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[FlowRun.Ev
       case Identifier(name)   => Future(symTab.getValue(id, name))
       case TrueLit            => Future.successful(true)
       case FalseLit           => Future.successful(false)
-      case Parens(expression) => eval(id, expression)
+      case Parens(expression) => evalExpr(id, expression)
       case FunctionCall(name, argumentExprs) =>
         val key = SymbolKey(name, Symbol.Kind.Function, id)
         val funSym = symTab.getSymbol(id, key) // check if defined
@@ -404,7 +395,7 @@ class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[FlowRun.Ev
           List.empty,
           argumentExprs,
           (acc, nextExpr) => {
-            eval(id, nextExpr).map(arg => acc.appended(arg))
+            evalExpr(id, nextExpr).map(arg => acc.appended(arg))
           }
         )
 
@@ -422,7 +413,7 @@ class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[FlowRun.Ev
               )
             val argsWithTypes = args.zip(fun.parameters).zipWithIndex.map { case ((arg, p), idx) =>
               // validate expected type
-              if TypeUtils.getUpdateValue(id, p.name, p.tpe, arg).isFailure then
+              if TypeUtils.getValue(id, p.tpe, arg).isFailure then
                 throw EvalException(
                   s"Expected: '${p.name}: ${p.tpe}' at index $idx, got value '$arg'",
                   id

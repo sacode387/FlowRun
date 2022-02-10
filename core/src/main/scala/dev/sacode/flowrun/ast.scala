@@ -59,7 +59,7 @@ enum Unary derives NativeConverter:
 case class UnaryOpt(op: Token, unary: Unary) derives NativeConverter
 
 enum Atom derives NativeConverter:
-  case IntegerLit(value: Long)
+  case IntegerLit(value: Int)
   case RealLit(value: Double)
   case StringLit(value: String)
   case Identifier(name: String)
