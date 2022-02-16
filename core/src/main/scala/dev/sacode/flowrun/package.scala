@@ -9,8 +9,13 @@ import org.scalajs.dom.window
 import scalatags.JsDom.all._
 
 import dev.sacode.flowrun.eval.SymbolKey
+import java.time.format.DateTimeFormatter
+import java.time.ZoneId
+import java.time.ZoneOffset
 
 val samp = tag("samp")
+
+val DTF = DateTimeFormatter.ofPattern("yyyy-MM-dd hh:mm:ss").withZone(ZoneId.from(ZoneOffset.UTC))
 
 extension (any: Any) {
   def asDyn: js.Dynamic = any.asInstanceOf[js.Dynamic]
@@ -42,10 +47,6 @@ extension (integer: Int) {
   def spaces: String =
     " " * integer
 }
-
-def getNowTime: String =
-  val now = new js.Date()
-  now.toLocaleTimeString
 
 object TypeUtils:
   import Expression.Type

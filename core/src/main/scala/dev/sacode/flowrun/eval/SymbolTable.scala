@@ -53,9 +53,8 @@ class SymbolTable(flowrunChannel: Channel[FlowRun.Event]) {
 }
 
 /** One scope level:
-  *   - global
+  *   - global or
   *   - function
-  *   - block (for loop, while loop)
   */
 class Scope(
     val name: String,

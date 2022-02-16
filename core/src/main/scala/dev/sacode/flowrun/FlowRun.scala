@@ -17,6 +17,10 @@ import dev.sacode.flowrun.codegen.CodeGeneratorFactory
 import dev.sacode.flowrun.codegen.Language
 import dev.sacode.flowrun.toastify.*
 import dev.sacode.flowrun.eval.Interpreter.State
+import java.time.Instant
+import java.time.Duration
+import java.time.temporal.TemporalUnit
+import java.time.temporal.ChronoUnit
 
 @JSExportTopLevel("FlowRun")
 class FlowRun(
@@ -68,16 +72,15 @@ class FlowRun(
   private val statementEditor = StatementEditor(programModel, flowrunChannel, flowRunElements)
   private val ctxMenu = CtxMenu(programModel)
 
-  private var startedTime: String = ""
+  private var startedTime: Instant = _
 
   flowRunElements.metaData.innerText = program.name
 
   if editable then
     ctxMenu.init()
     attachEditListeners()
-  else 
-    flowRunElements.addFunButton.remove()
-  
+  else flowRunElements.addFunButton.remove()
+
   functionSelector.loadFunctions()
 
   flowRunConfig.attach { _ =>
@@ -97,7 +100,7 @@ class FlowRun(
     val generator = CodeGeneratorFactory(flowRunConfig.get.lang, programModel.ast)
     val codeTry = generator.generate
     if codeTry.isFailure then println("Failed to generate code: " + codeTry.failed)
-    codeTry.getOrElse("Error while generating code. Please fix errors in the program.")
+    codeTry.getOrElse("Error while generating code: " + codeTry.failed.get.getMessage)
 
   flowRunElements.runButton.onclick = _ => {
     outputArea.clearAll()
@@ -106,8 +109,8 @@ class FlowRun(
     flowchartPresenter.clearSelected()
     flowrunChannel := FlowRun.Event.Deselected
 
-    startedTime = getNowTime
-    flowRunElements.runtimeOutput.appendChild(div(samp(s"Started at: $startedTime"), br, br).render)
+    startedTime = Instant.now()
+    flowRunElements.runtimeOutput.appendChild(div(samp(s"Started at: ${DTF.format(startedTime)}"), br, br).render)
 
     interpreter = Interpreter(programModel, flowrunChannel) // fresh SymTable etc
     outputArea = OutputArea(interpreter, flowRunElements, flowrunChannel)
@@ -147,7 +150,10 @@ class FlowRun(
   import FlowRun.Event.*
   flowrunChannel.attach {
     case EvalSuccess =>
-      flowRunElements.runtimeOutput.appendChild(div(samp(s"Finished at: $getNowTime")).render)
+      val finishedTime = Instant.now()
+      val duration = Duration.between(startedTime, finishedTime)
+      flowRunElements.runtimeOutput.appendChild(div(br, samp(s"Finished at: ${DTF.format(finishedTime)}")).render)
+      flowRunElements.runtimeOutput.appendChild(div(samp(s"Execution time: ${duration.toString.substring(2)}")).render)
       flowRunElements.debugVariables.innerText = ""
       flowchartPresenter.enable()
       functionSelector.enable()
@@ -167,7 +173,7 @@ class FlowRun(
       functionSelector.enable()
       outputArea.finished()
     case EvalError(nodeId, msg) =>
-      outputArea.runtimeError(msg, startedTime, getNowTime)
+      outputArea.runtimeError(msg, DTF.format(startedTime), DTF.format(Instant.now()))
       flowchartPresenter.highlightError(nodeId)
       flowchartPresenter.enable()
       functionSelector.enable()
@@ -176,7 +182,7 @@ class FlowRun(
       val newOutput = div(samp(output), br).render
       flowRunElements.runtimeOutput.appendChild(newOutput)
     case EvalInput(nodeId, name) =>
-      outputArea.evalInput(nodeId, name, startedTime)
+      outputArea.evalInput(nodeId, name)
     case SymbolTableUpdated =>
       debugArea.showVariables()
     case FunctionUpdated =>

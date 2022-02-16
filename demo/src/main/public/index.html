@@ -510,7 +510,7 @@
             <span class="flowrun-fun-add-param material-icons">add</span>r
             <span class="flowrun-fun-delete-param material-icons">remove</span>
 
-            <input class="flowrun-input-text" type="text" size="10" novalidate>
+            <input class="flowrun-input-text" type="text" size="10">
             <select class="flowrun-input-select"></select>
             <input type="radio" class="flowrun-input-radio">
             <button class="flowrun-btn-enter">Enter</button>
@@ -533,26 +533,21 @@
     <hr>
 
     <div class="flowrun-instance flowrun-layout-f-d-o">
-        {"id":"id_3e6e500f_323e_4a1e_be60_ec3b268b42a6","name":"Fibonacci","main":{"rawId":"main","name":"main","parameters":[],"tpe":"Void","statements":[{"id":"id_7b132625_7a51_4f4d_9020_98dafa2ce447","@type":"Begin"},{"id":"id_42746d42_6ac6_40a8_b9d3_26bdf1ffcb45","name":"n","tpe":"Integer","initValue":null,"@type":"Declare"},{"id":"id_fa69c7ba_b0ce_4491_8e82_e10b65c44155","name":"n","@type":"Input"},{"id":"id_e0627030_93f1_4a70_a7ed_01d5654ab3a7","value":"\"Fib
-        of \" + n + \" is \" +
-        fib(n)","@type":"Output"},{"id":"id_d032972a_9b50_4afa_86f3_e35f4fc94e93","maybeValue":null,"@type":"Return"}]},"functions":[{"rawId":"id_1b20456d_5a50_4e62_a292_f11bfdbd8cff","name":"fib","parameters":[{"id":"7c6820f3-0f79-4033-ae07-61d66c5bcdea","name":"n","tpe":"Integer"}],"tpe":"Integer","statements":[{"id":"id_ced81cf5_85b7_4144_9555_4c06ae3b9692","@type":"Begin"},{"id":"id_8064141f_1459_42e5_9215_a62f8dfcf7ae","name":"res","tpe":"Integer","initValue":null,"@type":"Declare"},{"id":"id_a812529f_c57c_4de3_862f_d388720f9f62","condition":"n
-        <= 2","trueBlock":{"id":"id_17599d19_7b85_4aaa_a264_ec14411b4257","statements":[{"id":"id_cd1322b7_b780_48bf_9d10_11505ca1891d","name":"res","value":"1","@type":"Assign"}]},"falseBlock":{"id":"id_ecc75be4_d1c7_4bd5_aa63_9169e2f699c8","statements":[{"id":"id_43aa3ba3_9b12_4f6c_acad_ebdb7ad92c6e","name":"res","value":"fib(n-1)
-            +
-            fib(n-2)","@type":"Assign"}]},"@type":"If"},{"id":"id_5c1cefb1_e28b_4c0c_8e59_fc176a8e8ea5","maybeValue":"res","@type":"Return"}]}]}
-            </div>
+        {"id":"id_2680a766_5e3f_43c9_90da_f1e651fc3099","name":"My Program","main":{"rawId":"main","name":"main","parameters":[],"tpe":"Void","statements":[{"id":"id_87498624_665e_4bd4_ba04_718ac78142a2","@type":"Begin"},{"id":"id_51583a96_edb9_448b_b482_71a9bd8f1624","value":"fib(16)","@type":"Output"},{"id":"id_a90ebc25_f9d7_4f36_aa9c_2c8cbb0148ea","maybeValue":null,"@type":"Return"}]},"functions":[{"rawId":"id_3ab18ee6_a2ca_4f61_bd44_0e775335b003","name":"fib","parameters":[{"id":"03049558-c257-420c-aca0-ec0ab9d379ea","name":"n","tpe":"Integer"}],"tpe":"Integer","statements":[{"id":"id_34908360_84e7_4a54_984f_d2784d05deef","@type":"Begin"},{"id":"id_3f36a122_d09c_4733_83d8_7f249fdafa1c","name":"a","tpe":"Integer","initValue":"0","@type":"Declare"},{"id":"id_33033dc0_fdc4_4008_9a50_33edf1642f85","name":"b","tpe":"Integer","initValue":"1","@type":"Declare"},{"id":"id_da88bdb6_c907_4b5c_9f87_f4314e56e6c7","name":"res","tpe":"Integer","initValue":null,"@type":"Declare"},{"id":"id_fc6ab968_021b_48c0_b054_98d0c646ebea","condition":"n > 1","body":{"id":"id_f020a924_da55_4ad7_a235_1b7580ed4141","statements":[{"id":"id_1e1a3b3e_af6f_4ff8_aaa2_b77e8ff755cf","name":"res","value":"a+b","@type":"Assign"},{"id":"id_73f85b36_f964_4af0_9e43_d65fe435b6a6","name":"a","value":"b","@type":"Assign"},{"id":"id_3caffff1_f870_410f_85a6_0c651bb68b95","name":"b","value":"res","@type":"Assign"},{"id":"id_4e81bf27_b791_4a99_bc7e_4de870dedec2","name":"n","value":"n-1","@type":"Assign"}]},"@type":"While"},{"id":"id_67acb368_4b37_4e31_aeea_f168f03526d3","maybeValue":"res","@type":"Return"}]}]}   
+    </div>
 
-            <!-- graphviz -->
-            <script src="https://unpkg.com/@hpcc-js/wasm@0.3.11/dist/index.min.js"></script>
-            <script src="https://d3js.org/d3.v5.min.js"></script>
-            <script src="https://unpkg.com/d3-graphviz@3.0.5/build/d3-graphviz.js"></script>
+    <!-- graphviz -->
+    <script src="https://unpkg.com/@hpcc-js/wasm@0.3.11/dist/index.min.js"></script>
+    <script src="https://d3js.org/d3.v5.min.js"></script>
+    <script src="https://unpkg.com/d3-graphviz@3.0.5/build/d3-graphviz.js"></script>
 
-            <!-- highlight code -->
-            <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.4.0/highlight.min.js"></script>
-            <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.4.0/languages/scala.min.js"></script>
+    <!-- highlight code -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.4.0/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.4.0/languages/scala.min.js"></script>
 
-            <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
 
-            <script type="module" src="scripts/main.js"></script>
+    <script type="module" src="scripts/main.js"></script>
 </body>
 
 </html>

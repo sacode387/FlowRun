@@ -45,7 +45,7 @@ class OutputArea(
         samp("Error: " + msg),
         br,
         br,
-        samp(s"Finished at: $endTime")
+        samp(s"Finished (failed) at: $endTime")
       ).render
     )
     flowRunElements.runtimeOutput.classList.add("flowrun--error")
@@ -55,7 +55,7 @@ class OutputArea(
     flowRunElements.syntaxOutput.appendChild(samp("Syntax Error: " + msg).render)
     flowRunElements.syntaxOutput.classList.add("flowrun--error")
 
-  def evalInput(nodeId: String, name: String, startedTime: String): Unit = {
+  def evalInput(nodeId: String, name: String): Unit = {
 
     val valueInputElem = flowRunElements.newInputText()
     val valueBtnElem = flowRunElements.newEnterButton
