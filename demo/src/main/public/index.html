@@ -69,13 +69,6 @@
             border-radius: 0.25rem;
         }
 
-
-
-        .flowrun-instance button {
-            background: none;
-            border: none;
-        }
-
         .flowrun-instance>* {
             margin-bottom: 1rem;
         }
@@ -185,7 +178,6 @@
             align-items: center;
             justify-content: space-between;
             background: var(--flowrun-light_blue);
-            padding-right: 0.33rem;
         }
 
         .flowrun-fun-chooser>div>label {
@@ -196,18 +188,15 @@
             padding-left: 1rem;
         }
 
-        .flowrun-fun-chooser>div>label {
-            display: block;
-            width: 80%;
-            cursor: pointer;
+        .flowrun-fun-chooser>div>button {
+            margin-right: 0.33rem;
         }
 
         .flowrun-fun-chooser .material-icons {
-            font-size: 20px;
             color: var(--flowrun-red-darker);
         }
 
-        .flowrun-fun-add {
+        .flowrun-btn-fun-add {
             width: 100%;
             text-align: center;
         }
@@ -370,12 +359,14 @@
             position: absolute;
             right: 5px;
             top: 5px;
+            display: flex;
         }
 
         .flowrun-draw-copy-btns {
             position: absolute;
             left: 5px;
             top: 5px;
+            display: flex;
         }
 
         .flowrun-gencode-copy-btns {
@@ -384,25 +375,19 @@
             top: 5px;
         }
 
-
-        .flowrun-draw-exec-btns .material-icons,
-        .flowrun-draw-copy-btns .material-icons,
-        .flowrun-gencode-copy-btns .material-icons,
-        .flowrun-fun-add,
-        .flowrun-fun-delete,
-        .flowrun-fun-add-param,
-        .flowrun-fun-delete-param {
+        .flowrun-instance button[class^="flowrun-btn"] {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 0.2rem;
             cursor: pointer;
             user-select: none;
             color: var(--flowrun-green);
-            font-size: 1.8rem;
+            background: none;
+            border: none;
         }
 
-        .flowrun-draw-copy-btns .material-icons {
-            font-size: 1.6rem;
-        }
-
-        .flowrun-instance .material-icons:hover {
+        .flowrun-instance button[class^="flowrun-btn"]:hover {
             background-color: var(--flowrun-grey);
         }
 
@@ -425,6 +410,10 @@
         .flowrun-context-menu {
             position: fixed;
             z-index: 10000;
+
+            display: flex;
+            flex-direction: column;
+            
             width: 150px;
             user-select: none;
 
@@ -436,7 +425,7 @@
             transform: scale(1);
         }
 
-        .flowrun-context-menu>div {
+        .flowrun-context-menu>button {
             display: flex;
             align-items: center;
             gap: 5px;
@@ -460,20 +449,18 @@
 
         <div class="flowrun-functions-list flowrun--panel">
             <div class="flowrun-fun-chooser"></div>
-            <div>
-                <span class="flowrun-fun-add material-icons" title="Add new function">add</span>
-            </div>
+            <button class="flowrun-btn-fun-add"> <span class="material-icons" title="Add new function">add</span> </button>
         </div>
 
         <div class="flowrun-diagram flowrun--panel">
             <div class="flowrun-draw"> </div>
             <div class="flowrun-draw-exec-btns">
-                <span class="flowrun-btn-run material-icons" title="Run">play_arrow</span>
-                <span class="flowrun-btn-stop material-icons flowrun--disabled" title="Stop">stop</span>
+                <button class="flowrun-btn-run"> <span class="material-icons" title="Run">play_arrow</span> </button>
+                <button class="flowrun-btn-stop flowrun--disabled"> <span class="material-icons" title="Stop">stop</span> </button>
             </div>
             <div class="flowrun-draw-copy-btns">
-                <span class="flowrun-btn-copy-source material-icons" title="Copy Source">source</span>
-                <span class="flowrun-btn-copy-dot material-icons" title="Copy DOT">account_tree</span>
+                <button class="flowrun-btn-copy-source"> <span class="material-icons" title="Copy Source">source</span> </button>
+                <button class="flowrun-btn-copy-dot"> <span class="material-icons" title="Copy DOT">account_tree</span> </button>
             </div>
             <div class="flowrun-debug-vars"></div>
         </div>
@@ -489,40 +476,37 @@
         <div class="flowrun-gen-code flowrun--panel">
             <pre class="flowrun-code"></pre>
             <div class="flowrun-gencode-copy-btns">
-                <button class="flowrun-btn-copy-gencode material-icons" title="Copy Generated Code">code</button>
+                <button class="flowrun-btn-copy-gencode" title="Copy Generated Code"> <span class="material-icons">code</span> </button>
             </div>
         </div>
 
         <!-- this whole div will be deleted -->
         <div class="flowrun-template-transient">
-
-            <span class="flowrun-fun-delete material-icons">remove</span>
-            <span class="flowrun-fun-add-param material-icons">add</span>r
-            <span class="flowrun-fun-delete-param material-icons">remove</span>
+            <button class="flowrun-btn-fun-delete"> <span class="material-icons">remove</span> </button>
+            <button class="flowrun-btn-fun-add-param"> <span class="material-icons">add</span> </button>
+            <button class="flowrun-btn-fun-delete-param"> <span class="material-icons">remove</span> </button>
 
             <input class="flowrun-input-text" type="text" size="10">
             <select class="flowrun-input-select"></select>
             <input type="radio" class="flowrun-input-radio">
-            <button class="flowrun-btn-enter">Enter</button>
+            <button class="flowrun-btn-enter"> <span class="material-icons">input</span> Enter</button>
         </div>
 
         <!-- context menus -->
         <div class="flowrun-edge-context-menu flowrun-context-menu">
-            <button class="flowrun-add-declare"><span class="material-icons">post_add</span> Declare</button>
-            <div class="flowrun-add-assign"><span class="material-icons">sync_alt</span> Assign</div>
-            <div class="flowrun-add-input"><span class="material-icons">keyboard</span> Input</div>
-            <div class="flowrun-add-output"><span class="material-icons">desktop_windows</span> Output</div>
-            <div class="flowrun-add-if"><span class="material-icons">call_split</span> If</div>
-            <div class="flowrun-add-while"><span class="material-icons">repeat</span> While</div>
-            <div class="flowrun-add-do-while"><span class="material-icons">repeat</span> Do While</div>
-            <div class="flowrun-add-for"><span class="material-icons">repeat</span> For loop</div>
-            <div class="flowrun-add-call"><span class="material-icons">call</span> Call</div>
+            <button class="flowrun-add-declare"> <span class="material-icons">post_add</span> Declare</button>
+            <button class="flowrun-add-assign"> <span class="material-icons">sync_alt</span> Assign</button>
+            <button class="flowrun-add-input"> <span class="material-icons">keyboard</span> Input</button>
+            <button class="flowrun-add-output"> <span class="material-icons">desktop_windows</span> Output</button>
+            <button class="flowrun-add-if"> <span class="material-icons">call_split</span> If</button>
+            <button class="flowrun-add-while"> <span class="material-icons">repeat</span> While</button>
+            <button class="flowrun-add-do-while"> <span class="material-icons">repeat</span> Do While</button>
+            <button class="flowrun-add-for"> <span class="material-icons">repeat</span> For loop</button>
+            <button class="flowrun-add-call"> <span class="material-icons">call</span> Call</button>
         </div>
-    
+
         <div class="flowrun-node-context-menu flowrun-context-menu">
-            <div class="flowrun-delete">
-                <span class="material-icons">remove</span> Delete
-            </div>
+            <button class="flowrun-delete"> <span class="material-icons">remove</span> Delete </button>
         </div>
     </div>
 

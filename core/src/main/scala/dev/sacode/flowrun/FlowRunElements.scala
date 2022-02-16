@@ -37,13 +37,13 @@ class FlowRunElements(
   val copyGencodeButton: dom.html.Element = template.querySelector(".flowrun-btn-copy-gencode").asInstanceOf[dom.html.Element]
   
 
-  val addFunButton: dom.html.Element = template.querySelector(".flowrun-fun-add").asInstanceOf[dom.html.Element]
+  val addFunButton: dom.html.Element = template.querySelector(".flowrun-btn-fun-add").asInstanceOf[dom.html.Element]
   private val deleteFunButton: dom.html.Element =
-    template.querySelector(".flowrun-fun-delete").asInstanceOf[dom.html.Element]
+    template.querySelector(".flowrun-btn-fun-delete").asInstanceOf[dom.html.Element]
 
-  val addParamButton: dom.html.Element = template.querySelector(".flowrun-fun-add-param").asInstanceOf[dom.html.Element]
+  val addParamButton: dom.html.Element = template.querySelector(".flowrun-btn-fun-add-param").asInstanceOf[dom.html.Element]
   val deleteParamButton: dom.html.Element =
-    template.querySelector(".flowrun-fun-delete-param").asInstanceOf[dom.html.Element]
+    template.querySelector(".flowrun-btn-fun-delete-param").asInstanceOf[dom.html.Element]
 
   // general
   private val enterButton = template.querySelector(".flowrun-btn-enter").asInstanceOf[dom.html.Element]
