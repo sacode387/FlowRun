@@ -35,7 +35,7 @@ class FlowRun(
 
   private val maybeTemplate = dom.document.getElementById("flowrun-template").asInstanceOf[dom.html.Element]
 
-  val flowRunElements = FlowRunElements.resolve(maybeTemplate)
+  val flowRunElements = FlowRunElements.resolve(maybeTemplate, mountElem)
   mountElem.innerText = ""
   // move all template children to mountElem
   // https://stackoverflow.com/a/20910214/4496364
@@ -71,7 +71,7 @@ class FlowRun(
 
   private val functionSelector = FunctionSelector(editable, programModel, flowrunChannel, flowRunElements)
   private val statementEditor = StatementEditor(programModel, flowrunChannel, flowRunElements)
-  private val ctxMenu = CtxMenu(programModel)
+  private val ctxMenu = CtxMenu(programModel, flowRunElements)
 
   private var startedTime: Instant = _
 
@@ -106,7 +106,7 @@ class FlowRun(
     val generator = CodeGeneratorFactory(flowRunConfig.get.lang, programModel.ast)
     val codeTry = generator.generate
     if codeTry.isFailure then println("Failed to generate code: " + codeTry.failed)
-    codeTry.getOrElse("Error while generating code: " + codeTry.failed.get.getMessage)
+    codeTry.getOrElse("Error while generating code:\n" + codeTry.failed.get.getMessage)
 
   import FlowRun.Event.*
   flowrunChannel.attach {

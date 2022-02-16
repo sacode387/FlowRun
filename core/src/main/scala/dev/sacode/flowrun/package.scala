@@ -94,10 +94,10 @@ object DomUtils {
     getSvgNode(event.target).getOrElse {
       for (i <- 1 to 15) { // search around mouse click for nearby edges
         val nearNodes = List(
-          dom.document.elementFromPoint(event.pageX + i, event.pageY),
-          dom.document.elementFromPoint(event.pageX - i, event.pageY),
-          dom.document.elementFromPoint(event.pageX, event.pageY + i),
-          dom.document.elementFromPoint(event.pageX, event.pageY - i)
+          dom.document.elementFromPoint(event.clientX + i, event.clientY),
+          dom.document.elementFromPoint(event.clientX - i, event.clientY),
+          dom.document.elementFromPoint(event.clientX, event.clientY + i),
+          dom.document.elementFromPoint(event.clientX, event.clientY - i)
         ).flatMap(getSvgNode)
         val maybeNode = nearNodes.headOption
         if maybeNode.isDefined && maybeNode.get._1 == "EDGE" then return maybeNode.get

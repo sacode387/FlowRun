@@ -5,8 +5,9 @@ import dev.sacode.flowrun.ProgramModel
 import dev.sacode.flowrun.ProgramModel.Request
 import dev.sacode.flowrun.Expression.Type
 import dev.sacode.flowrun.AST
+import dev.sacode.flowrun.FlowRunElements
 
-class CtxMenu(programModel: ProgramModel) {
+class CtxMenu(programModel: ProgramModel, flowRunElements: FlowRunElements) {
 
   /** used for delete */
   private var nodeId = ""
@@ -18,9 +19,9 @@ class CtxMenu(programModel: ProgramModel) {
     Set("Declare", "Assign", "Input", "Output", "Call", "If", "While", "DoWhile", "ForLoop")
 
   private val edgeContextMenu =
-    dom.document.getElementById("flowrun-edge-context-menu").asInstanceOf[dom.html.Element]
+    flowRunElements.mountElem.querySelector(".flowrun-edge-context-menu").asInstanceOf[dom.html.Element]
   private val nodeContextMenu =
-    dom.document.getElementById("flowrun-node-context-menu").asInstanceOf[dom.html.Element]
+    flowRunElements.mountElem.querySelector(".flowrun-node-context-menu").asInstanceOf[dom.html.Element]
 
   def init(): Unit =
     attachListeners()
@@ -73,19 +74,16 @@ class CtxMenu(programModel: ProgramModel) {
 
   private def attachListeners(): Unit = {
 
-    val edgeContextMenu = dom.document.getElementById("flowrun-edge-context-menu").asInstanceOf[dom.html.Element]
-    val nodeContextMenu = dom.document.getElementById("flowrun-node-context-menu").asInstanceOf[dom.html.Element]
-
-    val deleteButton = nodeContextMenu.querySelector("#flowrun-delete").asInstanceOf[dom.html.Element]
-    val addDeclareButton = edgeContextMenu.querySelector("#flowrun-add-declare").asInstanceOf[dom.html.Element]
-    val addAssignButton = edgeContextMenu.querySelector("#flowrun-add-assign").asInstanceOf[dom.html.Element]
-    val addInputButton = edgeContextMenu.querySelector("#flowrun-add-input").asInstanceOf[dom.html.Element]
-    val addOutputButton = edgeContextMenu.querySelector("#flowrun-add-output").asInstanceOf[dom.html.Element]
-    val addCallButton = edgeContextMenu.querySelector("#flowrun-add-call").asInstanceOf[dom.html.Element]
-    val addIfButton = edgeContextMenu.querySelector("#flowrun-add-if").asInstanceOf[dom.html.Element]
-    val addWhileButton = edgeContextMenu.querySelector("#flowrun-add-while").asInstanceOf[dom.html.Element]
-    val addDoWhileButton = edgeContextMenu.querySelector("#flowrun-add-do-while").asInstanceOf[dom.html.Element]
-    val addForLoopButton = edgeContextMenu.querySelector("#flowrun-add-for").asInstanceOf[dom.html.Element]
+    val deleteButton = nodeContextMenu.querySelector(".flowrun-delete").asInstanceOf[dom.html.Element]
+    val addDeclareButton = edgeContextMenu.querySelector(".flowrun-add-declare").asInstanceOf[dom.html.Element]
+    val addAssignButton = edgeContextMenu.querySelector(".flowrun-add-assign").asInstanceOf[dom.html.Element]
+    val addInputButton = edgeContextMenu.querySelector(".flowrun-add-input").asInstanceOf[dom.html.Element]
+    val addOutputButton = edgeContextMenu.querySelector(".flowrun-add-output").asInstanceOf[dom.html.Element]
+    val addCallButton = edgeContextMenu.querySelector(".flowrun-add-call").asInstanceOf[dom.html.Element]
+    val addIfButton = edgeContextMenu.querySelector(".flowrun-add-if").asInstanceOf[dom.html.Element]
+    val addWhileButton = edgeContextMenu.querySelector(".flowrun-add-while").asInstanceOf[dom.html.Element]
+    val addDoWhileButton = edgeContextMenu.querySelector(".flowrun-add-do-while").asInstanceOf[dom.html.Element]
+    val addForLoopButton = edgeContextMenu.querySelector(".flowrun-add-for").asInstanceOf[dom.html.Element]
 
     deleteButton.addEventListener(
       "click",

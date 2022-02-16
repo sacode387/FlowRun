@@ -5,7 +5,8 @@ import scalatags.JsDom.all.*
 
 /* UI sections and elements */
 class FlowRunElements(
-    val template: dom.html.Element
+    val template: dom.html.Element, // TODO do not use!
+    val mountElem: dom.Element
 ) {
   // template is CLONED, so we can use "Run button", "output" and other "single purpose" elements freely
 
@@ -82,11 +83,11 @@ class FlowRunElements(
 
 object FlowRunElements {
 
-  def resolve(maybeTemplate: dom.html.Element): FlowRunElements =
+  def resolve(maybeTemplate: dom.html.Element, mountElem: dom.Element): FlowRunElements =
     val t =
       if maybeTemplate == null then defaultTemplate
       else maybeTemplate.cloneNode(true).asInstanceOf[dom.html.Element]
-    FlowRunElements(t)
+    FlowRunElements(t, mountElem)
 
   private def defaultTemplate: dom.html.Element = {
 

@@ -71,7 +71,7 @@ class Scope(
 
   // we assume type is good here
   def add(nodeId: String, key: SymbolKey, tpe: Type, value: Option[Any]): Symbol =
-    if symbols.isDefinedAt(key) then error(s"${key.kind.toString} with name '${key.name}' is already declared.", nodeId)
+    if symbols.isDefinedAt(key) then error(s"${key.kind.toString} '${key.name}' is already declared.", nodeId)
     val newSymbol = Symbol(key, tpe, value, this)
     symbols += (key -> newSymbol)
     flowrunChannel := FlowRun.Event.SymbolTableUpdated
