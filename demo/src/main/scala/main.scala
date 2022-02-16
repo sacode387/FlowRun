@@ -15,9 +15,8 @@ import dev.sacode.flowrun.FlowRun
       val flowRun: FlowRun = FlowRun(
         mountElem,
         editable,
-        mountCallback = Some { fr => 
-         // .classL
-         mountElem.classList.remove("flowrun--hidden")
+        mountCallback = Some { fr =>
+          mountElem.classList.remove("flowrun--hidden")
         },
         changeCallback = Some { fr =>
 

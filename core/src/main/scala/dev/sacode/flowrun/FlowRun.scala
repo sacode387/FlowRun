@@ -65,7 +65,7 @@ class FlowRun(
   private val programModel = ProgramModel(program, flowrunChannel)
   private var interpreter = Interpreter(programModel, flowrunChannel)
 
-  private val flowchartPresenter = FlowchartPresenter(programModel, flowRunElements)
+  private val flowchartPresenter = FlowchartPresenter(programModel, flowRunElements, flowrunChannel)
   private var outputArea = OutputArea(interpreter, flowRunElements, flowrunChannel)
   private var debugArea = DebugArea(interpreter, flowRunElements)
 
@@ -92,8 +92,6 @@ class FlowRun(
 
   // trigger first time to get the ball rolling
   flowrunChannel := FlowRun.Event.SyntaxSuccess
-
-  mountCallback.foreach { cb => cb(this) }
 
   def config(): FlowRunConfig =
     flowRunConfig.get
@@ -166,6 +164,8 @@ class FlowRun(
       outputArea.clearSyntax()
       flowchartPresenter.clearSelected()
     case ConfigChanged => // noop
+    case SvgMounted =>
+      mountCallback.foreach { cb => cb(this) }
   }
   flowrunChannel.attach { _ =>
     // on any event hide menus
@@ -302,4 +302,5 @@ object FlowRun:
     case FunctionSelected
     case Deselected
     case ConfigChanged
+    case SvgMounted
 end FlowRun

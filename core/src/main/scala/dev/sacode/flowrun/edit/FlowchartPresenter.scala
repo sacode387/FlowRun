@@ -14,6 +14,7 @@ import dev.sacode.flowrun.Expression.Type
 class FlowchartPresenter(
     programModel: ProgramModel,
     flowRunElements: FlowRunElements,
+    flowrunChannel: Channel[FlowRun.Event],
     colorScheme: ColorScheme = ColorScheme.default
 ) {
 
@@ -63,6 +64,7 @@ class FlowchartPresenter(
               .querySelectorAll(s""" .node[id*="${id}"] """)
               .foreach(_.classList.add("flowrun--selected"))
           }
+          flowrunChannel := FlowRun.Event.SvgMounted
         }
       )
   }
