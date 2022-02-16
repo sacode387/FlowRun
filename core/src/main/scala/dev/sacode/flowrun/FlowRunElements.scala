@@ -10,7 +10,6 @@ class FlowRunElements(
   // template is CLONED, so we can use "Run button", "output" and other "single purpose" elements freely
 
   template.id = ""
-  template.style = "" // remove hidden attributes -> "display: block;"
 
   // areas
   val metaData: dom.Element = template.querySelector(".flowrun-meta")

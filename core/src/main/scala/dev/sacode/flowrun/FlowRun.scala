@@ -27,6 +27,7 @@ class FlowRun(
     mountElem: dom.Element,
     editable: Boolean = true,
     programJson: Option[String] = None,
+    mountCallback: Option[js.Function1[FlowRun, Unit]] = None,
     changeCallback: Option[js.Function1[FlowRun, Unit]] = None
 ) {
 
@@ -76,6 +77,8 @@ class FlowRun(
 
   flowRunElements.metaData.innerText = program.name
 
+  attachRunAndCopyListeners()
+
   if editable then
     ctxMenu.init()
     attachEditListeners()
@@ -86,6 +89,11 @@ class FlowRun(
   flowRunConfig.attach { _ =>
     flowrunChannel := FlowRun.Event.ConfigChanged
   }
+
+  // trigger first time to get the ball rolling
+  flowrunChannel := FlowRun.Event.SyntaxSuccess
+
+  mountCallback.foreach { cb => cb(this) }
 
   def config(): FlowRunConfig =
     flowRunConfig.get
@@ -101,51 +109,6 @@ class FlowRun(
     val codeTry = generator.generate
     if codeTry.isFailure then println("Failed to generate code: " + codeTry.failed)
     codeTry.getOrElse("Error while generating code: " + codeTry.failed.get.getMessage)
-
-  flowRunElements.runButton.onclick = _ => {
-    outputArea.clearAll()
-    outputArea.running()
-    flowchartPresenter.clearErrors()
-    flowchartPresenter.clearSelected()
-    flowrunChannel := FlowRun.Event.Deselected
-
-    startedTime = Instant.now()
-    flowRunElements.runtimeOutput.appendChild(div(samp(s"Started at: ${DTF.format(startedTime)}"), br, br).render)
-
-    interpreter = Interpreter(programModel, flowrunChannel) // fresh SymTable etc
-    outputArea = OutputArea(interpreter, flowRunElements, flowrunChannel)
-    debugArea = DebugArea(interpreter, flowRunElements)
-
-    interpreter.run()
-    dom.window.setTimeout(
-      () => {
-        // check after delay if it's running, to avoid flicker
-        if Set(State.RUNNING, State.PAUSED).contains(interpreter.state) then
-          flowchartPresenter.disable()
-          functionSelector.disable()
-      },
-      100
-    )
-  }
-
-  flowRunElements.stopButton.onclick = _ => {
-    interpreter.state = State.FINISHED_STOPPED
-  }
-
-  flowRunElements.copySourceButton.onclick = _ => {
-    dom.window.navigator.clipboard.writeText(json())
-    Toastify(ToastifyOptions("Copied program source to clipboard.", Color.green)).showToast()
-  }
-
-  flowRunElements.copyDotButton.onclick = _ => {
-    dom.window.navigator.clipboard.writeText(flowchartPresenter.funDOT)
-    Toastify(ToastifyOptions("Copied DOT to clipboard.", Color.green)).showToast()
-  }
-
-  flowRunElements.copyGencodeButton.onclick = _ => {
-    dom.window.navigator.clipboard.writeText(codeText())
-    Toastify(ToastifyOptions("Copied generated code to clipboard.", Color.green)).showToast()
-  }
 
   import FlowRun.Event.*
   flowrunChannel.attach {
@@ -211,8 +174,52 @@ class FlowRun(
     generateCode()
   }
 
-  // trigger first time to get the ball rolling
-  flowrunChannel := SyntaxSuccess
+  private def attachRunAndCopyListeners(): Unit = {
+    flowRunElements.runButton.onclick = _ => {
+      outputArea.clearAll()
+      outputArea.running()
+      flowchartPresenter.clearErrors()
+      flowchartPresenter.clearSelected()
+      flowrunChannel := FlowRun.Event.Deselected
+
+      startedTime = Instant.now()
+      flowRunElements.runtimeOutput.appendChild(div(samp(s"Started at: ${DTF.format(startedTime)}"), br, br).render)
+
+      interpreter = Interpreter(programModel, flowrunChannel) // fresh SymTable etc
+      outputArea = OutputArea(interpreter, flowRunElements, flowrunChannel)
+      debugArea = DebugArea(interpreter, flowRunElements)
+
+      interpreter.run()
+      dom.window.setTimeout(
+        () => {
+          // check after delay if it's running, to avoid flicker
+          if Set(State.RUNNING, State.PAUSED).contains(interpreter.state) then
+            flowchartPresenter.disable()
+            functionSelector.disable()
+        },
+        100
+      )
+    }
+
+    flowRunElements.stopButton.onclick = _ => {
+      interpreter.state = State.FINISHED_STOPPED
+    }
+
+    flowRunElements.copySourceButton.onclick = _ => {
+      dom.window.navigator.clipboard.writeText(json())
+      Toastify(ToastifyOptions("Copied program source to clipboard.", Color.green)).showToast()
+    }
+
+    flowRunElements.copyDotButton.onclick = _ => {
+      dom.window.navigator.clipboard.writeText(flowchartPresenter.funDOT)
+      Toastify(ToastifyOptions("Copied DOT to clipboard.", Color.green)).showToast()
+    }
+
+    flowRunElements.copyGencodeButton.onclick = _ => {
+      dom.window.navigator.clipboard.writeText(codeText())
+      Toastify(ToastifyOptions("Copied generated code to clipboard.", Color.green)).showToast()
+    }
+  }
 
   private def attachEditListeners(): Unit = {
     flowRunElements.addFunButton.onclick = _ => programModel.addNewFunction()

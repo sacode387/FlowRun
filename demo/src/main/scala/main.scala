@@ -15,7 +15,11 @@ import dev.sacode.flowrun.FlowRun
       val flowRun: FlowRun = FlowRun(
         mountElem,
         editable,
-        changeCallback = Some(fr => {
+        mountCallback = Some { fr => 
+         // .classL
+         mountElem.classList.remove("flowrun--hidden")
+        },
+        changeCallback = Some { fr =>
 
           var lang = fr.config().lang.toString
           if lang.startsWith("scala") then lang = "scala"
@@ -28,7 +32,7 @@ import dev.sacode.flowrun.FlowRun
           codeArea.innerText = ""
           codeArea.appendChild(codeElem)
           js.Dynamic.global.hljs.highlightElement(codeElem)
-        })
+        }
       )
     end for
   }
