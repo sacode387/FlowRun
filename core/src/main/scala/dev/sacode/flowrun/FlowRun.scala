@@ -24,28 +24,19 @@ import java.time.temporal.ChronoUnit
 
 @JSExportTopLevel("FlowRun")
 class FlowRun(
-    mountElem: dom.Element,
+    mountElem: dom.html.Element,
     editable: Boolean = true,
     programJson: Option[String] = None,
     mountCallback: Option[js.Function1[FlowRun, Unit]] = None,
     changeCallback: Option[js.Function1[FlowRun, Unit]] = None
 ) {
 
-  private val mountElemText = mountElem.innerText.trim
-
-  private val maybeTemplate = dom.document.getElementById("flowrun-template").asInstanceOf[dom.html.Element]
-
-  val flowRunElements = FlowRunElements.resolve(maybeTemplate, mountElem)
-  mountElem.innerText = ""
-  // move all template children to mountElem
-  // https://stackoverflow.com/a/20910214/4496364
-  while flowRunElements.template.childNodes.length > 0 do
-    mountElem.appendChild(flowRunElements.template.childNodes.head)
-
-  private val maybeJson = programJson.orElse(
+  // resolve initial program
+  private val jsonSourceOpt = programJson.orElse {
+    val mountElemText = mountElem.innerText.trim
     Option.when(mountElemText.nonEmpty)(mountElemText)
-  )
-  private val program = maybeJson match
+  }
+  private val program = jsonSourceOpt match
     case Some(json) => json.fromJson[Program]
     case None =>
       Program(
@@ -59,12 +50,20 @@ class FlowRun(
         List.empty
       )
 
+  // duplicate a template,
+  // move all its children to mountElem
+  // https://stackoverflow.com/a/20910214/4496364
+  private val template = dom.document.getElementById("flowrun-template").cloneNode(true).asInstanceOf[dom.html.Element]
+  mountElem.innerText = ""
+  while template.childNodes.length > 0 do mountElem.appendChild(template.childNodes.head)
+
   private val flowRunConfig = FlowRunConfig.resolve()
 
   private val flowrunChannel = Channel[FlowRun.Event]
   private val programModel = ProgramModel(program, flowrunChannel)
   private var interpreter = Interpreter(programModel, flowrunChannel)
 
+  val flowRunElements = FlowRunElements(mountElem) // needs to come after JSON resolving and template copying
   private val flowchartPresenter = FlowchartPresenter(programModel, flowRunElements, flowrunChannel)
   private var outputArea = OutputArea(interpreter, flowRunElements, flowrunChannel)
   private var debugArea = DebugArea(interpreter, flowRunElements)

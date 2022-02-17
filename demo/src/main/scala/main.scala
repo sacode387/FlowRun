@@ -10,7 +10,8 @@ import dev.sacode.flowrun.FlowRun
 
     // edit
     val flowRunEditors = document.querySelectorAll(".flowrun-instance")
-    for mountElem <- flowRunEditors do
+    for elem <- flowRunEditors do
+      val mountElem = elem.asInstanceOf[dom.html.Element]
       val editable = mountElem.classList.contains("flowrun--editable")
       val flowRun: FlowRun = FlowRun(
         mountElem,
