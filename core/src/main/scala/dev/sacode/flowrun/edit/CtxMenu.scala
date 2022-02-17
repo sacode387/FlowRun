@@ -1,13 +1,17 @@
 package dev.sacode.flowrun.edit
 
 import org.scalajs.dom
+import reactify.*
+import org.getshaka.nativeconverter.fromJson
 import dev.sacode.flowrun.ProgramModel
 import dev.sacode.flowrun.ProgramModel.Request
 import dev.sacode.flowrun.Expression.Type
 import dev.sacode.flowrun.AST
 import dev.sacode.flowrun.FlowRunElements
+import dev.sacode.flowrun.FlowRun
+import dev.sacode.flowrun.Statement
 
-class CtxMenu(programModel: ProgramModel, flowRunElements: FlowRunElements) {
+class CtxMenu(programModel: ProgramModel, flowRunElements: FlowRunElements, flowrunChannel: Channel[FlowRun.Event]) {
 
   /** used for delete */
   private var nodeId = ""
@@ -74,7 +78,10 @@ class CtxMenu(programModel: ProgramModel, flowRunElements: FlowRunElements) {
 
   private def attachListeners(): Unit = {
 
+    val copyButton = nodeContextMenu.querySelector(".flowrun-copy-stmt").asInstanceOf[dom.html.Element]
     val deleteButton = nodeContextMenu.querySelector(".flowrun-delete").asInstanceOf[dom.html.Element]
+
+    val pasteButton = edgeContextMenu.querySelector(".flowrun-paste-stmt").asInstanceOf[dom.html.Element]
     val addDeclareButton = edgeContextMenu.querySelector(".flowrun-add-declare").asInstanceOf[dom.html.Element]
     val addAssignButton = edgeContextMenu.querySelector(".flowrun-add-assign").asInstanceOf[dom.html.Element]
     val addInputButton = edgeContextMenu.querySelector(".flowrun-add-input").asInstanceOf[dom.html.Element]
@@ -85,9 +92,28 @@ class CtxMenu(programModel: ProgramModel, flowRunElements: FlowRunElements) {
     val addDoWhileButton = edgeContextMenu.querySelector(".flowrun-add-do-while").asInstanceOf[dom.html.Element]
     val addForLoopButton = edgeContextMenu.querySelector(".flowrun-add-for").asInstanceOf[dom.html.Element]
 
+    // node buttons
+    copyButton.addEventListener(
+      "click",
+      (event: dom.MouseEvent) =>
+        val stmtJson = programModel.findStatement(nodeId).toJson
+        dom.window.navigator.clipboard.writeText(stmtJson)
+        flowrunChannel := FlowRun.Event.Deselected
+    )
+
     deleteButton.addEventListener(
       "click",
       (event: dom.MouseEvent) => programModel.delete(Request.Delete(nodeId))
+    )
+
+    // edge buttons
+    pasteButton.addEventListener(
+      "click",
+      (event: dom.MouseEvent) =>
+        dom.window.navigator.clipboard.readText().`then` { stmtJson =>
+          val newStmt = stmtJson.fromJson[Statement].duplicated
+          programModel.addStmt(Request.AddStmt(newStmt, afterId, blockId))
+        }
     )
 
     addDeclareButton.addEventListener(

@@ -71,7 +71,7 @@ class FlowRun(
 
   private val functionSelector = FunctionSelector(editable, programModel, flowrunChannel, flowRunElements)
   private val statementEditor = StatementEditor(programModel, flowrunChannel, flowRunElements)
-  private val ctxMenu = CtxMenu(programModel, flowRunElements)
+  private val ctxMenu = CtxMenu(programModel, flowRunElements, flowrunChannel)
 
   private var startedTime: Instant = _
 

@@ -67,6 +67,9 @@ class ProgramModel(
     flowrunChannel := FlowRun.Event.FunctionUpdated
 
   /* per-function */
+  def addStmt(req: AddStmt): Unit =
+    update(_.addStmt(req), FlowRun.Event.StmtAdded)
+
   def addDeclare(req: AddDeclare): Unit =
     update(_.addDeclare(req), FlowRun.Event.StmtAdded)
 
@@ -150,8 +153,10 @@ object ProgramModel:
 
   val MainFunId = "fun-main"
 
+  // TODO refactor to AddStmt, remove redundancy
   enum Request:
     case Delete(id: String)
+    case AddStmt(stmt: Statement, afterId: String, blockId: String)
     case AddDeclare(id: String, name: String, tpe: Type, afterId: String, blockId: String)
     case AddAssign(id: String, afterId: String, blockId: String)
     case AddOutput(id: String, afterId: String, blockId: String)
@@ -216,6 +221,9 @@ case class FunctionModel(
     ast: Function
 ) {
   import ProgramModel.Request.*
+
+  def addStmt(req: AddStmt): FunctionModel =
+    doInsert(req.afterId, req.stmt, req.blockId)
 
   def addDeclare(req: AddDeclare): FunctionModel =
     val newStat = Statement.Declare(req.id, req.name, req.tpe, None)

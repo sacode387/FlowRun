@@ -75,6 +75,7 @@ enum Atom derives NativeConverter:
  */
 
 sealed trait Statement(val id: String) derives NativeConverter:
+  def duplicated: Statement = this
   def label: String
   def verboseLabel: String = label
 
@@ -89,31 +90,39 @@ object Statement:
       tpe: Expression.Type,
       initValue: Option[String]
   ) extends Statement(id):
+    override def duplicated:Declare = copy(id = AST.newId)
     def label =
       val maybeExprText = initValue.map(e => s" = $e").getOrElse("")
       s"$name$maybeExprText"
     override def verboseLabel =
       val maybeExprText = initValue.map(e => s" = $e").getOrElse("")
       s"$name: $tpe$maybeExprText"
+
   case class Assign(override val id: String, name: String, value: String) extends Statement(id):
+    override def duplicated:Assign = copy(id = AST.newId)
     def label = s"$name = $value"
 
   case class Call(override val id: String, value: String) extends Statement(id):
+    override def duplicated:Call = copy(id = AST.newId)
     def label = value
 
   case class Input(override val id: String, name: String) extends Statement(id):
+    override def duplicated: Input = copy(id = AST.newId)
     def label = name
 
   case class Output(override val id: String, value: String) extends Statement(id):
+    override def duplicated: Output = copy(id = AST.newId)
     def label = value
 
   case class Block(override val id: String, statements: List[Statement] = List.empty) extends Statement(id):
+    override def duplicated: Block = copy(id = AST.newId, statements=statements.map(_.duplicated))
     def label = ""
 
   case class Return(
       override val id: String,
       maybeValue: Option[String] = None
   ) extends Statement(id):
+    override def duplicated = copy(id = AST.newId)
     def label = maybeValue.map(e => s"return $e").getOrElse("return")
 
   case class If(
@@ -122,6 +131,7 @@ object Statement:
       trueBlock: Block,
       falseBlock: Block
   ) extends Statement(id):
+    override def duplicated = copy(id = AST.newId, trueBlock = trueBlock.duplicated, falseBlock = falseBlock.duplicated)
     def label = condition.toString
 
   case class While(
@@ -129,6 +139,7 @@ object Statement:
       condition: String,
       body: Block
   ) extends Statement(id):
+    override def duplicated = copy(id = AST.newId, body = body.duplicated)
     def label = condition.toString
 
   case class DoWhile(
@@ -136,6 +147,7 @@ object Statement:
       condition: String,
       body: Block
   ) extends Statement(id):
+    override def duplicated = copy(id = AST.newId, body = body.duplicated)
     def label = condition.toString
 
   case class ForLoop(
@@ -146,6 +158,7 @@ object Statement:
       end: String,
       body: Block
   ) extends Statement(id):
+    override def duplicated = copy(id = AST.newId, body = body.duplicated)
     def label = s"$varName = $start to $end by $incr"
 
   // utils
