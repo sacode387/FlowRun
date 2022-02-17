@@ -23,13 +23,13 @@ class FlowchartPresenter(
   private val PxInInch = 96
 
   private val graphviz = d3
-      .select(flowRunElements.drawArea)
-      .graphviz(
-        js.Dynamic.literal(
-          zoom = false,
-          fit = true
-        )
+    .select(flowRunElements.drawArea)
+    .graphviz(
+      js.Dynamic.literal(
+        zoom = false,
+        fit = true
       )
+    )
 
   loadCurrentFunction()
 
@@ -176,12 +176,13 @@ class FlowchartPresenter(
         val lbl = stmt.label.toGraphvizLbl
         val ifEndId = s"end_${stmt.id}"
 
-        // ovdje nać width pa proslijedit
+        // when text is longer we need to move edges also
+        val surplus = stmtSurplus(lbl)
 
         val (trueNodeDOTs, trueOffsetX) = locally {
           val block = stmt.trueBlock
           val stmts = block.statements
-          val x = posX + widthRight(stmt, 0)
+          val x = posX + widthRight(stmt, 0) + surplus
           val dots = stmts.foldLeft((List.empty[String], posY + 1)) { case ((prevDots, lastY), s) =>
             val dot = nodeDOT(s, block.id, x, lastY)
             (prevDots.appended(dot._1), dot._2 + 1)
@@ -192,7 +193,7 @@ class FlowchartPresenter(
         val (falseNodeDOTs, falseOffsetX) = locally {
           val block = stmt.falseBlock
           val stmts = block.statements
-          val x = posX - widthLeft(stmt, 0)
+          val x = posX - widthLeft(stmt, 0) - surplus
           val dots = stmts.foldLeft((List.empty[String], posY + 1)) { case ((prevDots, lastY), s) =>
             val dot = nodeDOT(s, block.id, x, lastY)
             (prevDots.appended(dot._1), dot._2 + 1)
@@ -224,10 +225,12 @@ class FlowchartPresenter(
       case stmt: While =>
         val lbl = stmt.label.toGraphvizLbl
 
+        val surplus = stmtSurplus(lbl)
+
         val (blockDOTs, trueOffsetX) = locally {
           val block = stmt.body
           val stmts = block.statements
-          val x = posX + widthRight(stmt, 0)
+          val x = posX + widthRight(stmt, 0) + surplus
           val dots = stmts.foldLeft((List.empty[String], posY + 1)) { case ((prevDots, lastY), s) =>
             val dot = nodeDOT(s, block.id, x, lastY)
             (prevDots.appended(dot._1), dot._2 + 1)
@@ -235,7 +238,7 @@ class FlowchartPresenter(
           (dots, x)
         }
 
-        val falseOffsetX = posX - 1
+        val falseOffsetX = posX - 1 - surplus
 
         val maxBranchY = blockDOTs._2
 
@@ -258,6 +261,7 @@ class FlowchartPresenter(
 
       case stmt: DoWhile =>
         val lbl = stmt.label.toGraphvizLbl
+        val surplus = stmtSurplus(lbl)
         val doWhileEndId = s"end_${stmt.id}"
 
         val blockDOTs = locally {
@@ -270,7 +274,7 @@ class FlowchartPresenter(
           dots
         }
 
-        val trueOffsetX = posX + widthRight(stmt, 0)
+        val trueOffsetX = posX + widthRight(stmt, 0) + surplus
 
         val maxBranchY = blockDOTs._2
 
@@ -291,11 +295,12 @@ class FlowchartPresenter(
 
       case stmt: ForLoop =>
         val lbl = stmt.label.toGraphvizLbl
+        val surplus = stmtSurplus(lbl)
 
         val (blockDOTs, trueOffsetX) = locally {
           val block = stmt.body
           val stmts = block.statements
-          val x = posX + widthRight(stmt, 0)
+          val x = posX + widthRight(stmt, 0) + surplus
           val dots = stmts.foldLeft((List.empty[String], posY + 1)) { case ((prevDots, lastY), s) =>
             val dot = nodeDOT(s, block.id, x, lastY)
             (prevDots.appended(dot._1), dot._2 + 1)
@@ -303,7 +308,7 @@ class FlowchartPresenter(
           (dots, x)
         }
 
-        val falseOffsetX = posX - 1
+        val falseOffsetX = posX - 1 - surplus
 
         val maxBranchY = blockDOTs._2
 
@@ -584,5 +589,8 @@ class FlowchartPresenter(
   private def edgeAttrs(nextStmtId: String): String =
     val maybeNoArrow = Option.when(nextStmtId.contains("dummy"))("arrowhead=none").getOrElse("")
     s""" tailtooltip=" " edgetooltip=" " $maybeNoArrow """.trim
+
+  def stmtSurplus(lbl: String): Int =
+    (lbl.length / 19).toInt 
 
 }

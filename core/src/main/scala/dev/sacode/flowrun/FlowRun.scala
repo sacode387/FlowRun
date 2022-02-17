@@ -140,6 +140,7 @@ class FlowRun(
         flowchartPresenter.highlightError(nodeId)
         flowchartPresenter.enable()
         functionSelector.enable()
+        functionSelector.loadFunctions()
         outputArea.finished()
       }
     case EvalOutput(output) =>

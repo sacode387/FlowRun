@@ -407,7 +407,7 @@ class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[FlowRun.Ev
             val fun = allFunctions.find(_.name == name).get
             if args.size != fun.parameters.size then
               throw EvalException(
-                s"Wrong number of arguments, expected: ${fun.parameters.size} but got ${args.size}",
+                s"Wrong number of arguments, expected ${fun.parameters.size} but got ${args.size}",
                 id
               )
             val argsWithTypes = args.zip(fun.parameters).zipWithIndex.map { case ((arg, p), idx) =>

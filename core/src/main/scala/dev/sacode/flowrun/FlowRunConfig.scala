@@ -25,12 +25,12 @@ object FlowRunConfig {
       dom.window.localStorage.setItem(FlowRunConfigKey, newValue.toJson)
     }
 
-    val savedConfig = dom.window.localStorage.getItem(FlowRunConfigKey)
-    val savedTodos =
-      if (savedConfig == null) FlowRunConfig(Language.java, "")
-      else savedConfig.fromJson[FlowRunConfig]
+    val savedConfigJson = dom.window.localStorage.getItem(FlowRunConfigKey)
+    val savedConfig =
+      if (savedConfigJson == null) FlowRunConfig(Language.java, "")
+      else savedConfigJson.fromJson[FlowRunConfig]
 
-    config$.set(savedTodos)
+    config$.set(savedConfig)
     config$
   }
 
