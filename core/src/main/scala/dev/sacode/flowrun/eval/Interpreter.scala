@@ -46,13 +46,13 @@ class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[FlowRun.Ev
         flowrunChannel := FlowRun.Event.EvalSuccess
       case Failure(e: EvalException) =>
         state = State.FINISHED_FAILED
-        flowrunChannel := FlowRun.Event.EvalError(e.nodeId, e.getMessage)
+        flowrunChannel := FlowRun.Event.EvalError(e.nodeId, e.getMessage, symTab.currentScope.id)
       case Failure(e: ParseException) =>
         state = State.FINISHED_FAILED
-        flowrunChannel := FlowRun.Event.EvalError(e.nodeId, e.getMessage)
+        flowrunChannel := FlowRun.Event.EvalError(e.nodeId, e.getMessage, symTab.currentScope.id)
       case Failure(e: LexException) =>
         state = State.FINISHED_FAILED
-        flowrunChannel := FlowRun.Event.EvalError(e.nodeId, e.getMessage)
+        flowrunChannel := FlowRun.Event.EvalError(e.nodeId, e.getMessage, symTab.currentScope.id)
       case Failure(e) =>
         state = State.FINISHED_FAILED
         // this can be any JS failure, that's why we dont't print it to user
@@ -78,11 +78,11 @@ class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[FlowRun.Ev
     } catch {
       case (e: EvalException) => // from symbol table
         state = State.FINISHED_FAILED
-        flowrunChannel := FlowRun.Event.EvalError(nodeId, e.getMessage)
+        flowrunChannel := FlowRun.Event.EvalError(nodeId, e.getMessage, symTab.currentScope.id)
         None
       case e: (NumberFormatException | IllegalArgumentException) =>
         state = State.FINISHED_FAILED
-        flowrunChannel := FlowRun.Event.EvalError(nodeId, s"You entered invalid ${sym.tpe}: ${inputValue}")
+        flowrunChannel := FlowRun.Event.EvalError(nodeId, s"You entered invalid ${sym.tpe}: ${inputValue}", symTab.currentScope.id)
         None
     }
 
@@ -90,7 +90,7 @@ class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[FlowRun.Ev
       fun: Function,
       arguments: List[(String, Expression.Type, Any)]
   ): Future[Any] =
-    symTab.enterScope(fun.name)
+    symTab.enterScope(fun.id, fun.name)
     arguments.foreach { (name, tpe, value) =>
       val key = SymbolKey(name, Symbol.Kind.Variable, "")
       symTab.add(null, key, tpe, Some(value))

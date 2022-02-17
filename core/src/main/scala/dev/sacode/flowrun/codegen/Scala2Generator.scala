@@ -36,7 +36,7 @@ class Scala2Generator(programAst: Program) extends CodeGenerator {
   }
 
   private def genFunction(function: Function): String = {
-    symTab.enterScope(function.name)
+    symTab.enterScope(function.id,function.name)
     val statements = function.statements.map(genStatement).filterNot(_.trim.isEmpty)
     val params = function.parameters.map(p => s"${p.name}: ${getType(p.tpe)}").mkString(", ")
     symTab.exitScope()

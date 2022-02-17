@@ -1,6 +1,8 @@
 package dev.sacode.flowrun
 package edit
 
+import scala.concurrent.{Future, Promise}
+import scala.concurrent.ExecutionContext.Implicits.global
 import scalajs.js
 import scalajs.js.JSConverters.*
 import org.scalajs.dom
@@ -19,6 +21,15 @@ class FlowchartPresenter(
 ) {
 
   private val PxInInch = 96
+
+  private val graphviz = d3
+      .select(flowRunElements.drawArea)
+      .graphviz(
+        js.Dynamic.literal(
+          zoom = false,
+          fit = true
+        )
+      )
 
   loadCurrentFunction()
 
@@ -41,16 +52,8 @@ class FlowchartPresenter(
   def highlightError(nodeId: String): Unit =
     dom.window.document.querySelector(s""" .node[id^="$nodeId"] """).classList.add("flowrun--error")
 
-  def loadCurrentFunction(): Unit = {
-    val graphviz = d3
-      .select(flowRunElements.drawArea)
-      .graphviz(
-        js.Dynamic.literal(
-          zoom = false,
-          fit = true
-        )
-      )
-
+  def loadCurrentFunction(): Future[Unit] = {
+    val p = Promise[Unit]()
     graphviz
       .engine("neato")
       .renderDot(
@@ -65,8 +68,10 @@ class FlowchartPresenter(
               .foreach(_.classList.add("flowrun--selected"))
           }
           flowrunChannel := FlowRun.Event.SvgMounted
+          p.success(())
         }
       )
+    p.future
   }
 
   def funDOT: String =

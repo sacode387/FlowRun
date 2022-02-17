@@ -7,7 +7,7 @@ import dev.sacode.flowrun.Expression.Type
 
 class SymbolTable(flowrunChannel: Channel[FlowRun.Event]) {
 
-  val globalScope = Scope("GLOBAL", None, flowrunChannel)
+  val globalScope = Scope("GLOBAL","GLOBAL", None, flowrunChannel)
   locally {
     val key = SymbolKey("abs", Symbol.Kind.Function, "")
     globalScope.add(null, key, Type.Integer, None)
@@ -15,8 +15,8 @@ class SymbolTable(flowrunChannel: Channel[FlowRun.Event]) {
 
   var currentScope = globalScope
 
-  def enterScope(name: String): Unit =
-    val newScope = Scope(name, Some(currentScope), flowrunChannel)
+  def enterScope(id: String, name: String): Unit =
+    val newScope = Scope(id, name, Some(currentScope), flowrunChannel)
     currentScope.childScopes = currentScope.childScopes.appended(newScope)
     currentScope = newScope
     flowrunChannel := FlowRun.Event.SymbolTableUpdated
@@ -57,6 +57,7 @@ class SymbolTable(flowrunChannel: Channel[FlowRun.Event]) {
   *   - function
   */
 class Scope(
+    val id: String,
     val name: String,
     val parentScope: Option[Scope],
     flowrunChannel: Channel[FlowRun.Event]

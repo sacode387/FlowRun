@@ -1,5 +1,6 @@
 package dev.sacode.flowrun
 
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.scalajs.js
 import scala.scalajs.js.annotation.JSExportTopLevel
 import org.scalajs.dom
@@ -132,12 +133,15 @@ class FlowRun(
       flowchartPresenter.enable()
       functionSelector.enable()
       outputArea.finished()
-    case EvalError(nodeId, msg) =>
-      outputArea.runtimeError(msg, DTF.format(startedTime), DTF.format(Instant.now()))
-      flowchartPresenter.highlightError(nodeId)
-      flowchartPresenter.enable()
-      functionSelector.enable()
-      outputArea.finished()
+    case EvalError(nodeId, msg, funId) =>
+      programModel.currentFunctionId = funId
+      flowchartPresenter.loadCurrentFunction().foreach { _ =>
+        outputArea.runtimeError(msg, DTF.format(startedTime), DTF.format(Instant.now()))
+        flowchartPresenter.highlightError(nodeId)
+        flowchartPresenter.enable()
+        functionSelector.enable()
+        outputArea.finished()
+      }
     case EvalOutput(output) =>
       val newOutput = div(samp(output), br).render
       flowRunElements.runtimeOutput.appendChild(newOutput)
@@ -289,7 +293,7 @@ object FlowRun:
 
   enum Event:
     case EvalSuccess
-    case EvalError(nodeId: String, msg: String)
+    case EvalError(nodeId: String, msg: String, funId: String)
     case EvalOutput(msg: String)
     case EvalInput(nodeId: String, name: String)
     case SyntaxSuccess
