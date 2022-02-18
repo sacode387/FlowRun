@@ -53,27 +53,27 @@ class StatementEditor(
     nameInputElem.oninput = { (_: dom.Event) =>
       val newName = nameInputElem.value.trim
       val errorMsg: Option[String] = NameUtils.validateIdentifier(newName)
-      if errorMsg.isEmpty then {
-        stmt match {
-          case _: Statement.Declare =>
-            programModel.updateDeclare(Request.UpdateDeclare(stmtId, name = Some(newName)))
-          case _: Statement.Input =>
-            programModel.updateInput(Request.UpdateInput(stmtId, name = newName))
-          case _: Statement.Begin =>
-            programModel.updateFunction(Request.UpdateFunction(stmtId, name = Some(newName)))
-          case _: Statement.Assign =>
-            programModel.updateAssign(Request.UpdateAssign(stmtId, name = Some(newName)))
-          case _: Statement.ForLoop =>
-            programModel.updateForLoop(Request.UpdateForLoop(stmtId, varName = Some(newName)))
-          case _ => ()
-        }
-      } else {
-        flowrunChannel := FlowRun.Event.SyntaxError(errorMsg.get)
-      }
+      errorMsg match
+        case None =>
+          stmt match
+            case _: Statement.Declare =>
+              programModel.updateDeclare(Request.UpdateDeclare(stmtId, name = Some(newName)))
+            case _: Statement.Input =>
+              programModel.updateInput(Request.UpdateInput(stmtId, name = newName))
+            case _: Statement.Begin =>
+              programModel.updateFunction(Request.UpdateFunction(stmtId, name = Some(newName)))
+            case _: Statement.Assign =>
+              programModel.updateAssign(Request.UpdateAssign(stmtId, name = Some(newName)))
+            case _: Statement.ForLoop =>
+              programModel.updateForLoop(Request.UpdateForLoop(stmtId, varName = Some(newName)))
+            case _ => ()
+        case Some(msg) =>
+          flowrunChannel := FlowRun.Event.SyntaxError(msg)
     }
 
     var filledName = false
-    if Statement.hasName(stmt, programModel.currentFunction.name) then
+    val hasName = Statement.hasName(stmt, programModel.currentFunction.name)
+    if hasName then
       filledName = nameInputElem.value.nonEmpty
       stmtElems.appendChild(nameInputElem)
 
@@ -219,11 +219,7 @@ class StatementEditor(
     end if
 
     // focus
-    if !Statement.hasExpr(stmt) || (Statement.hasName(
-        stmt,
-        programModel.currentFunction.name
-      ) && !filledName)
-    then
+    if hasName then
       nameInputElem.focus()
       nameInputElem.select()
     else
