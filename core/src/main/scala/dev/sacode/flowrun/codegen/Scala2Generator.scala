@@ -1,17 +1,13 @@
 package dev.sacode.flowrun.codegen
 
+import scala.util.Try
 import reactify.*
-import dev.sacode.flowrun.Program
-import dev.sacode.flowrun.Function
-import dev.sacode.flowrun.Statement
-import dev.sacode.flowrun.Expression
-import dev.sacode.flowrun.indented
 import dev.sacode.flowrun.FlowRun
+import dev.sacode.flowrun.ast.*, Expression.Type
+import dev.sacode.flowrun.indented
 import dev.sacode.flowrun.eval.SymbolTable
 import dev.sacode.flowrun.eval.SymbolKey
 import dev.sacode.flowrun.eval.Symbol
-import dev.sacode.flowrun.Expression.Type
-import scala.util.Try
 
 class Scala2Generator(programAst: Program) extends CodeGenerator {
 

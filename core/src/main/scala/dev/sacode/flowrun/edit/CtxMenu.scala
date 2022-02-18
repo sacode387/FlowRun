@@ -5,11 +5,9 @@ import reactify.*
 import org.getshaka.nativeconverter.fromJson
 import dev.sacode.flowrun.ProgramModel
 import dev.sacode.flowrun.ProgramModel.Request
-import dev.sacode.flowrun.Expression.Type
-import dev.sacode.flowrun.AST
 import dev.sacode.flowrun.FlowRunElements
 import dev.sacode.flowrun.FlowRun
-import dev.sacode.flowrun.Statement
+import dev.sacode.flowrun.ast.*
 
 class CtxMenu(programModel: ProgramModel, flowRunElements: FlowRunElements, flowrunChannel: Channel[FlowRun.Event]) {
 
@@ -119,7 +117,7 @@ class CtxMenu(programModel: ProgramModel, flowRunElements: FlowRunElements, flow
     addDeclareButton.addEventListener(
       "click",
       (event: dom.MouseEvent) =>
-        programModel.addDeclare(Request.AddDeclare(AST.newId, "x", Type.Integer, afterId, blockId))
+        programModel.addDeclare(Request.AddDeclare(AST.newId, "x", Expression.Type.Integer, afterId, blockId))
     )
 
     addAssignButton.addEventListener(

@@ -1,6 +1,6 @@
 package dev.sacode.flowrun.codegen
 
-import dev.sacode.flowrun.Program
+import dev.sacode.flowrun.ast.Program
 
 object CodeGeneratorFactory {
 

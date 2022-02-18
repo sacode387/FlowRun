@@ -6,7 +6,7 @@ import scala.concurrent.{Future, Promise}
 import scala.concurrent.ExecutionContext.Implicits.global
 import scalajs.js
 import reactify.*
-import dev.sacode.flowrun.parse.{Token, parseExpr, ParseException, LexException}
+import dev.sacode.flowrun.ast.*, parse.{Token, parseExpr, ParseException, LexException}
 
 /*
 - at runtime we use Int and Double

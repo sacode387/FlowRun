@@ -1,8 +1,7 @@
 package dev.sacode.flowrun
 
-import scala.scalajs.js
 import reactify.*
-import dev.sacode.flowrun.parse.parseExpr
+import dev.sacode.flowrun.ast.*
 
 class ProgramModel(
     initAst: Program,
@@ -149,7 +148,7 @@ class ProgramModel(
 }
 
 object ProgramModel:
-  import dev.sacode.flowrun.Expression.Type
+  import dev.sacode.flowrun.ast.Expression.Type
 
   val MainFunId = "fun-main"
 

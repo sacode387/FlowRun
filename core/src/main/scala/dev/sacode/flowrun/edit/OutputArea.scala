@@ -5,7 +5,7 @@ import org.scalajs.dom
 import reactify.*
 import scalatags.JsDom.all.*
 import dev.sacode.flowrun.eval.*
-import dev.sacode.flowrun.Expression.Type
+import dev.sacode.flowrun.ast.Expression.Type
 
 class OutputArea(
     interpreter: Interpreter,

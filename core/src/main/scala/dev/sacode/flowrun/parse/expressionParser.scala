@@ -3,6 +3,7 @@ package parse
 
 import scala.collection.mutable
 import dev.sacode.flowrun.parse.Token, Token.Type
+import dev.sacode.flowrun.ast.*
 
 /** Expression parser.
   *

@@ -8,7 +8,7 @@ import scalajs.js.JSConverters.*
 import org.scalajs.dom
 import reactify.*
 import dev.sacode.flowrun.parse.*
-import dev.sacode.flowrun.Expression.Type
+import dev.sacode.flowrun.ast.*, Expression.Type
 
 /*
 - color==border_color, fillcolor==.. https://stackoverflow.com/questions/9106079/graphviz-how-to-change-border-color

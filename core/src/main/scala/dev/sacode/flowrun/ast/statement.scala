@@ -1,72 +1,8 @@
-package dev.sacode.flowrun
+package dev.sacode.flowrun.ast
 
-import org.getshaka.nativeconverter.NativeConverter
-
-import dev.sacode.flowrun.parse.Token
 import java.util.UUID
+import org.getshaka.nativeconverter.NativeConverter
 import dev.sacode.flowrun.eval.Interpreter.State
-
-/*
-EXPRESSION GRAMMAR:
-
-expression          -> boolOrComparison ("||"  boolOrComparison)* ;
-boolOrComparison    -> boolAndComparison ("&&"  boolAndComparison)* ;
-boolAndComparison   -> numComparison (("!=" | "==" ) numComparison)* ;
-numComparison       -> term (("<" | ">" | "<=" | ">=") term)* ;
-term                -> factor (("+" | "-") factor)* ;
-factor              -> unary (("*" |  "/" | "%") unary)* ;
-unary               -> ("!" | "-") unary
-                    | atom ;
-atom                -> NUMBER | STRING | "true" | "false" | "null"
-                    | ID
-                    | "(" expression ")" ;
- */
-
-case class Expression(boolOrComparison: BoolOrComparison, boolOrComparisons: List[BoolOrComparison])
-    derives NativeConverter
-
-object Expression:
-  enum Type derives NativeConverter:
-    case Void
-    case Integer
-    case Real
-    case String
-    case Boolean
-  object Type:
-    val VarTypes = Type.values.filterNot(_ == Type.Void)
-
-case class BoolOrComparison(
-    boolAndComparison: BoolAndComparison,
-    boolAndComparisons: List[BoolAndComparison]
-) derives NativeConverter
-
-case class BoolAndComparison(numComparison: NumComparison, numComparisons: List[NumComparisonOpt])
-    derives NativeConverter
-
-case class NumComparison(term: Term, terms: Option[TermOpt]) derives NativeConverter
-case class NumComparisonOpt(op: Token, numComparison: NumComparison) derives NativeConverter
-
-case class Term(factor: Factor, factors: List[FactorOpt]) derives NativeConverter
-case class TermOpt(op: Token, term: Term) derives NativeConverter
-
-case class Factor(unary: Unary, unaries: List[UnaryOpt]) derives NativeConverter
-case class FactorOpt(op: Token, factor: Factor) derives NativeConverter
-
-enum Unary derives NativeConverter:
-  case Prefixed(op: Token, unary: Unary)
-  case Simple(atom: Atom)
-
-case class UnaryOpt(op: Token, unary: Unary) derives NativeConverter
-
-enum Atom derives NativeConverter:
-  case IntegerLit(value: Int)
-  case RealLit(value: Double)
-  case StringLit(value: String)
-  case Identifier(name: String)
-  case TrueLit
-  case FalseLit
-  case Parens(expression: Expression)
-  case FunctionCall(name: String, arguments: List[Expression])
 
 ///////////////////////////////////////////////
 /* AST, of visual statements.
@@ -90,7 +26,7 @@ object Statement:
       tpe: Expression.Type,
       initValue: Option[String]
   ) extends Statement(id):
-    override def duplicated:Declare = copy(id = AST.newId)
+    override def duplicated: Declare = copy(id = AST.newId)
     def label =
       val maybeExprText = initValue.map(e => s" = $e").getOrElse("")
       s"$name$maybeExprText"
@@ -99,11 +35,11 @@ object Statement:
       s"$name: $tpe$maybeExprText"
 
   case class Assign(override val id: String, name: String, value: String) extends Statement(id):
-    override def duplicated:Assign = copy(id = AST.newId)
+    override def duplicated: Assign = copy(id = AST.newId)
     def label = s"$name = $value"
 
   case class Call(override val id: String, value: String) extends Statement(id):
-    override def duplicated:Call = copy(id = AST.newId)
+    override def duplicated: Call = copy(id = AST.newId)
     def label = value
 
   case class Input(override val id: String, name: String) extends Statement(id):
@@ -115,7 +51,7 @@ object Statement:
     def label = value
 
   case class Block(override val id: String, statements: List[Statement] = List.empty) extends Statement(id):
-    override def duplicated: Block = copy(id = AST.newId, statements=statements.map(_.duplicated))
+    override def duplicated: Block = copy(id = AST.newId, statements = statements.map(_.duplicated))
     def label = ""
 
   case class Return(
@@ -191,16 +127,16 @@ object Statement:
     getExpr(stmt).isDefined
 
   private def getExpr(stmt: Statement): Option[String] = stmt match
-    case Declare(_, _, _, expr)           => Some(expr.getOrElse(""))
-    case Assign(_, _, expr)               => Some(expr)
-    case Output(_, expr)                  => Some(expr)
-    case Call(_, expr)                    => Some(expr)
-    case Return(_, expr)                  => Some(expr.getOrElse(""))
-    case If(_, expr, _, _)                => Some(expr)
-    case While(_, expr, _)                => Some(expr)
-    case DoWhile(_, expr, _)              => Some(expr)
+    case Declare(_, _, _, expr)        => Some(expr.getOrElse(""))
+    case Assign(_, _, expr)            => Some(expr)
+    case Output(_, expr)               => Some(expr)
+    case Call(_, expr)                 => Some(expr)
+    case Return(_, expr)               => Some(expr.getOrElse(""))
+    case If(_, expr, _, _)             => Some(expr)
+    case While(_, expr, _)             => Some(expr)
+    case DoWhile(_, expr, _)           => Some(expr)
     case ForLoop(_, _, start, _, _, _) => Some(start)
-    case _                                => None
+    case _                             => None
 
   // umm, this logic is a bit hard to explain
   // best to concentrate on it visually
@@ -235,38 +171,3 @@ object Statement:
     case _ => 0
 
 end Statement
-
-case class Function(
-    rawId: String,
-    name: String,
-    parameters: List[Function.Parameter] = List.empty,
-    tpe: Expression.Type = Expression.Type.Void,
-    statements: List[Statement] = List.empty
-) derives NativeConverter:
-
-  val id = s"fun-$rawId"
-
-  def isMain: Boolean = rawId == "main"
-
-  def label: String =
-    val title = if isMain then "main" else name
-    val params = if isMain then "" else s"(${parameters.map(p => s"${p.name}").mkString(", ")})"
-    s"$title$params"
-  def verboseLabel =
-    val title = if isMain then "main" else name
-    val params = if isMain then "" else s"(${parameters.map(p => s"${p.name}: ${p.tpe}").mkString(", ")})"
-    s"$title$params: $tpe"
-
-object Function:
-  case class Parameter(id: String, name: String, tpe: Expression.Type)
-
-case class Program(
-    id: String,
-    name: String,
-    main: Function,
-    functions: List[Function] = List.empty
-) derives NativeConverter
-
-object AST:
-  def newId: String =
-    "id_" + UUID.randomUUID.toString.replaceAll("-", "_")

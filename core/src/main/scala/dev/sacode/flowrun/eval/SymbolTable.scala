@@ -3,7 +3,7 @@ package eval
 
 import scala.collection.mutable
 import reactify.*
-import dev.sacode.flowrun.Expression.Type
+import dev.sacode.flowrun.ast.Expression.Type
 
 class SymbolTable(flowrunChannel: Channel[FlowRun.Event]) {
 
