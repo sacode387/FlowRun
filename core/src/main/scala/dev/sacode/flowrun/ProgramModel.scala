@@ -69,33 +69,6 @@ class ProgramModel(
   def addStmt(req: AddStmt): Unit =
     update(_.addStmt(req), FlowRun.Event.StmtAdded)
 
-  def addDeclare(req: AddDeclare): Unit =
-    update(_.addDeclare(req), FlowRun.Event.StmtAdded)
-
-  def addAssign(req: AddAssign): Unit =
-    update(_.addAssign(req), FlowRun.Event.StmtAdded)
-
-  def addOutput(req: AddOutput): Unit =
-    update(_.addOutput(req), FlowRun.Event.StmtAdded)
-
-  def addInput(req: AddInput): Unit =
-    update(_.addInput(req), FlowRun.Event.StmtAdded)
-
-  def addCall(req: AddCall): Unit =
-    update(_.addCall(req), FlowRun.Event.StmtAdded)
-
-  def addIf(req: AddIf): Unit =
-    update(_.addIf(req), FlowRun.Event.StmtAdded)
-
-  def addWhile(req: AddWhile): Unit =
-    update(_.addWhile(req), FlowRun.Event.StmtAdded)
-
-  def addDoWhile(req: AddDoWhile): Unit =
-    update(_.addDoWhile(req), FlowRun.Event.StmtAdded)
-
-  def addForLoop(req: AddForLoop): Unit =
-    update(_.addForLoop(req), FlowRun.Event.StmtAdded)
-
   def updateDeclare(req: UpdateDeclare): Unit =
     update(_.updateDeclare(req), FlowRun.Event.SyntaxSuccess)
 
@@ -152,40 +125,9 @@ object ProgramModel:
 
   val MainFunId = "fun-main"
 
-  // TODO refactor to AddStmt, remove redundancy
   enum Request:
     case Delete(id: String)
     case AddStmt(stmt: Statement, afterId: String, blockId: String)
-    case AddDeclare(id: String, name: String, tpe: Type, afterId: String, blockId: String)
-    case AddAssign(id: String, afterId: String, blockId: String)
-    case AddOutput(id: String, afterId: String, blockId: String)
-    case AddInput(id: String, afterId: String, blockId: String)
-    case AddCall(id: String, afterId: String, blockId: String)
-    case AddIf(
-        id: String,
-        trueId: String,
-        falseId: String,
-        afterId: String,
-        blockId: String
-    )
-    case AddWhile(
-        id: String,
-        bodyId: String,
-        afterId: String,
-        blockId: String
-    )
-    case AddDoWhile(
-        id: String,
-        bodyId: String,
-        afterId: String,
-        blockId: String
-    )
-    case AddForLoop(
-        id: String,
-        bodyId: String,
-        afterId: String,
-        blockId: String
-    )
 
     case UpdateDeclare(
         id: String,
@@ -223,42 +165,6 @@ case class FunctionModel(
 
   def addStmt(req: AddStmt): FunctionModel =
     doInsert(req.afterId, req.stmt, req.blockId)
-
-  def addDeclare(req: AddDeclare): FunctionModel =
-    val newStat = Statement.Declare(req.id, req.name, req.tpe, None)
-    doInsert(req.afterId, newStat, req.blockId)
-
-  def addAssign(req: AddAssign): FunctionModel =
-    val newStat = Statement.Assign(req.id, "x", "19")
-    doInsert(req.afterId, newStat, req.blockId)
-
-  def addOutput(req: AddOutput): FunctionModel =
-    val newStat = Statement.Output(req.id, "\"output\"")
-    doInsert(req.afterId, newStat, req.blockId)
-
-  def addInput(req: AddInput): FunctionModel =
-    val newStat = Statement.Input(req.id, "x")
-    doInsert(req.afterId, newStat, req.blockId)
-
-  def addCall(req: AddCall): FunctionModel =
-    val newStat = Statement.Call(req.id, "fun1()")
-    doInsert(req.afterId, newStat, req.blockId)
-
-  def addIf(req: AddIf): FunctionModel =
-    val newStat = Statement.If(req.id, "true", Statement.Block(req.trueId), Statement.Block(req.falseId))
-    doInsert(req.afterId, newStat, req.blockId)
-
-  def addWhile(req: AddWhile): FunctionModel =
-    val newStat = Statement.While(req.id, "false", Statement.Block(req.bodyId))
-    doInsert(req.afterId, newStat, req.blockId)
-
-  def addDoWhile(req: AddDoWhile): FunctionModel =
-    val newStat = Statement.DoWhile(req.id, "false", Statement.Block(req.bodyId))
-    doInsert(req.afterId, newStat, req.blockId)
-
-  def addForLoop(req: AddForLoop): FunctionModel =
-    val newStat = Statement.ForLoop(req.id, "i", "0", "1", "10", Statement.Block(req.bodyId))
-    doInsert(req.afterId, newStat, req.blockId)
 
   def updateDeclare(req: UpdateDeclare): FunctionModel =
     var updatedStat: Statement.Declare = doFind(req.id).asInstanceOf[Statement.Declare]

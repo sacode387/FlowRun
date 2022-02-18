@@ -35,6 +35,3 @@ case class Program(
     functions: List[Function] = List.empty
 ) derives NativeConverter
 
-object AST:
-  def newId: String =
-    "id_" + UUID.randomUUID.toString.replaceAll("-", "_")

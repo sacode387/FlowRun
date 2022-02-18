@@ -110,55 +110,59 @@ class CtxMenu(programModel: ProgramModel, flowRunElements: FlowRunElements, flow
       (event: dom.MouseEvent) =>
         dom.window.navigator.clipboard.readText().`then` { stmtJson =>
           val newStmt = stmtJson.fromJson[Statement].duplicated
-          programModel.addStmt(Request.AddStmt(newStmt, afterId, blockId))
+          addStatement(newStmt)
         }
     )
 
     addDeclareButton.addEventListener(
       "click",
-      (event: dom.MouseEvent) =>
-        programModel.addDeclare(Request.AddDeclare(AST.newId, "x", Expression.Type.Integer, afterId, blockId))
+      (event: dom.MouseEvent) => addStatement(Statement.Declare(AST.newId, "x", Expression.Type.Integer, None))
     )
 
     addAssignButton.addEventListener(
       "click",
-      (event: dom.MouseEvent) => programModel.addAssign(Request.AddAssign(AST.newId, afterId, blockId))
+      (event: dom.MouseEvent) => addStatement(Statement.Assign(AST.newId, "x", "19"))
     )
 
     addInputButton.addEventListener(
       "click",
-      (event: dom.MouseEvent) => programModel.addInput(Request.AddInput(AST.newId, afterId, blockId))
+      (event: dom.MouseEvent) => addStatement(Statement.Input(AST.newId, "x"))
     )
 
     addOutputButton.addEventListener(
       "click",
-      (event: dom.MouseEvent) => programModel.addOutput(Request.AddOutput(AST.newId, afterId, blockId))
+      (event: dom.MouseEvent) => addStatement(Statement.Output(AST.newId, "\"output\""))
     )
 
     addCallButton.addEventListener(
       "click",
-      (event: dom.MouseEvent) => programModel.addCall(Request.AddCall(AST.newId, afterId, blockId))
+      (event: dom.MouseEvent) => addStatement(Statement.Call(AST.newId, "fun1()"))
     )
 
     addIfButton.addEventListener(
       "click",
-      (event: dom.MouseEvent) => programModel.addIf(Request.AddIf(AST.newId, AST.newId, AST.newId, afterId, blockId))
+      (event: dom.MouseEvent) =>
+        addStatement(Statement.If(AST.newId, "true", Statement.Block(AST.newId), Statement.Block(AST.newId)))
     )
 
     addWhileButton.addEventListener(
       "click",
-      (event: dom.MouseEvent) => programModel.addWhile(Request.AddWhile(AST.newId, AST.newId, afterId, blockId))
+      (event: dom.MouseEvent) => addStatement(Statement.While(AST.newId, "true", Statement.Block(AST.newId)))
     )
 
     addDoWhileButton.addEventListener(
       "click",
-      (event: dom.MouseEvent) => programModel.addDoWhile(Request.AddDoWhile(AST.newId, AST.newId, afterId, blockId))
+      (event: dom.MouseEvent) => addStatement(Statement.DoWhile(AST.newId, "true", Statement.Block(AST.newId)))
     )
 
     addForLoopButton.addEventListener(
       "click",
-      (event: dom.MouseEvent) => programModel.addForLoop(Request.AddForLoop(AST.newId, AST.newId, afterId, blockId))
+      (event: dom.MouseEvent) =>
+        addStatement(Statement.ForLoop(AST.newId, "i", "0", "1", "10", Statement.Block(AST.newId)))
     )
   }
+
+  private def addStatement(stmt: Statement): Unit =
+    programModel.addStmt(Request.AddStmt(stmt, afterId, blockId))
 
 }
