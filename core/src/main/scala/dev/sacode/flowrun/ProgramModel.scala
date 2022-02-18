@@ -69,35 +69,8 @@ class ProgramModel(
   def addStmt(req: AddStmt): Unit =
     update(_.addStmt(req), FlowRun.Event.StmtAdded)
 
-  def updateDeclare(req: UpdateDeclare): Unit =
-    update(_.updateDeclare(req), FlowRun.Event.SyntaxSuccess)
-
-  def updateAssign(req: UpdateAssign): Unit =
-    update(_.updateAssign(req), FlowRun.Event.SyntaxSuccess)
-
-  def updateOutput(req: UpdateOutput): Unit =
-    update(_.updateOutput(req), FlowRun.Event.SyntaxSuccess)
-
-  def updateInput(req: UpdateInput): Unit =
-    update(_.updateInput(req), FlowRun.Event.SyntaxSuccess)
-
-  def updateCall(req: UpdateCall): Unit =
-    update(_.updateCall(req), FlowRun.Event.SyntaxSuccess)
-
-  def updateReturn(req: UpdateReturn): Unit =
-    update(_.updateReturn(req), FlowRun.Event.SyntaxSuccess)
-
-  def updateIf(req: UpdateIf): Unit =
-    update(_.updateIf(req), FlowRun.Event.SyntaxSuccess)
-
-  def updateWhile(req: UpdateWhile): Unit =
-    update(_.updateWhile(req), FlowRun.Event.SyntaxSuccess)
-
-  def updateDoWhile(req: UpdateDoWhile): Unit =
-    update(_.updateDoWhile(req), FlowRun.Event.SyntaxSuccess)
-
-  def updateForLoop(req: UpdateForLoop): Unit =
-    update(_.updateForLoop(req), FlowRun.Event.SyntaxSuccess)
+  def updateStmt(req: UpdateStmt): Unit =
+    update(_.updateStmt(req), FlowRun.Event.SyntaxSuccess)
 
   def delete(req: Delete): Unit =
     update(_.delete(req), FlowRun.Event.StmtDeleted)
@@ -128,29 +101,7 @@ object ProgramModel:
   enum Request:
     case Delete(id: String)
     case AddStmt(stmt: Statement, afterId: String, blockId: String)
-    case UpdateStmt(stmt: Statement, afterId: String, blockId: String)
-
-    case UpdateDeclare(
-        id: String,
-        name: Option[String] = None,
-        tpe: Option[Type] = None,
-        expr: Option[Option[String]] = None
-    )
-    case UpdateAssign(id: String, name: Option[String] = None, expr: Option[String] = None)
-    case UpdateOutput(id: String, expr: String)
-    case UpdateInput(id: String, name: String)
-    case UpdateCall(id: String, expr: String)
-    case UpdateReturn(id: String, expr: Option[Option[String]] = None)
-    case UpdateIf(id: String, expr: String)
-    case UpdateWhile(id: String, expr: String)
-    case UpdateDoWhile(id: String, expr: String)
-    case UpdateForLoop(
-        id: String,
-        varName: Option[String] = None,
-        start: Option[String] = None,
-        incr: Option[String] = None,
-        end: Option[String] = None
-    )
+    case UpdateStmt(stmt: Statement)
     case UpdateFunction(
         id: String,
         name: Option[String] = None,
@@ -166,59 +117,9 @@ case class FunctionModel(
 
   def addStmt(req: AddStmt): FunctionModel =
     doInsert(req.afterId, req.stmt, req.blockId)
-
-  def updateDeclare(req: UpdateDeclare): FunctionModel =
-    var updatedStat: Statement.Declare = doFind(req.id).asInstanceOf[Statement.Declare]
-    req.name.foreach(n => updatedStat = updatedStat.copy(name = n))
-    req.tpe.foreach(t => updatedStat = updatedStat.copy(tpe = t))
-    req.expr.foreach(e => updatedStat = updatedStat.copy(initValue = e))
-    doUpdate(req.id, updatedStat)
-
-  def updateAssign(req: UpdateAssign): FunctionModel =
-    var updatedStat = doFind(req.id).asInstanceOf[Statement.Assign]
-    req.name.foreach(n => updatedStat = updatedStat.copy(name = n))
-    req.expr.foreach(e => updatedStat = updatedStat.copy(value = e))
-    doUpdate(req.id, updatedStat)
-
-  def updateOutput(req: UpdateOutput): FunctionModel =
-    val newStat = Statement.Output(req.id, req.expr)
-    doUpdate(req.id, newStat)
-
-  def updateInput(req: UpdateInput): FunctionModel =
-    val newStat = Statement.Input(req.id, req.name)
-    doUpdate(req.id, newStat)
-
-  def updateCall(req: UpdateCall): FunctionModel =
-    val newStat = Statement.Call(req.id, req.expr)
-    doUpdate(req.id, newStat)
-
-  def updateReturn(req: UpdateReturn): FunctionModel =
-    var updatedStat = doFind(req.id).asInstanceOf[Statement.Return]
-    req.expr.foreach(e => updatedStat = updatedStat.copy(maybeValue = e))
-    doUpdate(req.id, updatedStat)
-
-  def updateIf(req: UpdateIf): FunctionModel =
-    var updatedStat = doFind(req.id).asInstanceOf[Statement.If]
-    updatedStat = updatedStat.copy(condition = req.expr)
-    doUpdate(req.id, updatedStat)
-
-  def updateWhile(req: UpdateWhile): FunctionModel =
-    var updatedStat = doFind(req.id).asInstanceOf[Statement.While]
-    updatedStat = updatedStat.copy(condition = req.expr)
-    doUpdate(req.id, updatedStat)
-
-  def updateDoWhile(req: UpdateDoWhile): FunctionModel =
-    var updatedStat = doFind(req.id).asInstanceOf[Statement.DoWhile]
-    updatedStat = updatedStat.copy(condition = req.expr)
-    doUpdate(req.id, updatedStat)
-
-  def updateForLoop(req: UpdateForLoop): FunctionModel =
-    var updatedStat = doFind(req.id).asInstanceOf[Statement.ForLoop]
-    req.varName.foreach(n => updatedStat = updatedStat.copy(varName = n))
-    req.start.foreach(e => updatedStat = updatedStat.copy(start = e))
-    req.incr.foreach(e => updatedStat = updatedStat.copy(incr = e))
-    req.end.foreach(e => updatedStat = updatedStat.copy(end = e))
-    doUpdate(req.id, updatedStat)
+  
+  def updateStmt(req: UpdateStmt): FunctionModel =
+    doUpdate(req.stmt.id, req.stmt)
 
   def delete(req: Delete): FunctionModel =
     val newStats = delete(ast.statements, req.id)

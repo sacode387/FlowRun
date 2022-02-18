@@ -56,16 +56,20 @@ class StatementEditor(
       errorMsg match
         case None =>
           stmt match
-            case _: Statement.Declare =>
-              programModel.updateDeclare(Request.UpdateDeclare(stmtId, name = Some(newName)))
-            case _: Statement.Input =>
-              programModel.updateInput(Request.UpdateInput(stmtId, name = newName))
-            case _: Statement.Begin =>
+            case statement: Statement.Begin =>
               programModel.updateFunction(Request.UpdateFunction(stmtId, name = Some(newName)))
-            case _: Statement.Assign =>
-              programModel.updateAssign(Request.UpdateAssign(stmtId, name = Some(newName)))
-            case _: Statement.ForLoop =>
-              programModel.updateForLoop(Request.UpdateForLoop(stmtId, varName = Some(newName)))
+            case statement: Statement.Declare =>
+              val updatedStmt = statement.copy(name = newName)
+              programModel.updateStmt(Request.UpdateStmt(updatedStmt))
+            case statement: Statement.Input =>
+              val updatedStmt = statement.copy(name = newName)
+              programModel.updateStmt(Request.UpdateStmt(updatedStmt))
+            case statement: Statement.Assign =>
+              val updatedStmt = statement.copy(name = newName)
+              programModel.updateStmt(Request.UpdateStmt(updatedStmt))
+            case statement: Statement.ForLoop =>
+              val updatedStmt = statement.copy(varName = newName)
+              programModel.updateStmt(Request.UpdateStmt(updatedStmt))
             case _ => ()
         case Some(msg) =>
           flowrunChannel := FlowRun.Event.SyntaxError(msg)
@@ -89,8 +93,12 @@ class StatementEditor(
     typeSelectElem.onchange = { (e: dom.Event) =>
       val thisElem = e.target.asInstanceOf[dom.html.Select]
       val newType = Expression.Type.valueOf(thisElem.value)
-      if stmtType == "Declare" then programModel.updateDeclare(Request.UpdateDeclare(stmtId, tpe = Some(newType)))
-      else programModel.updateFunction(Request.UpdateFunction(stmtId, tpe = Some(newType)))
+      stmt match
+        case statement: Statement.Declare =>
+          val updatedStmt = statement.copy(tpe = newType)
+          programModel.updateStmt(Request.UpdateStmt(updatedStmt))
+        case _ =>
+          programModel.updateFunction(Request.UpdateFunction(stmtId, tpe = Some(newType)))
     }
 
     if Statement.hasTpe(stmt, programModel.currentFunction.tpe.toString) then
@@ -111,29 +119,46 @@ class StatementEditor(
       val maybeNewExpr = Try(parseExpr(stmtId, newExprText))
       maybeNewExpr match {
         case Failure(e) =>
-          if stmtType == "Declare" && newExprText.isEmpty then
-            programModel.updateDeclare(Request.UpdateDeclare(stmtId, expr = Some(None)))
-          else if stmtType == "Return" && newExprText.isEmpty then
-            programModel.updateReturn(Request.UpdateReturn(stmtId, expr = Some(None)))
-          else flowrunChannel := FlowRun.Event.SyntaxError(e.getMessage)
+          stmt match
+            case statement: Statement.Declare if newExprText.isEmpty =>
+              val updatedStmt = statement.copy(initValue = None)
+              programModel.updateStmt(Request.UpdateStmt(updatedStmt))
+            case statement: Statement.Return if newExprText.isEmpty =>
+              val updatedStmt = statement.copy(maybeValue = None)
+              programModel.updateStmt(Request.UpdateStmt(updatedStmt))
+            case _ =>
+              flowrunChannel := FlowRun.Event.SyntaxError(e.getMessage)
+
         case Success(_) =>
-          if stmtType == "Declare" then
-            programModel.updateDeclare(
-              Request.UpdateDeclare(stmtId, expr = Some(Some(newExprText)))
-            )
-          else if stmtType == "Assign" then
-            programModel.updateAssign(Request.UpdateAssign(stmtId, expr = Some(newExprText)))
-          else if stmtType == "If" then programModel.updateIf(Request.UpdateIf(stmtId, expr = newExprText))
-          else if stmtType == "While" then programModel.updateWhile(Request.UpdateWhile(stmtId, expr = newExprText))
-          else if stmtType == "DoWhile" then
-            programModel.updateDoWhile(Request.UpdateDoWhile(stmtId, expr = newExprText))
-          else if stmtType == "Call" // TODO validate expr is Call()
-          then programModel.updateCall(Request.UpdateCall(stmtId, expr = newExprText))
-          else if stmtType == "Return" then
-            programModel.updateReturn(Request.UpdateReturn(stmtId, expr = Some(Some(newExprText))))
-          else if stmtType == "ForLoop" then
-            programModel.updateForLoop(Request.UpdateForLoop(stmtId, start = Some(newExprText)))
-          else programModel.updateOutput(Request.UpdateOutput(stmtId, newExprText))
+          stmt match
+            case statement: Statement.Output =>
+              val updatedStmt = statement.copy(value = newExprText)
+              programModel.updateStmt(Request.UpdateStmt(updatedStmt))
+            case statement: Statement.Declare =>
+              val updatedStmt = statement.copy(initValue = Some(newExprText))
+              programModel.updateStmt(Request.UpdateStmt(updatedStmt))
+            case statement: Statement.Assign =>
+              val updatedStmt = statement.copy(value = newExprText)
+              programModel.updateStmt(Request.UpdateStmt(updatedStmt))
+            case statement: Statement.If =>
+              val updatedStmt = statement.copy(condition = newExprText)
+              programModel.updateStmt(Request.UpdateStmt(updatedStmt))
+            case statement: Statement.While =>
+              val updatedStmt = statement.copy(condition = newExprText)
+              programModel.updateStmt(Request.UpdateStmt(updatedStmt))
+            case statement: Statement.DoWhile =>
+              val updatedStmt = statement.copy(condition = newExprText)
+              programModel.updateStmt(Request.UpdateStmt(updatedStmt))
+            case statement: Statement.ForLoop =>
+              val updatedStmt = statement.copy(start = newExprText)
+              programModel.updateStmt(Request.UpdateStmt(updatedStmt))
+            case statement: Statement.Call =>
+              val updatedStmt = statement.copy(value = newExprText)
+              programModel.updateStmt(Request.UpdateStmt(updatedStmt))
+            case statement: Statement.Return =>
+              val updatedStmt = statement.copy(maybeValue = Some(newExprText))
+              programModel.updateStmt(Request.UpdateStmt(updatedStmt))
+            case _ => ()
       }
     }
 
@@ -146,9 +171,9 @@ class StatementEditor(
 
     // for loop additional inputs
     if stmtType == "ForLoop" then
-      val forLoop = stmt.asInstanceOf[Statement.ForLoop]
+      val statement = stmt.asInstanceOf[Statement.ForLoop]
       val toInputElem = flowRunElements.newInputText(exprInputSize)
-      toInputElem.value = forLoop.end
+      toInputElem.value = statement.end
       toInputElem.placeholder = "10"
       toInputElem.oninput = _ => {
         import scala.util.*
@@ -158,12 +183,13 @@ class StatementEditor(
           case Failure(e) =>
             flowrunChannel := FlowRun.Event.SyntaxError(e.getMessage)
           case Success(_) =>
-            programModel.updateForLoop(Request.UpdateForLoop(stmtId, end = Some(newExprText)))
+            val updatedStmt = statement.copy(end = newExprText)
+            programModel.updateStmt(Request.UpdateStmt(updatedStmt))
         }
       }
 
       val byInputElem = flowRunElements.newInputText(exprInputSize)
-      byInputElem.value = forLoop.incr
+      byInputElem.value = statement.incr
       byInputElem.placeholder = "11"
       byInputElem.oninput = _ => {
         import scala.util.*
@@ -173,7 +199,8 @@ class StatementEditor(
           case Failure(e) =>
             flowrunChannel := FlowRun.Event.SyntaxError(e.getMessage)
           case Success(_) =>
-            programModel.updateForLoop(Request.UpdateForLoop(stmtId, incr = Some(newExprText)))
+            val updatedStmt = statement.copy(incr = newExprText)
+            programModel.updateStmt(Request.UpdateStmt(updatedStmt))
         }
       }
 
