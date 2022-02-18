@@ -4,6 +4,7 @@ package eval
 import scala.concurrent.ExecutionContext
 import reactify.*
 import utest.*
+import dev.sacode.flowrun.ast.*
 
 object InterpreterTests extends TestSuite {
   given ExecutionContext = scala.concurrent.ExecutionContext.global
