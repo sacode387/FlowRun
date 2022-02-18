@@ -49,7 +49,7 @@ class StatementEditor(
     // name input
     val nameInputSize = if stmtType == "ForLoop" then 3 else 10
     val nameInputElem = flowRunElements.newInputText(nameInputSize)
-    nameInputElem.value = Statement.name(stmt, programModel.currentFunction.name)
+    nameInputElem.value = stmtName(stmt, programModel.currentFunction.name)
     nameInputElem.placeholder = if stmtType == "Begin" then "myFun" else "x"
     nameInputElem.oninput = { (_: dom.Event) =>
       val newName = nameInputElem.value.trim
@@ -77,7 +77,7 @@ class StatementEditor(
     }
 
     var filledName = false
-    val hasName = Statement.hasName(stmt, programModel.currentFunction.name)
+    val hasName = stmtHasName(stmt, programModel.currentFunction.name)
     if hasName then
       filledName = nameInputElem.value.nonEmpty
       stmtElems.appendChild(nameInputElem)
@@ -102,14 +102,14 @@ class StatementEditor(
           programModel.updateFunction(stmtId, tpe = Some(newType))
     }
 
-    if Statement.hasTpe(stmt, programModel.currentFunction.tpe.toString) then
-      typeSelectElem.value = Statement.tpe(stmt, programModel.currentFunction.tpe.toString) // select appropriate type
+    if hasTpe(stmt, programModel.currentFunction.tpe.toString) then
+      typeSelectElem.value = tpe(stmt, programModel.currentFunction.tpe.toString) // select appropriate type
       stmtElems.appendChild(typeSelectElem)
 
     // expression input
     val exprInputSize = if stmtType == "ForLoop" then 3 else 10
     val exprInputElem = flowRunElements.newInputText(exprInputSize)
-    exprInputElem.value = Statement.expr(stmt)
+    exprInputElem.value = expr(stmt)
     exprInputElem.placeholder =
       if stmtType == "Output" then "\"Hello!\""
       else if stmtType == "Call" then "myFun(x)"
@@ -163,7 +163,7 @@ class StatementEditor(
       }
     }
 
-    if Statement.hasExpr(stmt) then
+    if hasExpr(stmt) then
       if Set("Declare", "Assign", "ForLoop").contains(stmtType) then {
         stmtElems.appendChild(span(" = ").render)
       }
@@ -314,5 +314,46 @@ class StatementEditor(
 
   private def isQuotedStringLiteral(str: String) =
     str.length >= 2 && str.head == '"' && str.last == '"'
+
+  //// Statement utils
+  private def stmtName(stmt: Statement, funName: String): String =
+    getName(stmt, funName).getOrElse("")
+  private def stmtHasName(stmt: Statement, funName: String): Boolean =
+    getName(stmt, funName).isDefined
+
+  private def getName(stmt: Statement, funName: String): Option[String] = stmt match
+    case _: Begin                     => Some(funName)
+    case Declare(_, name, _, _)       => Some(name)
+    case Assign(_, name, _)           => Some(name)
+    case Input(_, name)               => Some(name)
+    case ForLoop(_, name, _, _, _, _) => Some(name)
+    case _                            => None
+
+  private def tpe(stmt: Statement, funTpe: String): String =
+    getTpe(stmt, funTpe).getOrElse("")
+  private def hasTpe(stmt: Statement, funTpe: String): Boolean =
+    getTpe(stmt, funTpe).isDefined
+
+  private def getTpe(stmt: Statement, funTpe: String): Option[String] = stmt match
+    case Declare(_, _, tpe, _) => Some(tpe.toString)
+    case _: Begin              => Some(funTpe)
+    case _                     => None
+
+  private def expr(stmt: Statement): String =
+    getExpr(stmt).getOrElse("")
+  private def hasExpr(stmt: Statement): Boolean =
+    getExpr(stmt).isDefined
+
+  private def getExpr(stmt: Statement): Option[String] = stmt match
+    case Declare(_, _, _, expr)        => Some(expr.getOrElse(""))
+    case Assign(_, _, expr)            => Some(expr)
+    case Output(_, expr)               => Some(expr)
+    case Call(_, expr)                 => Some(expr)
+    case Return(_, expr)               => Some(expr.getOrElse(""))
+    case If(_, expr, _, _)             => Some(expr)
+    case While(_, expr, _)             => Some(expr)
+    case DoWhile(_, expr, _)           => Some(expr)
+    case ForLoop(_, _, start, _, _, _) => Some(start)
+    case _                             => None
 
 }

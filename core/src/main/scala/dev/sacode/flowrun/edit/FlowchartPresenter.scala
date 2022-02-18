@@ -587,5 +587,40 @@ class FlowchartPresenter(
 
   def stmtSurplus(lbl: String): Int =
     (lbl.length / 19).toInt
+  
+  //// Statement utils
+  
+  // umm, this logic is a bit hard to explain
+  // best to concentrate on it visually
+  // look nested ifs
+  // depth is CRUCIAL
+  def widthFalse(stmt: Statement, depth: Int): Int = stmt match
+    case stmt: If =>
+      val wlMax = stmt.falseBlock.statements.map(s => widthFalse(s, depth + 1)).maxOption.getOrElse(0)
+      val wrMax = stmt.falseBlock.statements.map(s => widthTrue(s, depth + 1)).maxOption.getOrElse(0)
+      if depth == 0 then wrMax + 1 else wlMax + wrMax + 1
+    case stmt: While   => 1
+    case stmt: DoWhile => 0
+    case stmt: ForLoop => 1
+    case _             => 0
+
+  def widthTrue(statement: Statement, depth: Int): Int = statement match
+    case stmt: If =>
+      val wlMax = stmt.trueBlock.statements.map(s => widthFalse(s, depth + 1)).maxOption.getOrElse(0)
+      val wrMax = stmt.trueBlock.statements.map(s => widthTrue(s, depth + 1)).maxOption.getOrElse(0)
+      if depth == 0 then wlMax + 1 else wlMax + wrMax + 1
+    case stmt: While =>
+      val wlMax = stmt.body.statements.map(s => widthFalse(s, depth + 1)).maxOption.getOrElse(0)
+      val wrMax = stmt.body.statements.map(s => widthTrue(s, depth + 1)).maxOption.getOrElse(0)
+      if depth == 0 then wlMax + 1 else wlMax + wrMax + 1
+    case stmt: DoWhile =>
+      val wlMax = stmt.body.statements.map(s => widthFalse(s, depth + 1)).maxOption.getOrElse(0)
+      val wrMax = stmt.body.statements.map(s => widthTrue(s, depth + 1)).maxOption.getOrElse(0)
+      if depth == 0 then wrMax + 1 else wlMax + wrMax + 1
+    case stmt: ForLoop =>
+      val wlMax = stmt.body.statements.map(s => widthFalse(s, depth + 1)).maxOption.getOrElse(0)
+      val wrMax = stmt.body.statements.map(s => widthTrue(s, depth + 1)).maxOption.getOrElse(0)
+      if depth == 0 then wlMax + 1 else wlMax + wrMax + 1
+    case _ => 0
 
 }
