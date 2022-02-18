@@ -238,12 +238,11 @@ class FlowRun(
           case ("NODE", n) =>
             val idParts = n.id.split("#", -1)
             val nodeId = idParts(0)
-            val tpe = idParts(1)
             if !n.classList.contains("flowrun-not-selectable") then
               programModel.currentStmtId = Some(nodeId)
               outputArea.clearSyntax()
               flowchartPresenter.loadCurrentFunction() // to highlight new node..
-              statementEditor.edit(nodeId, tpe)
+              statementEditor.edit(nodeId)
           case _ =>
             flowrunChannel := FlowRun.Event.Deselected
         }

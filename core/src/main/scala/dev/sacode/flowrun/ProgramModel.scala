@@ -128,6 +128,7 @@ object ProgramModel:
   enum Request:
     case Delete(id: String)
     case AddStmt(stmt: Statement, afterId: String, blockId: String)
+    case UpdateStmt(stmt: Statement, afterId: String, blockId: String)
 
     case UpdateDeclare(
         id: String,
