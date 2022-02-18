@@ -59,7 +59,6 @@ class FlowchartPresenter(
       .renderDot(
         funDOT,
         (gr: js.Dynamic) => {
-          // select current node
           clearSelected()
           clearErrors()
           programModel.currentStmtId.foreach { id =>
@@ -80,7 +79,7 @@ class FlowchartPresenter(
     |  bgcolor="transparent"
     |
     |  node [penwidth=0.5 fontsize="12" shape="box" style="filled" fontcolor="white" fontname="Courier Prime"]
-    |  edge [penwidth=2 fontsize="12" color="#0A1931" arrowsize=0.8]
+    |  edge [penwidth=2 fontsize="10" color="#0A1931" arrowsize=0.8 fontname="Courier Prime"]
     |
     |  $nodesDOT
     |
@@ -341,10 +340,7 @@ class FlowchartPresenter(
 
     val statementsDot = stmts
       .zip(stmts.tail)
-      .map {
-        case (prev, next: Statement.DoWhile) => edgeDOT(prev, funId, s"end_${next.id}")
-        case (prev, next)                    => edgeDOT(prev, funId, next.id)
-      }
+      .map { (prev, next) => edgeDOT(prev, funId, next.firstNodeId) }
       .mkString("\n")
     statementsDot
   }
@@ -402,7 +398,7 @@ class FlowchartPresenter(
             .map { (prev, nextId) => edgeDOT(prev, block.id, nextId) }
             .mkString("\n")
 
-          val first = stmts.headOption.map(_.id).getOrElse(s"true_dummy_down_${stmt.id}")
+          val first = stmts.headOption.map(_.firstNodeId).getOrElse(s"true_dummy_down_${stmt.id}")
           val last = stmts.lastOption.map(_.id).getOrElse(stmt.id)
           (statementsDot, first, last)
         }
@@ -417,7 +413,7 @@ class FlowchartPresenter(
             .map { (prev, nextId) => edgeDOT(prev, block.id, nextId) }
             .mkString("\n")
 
-          val first = stmts.headOption.map(_.id).getOrElse(s"false_dummy_down_${stmt.id}")
+          val first = stmts.headOption.map(_.firstNodeId).getOrElse(s"false_dummy_down_${stmt.id}")
           val last = stmts.lastOption.map(_.id).getOrElse(stmt.id)
           (statementsDot, first, last)
         }
@@ -462,7 +458,7 @@ class FlowchartPresenter(
             .map { (prev, nextId) => edgeDOT(prev, block.id, nextId) }
             .mkString("\n")
 
-          val first = stmts.headOption.map(_.id).getOrElse(s"true_dummy_down_${stmt.id}")
+          val first = stmts.headOption.map(_.firstNodeId).getOrElse(s"true_dummy_down_${stmt.id}")
           val last = stmts.lastOption.map(_.id).getOrElse(stmt.id)
           (statementsDot, first, last)
         }
@@ -501,7 +497,7 @@ class FlowchartPresenter(
             .map { (prev, nextId) => edgeDOT(prev, block.id, nextId) }
             .mkString("\n")
 
-          val first = stmts.headOption.map(_.id).getOrElse(stmt.id)
+          val first = stmts.headOption.map(_.firstNodeId).getOrElse(stmt.id)
           val last = stmts.lastOption.map(_.id).getOrElse(stmt.id)
           (statementsDot, first, last)
         }
@@ -538,7 +534,7 @@ class FlowchartPresenter(
             .map { (prev, nextId) => edgeDOT(prev, block.id, nextId) }
             .mkString("\n")
 
-          val first = stmts.headOption.map(_.id).getOrElse(s"true_dummy_down_${stmt.id}")
+          val first = stmts.headOption.map(_.firstNodeId).getOrElse(s"true_dummy_down_${stmt.id}")
           val last = stmts.lastOption.map(_.id).getOrElse(stmt.id)
           (statementsDot, first, last)
         }
@@ -591,6 +587,6 @@ class FlowchartPresenter(
     s""" tailtooltip=" " edgetooltip=" " $maybeNoArrow """.trim
 
   def stmtSurplus(lbl: String): Int =
-    (lbl.length / 19).toInt 
+    (lbl.length / 19).toInt
 
 }

@@ -167,7 +167,8 @@ class FlowRun(
       outputArea.clearStmt()
       outputArea.clearSyntax()
       flowchartPresenter.clearSelected()
-    case ConfigChanged => // noop
+    case ConfigChanged =>
+    // noop
     case SvgMounted =>
       mountCallback.foreach { cb => cb(this) }
   }

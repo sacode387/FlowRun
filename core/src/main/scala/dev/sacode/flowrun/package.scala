@@ -48,6 +48,13 @@ extension (integer: Int) {
     " " * integer
 }
 
+extension (stmt: Statement) {
+  def firstNodeId: String = stmt match {
+    case _: Statement.DoWhile => s"end_${stmt.id}"
+    case _                    => stmt.id
+  }
+}
+
 object TypeUtils:
   import Expression.Type
 
@@ -70,7 +77,7 @@ object TypeUtils:
           s"Expected '$expectedType' but got '$valueType' for value $valueStr ",
           nodeId
         )
-    }      
+    }
   }
 
 object NameUtils:
