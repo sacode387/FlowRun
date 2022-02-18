@@ -7,7 +7,6 @@ import scalajs.js
 import org.scalajs.dom
 import scalatags.JsDom.all.{name => _, *}
 import reactify.*
-import dev.sacode.flowrun.ProgramModel.Request
 import dev.sacode.flowrun.parse.*
 import dev.sacode.flowrun.toastify.*
 import dev.sacode.flowrun.ast.*
@@ -57,19 +56,19 @@ class StatementEditor(
         case None =>
           stmt match
             case statement: Statement.Begin =>
-              programModel.updateFunction(Request.UpdateFunction(stmtId, name = Some(newName)))
+              programModel.updateFunction(stmtId, name = Some(newName))
             case statement: Statement.Declare =>
               val updatedStmt = statement.copy(name = newName)
-              programModel.updateStmt(Request.UpdateStmt(updatedStmt))
+              programModel.updateStmt(updatedStmt)
             case statement: Statement.Input =>
               val updatedStmt = statement.copy(name = newName)
-              programModel.updateStmt(Request.UpdateStmt(updatedStmt))
+              programModel.updateStmt(updatedStmt)
             case statement: Statement.Assign =>
               val updatedStmt = statement.copy(name = newName)
-              programModel.updateStmt(Request.UpdateStmt(updatedStmt))
+              programModel.updateStmt(updatedStmt)
             case statement: Statement.ForLoop =>
               val updatedStmt = statement.copy(varName = newName)
-              programModel.updateStmt(Request.UpdateStmt(updatedStmt))
+              programModel.updateStmt(updatedStmt)
             case _ => ()
         case Some(msg) =>
           flowrunChannel := FlowRun.Event.SyntaxError(msg)
@@ -96,9 +95,9 @@ class StatementEditor(
       stmt match
         case statement: Statement.Declare =>
           val updatedStmt = statement.copy(tpe = newType)
-          programModel.updateStmt(Request.UpdateStmt(updatedStmt))
+          programModel.updateStmt(updatedStmt)
         case _ =>
-          programModel.updateFunction(Request.UpdateFunction(stmtId, tpe = Some(newType)))
+          programModel.updateFunction(stmtId, tpe = Some(newType))
     }
 
     if Statement.hasTpe(stmt, programModel.currentFunction.tpe.toString) then
@@ -122,10 +121,10 @@ class StatementEditor(
           stmt match
             case statement: Statement.Declare if newExprText.isEmpty =>
               val updatedStmt = statement.copy(initValue = None)
-              programModel.updateStmt(Request.UpdateStmt(updatedStmt))
+              programModel.updateStmt(updatedStmt)
             case statement: Statement.Return if newExprText.isEmpty =>
               val updatedStmt = statement.copy(maybeValue = None)
-              programModel.updateStmt(Request.UpdateStmt(updatedStmt))
+              programModel.updateStmt(updatedStmt)
             case _ =>
               flowrunChannel := FlowRun.Event.SyntaxError(e.getMessage)
 
@@ -133,31 +132,31 @@ class StatementEditor(
           stmt match
             case statement: Statement.Output =>
               val updatedStmt = statement.copy(value = newExprText)
-              programModel.updateStmt(Request.UpdateStmt(updatedStmt))
+              programModel.updateStmt(updatedStmt)
             case statement: Statement.Declare =>
               val updatedStmt = statement.copy(initValue = Some(newExprText))
-              programModel.updateStmt(Request.UpdateStmt(updatedStmt))
+              programModel.updateStmt(updatedStmt)
             case statement: Statement.Assign =>
               val updatedStmt = statement.copy(value = newExprText)
-              programModel.updateStmt(Request.UpdateStmt(updatedStmt))
+              programModel.updateStmt(updatedStmt)
             case statement: Statement.If =>
               val updatedStmt = statement.copy(condition = newExprText)
-              programModel.updateStmt(Request.UpdateStmt(updatedStmt))
+              programModel.updateStmt(updatedStmt)
             case statement: Statement.While =>
               val updatedStmt = statement.copy(condition = newExprText)
-              programModel.updateStmt(Request.UpdateStmt(updatedStmt))
+              programModel.updateStmt(updatedStmt)
             case statement: Statement.DoWhile =>
               val updatedStmt = statement.copy(condition = newExprText)
-              programModel.updateStmt(Request.UpdateStmt(updatedStmt))
+              programModel.updateStmt(updatedStmt)
             case statement: Statement.ForLoop =>
               val updatedStmt = statement.copy(start = newExprText)
-              programModel.updateStmt(Request.UpdateStmt(updatedStmt))
+              programModel.updateStmt(updatedStmt)
             case statement: Statement.Call =>
               val updatedStmt = statement.copy(value = newExprText)
-              programModel.updateStmt(Request.UpdateStmt(updatedStmt))
+              programModel.updateStmt(updatedStmt)
             case statement: Statement.Return =>
               val updatedStmt = statement.copy(maybeValue = Some(newExprText))
-              programModel.updateStmt(Request.UpdateStmt(updatedStmt))
+              programModel.updateStmt(updatedStmt)
             case _ => ()
       }
     }
@@ -184,7 +183,7 @@ class StatementEditor(
             flowrunChannel := FlowRun.Event.SyntaxError(e.getMessage)
           case Success(_) =>
             val updatedStmt = statement.copy(end = newExprText)
-            programModel.updateStmt(Request.UpdateStmt(updatedStmt))
+            programModel.updateStmt(updatedStmt)
         }
       }
 
@@ -200,7 +199,7 @@ class StatementEditor(
             flowrunChannel := FlowRun.Event.SyntaxError(e.getMessage)
           case Success(_) =>
             val updatedStmt = statement.copy(incr = newExprText)
-            programModel.updateStmt(Request.UpdateStmt(updatedStmt))
+            programModel.updateStmt(updatedStmt)
         }
       }
 
@@ -228,7 +227,7 @@ class StatementEditor(
           div(id := newParam.id, cls := "flowrun-param-inputs")(paramNameInput, paramTpeInput, paramDeleteBtn).render
         )
         paramNameInput.focus()
-        programModel.updateFunction(Request.UpdateFunction(stmtId, parameters = Some(newParams)))
+        programModel.updateFunction(stmtId, parameters = Some(newParams))
       }
 
       getParams().foreach { param =>
@@ -271,7 +270,7 @@ class StatementEditor(
         if p.id == param.id then p.copy(name = newName) else p
       }
       val errorMsg: Option[String] = NameUtils.validateIdentifier(newName)
-      if errorMsg.isEmpty then programModel.updateFunction(Request.UpdateFunction(stmtId, parameters = Some(newParams)))
+      if errorMsg.isEmpty then programModel.updateFunction(stmtId, parameters = Some(newParams))
       else flowrunChannel := FlowRun.Event.SyntaxError(errorMsg.get)
     }
     paramNameInput
@@ -292,7 +291,7 @@ class StatementEditor(
       val newParams = params.map { p =>
         if p.id == param.id then p.copy(tpe = Expression.Type.valueOf(paramTpeInput.value)) else p
       }
-      programModel.updateFunction(Request.UpdateFunction(stmtId, parameters = Some(newParams)))
+      programModel.updateFunction(stmtId, parameters = Some(newParams))
     }
     paramTpeInput
   }
@@ -305,7 +304,7 @@ class StatementEditor(
     paramNameInput.onclick = _ => {
       val params = getParams()
       val newParams = params.filterNot(_.id == param.id)
-      programModel.updateFunction(Request.UpdateFunction(stmtId, parameters = Some(newParams)))
+      programModel.updateFunction(stmtId, parameters = Some(newParams))
       dom.window.document.getElementById(param.id).remove()
     }
     paramNameInput

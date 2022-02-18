@@ -7,7 +7,7 @@ class ProgramModel(
     initAst: Program,
     flowrunChannel: Channel[FlowRun.Event]
 ) {
-  import ProgramModel.*, Request.*
+  import ProgramModel.*
 
   var ast = initAst
 
@@ -29,7 +29,7 @@ class ProgramModel(
     flowrunChannel := FlowRun.Event.Deselected
     flowrunChannel := FlowRun.Event.FunctionUpdated
 
-  def addNewFunction(): Unit =
+  def addFunction(): Unit =
     val lastFunNum = ast.functions
       .map(_.name.substring(3))
       .flatMap(_.toIntOption)
@@ -50,13 +50,18 @@ class ProgramModel(
     flowrunChannel := FlowRun.Event.Deselected
     flowrunChannel := FlowRun.Event.FunctionUpdated
 
-  def updateFunction(req: UpdateFunction) =
+  def updateFunction(
+      id: String,
+      name: Option[String] = None,
+      tpe: Option[Expression.Type] = None,
+      parameters: Option[List[Function.Parameter]] = None
+  ) =
     val newFunctions = ast.functions.map { f =>
       if f.id == currentFunction.id then
         var updatedFun = f
-        req.name.foreach(n => updatedFun = updatedFun.copy(name = n))
-        req.tpe.foreach(t => updatedFun = updatedFun.copy(tpe = t))
-        req.parameters.foreach { params =>
+        name.foreach(n => updatedFun = updatedFun.copy(name = n))
+        tpe.foreach(t => updatedFun = updatedFun.copy(tpe = t))
+        parameters.foreach { params =>
           updatedFun = updatedFun.copy(parameters = params)
         }
         updatedFun
@@ -66,14 +71,14 @@ class ProgramModel(
     flowrunChannel := FlowRun.Event.FunctionUpdated
 
   /* per-function */
-  def addStmt(req: AddStmt): Unit =
-    update(_.addStmt(req), FlowRun.Event.StmtAdded)
+  def addStmt(stmt: Statement, afterId: String, blockId: String): Unit =
+    update(_.addStmt(stmt, afterId, blockId), FlowRun.Event.StmtAdded)
 
-  def updateStmt(req: UpdateStmt): Unit =
-    update(_.updateStmt(req), FlowRun.Event.SyntaxSuccess)
+  def updateStmt(stmt: Statement): Unit =
+    update(_.updateStmt(stmt), FlowRun.Event.SyntaxSuccess)
 
-  def delete(req: Delete): Unit =
-    update(_.delete(req), FlowRun.Event.StmtDeleted)
+  def delete(id: String): Unit =
+    update(_.delete(id), FlowRun.Event.StmtDeleted)
 
   def findStatement(stmtId: String): Statement =
     FunctionModel(currentFunction).doFind(stmtId)
@@ -94,35 +99,21 @@ class ProgramModel(
 }
 
 object ProgramModel:
-  import dev.sacode.flowrun.ast.Expression.Type
-
   val MainFunId = "fun-main"
-
-  enum Request:
-    case Delete(id: String)
-    case AddStmt(stmt: Statement, afterId: String, blockId: String)
-    case UpdateStmt(stmt: Statement)
-    case UpdateFunction(
-        id: String,
-        name: Option[String] = None,
-        tpe: Option[Type] = None,
-        parameters: Option[List[Function.Parameter]] = None
-    )
 end ProgramModel
 
 case class FunctionModel(
     ast: Function
 ) {
-  import ProgramModel.Request.*
 
-  def addStmt(req: AddStmt): FunctionModel =
-    doInsert(req.afterId, req.stmt, req.blockId)
-  
-  def updateStmt(req: UpdateStmt): FunctionModel =
-    doUpdate(req.stmt.id, req.stmt)
+  def addStmt(stmt: Statement, afterId: String, blockId: String): FunctionModel =
+    doInsert(afterId, stmt, blockId)
 
-  def delete(req: Delete): FunctionModel =
-    val newStats = delete(ast.statements, req.id)
+  def updateStmt(stmt: Statement): FunctionModel =
+    doUpdate(stmt.id, stmt)
+
+  def delete(id: String): FunctionModel =
+    val newStats = delete(ast.statements, id)
     this.copy(ast = ast.copy(statements = newStats))
 
   /* HELPERS */

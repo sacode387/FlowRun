@@ -228,7 +228,7 @@ class FlowRun(
   }
 
   private def attachEditListeners(): Unit = {
-    flowRunElements.addFunButton.onclick = _ => programModel.addNewFunction()
+    flowRunElements.addFunButton.onclick = _ => programModel.addFunction()
 
     flowRunElements.drawArea.addEventListener(
       "click",

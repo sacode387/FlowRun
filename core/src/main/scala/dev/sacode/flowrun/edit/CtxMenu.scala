@@ -4,7 +4,6 @@ import org.scalajs.dom
 import reactify.*
 import org.getshaka.nativeconverter.fromJson
 import dev.sacode.flowrun.ProgramModel
-import dev.sacode.flowrun.ProgramModel.Request
 import dev.sacode.flowrun.FlowRunElements
 import dev.sacode.flowrun.FlowRun
 import dev.sacode.flowrun.ast.*
@@ -101,7 +100,7 @@ class CtxMenu(programModel: ProgramModel, flowRunElements: FlowRunElements, flow
 
     deleteButton.addEventListener(
       "click",
-      (event: dom.MouseEvent) => programModel.delete(Request.Delete(nodeId))
+      (event: dom.MouseEvent) => programModel.delete(nodeId)
     )
 
     // edge buttons
@@ -163,6 +162,6 @@ class CtxMenu(programModel: ProgramModel, flowRunElements: FlowRunElements, flow
   }
 
   private def addStatement(stmt: Statement): Unit =
-    programModel.addStmt(Request.AddStmt(stmt, afterId, blockId))
+    programModel.addStmt(stmt, afterId, blockId)
 
 }
