@@ -30,7 +30,7 @@ class StatementEditor(
 
     // skip Begin if main function
     if nodeType == "Begin" && programModel.currentFunction.isMain then
-      Toastify(ToastifyOptions("Begin is not editable.", Color.yellow)).showToast()
+      toastify.Toastify(ToastifyOptions("Begin is not editable.", Color.yellow)).showToast()
       return
 
     // skip Return if function doesn't return anything
