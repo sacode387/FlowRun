@@ -1,6 +1,5 @@
 package dev.sacode.flowrun.ast
 
-
 import org.getshaka.nativeconverter.NativeConverter
 import dev.sacode.flowrun.eval.Interpreter.State
 
@@ -24,8 +23,7 @@ object Statement:
       override val id: String,
       name: String,
       tpe: Expression.Type,
-      initValue: Option[String],
-      
+      initValue: Option[String]
   ) extends Statement(id):
     override def duplicated: Declare = copy(id = AST.newId)
     def label =

@@ -3,7 +3,6 @@ package dev.sacode.flowrun.ast
 import java.util.UUID
 import org.getshaka.nativeconverter.NativeConverter
 
-
 case class Function(
     rawId: String,
     name: String,
@@ -34,4 +33,3 @@ case class Program(
     main: Function,
     functions: List[Function] = List.empty
 ) derives NativeConverter
-

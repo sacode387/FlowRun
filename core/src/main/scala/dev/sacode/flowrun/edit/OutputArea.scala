@@ -77,7 +77,7 @@ class OutputArea(
         flowRunElements.runtimeOutput.appendChild(
           div(samp(s"You entered $name = $printVal")).render
         )
-      }        
+      }
     }
 
     valueInputElem.focus()

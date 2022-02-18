@@ -31,7 +31,7 @@ object ToastifyOptions {
         position = position,
         style = js.Dynamic.literal(
           background = color.fill,
-          color = color.font,
+          color = color.font
         ),
         offset = js.Dynamic.literal(
           y = "5rem"

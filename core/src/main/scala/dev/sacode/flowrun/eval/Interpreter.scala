@@ -82,7 +82,11 @@ class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[FlowRun.Ev
         None
       case e: (NumberFormatException | IllegalArgumentException) =>
         state = State.FINISHED_FAILED
-        flowrunChannel := FlowRun.Event.EvalError(nodeId, s"You entered invalid ${sym.tpe}: ${inputValue}", symTab.currentScope.id)
+        flowrunChannel := FlowRun.Event.EvalError(
+          nodeId,
+          s"You entered invalid ${sym.tpe}: ${inputValue}",
+          symTab.currentScope.id
+        )
         None
     }
 

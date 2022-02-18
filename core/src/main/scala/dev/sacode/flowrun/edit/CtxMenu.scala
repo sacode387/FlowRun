@@ -140,8 +140,7 @@ class CtxMenu(programModel: ProgramModel, flowRunElements: FlowRunElements, flow
 
     addIfButton.addEventListener(
       "click",
-      (event: dom.MouseEvent) =>
-        addStatement(If(AST.newId, "true", Block(AST.newId), Block(AST.newId)))
+      (event: dom.MouseEvent) => addStatement(If(AST.newId, "true", Block(AST.newId), Block(AST.newId)))
     )
 
     addWhileButton.addEventListener(
@@ -156,8 +155,7 @@ class CtxMenu(programModel: ProgramModel, flowRunElements: FlowRunElements, flow
 
     addForLoopButton.addEventListener(
       "click",
-      (event: dom.MouseEvent) =>
-        addStatement(ForLoop(AST.newId, "i", "0", "1", "10", Block(AST.newId)))
+      (event: dom.MouseEvent) => addStatement(ForLoop(AST.newId, "i", "0", "1", "10", Block(AST.newId)))
     )
   }
 
