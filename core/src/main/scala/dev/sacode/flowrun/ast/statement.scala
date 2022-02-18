@@ -21,7 +21,7 @@ object Statement:
   case class Begin(override val id: String) extends Statement(id):
     def duplicated: Statement = this
     override def label = "Begin"
-  
+
   case class Return(
       override val id: String,
       maybeValue: Option[String] = None

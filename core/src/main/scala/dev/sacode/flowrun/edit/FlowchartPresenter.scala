@@ -176,13 +176,10 @@ class FlowchartPresenter(
         val lbl = stmt.label.toGraphvizLbl
         val ifEndId = s"end_${stmt.id}"
 
-        // when text is longer we need to move edges also
-        val surplus = stmtSurplus(lbl)
-
         val (trueNodeDOTs, trueOffsetX) = locally {
           val block = stmt.trueBlock
           val stmts = block.statements
-          val x = posX + widthTrue(stmt, 0) + surplus
+          val x = posX + widthTrue(stmt, 0)
           val dots = stmts.foldLeft((List.empty[String], posY + 1)) { case ((prevDots, lastY), s) =>
             val dot = nodeDOT(s, block.id, x, lastY)
             (prevDots.appended(dot._1), dot._2 + 1)
@@ -193,7 +190,7 @@ class FlowchartPresenter(
         val (falseNodeDOTs, falseOffsetX) = locally {
           val block = stmt.falseBlock
           val stmts = block.statements
-          val x = posX - widthFalse(stmt, 0) - surplus
+          val x = posX - widthFalse(stmt, 0)
           val dots = stmts.foldLeft((List.empty[String], posY + 1)) { case ((prevDots, lastY), s) =>
             val dot = nodeDOT(s, block.id, x, lastY)
             (prevDots.appended(dot._1), dot._2 + 1)
@@ -225,12 +222,10 @@ class FlowchartPresenter(
       case stmt: While =>
         val lbl = stmt.label.toGraphvizLbl
 
-        val surplus = stmtSurplus(lbl)
-
         val (blockDOTs, trueOffsetX) = locally {
           val block = stmt.body
           val stmts = block.statements
-          val x = posX + widthTrue(stmt, 0) + surplus
+          val x = posX + widthTrue(stmt, 0)
           val dots = stmts.foldLeft((List.empty[String], posY + 1)) { case ((prevDots, lastY), s) =>
             val dot = nodeDOT(s, block.id, x, lastY)
             (prevDots.appended(dot._1), dot._2 + 1)
@@ -238,7 +233,7 @@ class FlowchartPresenter(
           (dots, x)
         }
 
-        val falseOffsetX = posX - 1 - surplus
+        val falseOffsetX = posX - 1
 
         val maxBranchY = blockDOTs._2
 
@@ -261,7 +256,6 @@ class FlowchartPresenter(
 
       case stmt: DoWhile =>
         val lbl = stmt.label.toGraphvizLbl
-        val surplus = stmtSurplus(lbl)
         val doWhileEndId = s"end_${stmt.id}"
 
         val blockDOTs = locally {
@@ -274,7 +268,7 @@ class FlowchartPresenter(
           dots
         }
 
-        val trueOffsetX = posX + widthTrue(stmt, 0) + surplus
+        val trueOffsetX = posX + widthTrue(stmt, 0)
 
         val maxBranchY = blockDOTs._2
 
@@ -295,12 +289,11 @@ class FlowchartPresenter(
 
       case stmt: ForLoop =>
         val lbl = stmt.label.toGraphvizLbl
-        val surplus = stmtSurplus(lbl)
 
         val (blockDOTs, trueOffsetX) = locally {
           val block = stmt.body
           val stmts = block.statements
-          val x = posX + widthTrue(stmt, 0) + surplus
+          val x = posX + widthTrue(stmt, 0)
           val dots = stmts.foldLeft((List.empty[String], posY + 1)) { case ((prevDots, lastY), s) =>
             val dot = nodeDOT(s, block.id, x, lastY)
             (prevDots.appended(dot._1), dot._2 + 1)
@@ -308,7 +301,7 @@ class FlowchartPresenter(
           (dots, x)
         }
 
-        val falseOffsetX = posX - 1 - surplus
+        val falseOffsetX = posX - 1
 
         val maxBranchY = blockDOTs._2
 
@@ -585,42 +578,42 @@ class FlowchartPresenter(
     val maybeNoArrow = Option.when(nextStmtId.contains("dummy"))("arrowhead=none").getOrElse("")
     s""" tailtooltip=" " edgetooltip=" " $maybeNoArrow """.trim
 
-  def stmtSurplus(lbl: String): Int =
-    (lbl.length / 19).toInt
-  
   //// Statement utils
-  
+
   // umm, this logic is a bit hard to explain
   // best to concentrate on it visually
   // look nested ifs
   // depth is CRUCIAL
-  def widthFalse(stmt: Statement, depth: Int): Int = stmt match
+  private def widthFalse(stmt: Statement, depth: Int): Int = stmt match
     case stmt: If =>
       val wlMax = stmt.falseBlock.statements.map(s => widthFalse(s, depth + 1)).maxOption.getOrElse(0)
       val wrMax = stmt.falseBlock.statements.map(s => widthTrue(s, depth + 1)).maxOption.getOrElse(0)
-      if depth == 0 then wrMax + 1 else wlMax + wrMax + 1
-    case stmt: While   => 1
-    case stmt: DoWhile => 0
-    case stmt: ForLoop => 1
-    case _             => 0
+      width(stmt) + 1 + (if depth == 0 then wrMax else wlMax + wrMax)
+    case stmt: While   => width(stmt) + 1
+    case stmt: DoWhile => width(stmt)
+    case stmt: ForLoop => width(stmt) + 1
+    case stmt          => width(stmt)
 
-  def widthTrue(statement: Statement, depth: Int): Int = statement match
+  private def widthTrue(statement: Statement, depth: Int): Int = statement match
     case stmt: If =>
       val wlMax = stmt.trueBlock.statements.map(s => widthFalse(s, depth + 1)).maxOption.getOrElse(0)
       val wrMax = stmt.trueBlock.statements.map(s => widthTrue(s, depth + 1)).maxOption.getOrElse(0)
-      if depth == 0 then wlMax + 1 else wlMax + wrMax + 1
+      width(stmt) + 1 + (if depth == 0 then wlMax else wlMax + wrMax)
     case stmt: While =>
       val wlMax = stmt.body.statements.map(s => widthFalse(s, depth + 1)).maxOption.getOrElse(0)
       val wrMax = stmt.body.statements.map(s => widthTrue(s, depth + 1)).maxOption.getOrElse(0)
-      if depth == 0 then wlMax + 1 else wlMax + wrMax + 1
+      width(stmt) + 1 + (if depth == 0 then wlMax else wlMax + wrMax)
     case stmt: DoWhile =>
       val wlMax = stmt.body.statements.map(s => widthFalse(s, depth + 1)).maxOption.getOrElse(0)
       val wrMax = stmt.body.statements.map(s => widthTrue(s, depth + 1)).maxOption.getOrElse(0)
-      if depth == 0 then wrMax + 1 else wlMax + wrMax + 1
+      width(stmt) + 1 + (if depth == 0 then wrMax else wlMax + wrMax)
     case stmt: ForLoop =>
       val wlMax = stmt.body.statements.map(s => widthFalse(s, depth + 1)).maxOption.getOrElse(0)
       val wrMax = stmt.body.statements.map(s => widthTrue(s, depth + 1)).maxOption.getOrElse(0)
-      if depth == 0 then wlMax + 1 else wlMax + wrMax + 1
-    case _ => 0
+      width(stmt) + 1 + (if depth == 0 then wlMax else wlMax + wrMax)
+    case stmt => width(stmt)
+
+  private def width(stmt: Statement): Int =
+    (stmt.label.toGraphvizLbl.length.toDouble / 19).floor.toInt
 
 }
