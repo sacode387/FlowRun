@@ -20,6 +20,8 @@ class FlowchartPresenter(
     colorScheme: ColorScheme = ColorScheme.default
 ) {
 
+  private val xIncrement = 120
+  private val yIncrement = 90
   private val PxInInch = 96
 
   private val graphviz = d3
@@ -180,7 +182,7 @@ class FlowchartPresenter(
         val (trueNodeDOTs, trueOffsetX) = locally {
           val block = stmt.trueBlock
           val stmts = block.statements
-          val x = posX + widthRight(stmt, 0) + surplus
+          val x = posX + widthTrue(stmt, 0) + surplus
           val dots = stmts.foldLeft((List.empty[String], posY + 1)) { case ((prevDots, lastY), s) =>
             val dot = nodeDOT(s, block.id, x, lastY)
             (prevDots.appended(dot._1), dot._2 + 1)
@@ -191,7 +193,7 @@ class FlowchartPresenter(
         val (falseNodeDOTs, falseOffsetX) = locally {
           val block = stmt.falseBlock
           val stmts = block.statements
-          val x = posX - widthLeft(stmt, 0) - surplus
+          val x = posX - widthFalse(stmt, 0) - surplus
           val dots = stmts.foldLeft((List.empty[String], posY + 1)) { case ((prevDots, lastY), s) =>
             val dot = nodeDOT(s, block.id, x, lastY)
             (prevDots.appended(dot._1), dot._2 + 1)
@@ -228,7 +230,7 @@ class FlowchartPresenter(
         val (blockDOTs, trueOffsetX) = locally {
           val block = stmt.body
           val stmts = block.statements
-          val x = posX + widthRight(stmt, 0) + surplus
+          val x = posX + widthTrue(stmt, 0) + surplus
           val dots = stmts.foldLeft((List.empty[String], posY + 1)) { case ((prevDots, lastY), s) =>
             val dot = nodeDOT(s, block.id, x, lastY)
             (prevDots.appended(dot._1), dot._2 + 1)
@@ -272,7 +274,7 @@ class FlowchartPresenter(
           dots
         }
 
-        val trueOffsetX = posX + widthRight(stmt, 0) + surplus
+        val trueOffsetX = posX + widthTrue(stmt, 0) + surplus
 
         val maxBranchY = blockDOTs._2
 
@@ -298,7 +300,7 @@ class FlowchartPresenter(
         val (blockDOTs, trueOffsetX) = locally {
           val block = stmt.body
           val stmts = block.statements
-          val x = posX + widthRight(stmt, 0) + surplus
+          val x = posX + widthTrue(stmt, 0) + surplus
           val dots = stmts.foldLeft((List.empty[String], posY + 1)) { case ((prevDots, lastY), s) =>
             val dot = nodeDOT(s, block.id, x, lastY)
             (prevDots.appended(dot._1), dot._2 + 1)
@@ -504,7 +506,7 @@ class FlowchartPresenter(
             |$trueEdgeDOTs
             |
             |## TRUE
-            |${stmt.id}:e -> $trueDummyDownId [${edgeAttrs(trueDummyDownId)} taillabel="true" fontcolor="forestgreen"labelangle=90]
+            |${stmt.id}:e -> $trueDummyDownId [${edgeAttrs(trueDummyDownId)} taillabel="true" fontcolor="forestgreen" labelangle=90]
             |$trueDummyDownId -> $trueDummyUpId [${edgeAttrs(trueDummyUpId)}]
             |$trueDummyUpId -> ${doWhileEndId}:e [ ${edgeAttrs(stmt.id)}]
             |
@@ -564,8 +566,8 @@ class FlowchartPresenter(
   // https://stackoverflow.com/questions/55905661/how-to-force-neato-engine-to-reverse-node-order
   // it's easier here to have (0,0) at top-center (we just flip y axis that is..)
   private def pos(x: Int, y: Int, yOff: Int = 0): String =
-    val xPx: Double = if x == 0 then 0 else px2Inch(x * 120)
-    val yPx = if y == 0 then 0 else px2Inch(y * 90 + yOff)
+    val xPx: Double = if x == 0 then 0 else px2Inch(x * xIncrement)
+    val yPx = if y == 0 then 0 else px2Inch(y * yIncrement + yOff)
     val realY = 10_000 - yPx
     s""" pos="$xPx,$realY!" """.trim
 

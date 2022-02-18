@@ -2,6 +2,7 @@ package dev.sacode.flowrun.ast
 
 import org.getshaka.nativeconverter.NativeConverter
 import dev.sacode.flowrun.eval.Interpreter.State
+import dev.sacode.flowrun.xIncrement
 
 ///////////////////////////////////////////////
 /* AST, of visual statements.
@@ -10,14 +11,25 @@ import dev.sacode.flowrun.eval.Interpreter.State
  */
 
 sealed trait Statement(val id: String) derives NativeConverter:
-  def duplicated: Statement = this
+  def duplicated: Statement
+
   def label: String
   def verboseLabel: String = label
+
+end Statement
 
 object Statement:
 
   case class Begin(override val id: String) extends Statement(id):
-    def label = "Begin"
+    def duplicated: Statement = this
+    override def label = "Begin"
+  
+  case class Return(
+      override val id: String,
+      maybeValue: Option[String] = None
+  ) extends Statement(id):
+    override def duplicated = copy(id = AST.newId)
+    override def label = maybeValue.map(e => s"return $e").getOrElse("return")
 
   case class Declare(
       override val id: String,
@@ -26,7 +38,7 @@ object Statement:
       initValue: Option[String]
   ) extends Statement(id):
     override def duplicated: Declare = copy(id = AST.newId)
-    def label =
+    override def label =
       val maybeExprText = initValue.map(e => s" = $e").getOrElse("")
       s"$name$maybeExprText"
     override def verboseLabel =
@@ -35,30 +47,23 @@ object Statement:
 
   case class Assign(override val id: String, name: String, value: String) extends Statement(id):
     override def duplicated: Assign = copy(id = AST.newId)
-    def label = s"$name = $value"
+    override def label = s"$name = $value"
 
   case class Call(override val id: String, value: String) extends Statement(id):
     override def duplicated: Call = copy(id = AST.newId)
-    def label = value
+    override def label = value
 
   case class Input(override val id: String, name: String) extends Statement(id):
     override def duplicated: Input = copy(id = AST.newId)
-    def label = name
+    override def label = name
 
   case class Output(override val id: String, value: String) extends Statement(id):
     override def duplicated: Output = copy(id = AST.newId)
-    def label = value
+    override def label = value
 
   case class Block(override val id: String, statements: List[Statement] = List.empty) extends Statement(id):
     override def duplicated: Block = copy(id = AST.newId, statements = statements.map(_.duplicated))
-    def label = ""
-
-  case class Return(
-      override val id: String,
-      maybeValue: Option[String] = None
-  ) extends Statement(id):
-    override def duplicated = copy(id = AST.newId)
-    def label = maybeValue.map(e => s"return $e").getOrElse("return")
+    override def label = ""
 
   case class If(
       override val id: String,
@@ -67,7 +72,7 @@ object Statement:
       falseBlock: Block
   ) extends Statement(id):
     override def duplicated = copy(id = AST.newId, trueBlock = trueBlock.duplicated, falseBlock = falseBlock.duplicated)
-    def label = condition.toString
+    override def label = condition.toString
 
   case class While(
       override val id: String,
@@ -75,7 +80,7 @@ object Statement:
       body: Block
   ) extends Statement(id):
     override def duplicated = copy(id = AST.newId, body = body.duplicated)
-    def label = condition.toString
+    override def label = condition.toString
 
   case class DoWhile(
       override val id: String,
@@ -83,7 +88,7 @@ object Statement:
       body: Block
   ) extends Statement(id):
     override def duplicated = copy(id = AST.newId, body = body.duplicated)
-    def label = condition.toString
+    override def label = condition.toString
 
   case class ForLoop(
       override val id: String,
@@ -94,7 +99,7 @@ object Statement:
       body: Block
   ) extends Statement(id):
     override def duplicated = copy(id = AST.newId, body = body.duplicated)
-    def label = s"$varName = $start to $end by $incr"
+    override def label = s"$varName = $start to $end by $incr"
 
   // utils
   def name(stmt: Statement, funName: String): String =
@@ -140,32 +145,33 @@ object Statement:
   // umm, this logic is a bit hard to explain
   // best to concentrate on it visually
   // look nested ifs
-  def widthLeft(stmt: Statement, depth: Int): Int = stmt match
+  // depth is CRUCIAL
+  def widthFalse(stmt: Statement, depth: Int): Int = stmt match
     case stmt: If =>
-      val wlMax = stmt.falseBlock.statements.map(s => widthLeft(s, depth + 1)).maxOption.getOrElse(0)
-      val wrMax = stmt.falseBlock.statements.map(s => widthRight(s, depth + 1)).maxOption.getOrElse(0)
+      val wlMax = stmt.falseBlock.statements.map(s => widthFalse(s, depth + 1)).maxOption.getOrElse(0)
+      val wrMax = stmt.falseBlock.statements.map(s => widthTrue(s, depth + 1)).maxOption.getOrElse(0)
       if depth == 0 then wrMax + 1 else wlMax + wrMax + 1
     case stmt: While   => 1
     case stmt: DoWhile => 0
     case stmt: ForLoop => 1
     case _             => 0
 
-  def widthRight(statement: Statement, depth: Int): Int = statement match
+  def widthTrue(statement: Statement, depth: Int): Int = statement match
     case stmt: If =>
-      val wlMax = stmt.trueBlock.statements.map(s => widthLeft(s, depth + 1)).maxOption.getOrElse(0)
-      val wrMax = stmt.trueBlock.statements.map(s => widthRight(s, depth + 1)).maxOption.getOrElse(0)
+      val wlMax = stmt.trueBlock.statements.map(s => widthFalse(s, depth + 1)).maxOption.getOrElse(0)
+      val wrMax = stmt.trueBlock.statements.map(s => widthTrue(s, depth + 1)).maxOption.getOrElse(0)
       if depth == 0 then wlMax + 1 else wlMax + wrMax + 1
     case stmt: While =>
-      val wlMax = stmt.body.statements.map(s => widthLeft(s, depth + 1)).maxOption.getOrElse(0)
-      val wrMax = stmt.body.statements.map(s => widthRight(s, depth + 1)).maxOption.getOrElse(0)
+      val wlMax = stmt.body.statements.map(s => widthFalse(s, depth + 1)).maxOption.getOrElse(0)
+      val wrMax = stmt.body.statements.map(s => widthTrue(s, depth + 1)).maxOption.getOrElse(0)
       if depth == 0 then wlMax + 1 else wlMax + wrMax + 1
     case stmt: DoWhile =>
-      val wlMax = stmt.body.statements.map(s => widthLeft(s, depth + 1)).maxOption.getOrElse(0)
-      val wrMax = stmt.body.statements.map(s => widthRight(s, depth + 1)).maxOption.getOrElse(0)
-      if depth == 0 then wlMax + 1 else wlMax + wrMax + 1
+      val wlMax = stmt.body.statements.map(s => widthFalse(s, depth + 1)).maxOption.getOrElse(0)
+      val wrMax = stmt.body.statements.map(s => widthTrue(s, depth + 1)).maxOption.getOrElse(0)
+      if depth == 0 then wrMax + 1 else wlMax + wrMax + 1
     case stmt: ForLoop =>
-      val wlMax = stmt.body.statements.map(s => widthLeft(s, depth + 1)).maxOption.getOrElse(0)
-      val wrMax = stmt.body.statements.map(s => widthRight(s, depth + 1)).maxOption.getOrElse(0)
+      val wlMax = stmt.body.statements.map(s => widthFalse(s, depth + 1)).maxOption.getOrElse(0)
+      val wrMax = stmt.body.statements.map(s => widthTrue(s, depth + 1)).maxOption.getOrElse(0)
       if depth == 0 then wlMax + 1 else wlMax + wrMax + 1
     case _ => 0
 
