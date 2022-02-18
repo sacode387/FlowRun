@@ -6,7 +6,7 @@ import org.getshaka.nativeconverter.fromJson
 import dev.sacode.flowrun.ProgramModel
 import dev.sacode.flowrun.FlowRunElements
 import dev.sacode.flowrun.FlowRun
-import dev.sacode.flowrun.ast.*
+import dev.sacode.flowrun.ast.{AST, Statement, Expression}, Statement.*
 
 class CtxMenu(programModel: ProgramModel, flowRunElements: FlowRunElements, flowrunChannel: Channel[FlowRun.Event]) {
 
@@ -115,49 +115,49 @@ class CtxMenu(programModel: ProgramModel, flowRunElements: FlowRunElements, flow
 
     addDeclareButton.addEventListener(
       "click",
-      (event: dom.MouseEvent) => addStatement(Statement.Declare(AST.newId, "x", Expression.Type.Integer, None))
+      (event: dom.MouseEvent) => addStatement(Declare(AST.newId, "x", Expression.Type.Integer, None))
     )
 
     addAssignButton.addEventListener(
       "click",
-      (event: dom.MouseEvent) => addStatement(Statement.Assign(AST.newId, "x", "19"))
+      (event: dom.MouseEvent) => addStatement(Assign(AST.newId, "x", "19"))
     )
 
     addInputButton.addEventListener(
       "click",
-      (event: dom.MouseEvent) => addStatement(Statement.Input(AST.newId, "x"))
+      (event: dom.MouseEvent) => addStatement(Input(AST.newId, "x"))
     )
 
     addOutputButton.addEventListener(
       "click",
-      (event: dom.MouseEvent) => addStatement(Statement.Output(AST.newId, "\"output\""))
+      (event: dom.MouseEvent) => addStatement(Output(AST.newId, "\"output\""))
     )
 
     addCallButton.addEventListener(
       "click",
-      (event: dom.MouseEvent) => addStatement(Statement.Call(AST.newId, "fun1()"))
+      (event: dom.MouseEvent) => addStatement(Call(AST.newId, "fun1()"))
     )
 
     addIfButton.addEventListener(
       "click",
       (event: dom.MouseEvent) =>
-        addStatement(Statement.If(AST.newId, "true", Statement.Block(AST.newId), Statement.Block(AST.newId)))
+        addStatement(If(AST.newId, "true", Block(AST.newId), Block(AST.newId)))
     )
 
     addWhileButton.addEventListener(
       "click",
-      (event: dom.MouseEvent) => addStatement(Statement.While(AST.newId, "true", Statement.Block(AST.newId)))
+      (event: dom.MouseEvent) => addStatement(While(AST.newId, "true", Block(AST.newId)))
     )
 
     addDoWhileButton.addEventListener(
       "click",
-      (event: dom.MouseEvent) => addStatement(Statement.DoWhile(AST.newId, "true", Statement.Block(AST.newId)))
+      (event: dom.MouseEvent) => addStatement(DoWhile(AST.newId, "true", Block(AST.newId)))
     )
 
     addForLoopButton.addEventListener(
       "click",
       (event: dom.MouseEvent) =>
-        addStatement(Statement.ForLoop(AST.newId, "i", "0", "1", "10", Statement.Block(AST.newId)))
+        addStatement(ForLoop(AST.newId, "i", "0", "1", "10", Block(AST.newId)))
     )
   }
 

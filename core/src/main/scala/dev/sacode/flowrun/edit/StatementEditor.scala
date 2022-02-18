@@ -2,16 +2,15 @@ package dev.sacode.flowrun
 package edit
 
 import java.util.UUID
-
 import scalajs.js
 import org.scalajs.dom
 import scalatags.JsDom.all.{name => _, *}
 import reactify.*
 import dev.sacode.flowrun.parse.*
 import dev.sacode.flowrun.toastify.*
-import dev.sacode.flowrun.ast.*
+import dev.sacode.flowrun.ast.*, Statement.*
 
-/** Editor for selected statement. */
+/** Editor for selected statement or function signature. */
 class StatementEditor(
     programModel: ProgramModel,
     flowrunChannel: Channel[FlowRun.Event],
@@ -20,15 +19,18 @@ class StatementEditor(
 
   def edit(stmtId: String): Unit = {
 
+    // TODO have just one big pattern match
+    // ugly to read currently
+
     val stmt = programModel.findStatement(stmtId)
     val stmtType = stmt.getClass.getSimpleName.filterNot(_ == '$')
 
     stmt match
-      case _: Statement.Begin if programModel.currentFunction.isMain =>
+      case _: Begin if programModel.currentFunction.isMain =>
         // skip Begin if main function
         Toastify(ToastifyOptions("Begin is not editable.", Color.yellow)).showToast()
         return
-      case _: Statement.Return =>
+      case _: Return =>
         // skip Return if function doesn't return anything
         if programModel.currentFunction.isMain then
           Toastify(ToastifyOptions("End is not editable.", Color.yellow)).showToast()
@@ -55,18 +57,18 @@ class StatementEditor(
       errorMsg match
         case None =>
           stmt match
-            case statement: Statement.Begin =>
+            case statement: Begin =>
               programModel.updateFunction(stmtId, name = Some(newName))
-            case statement: Statement.Declare =>
+            case statement: Declare =>
               val updatedStmt = statement.copy(name = newName)
               programModel.updateStmt(updatedStmt)
-            case statement: Statement.Input =>
+            case statement: Input =>
               val updatedStmt = statement.copy(name = newName)
               programModel.updateStmt(updatedStmt)
-            case statement: Statement.Assign =>
+            case statement: Assign =>
               val updatedStmt = statement.copy(name = newName)
               programModel.updateStmt(updatedStmt)
-            case statement: Statement.ForLoop =>
+            case statement: ForLoop =>
               val updatedStmt = statement.copy(varName = newName)
               programModel.updateStmt(updatedStmt)
             case _ => ()
@@ -93,7 +95,7 @@ class StatementEditor(
       val thisElem = e.target.asInstanceOf[dom.html.Select]
       val newType = Expression.Type.valueOf(thisElem.value)
       stmt match
-        case statement: Statement.Declare =>
+        case statement: Declare =>
           val updatedStmt = statement.copy(tpe = newType)
           programModel.updateStmt(updatedStmt)
         case _ =>
@@ -119,10 +121,10 @@ class StatementEditor(
       maybeNewExpr match {
         case Failure(e) =>
           stmt match
-            case statement: Statement.Declare if newExprText.isEmpty =>
+            case statement: Declare if newExprText.isEmpty =>
               val updatedStmt = statement.copy(initValue = None)
               programModel.updateStmt(updatedStmt)
-            case statement: Statement.Return if newExprText.isEmpty =>
+            case statement: Return if newExprText.isEmpty =>
               val updatedStmt = statement.copy(maybeValue = None)
               programModel.updateStmt(updatedStmt)
             case _ =>
@@ -130,31 +132,31 @@ class StatementEditor(
 
         case Success(_) =>
           stmt match
-            case statement: Statement.Output =>
+            case statement: Output =>
               val updatedStmt = statement.copy(value = newExprText)
               programModel.updateStmt(updatedStmt)
-            case statement: Statement.Declare =>
+            case statement: Declare =>
               val updatedStmt = statement.copy(initValue = Some(newExprText))
               programModel.updateStmt(updatedStmt)
-            case statement: Statement.Assign =>
+            case statement: Assign =>
               val updatedStmt = statement.copy(value = newExprText)
               programModel.updateStmt(updatedStmt)
-            case statement: Statement.If =>
+            case statement: If =>
               val updatedStmt = statement.copy(condition = newExprText)
               programModel.updateStmt(updatedStmt)
-            case statement: Statement.While =>
+            case statement: While =>
               val updatedStmt = statement.copy(condition = newExprText)
               programModel.updateStmt(updatedStmt)
-            case statement: Statement.DoWhile =>
+            case statement: DoWhile =>
               val updatedStmt = statement.copy(condition = newExprText)
               programModel.updateStmt(updatedStmt)
-            case statement: Statement.ForLoop =>
+            case statement: ForLoop =>
               val updatedStmt = statement.copy(start = newExprText)
               programModel.updateStmt(updatedStmt)
-            case statement: Statement.Call =>
+            case statement: Call =>
               val updatedStmt = statement.copy(value = newExprText)
               programModel.updateStmt(updatedStmt)
-            case statement: Statement.Return =>
+            case statement: Return =>
               val updatedStmt = statement.copy(maybeValue = Some(newExprText))
               programModel.updateStmt(updatedStmt)
             case _ => ()
@@ -170,7 +172,7 @@ class StatementEditor(
 
     // for loop additional inputs
     if stmtType == "ForLoop" then
-      val statement = stmt.asInstanceOf[Statement.ForLoop]
+      val statement = stmt.asInstanceOf[ForLoop]
       val toInputElem = flowRunElements.newInputText(exprInputSize)
       toInputElem.value = statement.end
       toInputElem.placeholder = "10"

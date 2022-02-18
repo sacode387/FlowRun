@@ -1,7 +1,7 @@
 package dev.sacode.flowrun
 
 import reactify.*
-import dev.sacode.flowrun.ast.*
+import dev.sacode.flowrun.ast.*, Statement.*
 
 class ProgramModel(
     initAst: Program,
@@ -39,7 +39,7 @@ class ProgramModel(
     val newFun = Function(
       AST.newId,
       newFunName,
-      statements = List(Statement.Begin(AST.newId), Statement.Return(AST.newId))
+      statements = List(Begin(AST.newId), Return(AST.newId))
     )
     addFunction(newFun)
 
@@ -134,7 +134,7 @@ case class FunctionModel(
       if blockId.startsWith("fun-") then return statements.patch(afterStatementIdx + 1, List(newStatement), 0)
 
       afterStatement match {
-        case stmt: Statement.If =>
+        case stmt: If =>
           val newStmt =
             if (stmt.trueBlock.id == blockId)
               stmt.copy(trueBlock =
@@ -146,21 +146,21 @@ case class FunctionModel(
                 stmt.falseBlock.copy(statements = stmt.falseBlock.statements.prepended(newStatement))
               )
           statements.updated(afterStatementIdx, newStmt)
-        case stmt: Statement.While =>
+        case stmt: While =>
           val newStmt =
             if (stmt.body.id == blockId)
               stmt.copy(body = stmt.body.copy(statements = stmt.body.statements.prepended(newStatement)))
             else
               stmt
           statements.updated(afterStatementIdx, newStmt)
-        case stmt: Statement.DoWhile =>
+        case stmt: DoWhile =>
           val newStmt =
             if (stmt.body.id == blockId)
               stmt.copy(body = stmt.body.copy(statements = stmt.body.statements.prepended(newStatement)))
             else
               stmt
           statements.updated(afterStatementIdx, newStmt)
-        case stmt: Statement.ForLoop =>
+        case stmt: ForLoop =>
           val newStmt =
             if (stmt.body.id == blockId)
               stmt.copy(body = stmt.body.copy(statements = stmt.body.statements.prepended(newStatement)))
@@ -172,7 +172,7 @@ case class FunctionModel(
       }
     } else {
       statements.map {
-        case ifStatement: Statement.If =>
+        case ifStatement: If =>
           ifStatement.copy(
             trueBlock = ifStatement.trueBlock
               .copy(statements = insert(ifStatement.trueBlock.statements, afterId, newStatement, blockId)),
@@ -180,19 +180,19 @@ case class FunctionModel(
               insert(ifStatement.falseBlock.statements, afterId, newStatement, blockId)
             )
           )
-        case whileStatement: Statement.While =>
+        case whileStatement: While =>
           whileStatement.copy(
             body = whileStatement.body.copy(statements =
               insert(whileStatement.body.statements, afterId, newStatement, blockId)
             )
           )
-        case doWhileStatement: Statement.DoWhile =>
+        case doWhileStatement: DoWhile =>
           doWhileStatement.copy(
             body = doWhileStatement.body.copy(statements =
               insert(doWhileStatement.body.statements, afterId, newStatement, blockId)
             )
           )
-        case stmt: Statement.ForLoop =>
+        case stmt: ForLoop =>
           stmt.copy(
             body = stmt.body.copy(statements = insert(stmt.body.statements, afterId, newStatement, blockId))
           )
@@ -223,7 +223,7 @@ case class FunctionModel(
       statements.updated(statementIdx, newStatement)
     } else {
       statements.map {
-        case ifStatement: Statement.If =>
+        case ifStatement: If =>
           ifStatement.copy(
             trueBlock = ifStatement.trueBlock
               .copy(statements = update(ifStatement.trueBlock.statements, statementId, newStatement)),
@@ -231,18 +231,18 @@ case class FunctionModel(
               statements = update(ifStatement.falseBlock.statements, statementId, newStatement)
             )
           )
-        case whileStatement: Statement.While =>
+        case whileStatement: While =>
           whileStatement.copy(
             body =
               whileStatement.body.copy(statements = update(whileStatement.body.statements, statementId, newStatement))
           )
-        case doWhileStatement: Statement.DoWhile =>
+        case doWhileStatement: DoWhile =>
           doWhileStatement.copy(
             body = doWhileStatement.body.copy(statements =
               update(doWhileStatement.body.statements, statementId, newStatement)
             )
           )
-        case stmt: Statement.ForLoop =>
+        case stmt: ForLoop =>
           stmt.copy(
             body = stmt.body.copy(statements = update(stmt.body.statements, statementId, newStatement))
           )
@@ -256,7 +256,6 @@ case class FunctionModel(
       statements: List[Statement],
       statementId: String
   ): List[Statement] = {
-    import Statement.*
     statements.flatMap {
       case Block(_, blockStats) =>
         delete(blockStats, statementId)
@@ -297,7 +296,6 @@ case class FunctionModel(
       statements: List[Statement],
       statementId: String
   ): Option[Statement] =
-    import Statement.*
     statements.flatMap {
       case Block(_, blockStats) =>
         findById(blockStats, statementId)

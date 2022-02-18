@@ -8,7 +8,7 @@ import scalajs.js.JSConverters.*
 import org.scalajs.dom
 import reactify.*
 import dev.sacode.flowrun.parse.*
-import dev.sacode.flowrun.ast.*, Expression.Type
+import dev.sacode.flowrun.ast.*, Expression.Type, Statement.*
 
 /*
 - color==border_color, fillcolor==.. https://stackoverflow.com/questions/9106079/graphviz-how-to-change-border-color
@@ -106,7 +106,6 @@ class FlowchartPresenter(
       posX: Int,
       posY: Int
   ): (String, Int) = {
-    import Statement._
     import AST.newId
 
     // group puts elements of one branch in a straight line
@@ -352,8 +351,6 @@ class FlowchartPresenter(
       nextStmtDir: String = "n"
   ): String = {
 
-    import Statement._
-
     val stmtId = s"${stmt.id}#${stmt.getClass.getSimpleName}"
     stmt match {
       case Begin(isMain) =>
@@ -376,7 +373,7 @@ class FlowchartPresenter(
         val edgeId = s"${stmt.id}@$blockId"
         s"""${stmt.id}:s -> $nextStmtId:$nextStmtDir [id="$edgeId" ${edgeAttrs(nextStmtId)}]"""
 
-      case _: Statement.Call =>
+      case _: Call =>
         val edgeId = s"${stmt.id}@$blockId"
         s"""${stmt.id}:s -> $nextStmtId:$nextStmtDir [id="$edgeId" ${edgeAttrs(nextStmtId)}]"""
 
