@@ -1,9 +1,11 @@
 package dev.sacode.flowrun
 
+import scala.scalajs.js.annotation.*
 import org.scalajs.dom
 import scalatags.JsDom.all.*
 
 /* UI sections and elements */
+@JSExportAll
 class FlowRunElements(
     val mountElem: dom.html.Element
 ) {

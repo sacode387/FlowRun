@@ -2,7 +2,7 @@ package dev.sacode.flowrun
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.scalajs.js
-import scala.scalajs.js.annotation.JSExportTopLevel
+import scala.scalajs.js.annotation.*
 import org.scalajs.dom
 import scalatags.JsDom.all.*
 import org.getshaka.nativeconverter.fromJson
@@ -29,13 +29,13 @@ class FlowRun(
     mountElem: dom.html.Element,
     colorScheme: ColorScheme = ColorScheme.default,
     editable: Boolean = true,
-    programJson: Option[String] = None,
-    mountCallback: Option[js.Function1[FlowRun, Unit]] = None,
-    changeCallback: Option[js.Function1[FlowRun, Unit]] = None
+    programJson: String = null,
+    mountCallback: js.Function1[FlowRun, Unit] = fr => {},
+    changeCallback: js.Function1[FlowRun, Unit] = null
 ) {
 
   // resolve initial program
-  private val jsonSourceOpt = programJson.orElse {
+  private val jsonSourceOpt = Option(programJson).orElse {
     val mountElemText = mountElem.innerText.trim
     Option.when(mountElemText.nonEmpty)(mountElemText)
   }
@@ -66,6 +66,7 @@ class FlowRun(
   private val programModel = ProgramModel(program, flowrunChannel)
   private var interpreter = Interpreter(programModel, flowrunChannel)
 
+  @JSExport
   val flowRunElements = FlowRunElements(mountElem) // needs to come after JSON resolving and template copying
   private val flowchartPresenter = FlowchartPresenter(programModel, flowRunElements, colorScheme, flowrunChannel)
   private var outputArea = OutputArea(interpreter, flowRunElements, flowrunChannel)
@@ -95,15 +96,19 @@ class FlowRun(
   // trigger first time to get the ball rolling
   flowrunChannel := FlowRun.Event.SyntaxSuccess
 
+  @JSExport
   def config(): FlowRunConfig =
     flowRunConfig.get
 
+  @JSExport
   def json(): String =
     programModel.ast.toJson
 
+  @JSExport
   def funDOT(): String =
     flowchartPresenter.funDOT
 
+  @JSExport
   def codeText(): String =
     val generator = CodeGeneratorFactory(flowRunConfig.get.lang, programModel.ast)
     val codeTry = generator.generate
@@ -172,7 +177,7 @@ class FlowRun(
     case ConfigChanged =>
     // noop
     case SvgMounted =>
-      mountCallback.foreach { cb => cb(this) }
+      Option(mountCallback).foreach { cb => cb(this) }
   }
   flowrunChannel.attach { _ =>
     // on any event hide menus
@@ -285,7 +290,7 @@ class FlowRun(
 
   private def generateCode(): Unit = {
     // gen code always
-    changeCallback match
+    Option(changeCallback) match
       case None     => flowRunElements.codeArea.innerText = codeText()
       case Some(cb) => cb(this)
   }

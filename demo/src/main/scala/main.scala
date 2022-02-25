@@ -17,10 +17,10 @@ import dev.sacode.flowrun.{FlowRun, ColorScheme}
         colorScheme = colorScheme,
         mountElem = mountElem,
         editable = editable,
-        mountCallback = Some { fr =>
+        mountCallback = { (fr: FlowRun) =>
           mountElem.classList.remove("flowrun--hidden")
         },
-        changeCallback = Some { fr =>
+        changeCallback = { (fr: FlowRun) =>
 
           var lang = fr.config().lang.toString
           if lang.startsWith("scala") then lang = "scala"
