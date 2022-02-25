@@ -13,6 +13,8 @@ final case class FlowRunConfig(
 
 object FlowRunConfig {
 
+  val default = FlowRunConfig(Language.java, "")
+
   private val FlowRunConfigKey = "flowrun-config"
   private val localConfig = initLocalConfig()
 
@@ -26,11 +28,11 @@ object FlowRunConfig {
     }
 
     val savedConfigJson = dom.window.localStorage.getItem(FlowRunConfigKey)
-    val savedConfig =
-      if (savedConfigJson == null) FlowRunConfig(Language.java, "")
+    val config =
+      if (savedConfigJson == null) default
       else savedConfigJson.fromJson[FlowRunConfig]
 
-    config$.set(savedConfig)
+    config$.set(config)
     config$
   }
 
