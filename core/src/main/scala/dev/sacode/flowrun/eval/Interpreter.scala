@@ -387,14 +387,11 @@ class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[FlowRun.Ev
         } else value
         Future.successful[Double](res)
       case StringLit(value)   => Future.successful(value)
-      case Identifier(name)   => Future(symTab.getValue(id, name))
+      case Identifier(name)   => Future.successful(symTab.getValue(id, name))
       case TrueLit            => Future.successful(true)
       case FalseLit           => Future.successful(false)
       case Parens(expression) => evalExpr(id, expression)
       case FunctionCall(name, argumentExprs) =>
-        val key = SymbolKey(name, Symbol.Kind.Function, id)
-        val funSym = symTab.getSymbol(id, key) // check if defined
-
         val futureArgs = execSequentially(
           List.empty,
           argumentExprs,
@@ -404,26 +401,29 @@ class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[FlowRun.Ev
         )
 
         futureArgs.flatMap { args =>
-          if name == "abs" then
-            // TODO handle all predefined functions
-            Future(Math.abs(args.head.toReal))
-          else
-            val fun = allFunctions.find(_.name == name).get
-            if args.size != fun.parameters.size then
-              throw EvalException(
-                s"Wrong number of arguments, expected ${fun.parameters.size} but got ${args.size}",
-                id
-              )
-            val argsWithTypes = args.zip(fun.parameters).zipWithIndex.map { case ((arg, p), idx) =>
-              // validate expected type
-              if TypeUtils.getValue(id, p.tpe, arg).isFailure then
+          PredefinedFunction.withName(name) match
+            case Some(f) =>
+              handlePredefinedFunction(id, f, args)
+            case None =>
+              // check if defined
+              val key = SymbolKey(name, Symbol.Kind.Function, id)
+              val funSym = symTab.getSymbol(id, key) 
+              val fun = allFunctions.find(_.name == name).get
+              if args.size != fun.parameters.size then
                 throw EvalException(
-                  s"Expected: '${p.name}: ${p.tpe}' at index $idx, got value '$arg'",
+                  s"Wrong number of arguments, expected ${fun.parameters.size} but got ${args.size}",
                   id
                 )
-              (p.name, p.tpe, arg)
-            }
-            interpret(fun, argsWithTypes)
+              val argsWithTypes = args.zip(fun.parameters).zipWithIndex.map { case ((arg, p), idx) =>
+                // validate expected type
+                if TypeUtils.getValue(id, p.tpe, arg).isFailure then
+                  throw EvalException(
+                    s"Expected: '${p.name}: ${p.tpe}' at index $idx, got value '$arg'",
+                    id
+                  )
+                (p.name, p.tpe, arg)
+              }
+              interpret(fun, argsWithTypes)
         }
 
   // adapted https://stackoverflow.com/a/46619347/4496364
@@ -454,6 +454,26 @@ class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[FlowRun.Ev
     values.foldLeft(initF) { (a, next) =>
       a.flatMap(acc => f(acc, next))
     }
+  
+  private def handlePredefinedFunction(id: String, f: PredefinedFunction, args: Seq[Any]): Future[Any] =
+    import PredefinedFunction.*
+    f match {
+      case Abs =>
+        TypeUtils.getValue(id, Expression.Type.Integer, args.head).map { intVal =>
+          Future.successful(Math.abs(intVal.toInteger))
+        }.getOrElse {
+          val realVal = TypeUtils.getValue(id, Expression.Type.Real, args.head).get
+          Future.successful(Math.abs(realVal.toReal))
+        }
+      case Length =>
+        val str = TypeUtils.getValue(id, Expression.Type.String, args.head).get
+        Future.successful(str.toString.length)
+      case CharAt =>
+        val strValue = TypeUtils.getValue(id, Expression.Type.String, args.head).get.toString
+        val idxValue = TypeUtils.getValue(id, Expression.Type.Integer, args(1)).get.toInteger
+        Future.successful(strValue.charAt(idxValue))
+    }
+    
 }
 
 object Interpreter:

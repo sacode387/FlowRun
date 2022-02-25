@@ -107,7 +107,7 @@ class StatementEditor(
       stmtElems.appendChild(typeSelectElem)
 
     // expression input
-    val exprInputSize = if stmtType == "ForLoop" then 3 else 10
+    val exprInputSize = if stmtType == "ForLoop" then 3 else if stmtType == "Output" then 30 else 10
     val exprInputElem = flowRunElements.newInputText(exprInputSize)
     exprInputElem.value = expr(stmt)
     exprInputElem.placeholder =

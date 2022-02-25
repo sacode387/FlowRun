@@ -8,10 +8,6 @@ import dev.sacode.flowrun.ast.Expression.Type
 class SymbolTable(flowrunChannel: Channel[FlowRun.Event]) {
 
   val globalScope = Scope("GLOBAL", "GLOBAL", None, flowrunChannel)
-  locally {
-    val key = SymbolKey("abs", Symbol.Kind.Function, "")
-    globalScope.add(null, key, Type.Integer, None)
-  }
 
   var currentScope = globalScope
 
