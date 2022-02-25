@@ -45,12 +45,12 @@ lazy val core = (project in file("core"))
       "-Ysafe-init",
       "-deprecation"
     ),
-    scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.ESModule) },
+    //scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.ESModule) },
 
     // tests
     testFrameworks += new TestFramework("utest.runner.Framework"),
     Test / parallelExecution := false,
-    Test / scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.NoModule) },
+    //Test / scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.NoModule) },
     Test / jsEnv := new org.scalajs.jsenv.jsdomnodejs.JSDOMNodeJSEnv()
   )
   .enablePlugins(ScalaJSPlugin)

@@ -3,19 +3,20 @@ import org.scalajs.dom
 import org.scalajs.dom.ext.*
 import org.scalajs.dom.document
 import scalatags.JsDom.all.*
-import dev.sacode.flowrun.FlowRun
+import dev.sacode.flowrun.{FlowRun, ColorScheme}
 
 @main def start(): Unit =
   dom.window.onload = _ => {
 
-    // edit
+    val colorScheme = ColorScheme.default.withFontName("Courier Prime")
     val flowRunEditors = document.querySelectorAll(".flowrun-instance")
     for elem <- flowRunEditors do
       val mountElem = elem.asInstanceOf[dom.html.Element]
       val editable = mountElem.classList.contains("flowrun--editable")
       val flowRun: FlowRun = FlowRun(
-        mountElem,
-        editable,
+        colorScheme = colorScheme,
+        mountElem = mountElem,
+        editable = editable,
         mountCallback = Some { fr =>
           mountElem.classList.remove("flowrun--hidden")
         },

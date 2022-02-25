@@ -16,8 +16,9 @@ import dev.sacode.flowrun.ast.*, Expression.Type, Statement.*
 class FlowchartPresenter(
     programModel: ProgramModel,
     flowRunElements: FlowRunElements,
-    flowrunChannel: Channel[FlowRun.Event],
-    colorScheme: ColorScheme = ColorScheme.default
+    colorScheme: ColorScheme,
+    flowrunChannel: Channel[FlowRun.Event]
+    
 ) {
 
   private val xIncrement = 120
@@ -80,8 +81,8 @@ class FlowchartPresenter(
     |digraph {
     |  bgcolor="transparent"
     |
-    |  node [penwidth=0.5 fontsize="12" shape="box" style="filled" fontcolor="white" fontname="Courier Prime"]
-    |  edge [penwidth=2 fontsize="10" color="#0A1931" arrowsize=0.8 fontname="Courier Prime"]
+    |  node [penwidth=0.5 fontsize="12" shape="box" style="filled" fontcolor="white" fontname="${colorScheme.fontName}"]
+    |  edge [penwidth=2 fontsize="10" color="#0A1931" arrowsize=0.8 fontname="${colorScheme.fontName}"]
     |
     |  $nodesDOT
     |

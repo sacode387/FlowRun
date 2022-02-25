@@ -27,6 +27,7 @@ import java.time.temporal.ChronoUnit
 @JSExportTopLevel("FlowRun")
 class FlowRun(
     mountElem: dom.html.Element,
+    colorScheme: ColorScheme = ColorScheme.default,
     editable: Boolean = true,
     programJson: Option[String] = None,
     mountCallback: Option[js.Function1[FlowRun, Unit]] = None,
@@ -66,7 +67,7 @@ class FlowRun(
   private var interpreter = Interpreter(programModel, flowrunChannel)
 
   val flowRunElements = FlowRunElements(mountElem) // needs to come after JSON resolving and template copying
-  private val flowchartPresenter = FlowchartPresenter(programModel, flowRunElements, flowrunChannel)
+  private val flowchartPresenter = FlowchartPresenter(programModel, flowRunElements, colorScheme, flowrunChannel)
   private var outputArea = OutputArea(interpreter, flowRunElements, flowrunChannel)
   private var debugArea = DebugArea(interpreter, flowRunElements)
 
