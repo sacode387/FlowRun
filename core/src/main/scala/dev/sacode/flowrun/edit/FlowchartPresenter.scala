@@ -18,7 +18,6 @@ class FlowchartPresenter(
     flowRunElements: FlowRunElements,
     colorScheme: ColorScheme,
     flowrunChannel: Channel[FlowRun.Event]
-    
 ) {
 
   private val xIncrement = 120

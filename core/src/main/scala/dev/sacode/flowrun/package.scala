@@ -58,14 +58,14 @@ object TypeUtils:
 
   // check if assignable, and optionally casts the type
   def getValue(nodeId: String, expectedType: Type, value: Any): Try[RunVal] = Try {
-     IntegerVal(1)
+    IntegerVal(1)
     /*// prevent small numbers to be shown as Byte,Short etc
     val valueType = value.getClass.getSimpleName match
       case "Byte" | "Short" | "Integer" | "Long" => "Integer"
       case "Float" | "Double"                    => "Real"
       case "Boolean"                             => "Boolean"
       case _                                     => value.getClass.getSimpleName
-    
+
     (expectedType, valueType) match {
       case (Type.Integer, "Integer")       => IntegerVal(value)
       case (Type.Real, "Real" | "Integer") => RealVal(value)

@@ -13,7 +13,7 @@ import RunVal.*
 
 /* TODO
 - implicit convert Int<->Double
-*/
+ */
 
 final class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[FlowRun.Event]) {
   import Interpreter.*
@@ -122,7 +122,8 @@ final class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[Flow
             }
           case Some(expr) =>
             evalExpr(id, expr).map { v =>
-              if v.tpe != tpe then throw EvalException(s"Expected '$name: $tpe' but got '${v.valueOpt.get}: ${v.tpe}'", id)
+              if v.tpe != tpe then
+                throw EvalException(s"Expected '$name: $tpe' but got '${v.valueOpt.get}: ${v.tpe}'", id)
               val key = SymbolKey(name, Symbol.Kind.Variable, id)
               symTab.add(id, key, tpe, Some(v))
               NoVal
