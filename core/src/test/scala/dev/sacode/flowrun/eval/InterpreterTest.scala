@@ -5,6 +5,7 @@ import scala.concurrent.ExecutionContext
 import reactify.*
 import utest.*
 import dev.sacode.flowrun.ast.*
+import dev.sacode.flowrun.eval.RunVal.*
 
 object InterpreterTests extends TestSuite {
   given ExecutionContext = scala.concurrent.ExecutionContext.global
@@ -68,13 +69,13 @@ object InterpreterTests extends TestSuite {
       interpreter.run().map { _ =>
         val scope = interpreter.symTab.globalScope.childScopes.head
 
-        scope.getValue("", "integer") ==> 5
-        scope.getValue("", "neg_integer") ==> -123
+        scope.getValue("", "integer") ==> IntegerVal(5)
+        scope.getValue("", "neg_integer") ==> IntegerVal(-123)
 
-        scope.getValue("", "real") ==> 12.345
-        scope.getValue("", "string") ==> "abc"
-        scope.getValue("", "boolean") ==> false
-        scope.getValue("", "neg_boolean") ==> true
+        scope.getValue("", "real") ==> RealVal(12.345)
+        scope.getValue("", "string") ==> StringVal("abc")
+        scope.getValue("", "boolean") ==> BooleanVal(false)
+        scope.getValue("", "neg_boolean") ==> BooleanVal(true)
       }
     }
 
@@ -93,11 +94,11 @@ object InterpreterTests extends TestSuite {
       interpreter.run().map { _ =>
         val scope = interpreter.symTab.globalScope.childScopes.head
         assert(scope.isDeclaredVar("x"))
-        scope.getValue("123", "x") ==> 6
+        scope.getValue("123", "x") ==> IntegerVal(6)
       }
     }
 
-    test("arithmetic") {
+    test("arithmetic - integers") {
       val main = newFun(
         List(
           S.Declare(getId(), "a", E.Type.Integer, Some("5 + 3 * 2")),
@@ -114,12 +115,41 @@ object InterpreterTests extends TestSuite {
 
       interpreter.run().map { _ =>
         val scope = interpreter.symTab.globalScope.childScopes.head
-        scope.getValue("", "a") ==> 11
-        scope.getValue("", "b") ==> 3
-        scope.getValue("", "c") ==> 3
-        scope.getValue("", "d") ==> true
-        scope.getValue("", "e") ==> true
-        scope.getValue("", "f") ==> false
+        scope.getValue("", "a") ==> IntegerVal(11)
+        scope.getValue("", "b") ==> IntegerVal(3)
+        scope.getValue("", "c") ==> IntegerVal(3)
+        scope.getValue("", "d") ==> BooleanVal(true)
+        scope.getValue("", "e") ==> BooleanVal(true)
+        scope.getValue("", "f") ==> BooleanVal(false)
+      }
+    }
+
+    test("arithmetic - reals") {
+      val main = newFun(
+        List(
+          S.Declare(getId(), "a", E.Type.Real, Some("5.1 + 3.0 * 2.0")),
+          S.Declare(getId(), "b", E.Type.Real, Some("15.0 / 3.0 - 2.5")),
+          S.Declare(getId(), "c", E.Type.Real, Some("15.0 % 4.5")),
+          S.Declare(getId(), "d", E.Type.Boolean, Some("1.0 == 1.0")),
+          S.Declare(getId(), "e", E.Type.Boolean, Some("2.0 >= 1.0")),
+          S.Declare(getId(), "f", E.Type.Boolean, Some("2.0 <= 1.0")),
+          S.Declare(getId(), "g", E.Type.Real, Some("5.0 / 2.0"))
+        )
+      )
+      val flowrunChannel = Channel[FlowRun.Event]
+      val programModel = ProgramModel(Program("p4", "program", main), flowrunChannel)
+      val interpreter = Interpreter(programModel, flowrunChannel)
+
+      interpreter.run().map { _ =>
+        val scope = interpreter.symTab.globalScope.childScopes.head
+        scope.getValue("", "a") ==> RealVal(11.1)
+        scope.getValue("", "b") ==> RealVal(2.5)
+        scope.getValue("", "c") ==> RealVal(1.5)
+        scope.getValue("", "g") ==> RealVal(2.5)
+
+        scope.getValue("", "d") ==> BooleanVal(true)
+        scope.getValue("", "e") ==> BooleanVal(true)
+        scope.getValue("", "f") ==> BooleanVal(false)
       }
     }
 
@@ -141,7 +171,7 @@ object InterpreterTests extends TestSuite {
 
       interpreter.run().map { _ =>
         val scope = interpreter.symTab.globalScope.childScopes.head
-        scope.getValue("123", "x") ==> 1
+        scope.getValue("123", "x") ==> IntegerVal(1)
       }
     }
   }

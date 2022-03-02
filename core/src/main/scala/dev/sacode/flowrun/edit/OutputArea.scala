@@ -71,8 +71,8 @@ class OutputArea(
     def inputValueSubmitted(): Unit = {
       val inputValue = valueInputElem.value.trim
       val res = interpreter.setValue(nodeId, name, inputValue)
-      res.foreach { (tpe, _) =>
-        val printVal = if tpe == Type.String then s""" "$inputValue" """ else inputValue
+      res.foreach { value =>
+        val printVal = if value.tpe == Type.String then s""" "$inputValue" """ else inputValue
         flowRunElements.runtimeOutput.removeChild(enterValueDiv)
         flowRunElements.runtimeOutput.appendChild(
           div(samp(s"You entered $name = $printVal")).render

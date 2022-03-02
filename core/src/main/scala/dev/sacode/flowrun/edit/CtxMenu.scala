@@ -145,12 +145,12 @@ class CtxMenu(programModel: ProgramModel, flowRunElements: FlowRunElements, flow
 
     addWhileButton.addEventListener(
       "click",
-      (event: dom.MouseEvent) => addStatement(While(AST.newId, "true", Block(AST.newId)))
+      (event: dom.MouseEvent) => addStatement(While(AST.newId, "false", Block(AST.newId)))
     )
 
     addDoWhileButton.addEventListener(
       "click",
-      (event: dom.MouseEvent) => addStatement(DoWhile(AST.newId, "true", Block(AST.newId)))
+      (event: dom.MouseEvent) => addStatement(DoWhile(AST.newId, "false", Block(AST.newId)))
     )
 
     addForLoopButton.addEventListener(

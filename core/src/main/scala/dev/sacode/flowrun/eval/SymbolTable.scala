@@ -26,13 +26,13 @@ class SymbolTable(flowrunChannel: Channel[FlowRun.Event]) {
   def varSymbols: List[Symbol] =
     currentScope.allSymbols.values.filter(_.key.kind == Symbol.Kind.Variable).toList
 
-  def add(nodeId: String, key: SymbolKey, tpe: Type, value: Option[Any]): Symbol =
+  def add(nodeId: String, key: SymbolKey, tpe: Type, value: Option[RunVal]): Symbol =
     currentScope.add(nodeId, key, tpe, value)
 
-  def setValue(nodeId: String, name: String, value: Any): Unit =
+  def setValue(nodeId: String, name: String, value: RunVal): Unit =
     currentScope.setValue(nodeId, name, value)
 
-  def getValue(nodeId: String, name: String): Any =
+  def getValue(nodeId: String, name: String): RunVal =
     currentScope.getValue(nodeId, name)
 
   def isDeclaredVar(name: String): Boolean =
@@ -67,7 +67,7 @@ class Scope(
   def allSymbols: Map[SymbolKey, Symbol] = symbols
 
   // we assume type is good here
-  def add(nodeId: String, key: SymbolKey, tpe: Type, value: Option[Any]): Symbol =
+  def add(nodeId: String, key: SymbolKey, tpe: Type, value: Option[RunVal]): Symbol =
     if symbols.isDefinedAt(key) then error(s"${key.kind.toString} '${key.name}' is already declared.", nodeId)
     val newSymbol = Symbol(key, tpe, value, this)
     symbols += (key -> newSymbol)
@@ -80,15 +80,16 @@ class Scope(
   def get(key: SymbolKey): Option[Symbol] =
     symbols.get(key)
 
-  def setValue(nodeId: String, name: String, value: Any): Unit =
+  def setValue(nodeId: String, name: String, value: RunVal): Unit =
     val key = SymbolKey(name, Symbol.Kind.Variable, nodeId)
     val sym = getSymbol(nodeId, key)
-    val updateValue = TypeUtils.getValue(nodeId, sym.tpe, value).get
-    val updatedSym = sym.copy(value = Some(updateValue))
+    // TODO samo uporedit jesu li TYPEs JEDNAKI !!! :)
+    //val updateValue = TypeUtils.getValue(nodeId, sym.tpe, value).get
+    val updatedSym = sym.copy(value = Some(value))
     sym.scope.set(key, updatedSym)
     flowrunChannel := FlowRun.Event.SymbolTableUpdated
 
-  def getValue(nodeId: String, name: String): Any =
+  def getValue(nodeId: String, name: String): RunVal =
     val key = SymbolKey(name, Symbol.Kind.Variable, nodeId)
     val sym = getSymbol(nodeId, key)
     sym.value.getOrElse(error(s"Variable '$name' is not initialized.", nodeId))
@@ -140,10 +141,10 @@ object SymbolKey {
     .get
 }
 
-case class Symbol(key: SymbolKey, tpe: Type, value: Option[Any] = None, scope: Scope):
+case class Symbol(key: SymbolKey, tpe: Type, value: Option[RunVal] = None, scope: Scope):
   override def toString: String =
     s"${key.name}: ${tpe}" + value.map(v => s" = $v").getOrElse("")
 
 object Symbol:
   enum Kind:
-    case Const, Variable, Function
+    case Variable, Function

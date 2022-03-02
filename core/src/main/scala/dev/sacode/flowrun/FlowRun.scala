@@ -35,7 +35,7 @@ class FlowRun(
 ) {
 
   // resolve initial program
-  private val jsonSourceOpt = Option(programJson).orElse {
+  private val jsonSourceOpt = Option(programJson).filterNot(_.trim.isEmpty).orElse {
     val mountElemText = mountElem.innerText.trim
     Option.when(mountElemText.nonEmpty)(mountElemText)
   }
@@ -103,6 +103,10 @@ class FlowRun(
     case SyntaxSuccess =>
       outputArea.clearSyntax()
       flowchartPresenter.loadCurrentFunction() // if function name updated
+    case StmtUpdated =>
+      outputArea.clearSyntax()
+      flowchartPresenter.loadCurrentFunction()
+      doOnChange()
     case StmtDeleted | StmtAdded =>
       programModel.currentStmtId = None
       programModel.currentEdgeId = None
@@ -306,6 +310,7 @@ object FlowRun:
     case SyntaxSuccess
     case StmtDeleted
     case StmtAdded
+    case StmtUpdated
     case SyntaxError(msg: String)
     case SymbolTableUpdated
     case FunctionUpdated
