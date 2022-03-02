@@ -122,10 +122,19 @@ final class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[Flow
             }
           case Some(expr) =>
             evalExpr(id, expr).map { v =>
-              if v.tpe != tpe then
+              val promotedVal =
+                if tpe == Expression.Type.Real then
+                  v match
+                    case rv: RealVal    => rv
+                    case iv: IntegerVal => RealVal(iv.value.toDouble)
+                    case otherVal =>
+                      throw EvalException(s"Expected '$name: $tpe' but got '${otherVal.valueOpt.get}: ${v.tpe}'", id)
+                else v
+
+              if promotedVal.tpe != tpe then
                 throw EvalException(s"Expected '$name: $tpe' but got '${v.valueOpt.get}: ${v.tpe}'", id)
               val key = SymbolKey(name, Symbol.Kind.Variable, id)
-              symTab.add(id, key, tpe, Some(v))
+              symTab.add(id, key, tpe, Some(promotedVal))
               NoVal
             }
 
@@ -161,7 +170,7 @@ final class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[Flow
           case condition: BooleanVal =>
             if (condition.value) interpretStatement(ifTrueStatements)
             else interpretStatement(ifFalseStatements)
-          case condValue => throw EvalException(s"Not a valid condition: '$condValue'", id)
+          case condValue => throw EvalException(s"Not a valid condition: '${condValue.valueOpt.get}'", id)
         }
 
       case While(id, condition, body) =>
@@ -170,7 +179,7 @@ final class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[Flow
             case condition: BooleanVal =>
               if (condition.value) interpretStatement(body).flatMap(_ => loop())
               else Future.successful(NoVal)
-            case condValue => throw EvalException(s"Not a valid condition: '$condValue'", id)
+            case condValue => throw EvalException(s"Not a valid condition: '${condValue.valueOpt.get}'", id)
           }
         loop()
 
@@ -180,7 +189,7 @@ final class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[Flow
             case condition: BooleanVal =>
               if (condition.value) interpretStatement(body).flatMap(_ => loop())
               else Future.successful(NoVal)
-            case condValue => throw EvalException(s"Not a valid condition: '$condValue'", id)
+            case condValue => throw EvalException(s"Not a valid condition: '${condValue.valueOpt.get}'", id)
           }
         interpretStatement(body).flatMap(_ => loop())
 
@@ -194,7 +203,7 @@ final class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[Flow
                 loop(conditionExpr, incr)
               }
               else Future.successful(NoVal)
-            case condValue => throw EvalException(s"Not a valid condition: '$condValue'", id)
+            case condValue => throw EvalException(s"Not a valid condition: '${condValue.valueOpt.get}'", id)
           }
 
         for {
@@ -239,6 +248,7 @@ final class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[Flow
           expr.boolOrComparisons,
           (acc, nextBoolOrOpt) => {
             evalBoolAndComparison(id, nextBoolOrOpt.boolAndComparison).map { v =>
+              // TODO short circuit
               val nextVal = v.asInstanceOf[BooleanVal]
               boolVal.transform(_ || nextVal.value)
             }
@@ -255,7 +265,7 @@ final class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[Flow
           boolOrComparison.boolAndComparisons,
           (acc, nextBoolAndOpt) => {
             evalNumComparison(id, nextBoolAndOpt.numComparison).map { v =>
-              //TypeUtils.getValue(id, Expression.Type.Boolean, v).get // validate
+              // TODO short circuit
               val nextVal = v.asInstanceOf[BooleanVal]
               boolVal.transform(_ && nextVal.value)
             }
