@@ -83,8 +83,8 @@ class Scope(
   def setValue(nodeId: String, name: String, value: RunVal): Unit =
     val key = SymbolKey(name, Symbol.Kind.Variable, nodeId)
     val sym = getSymbol(nodeId, key)
-    // TODO samo uporedit jesu li TYPEs JEDNAKI !!! :)
-    //val updateValue = TypeUtils.getValue(nodeId, sym.tpe, value).get
+    if value.tpe != sym.tpe then
+      throw EvalException(s"Expected '$name: ${sym.tpe}' but got '${value.valueOpt.get}: ${value.tpe}'", nodeId)
     val updatedSym = sym.copy(value = Some(value))
     sym.scope.set(key, updatedSym)
     flowrunChannel := FlowRun.Event.SymbolTableUpdated

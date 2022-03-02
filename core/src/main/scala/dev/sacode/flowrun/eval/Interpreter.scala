@@ -130,7 +130,6 @@ final class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[Flow
                     case otherVal =>
                       throw EvalException(s"Expected '$name: $tpe' but got '${otherVal.valueOpt.get}: ${v.tpe}'", id)
                 else v
-
               if promotedVal.tpe != tpe then
                 throw EvalException(s"Expected '$name: $tpe' but got '${v.valueOpt.get}: ${v.tpe}'", id)
               val key = SymbolKey(name, Symbol.Kind.Variable, id)
@@ -143,9 +142,17 @@ final class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[Flow
         val key = SymbolKey(name, Symbol.Kind.Variable, id)
         val sym = symTab.getSymbol(id, key)
         evalExpr(id, parseExpr(id, expr)).map { exprValue =>
-          if exprValue.toString.isEmpty && sym.tpe != Expression.Type.String then
+          if exprValue.valueOpt.get.toString.isEmpty && sym.tpe != Expression.Type.String then
             throw EvalException(s"Assign expression cannot be empty.", id)
-          symTab.setValue(id, name, exprValue)
+          val promotedVal =
+            if sym.tpe == Expression.Type.Real then
+              exprValue match
+                case rv: RealVal    => rv
+                case iv: IntegerVal => RealVal(iv.value.toDouble)
+                case otherVal =>
+                  throw EvalException(s"Expected '$name: ${sym.tpe}' but got '${otherVal.valueOpt.get}: ${exprValue.tpe}'", id)
+            else exprValue
+          symTab.setValue(id, name, promotedVal)
           NoVal
         }
 
