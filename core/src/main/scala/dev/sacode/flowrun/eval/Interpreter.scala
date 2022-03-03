@@ -336,29 +336,28 @@ final class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[Flow
 
   private def evalTerm(id: String, term: Term): Future[RunVal] =
     evalFactor(id, term.factor).flatMap {
-      case intVal: IntegerVal =>
+      case numVal: (IntegerVal | RealVal) =>
         execSequentially(
-          intVal,
+          numVal,
           term.factors,
           (acc, nextFactorOpt) => {
-            evalFactor(id, nextFactorOpt.factor).map { v =>
-              val nextVal = v.asInstanceOf[IntegerVal].value // TODO
-              nextFactorOpt.op.tpe match
-                case Token.Type.Plus => acc.transform(_ + nextVal)
-                case _               => acc.transform(_ - nextVal)
-            }
-          }
-        )
-      case intVal: RealVal =>
-        execSequentially(
-          intVal,
-          term.factors,
-          (acc, nextFactorOpt) => {
-            evalFactor(id, nextFactorOpt.factor).map { v =>
-              val nextVal = v.asInstanceOf[RealVal].value // TODO
-              nextFactorOpt.op.tpe match
-                case Token.Type.Plus => acc.transform(_ + nextVal)
-                case _               => acc.transform(_ - nextVal)
+            val isPlus = nextFactorOpt.op.tpe == Token.Type.Plus
+            evalFactor(id, nextFactorOpt.factor).map { nextVal =>
+              (acc, nextVal) match
+                case (v1: IntegerVal, v2: IntegerVal) =>
+                  if isPlus then IntegerVal(v1.value + v2.value) else IntegerVal(v1.value - v2.value)
+                case (v1: RealVal, v2: RealVal) =>
+                  if isPlus then RealVal(v1.value + v2.value) else RealVal(v1.value - v2.value)
+                case (v1: RealVal, v2: IntegerVal) => // promote Integer to Real
+                  if isPlus then RealVal(v1.value + v2.value.toDouble) else RealVal(v1.value - v2.value.toDouble)
+                case (v1: IntegerVal , v2: RealVal) => // promote Integer to Real
+                  if isPlus then RealVal(v1.value.toDouble + v2.value) else RealVal(v1.value.toDouble - v2.value)
+                case (v1, v2) =>
+                  val op = if isPlus then "sum" else "deduct"
+                  throw EvalException(
+                    s"Cannot $op '${v1.pretty}' and '${v2.pretty}'",
+                    id
+                  )
             }
           }
         )
@@ -380,31 +379,29 @@ final class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[Flow
 
   private def evalFactor(id: String, factor: Factor): Future[RunVal] =
     evalUnary(id, factor.unary).flatMap {
-      case intVal: IntegerVal =>
+      case numVal: (IntegerVal | RealVal) =>
         execSequentially(
-          intVal,
+          numVal,
           factor.unaries,
           (acc, nextUnaryOpt) => {
-            evalUnary(id, nextUnaryOpt.unary).map { v =>
-              val nextVal = v.asInstanceOf[IntegerVal].value // TODO
-              nextUnaryOpt.op.tpe match
-                case Token.Type.Times => acc.transform(_ * nextVal)
-                case Token.Type.Div   => acc.transform(_ / nextVal)
-                case _                => acc.transform(_ % nextVal)
-            }
-          }
-        )
-      case intVal: RealVal =>
-        execSequentially(
-          intVal,
-          factor.unaries,
-          (acc, nextUnaryOpt) => {
-            evalUnary(id, nextUnaryOpt.unary).map { v =>
-              val nextVal = v.asInstanceOf[RealVal].value // TODO
-              nextUnaryOpt.op.tpe match
-                case Token.Type.Times => acc.transform(_ * nextVal)
-                case Token.Type.Div   => acc.transform(_ / nextVal)
-                case _                => acc.transform(_ % nextVal)
+            val isTimes = nextUnaryOpt.op.tpe == Token.Type.Times
+            val isDiv = nextUnaryOpt.op.tpe == Token.Type.Div
+            evalUnary(id, nextUnaryOpt.unary).map { nextVal =>
+              (acc, nextVal) match
+                case (v1: IntegerVal, v2: IntegerVal) =>
+                  if isTimes then IntegerVal(v1.value * v2.value) else if isDiv then IntegerVal(v1.value / v2.value) else IntegerVal(v1.value % v2.value)
+                case (v1: RealVal, v2: RealVal) =>
+                  if isTimes then RealVal(v1.value * v2.value) else if isDiv then RealVal(v1.value / v2.value) else RealVal(v1.value % v2.value)
+                case (v1: RealVal, v2: IntegerVal) => // promote Integer to Real
+                  if isTimes then RealVal(v1.value * v2.value.toDouble) else if isDiv then RealVal(v1.value / v2.value.toDouble) else RealVal(v1.value % v2.value.toDouble)
+                case (v1: IntegerVal , v2: RealVal) => // promote Integer to Real
+                  if isTimes then RealVal(v1.value.toDouble * v2.value) else if isDiv then RealVal(v1.value.toDouble / v2.value) else RealVal(v1.value.toDouble % v2.value)
+                case (v1, v2) =>
+                  val op = if isTimes then "multiply" else if isDiv then "divide" else "mod"
+                  throw EvalException(
+                    s"Cannot $op '${v1.pretty}' and '${v2.pretty}'",
+                    id
+                  )
             }
           }
         )
@@ -419,7 +416,7 @@ final class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[Flow
             next match
               case n: IntegerVal => n.transform(v => -v)
               case n: RealVal    => n.transform(v => -v)
-              case _             => throw EvalException(s"Cant evalUnary $next (should not happen)", id)
+              case _             => throw EvalException(s"Cant negate '${next.pretty}'", id)
           else next.asInstanceOf[BooleanVal].transform(v => !v)
         }
       case Unary.Simple(atom) => evalAtom(id, atom)
