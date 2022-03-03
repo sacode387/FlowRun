@@ -303,34 +303,19 @@ final class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[Flow
 
   private def evalNumComparison(id: String, numComparison: NumComparison): Future[RunVal] =
     evalTerm(id, numComparison.term).flatMap {
-      case intVal: IntegerVal =>
-        val tmp = intVal.value
-        // TODO validate EXACTLY 1 or 2 args !!!
+      case numVal: (IntegerVal | RealVal) =>
         numComparison.terms match
           case Some(nextTermOpt) =>
-            evalTerm(id, nextTermOpt.term).map { v =>
-              val nextVal = v.asInstanceOf[IntegerVal].value // TODO
+            evalTerm(id, nextTermOpt.term).map { nextVal =>
+              val v1: Double = numVal.promote(id, "", Type.Real).asInstanceOf[RealVal].value
+              val v2: Double = nextVal.promote(id, "", Type.Real).asInstanceOf[RealVal].value
               nextTermOpt.op.tpe match
-                case Token.Type.Lt   => BooleanVal(tmp < nextVal)
-                case Token.Type.LtEq => BooleanVal(tmp <= nextVal)
-                case Token.Type.Gt   => BooleanVal(tmp > nextVal)
-                case _               => BooleanVal(tmp >= nextVal)
+                case Token.Type.Lt   => BooleanVal(v1 < v2)
+                case Token.Type.LtEq => BooleanVal(v1 <= v2)
+                case Token.Type.Gt   => BooleanVal(v1 > v2)
+                case _               => BooleanVal(v1 >= v2)
             }
-          case None => Future.successful(intVal)
-      case intVal: RealVal =>
-        val tmp = intVal.value
-        // TODO validate EXACTLY 1 or 2 args !!!
-        numComparison.terms match
-          case Some(nextTermOpt) =>
-            evalTerm(id, nextTermOpt.term).map { v =>
-              val nextVal = v.asInstanceOf[RealVal].value // TODO
-              nextTermOpt.op.tpe match
-                case Token.Type.Lt   => BooleanVal(tmp < nextVal)
-                case Token.Type.LtEq => BooleanVal(tmp <= nextVal)
-                case Token.Type.Gt   => BooleanVal(tmp > nextVal)
-                case _               => BooleanVal(tmp >= nextVal)
-            }
-          case None => Future.successful(intVal)
+          case None => Future.successful(numVal)
       case otherVal => Future.successful(otherVal)
     }
 
