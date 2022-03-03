@@ -11,10 +11,6 @@ import dev.sacode.flowrun.ProgramModel
 import dev.sacode.flowrun.FlowRun
 import RunVal.*
 
-/* TODO
-- implicit convert Int<->Double
- */
-
 final class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[FlowRun.Event]) {
   import Interpreter.*
 
@@ -307,6 +303,7 @@ final class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[Flow
         numComparison.terms match
           case Some(nextTermOpt) =>
             evalTerm(id, nextTermOpt.term).map { nextVal =>
+              // just promote both to Double and done
               val v1: Double = numVal.promote(id, "", Type.Real).asInstanceOf[RealVal].value
               val v2: Double = nextVal.promote(id, "", Type.Real).asInstanceOf[RealVal].value
               nextTermOpt.op.tpe match
@@ -335,7 +332,7 @@ final class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[Flow
                   if isPlus then RealVal(v1.value + v2.value) else RealVal(v1.value - v2.value)
                 case (v1: RealVal, v2: IntegerVal) => // promote Integer to Real
                   if isPlus then RealVal(v1.value + v2.value.toDouble) else RealVal(v1.value - v2.value.toDouble)
-                case (v1: IntegerVal , v2: RealVal) => // promote Integer to Real
+                case (v1: IntegerVal, v2: RealVal) => // promote Integer to Real
                   if isPlus then RealVal(v1.value.toDouble + v2.value) else RealVal(v1.value.toDouble - v2.value)
                 case (v1, v2) =>
                   val op = if isPlus then "sum" else "deduct"
@@ -374,13 +371,21 @@ final class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[Flow
             evalUnary(id, nextUnaryOpt.unary).map { nextVal =>
               (acc, nextVal) match
                 case (v1: IntegerVal, v2: IntegerVal) =>
-                  if isTimes then IntegerVal(v1.value * v2.value) else if isDiv then IntegerVal(v1.value / v2.value) else IntegerVal(v1.value % v2.value)
+                  if isTimes then IntegerVal(v1.value * v2.value)
+                  else if isDiv then IntegerVal(v1.value / v2.value)
+                  else IntegerVal(v1.value % v2.value)
                 case (v1: RealVal, v2: RealVal) =>
-                  if isTimes then RealVal(v1.value * v2.value) else if isDiv then RealVal(v1.value / v2.value) else RealVal(v1.value % v2.value)
+                  if isTimes then RealVal(v1.value * v2.value)
+                  else if isDiv then RealVal(v1.value / v2.value)
+                  else RealVal(v1.value % v2.value)
                 case (v1: RealVal, v2: IntegerVal) => // promote Integer to Real
-                  if isTimes then RealVal(v1.value * v2.value.toDouble) else if isDiv then RealVal(v1.value / v2.value.toDouble) else RealVal(v1.value % v2.value.toDouble)
-                case (v1: IntegerVal , v2: RealVal) => // promote Integer to Real
-                  if isTimes then RealVal(v1.value.toDouble * v2.value) else if isDiv then RealVal(v1.value.toDouble / v2.value) else RealVal(v1.value.toDouble % v2.value)
+                  if isTimes then RealVal(v1.value * v2.value.toDouble)
+                  else if isDiv then RealVal(v1.value / v2.value.toDouble)
+                  else RealVal(v1.value % v2.value.toDouble)
+                case (v1: IntegerVal, v2: RealVal) => // promote Integer to Real
+                  if isTimes then RealVal(v1.value.toDouble * v2.value)
+                  else if isDiv then RealVal(v1.value.toDouble / v2.value)
+                  else RealVal(v1.value.toDouble % v2.value)
                 case (v1, v2) =>
                   val op = if isTimes then "multiply" else if isDiv then "divide" else "mod"
                   throw EvalException(
@@ -432,11 +437,7 @@ final class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[Flow
             case None =>
               val funSym = symTab.getSymbolFun(id, name)
               val fun = allFunctions.find(_.name == name).get
-              if args.size != fun.parameters.size then
-                throw EvalException(
-                  s"Wrong number of arguments, expected ${fun.parameters.size} but got ${args.size}",
-                  id
-                )
+              validateArgsNumber(id, fun.name, fun.parameters.size, args.size)
               val argsWithTypes = args.zip(fun.parameters).zipWithIndex.map { case ((arg, p), idx) =>
                 if arg.tpe != p.tpe then
                   throw EvalException(
@@ -478,21 +479,30 @@ final class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[Flow
     }
 
   private def handlePredefinedFunction(id: String, f: PredefinedFunction, args: Seq[RunVal]): Future[RunVal] =
-    println("predefff " + f + "  " + args)
     import PredefinedFunction.*
     f match {
       case func @ Abs =>
-        val arg = args.headOption.getOrElse(throw EvalException(s"Expected one argument in function ${func.name}", id))
-        arg match
+        validateArgsNumber(id, func.name, 1, args.size)
+        args.head match
           case n: IntegerVal => Future(n.transform(_.abs))
-          case n: RealVal    => Future(n.transform(_.abs))
+          case n: RealVal    => Future(n.transform(_.abs)) // polymorphic, overloaded..
           case _             => throw EvalException(s"Expected a number argument in function ${func.name}", id)
       case func @ Length =>
-        val arg = args.headOption.getOrElse(throw EvalException(s"Expected one argument in function ${func.name}", id))
-        arg match
+        validateArgsNumber(id, func.name, 1, args.size)
+        args.head match
           case s: StringVal => Future(IntegerVal(s.value.length))
-          case _            => throw EvalException(s"Expected a number argument in function ${func.name}", id)
+          case _            => throw EvalException(s"Expected a String argument in function ${func.name}", id)
+      case func @ CharAt =>
+        validateArgsNumber(id, func.name, 2, args.size)
+        val str = args.head
+        val idx = args(1)
+        (str, idx) match
+          case (s: StringVal, i: IntegerVal) => Future(s.transform(_.apply(i.value).toString))
+          case _            => throw EvalException(s"Expected (String, Integer) arguments in function ${func.name}", id)
     }
+
+  private def validateArgsNumber(id: String, funName: String, expected: Int, got: Int): Unit =
+    if got != expected then throw EvalException(s"Wrong number of arguments in function $funName, expected $expected but got $got", id)
 }
 
 object Interpreter:
