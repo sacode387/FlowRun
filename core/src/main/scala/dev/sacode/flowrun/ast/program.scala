@@ -25,7 +25,8 @@ case class Function(
     s"$title$params: $tpe"
 
 object Function:
-  case class Parameter(id: String, name: String, tpe: Expression.Type)
+  case class Parameter(id: String, name: String, tpe: Expression.Type):
+    def pretty: String = s"$name: $tpe"
 
 case class Program(
     id: String,

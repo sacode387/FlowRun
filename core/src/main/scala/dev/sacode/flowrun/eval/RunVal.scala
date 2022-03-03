@@ -13,6 +13,24 @@ enum RunVal(val tpe: Type, val valueOpt: Option[Any]):
   case StringVal(value: String) extends RunVal(Type.String, Some(value))
   case BooleanVal(value: Boolean) extends RunVal(Type.Boolean, Some(value))
 
+  def pretty: String = this match
+    case NoVal => "Void"
+    case IntegerVal(value) => s"$value: Integer"
+    case RealVal(value) => s"$value: Real"
+    case StringVal(value) => s"$value: String"
+    case BooleanVal(value) => s"$value: Boolean"
+
+  def promote(nodeId: String, expectedName: String, expectedTpe: Type): RunVal =
+    if expectedTpe == Type.Real then
+      this match
+        case rv: RealVal    => rv
+        case iv: IntegerVal => RealVal(iv.value.toDouble)
+        case otherVal =>
+          throw EvalException(s"Expected '$expectedName: $expectedTpe' but got '${valueOpt.get}: ${tpe}'", nodeId)
+    else if tpe != expectedTpe then
+      throw EvalException(s"Expected '$expectedName: $expectedTpe' but got '${valueOpt.get}: ${tpe}'", nodeId)
+    else this
+
 object RunVal:
   import Type.*
   def fromValue(id: String, tpe: Type, value: Any): RunVal = (tpe, value) match

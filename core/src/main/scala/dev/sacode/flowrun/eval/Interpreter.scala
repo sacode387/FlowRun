@@ -118,16 +118,7 @@ final class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[Flow
             }
           case Some(expr) =>
             evalExpr(id, expr).map { v =>
-              val promotedVal =
-                if tpe == Type.Real then
-                  v match
-                    case rv: RealVal    => rv
-                    case iv: IntegerVal => RealVal(iv.value.toDouble)
-                    case otherVal =>
-                      throw EvalException(s"Expected '$name: $tpe' but got '${otherVal.valueOpt.get}: ${v.tpe}'", id)
-                else v
-              if promotedVal.tpe != tpe then
-                throw EvalException(s"Expected '$name: $tpe' but got '${v.valueOpt.get}: ${v.tpe}'", id)
+              val promotedVal = v.promote(id, name, tpe)
               symTab.addVar(id, name, tpe, Some(promotedVal))
               NoVal
             }
@@ -138,17 +129,7 @@ final class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[Flow
         evalExpr(id, parseExpr(id, expr)).map { exprValue =>
           if exprValue.valueOpt.get.toString.isEmpty && sym.tpe != Type.String then
             throw EvalException(s"Assign expression cannot be empty.", id)
-          val promotedVal =
-            if sym.tpe == Type.Real then
-              exprValue match
-                case rv: RealVal    => rv
-                case iv: IntegerVal => RealVal(iv.value.toDouble)
-                case otherVal =>
-                  throw EvalException(
-                    s"Expected '$name: ${sym.tpe}' but got '${otherVal.valueOpt.get}: ${exprValue.tpe}'",
-                    id
-                  )
-            else exprValue
+          val promotedVal = exprValue.promote(id, name, sym.tpe)
 
           symTab.setValue(id, name, promotedVal)
           NoVal
@@ -250,11 +231,16 @@ final class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[Flow
           boolVal,
           expr.boolOrComparisons,
           (acc, nextBoolOrOpt) => {
-            evalBoolAndComparison(id, nextBoolOrOpt.boolAndComparison).map { v =>
-              // TODO short circuit
-              val nextVal = v.asInstanceOf[BooleanVal]
-              boolVal.transform(_ || nextVal.value)
-            }
+            if acc.value then Future.successful(BooleanVal(true)) // short circuit when TRUE
+            else
+              evalBoolAndComparison(id, nextBoolOrOpt.boolAndComparison).map {
+                case nextVal: BooleanVal => acc.transform(_ || nextVal.value)
+                case otherVal =>
+                  throw EvalException(
+                    s"Expected a Boolean but got '${otherVal.pretty}' while evaluating || operation.",
+                    id
+                  )
+              }
           }
         )
       case otherVal => Future.successful(otherVal)
@@ -267,11 +253,16 @@ final class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[Flow
           boolVal,
           boolOrComparison.boolAndComparisons,
           (acc, nextBoolAndOpt) => {
-            evalNumComparison(id, nextBoolAndOpt.numComparison).map { v =>
-              // TODO short circuit
-              val nextVal = v.asInstanceOf[BooleanVal]
-              boolVal.transform(_ && nextVal.value)
-            }
+            if !acc.value then Future.successful(BooleanVal(false)) // short circuit when FALSE
+            else
+              evalNumComparison(id, nextBoolAndOpt.numComparison).map {
+                case nextVal: BooleanVal => acc.transform(_ && nextVal.value)
+                case otherVal =>
+                  throw EvalException(
+                    s"Expected a Boolean but got '${otherVal.pretty}' while evaluating && operation.",
+                    id
+                  )
+              }
           }
         )
       case otherVal => Future.successful(otherVal)
@@ -363,7 +354,7 @@ final class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[Flow
           term.factors,
           (acc, nextFactorOpt) => {
             evalFactor(id, nextFactorOpt.factor).map { v =>
-              val nextVal = v.toString
+              val nextVal = v.valueOpt.map(_.toString).getOrElse("")
               nextFactorOpt.op.tpe match
                 case Token.Type.Plus => acc.transform(_ + nextVal)
                 case _               => throw EvalException("Cannot subtract Strings", id)
@@ -453,7 +444,7 @@ final class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[Flow
               val argsWithTypes = args.zip(fun.parameters).zipWithIndex.map { case ((arg, p), idx) =>
                 if arg.tpe != p.tpe then
                   throw EvalException(
-                    s"Expected: '${p.name}: ${p.tpe}' at index $idx, got value '${arg.valueOpt.get}: ${arg.tpe}'",
+                    s"Expected: '${p.pretty}' at index $idx, got value '${arg.pretty}'",
                     id
                   )
                 (p.name, p.tpe, NoVal)
