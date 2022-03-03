@@ -274,14 +274,28 @@ final class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[Flow
         first,
         boolAndComparison.numComparisons,
         (acc, nextNumCompOpt) => {
-          // TODO check what types are comparable
-          // int == double, string==int ????????????''
-          evalNumComparison(id, nextNumCompOpt.numComparison).map {
-            case NoVal => BooleanVal(false) // TODO throw ?
-            case nextVal =>
-              nextNumCompOpt.op.tpe match
-                case Token.Type.EqualsEquals => BooleanVal(acc == nextVal)
-                case _                       => BooleanVal(acc != nextVal)
+          val isEquals = nextNumCompOpt.op.tpe == Token.Type.EqualsEquals
+          evalNumComparison(id, nextNumCompOpt.numComparison).map { nextVal =>
+            (acc, nextVal) match
+              case (v1: IntegerVal, v2: IntegerVal) =>
+                if isEquals then BooleanVal(v1.value == v2.value) else BooleanVal(v1.value != v2.value)
+              case (v1: RealVal, v2: RealVal) =>
+                if isEquals then BooleanVal(v1.value == v2.value) else BooleanVal(v1.value != v2.value)
+              case (v1: RealVal, v2: IntegerVal) => // promote Integer to Real
+                if isEquals then BooleanVal(v1.value == v2.value.toDouble)
+                else BooleanVal(v1.value != v2.value.toDouble)
+              case (v1: IntegerVal, v2: RealVal) => // promote Integer to Real
+                if isEquals then BooleanVal(v1.value.toDouble == v2.value)
+                else BooleanVal(v1.value.toDouble != v2.value)
+              case (v1: StringVal, v2: StringVal) =>
+                if isEquals then BooleanVal(v1.value == v2.value) else BooleanVal(v1.value != v2.value)
+              case (v1: BooleanVal, v2: BooleanVal) =>
+                if isEquals then BooleanVal(v1.value == v2.value) else BooleanVal(v1.value != v2.value)
+              case (v1, v2) =>
+                throw EvalException(
+                  s"Values '${v1.pretty}' and '${v2.pretty}' are not comparable.",
+                  id
+                )
           }
         }
       )
