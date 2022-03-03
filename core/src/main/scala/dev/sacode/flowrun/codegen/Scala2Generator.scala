@@ -57,7 +57,7 @@ class Scala2Generator(programAst: Program) extends CodeGenerator {
       case Call(_, value) =>
         value.indented(indent)
       case Input(_, name) =>
-        val symOpt = getVarSym(name)
+        val symOpt = Try(symTab.getSymbolVar("", name)).toOption
         val readFun = readFunction(symOpt.map(_.tpe))
         s"$name = StdIn.$readFun()".indented(indent)
       case Output(_, value) =>
@@ -103,9 +103,4 @@ class Scala2Generator(programAst: Program) extends CodeGenerator {
         case Type.Boolean => "readBoolean"
         case _            => "readLine"
 
-  private def getVarSym(name: String) = Try {
-    val id = "dummy"
-    val key = SymbolKey(name, Symbol.Kind.Variable, id)
-    symTab.getSymbol(id, key)
-  }.toOption
 }

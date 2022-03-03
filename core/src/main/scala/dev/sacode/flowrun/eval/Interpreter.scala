@@ -5,7 +5,7 @@ import scala.concurrent.{Future, Promise}
 import scala.concurrent.ExecutionContext.Implicits.global
 import scalajs.js
 import reactify.*
-import dev.sacode.flowrun.ast.*
+import dev.sacode.flowrun.ast.*, Expression.Type
 import dev.sacode.flowrun.parse.{Token, parseExpr, ParseException, LexException}
 import dev.sacode.flowrun.ProgramModel
 import dev.sacode.flowrun.FlowRun
@@ -28,10 +28,9 @@ final class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[Flow
 
     state = State.RUNNING
 
-    val functionsFuture = Future { // Future needed coz SymbolKey throws
+    val functionsFuture = Future { // Future needed coz symTab throws
       allFunctions.foreach { fun =>
-        val key = SymbolKey(fun.name, Symbol.Kind.Function, "")
-        symTab.add(null, key, fun.tpe, None)
+        symTab.addFun(fun.id, fun.name, fun.tpe, None)
       }
     }
 
@@ -64,15 +63,14 @@ final class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[Flow
   }
 
   def setValue(nodeId: String, name: String, inputValue: String): Option[RunVal] =
-    val key = SymbolKey(name, Symbol.Kind.Variable, nodeId)
-    val sym = symTab.getSymbol(nodeId, key)
+    val sym = symTab.getSymbolVar(nodeId, name)
     try {
       val value = sym.tpe match
-        case Expression.Type.Integer => IntegerVal(inputValue.toInt)
-        case Expression.Type.Real    => RealVal(inputValue.toDouble)
-        case Expression.Type.Boolean => BooleanVal(inputValue.toBoolean)
-        case Expression.Type.String  => StringVal(inputValue)
-        case Expression.Type.Void    => throw EvalException("Cant set Void var... (should not happen)", nodeId)
+        case Type.Integer => IntegerVal(inputValue.toInt)
+        case Type.Real    => RealVal(inputValue.toDouble)
+        case Type.Boolean => BooleanVal(inputValue.toBoolean)
+        case Type.String  => StringVal(inputValue)
+        case Type.Void    => throw EvalException("Cant set Void var... (should not happen)", nodeId)
       symTab.setValue(nodeId, name, value)
       state = State.RUNNING
       Some(value)
@@ -93,12 +91,11 @@ final class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[Flow
 
   private def interpretFunction(
       fun: Function,
-      arguments: List[(String, Expression.Type, RunVal)]
+      arguments: List[(String, Type, RunVal)]
   ): Future[RunVal] =
     symTab.enterScope(fun.id, fun.name)
     arguments.foreach { (name, tpe, value) =>
-      val key = SymbolKey(name, Symbol.Kind.Variable, "")
-      symTab.add(null, key, tpe, Some(value))
+      symTab.addVar(fun.id, name, tpe, Some(value))
     }
     execSequentially(NoVal, fun.statements, (_, s) => interpretStatement(s)).map { result =>
       symTab.exitScope()
@@ -116,14 +113,13 @@ final class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[Flow
         maybeInitValueExpr match
           case None =>
             Future {
-              val key = SymbolKey(name, Symbol.Kind.Variable, id)
-              symTab.add(id, key, tpe, None)
+              symTab.addVar(id, name, tpe, None)
               NoVal
             }
           case Some(expr) =>
             evalExpr(id, expr).map { v =>
               val promotedVal =
-                if tpe == Expression.Type.Real then
+                if tpe == Type.Real then
                   v match
                     case rv: RealVal    => rv
                     case iv: IntegerVal => RealVal(iv.value.toDouble)
@@ -132,26 +128,28 @@ final class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[Flow
                 else v
               if promotedVal.tpe != tpe then
                 throw EvalException(s"Expected '$name: $tpe' but got '${v.valueOpt.get}: ${v.tpe}'", id)
-              val key = SymbolKey(name, Symbol.Kind.Variable, id)
-              symTab.add(id, key, tpe, Some(promotedVal))
+              symTab.addVar(id, name, tpe, Some(promotedVal))
               NoVal
             }
 
       case Assign(id, name, expr) =>
         if !symTab.isDeclaredVar(name) then throw EvalException(s"Variable '$name' is not declared.", id)
-        val key = SymbolKey(name, Symbol.Kind.Variable, id)
-        val sym = symTab.getSymbol(id, key)
+        val sym = symTab.getSymbolVar(id, name)
         evalExpr(id, parseExpr(id, expr)).map { exprValue =>
-          if exprValue.valueOpt.get.toString.isEmpty && sym.tpe != Expression.Type.String then
+          if exprValue.valueOpt.get.toString.isEmpty && sym.tpe != Type.String then
             throw EvalException(s"Assign expression cannot be empty.", id)
           val promotedVal =
-            if sym.tpe == Expression.Type.Real then
+            if sym.tpe == Type.Real then
               exprValue match
                 case rv: RealVal    => rv
                 case iv: IntegerVal => RealVal(iv.value.toDouble)
                 case otherVal =>
-                  throw EvalException(s"Expected '$name: ${sym.tpe}' but got '${otherVal.valueOpt.get}: ${exprValue.tpe}'", id)
+                  throw EvalException(
+                    s"Expected '$name: ${sym.tpe}' but got '${otherVal.valueOpt.get}: ${exprValue.tpe}'",
+                    id
+                  )
             else exprValue
+
           symTab.setValue(id, name, promotedVal)
           NoVal
         }
@@ -225,9 +223,7 @@ final class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[Flow
           // maybe declare a new var
           _ =
             if symTab.isDeclaredVar(varName) then symTab.setValue(id, varName, start)
-            else
-              val key = SymbolKey(varName, Symbol.Kind.Variable, id)
-              symTab.add(id, key, Expression.Type.Integer, Some(start))
+            else symTab.addVar(id, varName, Type.Integer, Some(start))
 
           comparator = if incr.value >= 0 then "<=" else ">="
           conditionExpr = s"$varName $comparator ${end.value}"
@@ -447,9 +443,7 @@ final class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[Flow
             case Some(f) =>
               handlePredefinedFunction(id, f, args)
             case None =>
-              // check if defined
-              val key = SymbolKey(name, Symbol.Kind.Function, id)
-              val funSym = symTab.getSymbol(id, key)
+              val funSym = symTab.getSymbolFun(id, name)
               val fun = allFunctions.find(_.name == name).get
               if args.size != fun.parameters.size then
                 throw EvalException(

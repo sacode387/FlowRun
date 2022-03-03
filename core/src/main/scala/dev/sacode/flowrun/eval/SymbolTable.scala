@@ -29,6 +29,14 @@ class SymbolTable(flowrunChannel: Channel[FlowRun.Event]) {
   def add(nodeId: String, key: SymbolKey, tpe: Type, value: Option[RunVal]): Symbol =
     currentScope.add(nodeId, key, tpe, value)
 
+  def addVar(nodeId: String, name: String, tpe: Type, value: Option[RunVal]): Symbol =
+    val key = SymbolKey(name, Symbol.Kind.Variable, nodeId)
+    add(nodeId, key, tpe, value)
+  
+  def addFun(nodeId: String, name: String, tpe: Type, value: Option[RunVal]): Symbol =
+    val key = SymbolKey(name, Symbol.Kind.Function, nodeId)
+    add(nodeId, key, tpe, value)
+
   def setValue(nodeId: String, name: String, value: RunVal): Unit =
     currentScope.setValue(nodeId, name, value)
 
@@ -43,6 +51,14 @@ class SymbolTable(flowrunChannel: Channel[FlowRun.Event]) {
 
   def getSymbol(nodeId: String, key: SymbolKey): Symbol =
     currentScope.getSymbol(nodeId, key)
+  
+  def getSymbolVar(nodeId: String, name: String): Symbol =
+    val key = SymbolKey(name, Symbol.Kind.Variable, nodeId)
+    getSymbol(nodeId, key)
+  
+  def getSymbolFun(nodeId: String, name: String): Symbol =
+    val key = SymbolKey(name, Symbol.Kind.Function, nodeId)
+    getSymbol(nodeId, key)
 
   private def error(msg: String, nodeId: String) =
     throw EvalException(msg, nodeId)
@@ -84,7 +100,7 @@ class Scope(
     val key = SymbolKey(name, Symbol.Kind.Variable, nodeId)
     val sym = getSymbol(nodeId, key)
     if value.tpe != sym.tpe then
-      throw EvalException(s"Expected '$name: ${sym.tpe}' but got '${value.valueOpt.get}: ${value.tpe}'", nodeId)
+      error(s"Expected '$name: ${sym.tpe}' but got '${value.valueOpt.get}: ${value.tpe}'", nodeId)
     val updatedSym = sym.copy(value = Some(value))
     sym.scope.set(key, updatedSym)
     flowrunChannel := FlowRun.Event.SymbolTableUpdated

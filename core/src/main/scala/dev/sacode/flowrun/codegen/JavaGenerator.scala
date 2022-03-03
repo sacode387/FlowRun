@@ -66,7 +66,7 @@ class JavaGenerator(programAst: Program) extends CodeGenerator {
         s"$value;".indented(indent)
       case Input(_, name) =>
         initInput = true
-        val symOpt = getVarSym(name)
+        val symOpt = Try(symTab.getSymbolVar("", name)).toOption
         val readFun = readFunction(symOpt.map(_.tpe))
         s"$name = scanner.$readFun();".indented(indent)
       case Output(_, value) =>
@@ -112,9 +112,4 @@ class JavaGenerator(programAst: Program) extends CodeGenerator {
         case Type.Boolean => "nextBoolean"
         case _            => "nextLine"
 
-  private def getVarSym(name: String) = Try {
-    val id = "dummy"
-    val key = SymbolKey(name, Symbol.Kind.Variable, id)
-    symTab.getSymbol(id, key)
-  }.toOption
 }
