@@ -19,11 +19,9 @@ final class StatementEditor(
 
   def edit(stmtId: String): Unit = {
 
-    val stmt = programModel.findStatement(stmtId)
-
     val stmtElem = div(cls := "flowrun-stmt-inputs")
 
-    stmt match {
+    programModel.findStatement(stmtId) match {
       case _: Begin =>
         if currFun.isMain then Toastify(ToastifyOptions("Begin is not editable.", Color.yellow)).showToast()
         else {
@@ -86,12 +84,12 @@ final class StatementEditor(
         else
           val exprInputElem = newExprInput(statement.id, 10, statement.maybeValue.getOrElse(""), "x + 1")(
             newExprText => {
-              val updatedStmt = statement.copy(maybeValue = Some(newExprText))
+              val updatedStmt = programModel.findStatement(stmtId).asInstanceOf[Return].copy(maybeValue = Some(newExprText))
               programModel.updateStmt(updatedStmt)
             },
             (e, newExprText) => {
               if newExprText.isEmpty then
-                val updatedStmt = statement.copy(maybeValue = None)
+                val updatedStmt = programModel.findStatement(stmtId).asInstanceOf[Return].copy(maybeValue = None)
                 programModel.updateStmt(updatedStmt)
               else flowrunChannel := FlowRun.Event.SyntaxError(e.getMessage)
             }
@@ -102,21 +100,21 @@ final class StatementEditor(
 
       case statement: Declare =>
         val nameInputElem = newNameInput(10, statement.name, "x") { newName =>
-          val updatedStmt = statement.copy(name = newName)
+          val updatedStmt = programModel.findStatement(stmtId).asInstanceOf[Declare].copy(name = newName)
           programModel.updateStmt(updatedStmt)
         }
         val typeInputElem = newTypeInput(Expression.Type.VarTypes.toSeq, statement.tpe) { newType =>
-          val updatedStmt = statement.copy(tpe = newType)
+          val updatedStmt = programModel.findStatement(stmtId).asInstanceOf[Declare].copy(tpe = newType)
           programModel.updateStmt(updatedStmt)
         }
         val exprInputElem = newExprInput(statement.id, 10, statement.initValue.getOrElse(""), "123")(
           newExprText => {
-            val updatedStmt = statement.copy(initValue = Some(newExprText))
+            val updatedStmt = programModel.findStatement(stmtId).asInstanceOf[Declare].copy(initValue = Some(newExprText))
             programModel.updateStmt(updatedStmt)
           },
           (e, newExprText) => {
             if newExprText.isEmpty then
-              val updatedStmt = statement.copy(initValue = None)
+              val updatedStmt = programModel.findStatement(stmtId).asInstanceOf[Declare].copy(initValue = None)
               programModel.updateStmt(updatedStmt)
             else flowrunChannel := FlowRun.Event.SyntaxError(e.getMessage)
           }
@@ -135,7 +133,7 @@ final class StatementEditor(
 
       case statement: Input =>
         val nameInputElem = newNameInput(10, statement.name, "x") { newName =>
-          val updatedStmt = statement.copy(name = newName)
+          val updatedStmt = programModel.findStatement(stmtId).asInstanceOf[Input].copy(name = newName)
           programModel.updateStmt(updatedStmt)
         }
         flowRunElements.stmtOutput.innerText = ""
@@ -144,11 +142,11 @@ final class StatementEditor(
 
       case statement: Output =>
         val exprInputElem = newExprInput(statement.id, 30, statement.value, "\"Hello!\"")(newExprText => {
-          val updatedStmt = statement.copy(value = newExprText)
+          val updatedStmt = programModel.findStatement(stmtId).asInstanceOf[Output].copy(value = newExprText)
           programModel.updateStmt(updatedStmt)
         })
         val newlineInput = newCheckbox(statement.newline, isEnabled => {
-          val updatedStmt = statement.copy(newline = isEnabled)
+          val updatedStmt = programModel.findStatement(stmtId).asInstanceOf[Output].copy(newline = isEnabled)
           programModel.updateStmt(updatedStmt)
         })
         flowRunElements.stmtOutput.innerText = ""
@@ -159,11 +157,11 @@ final class StatementEditor(
 
       case statement: Assign =>
         val nameInputElem = newNameInput(10, statement.name, "x") { newName =>
-          val updatedStmt = statement.copy(name = newName)
+          val updatedStmt = programModel.findStatement(stmtId).asInstanceOf[Assign].copy(name = newName)
           programModel.updateStmt(updatedStmt)
         }
         val exprInputElem = newExprInput(statement.id, 10, statement.value, "x + 1")(newExprText => {
-          val updatedStmt = statement.copy(value = newExprText)
+          val updatedStmt = programModel.findStatement(stmtId).asInstanceOf[Assign].copy(value = newExprText)
           programModel.updateStmt(updatedStmt)
         })
         flowRunElements.stmtOutput.innerText = ""
@@ -178,7 +176,7 @@ final class StatementEditor(
 
       case statement: Call =>
         val exprInputElem = newExprInput(statement.id, 10, statement.value, "fun1()")(newExprText => {
-          val updatedStmt = statement.copy(value = newExprText)
+          val updatedStmt = programModel.findStatement(stmtId).asInstanceOf[Call].copy(value = newExprText)
           programModel.updateStmt(updatedStmt)
         })
         flowRunElements.stmtOutput.innerText = ""
@@ -187,7 +185,7 @@ final class StatementEditor(
 
       case statement: If =>
         val exprInputElem = newExprInput(statement.id, 10, statement.condition, "true")(newExprText => {
-          val updatedStmt = statement.copy(condition = newExprText)
+          val updatedStmt = programModel.findStatement(stmtId).asInstanceOf[If].copy(condition = newExprText)
           programModel.updateStmt(updatedStmt)
         })
         flowRunElements.stmtOutput.innerText = ""
@@ -196,7 +194,7 @@ final class StatementEditor(
 
       case statement: While =>
         val exprInputElem = newExprInput(statement.id, 10, statement.condition, "true")(newExprText => {
-          val updatedStmt = statement.copy(condition = newExprText)
+          val updatedStmt = programModel.findStatement(stmtId).asInstanceOf[While].copy(condition = newExprText)
           programModel.updateStmt(updatedStmt)
         })
         flowRunElements.stmtOutput.innerText = ""
@@ -205,7 +203,7 @@ final class StatementEditor(
 
       case statement: DoWhile =>
         val exprInputElem = newExprInput(statement.id, 10, statement.condition, "true")(newExprText => {
-          val updatedStmt = statement.copy(condition = newExprText)
+          val updatedStmt = programModel.findStatement(stmtId).asInstanceOf[DoWhile].copy(condition = newExprText)
           programModel.updateStmt(updatedStmt)
         })
         flowRunElements.stmtOutput.innerText = ""
@@ -214,19 +212,19 @@ final class StatementEditor(
 
       case statement: ForLoop =>
         val nameInputElem = newNameInput(3, statement.varName, "x") { newName =>
-          val updatedStmt = statement.copy(varName = newName)
+          val updatedStmt = programModel.findStatement(stmtId).asInstanceOf[ForLoop].copy(varName = newName)
           programModel.updateStmt(updatedStmt)
         }
         val startInputElem = newExprInput(statement.id, 3, statement.start, "0")(newExprText => {
-          val updatedStmt = statement.copy(start = newExprText)
+          val updatedStmt = programModel.findStatement(stmtId).asInstanceOf[ForLoop].copy(start = newExprText)
           programModel.updateStmt(updatedStmt)
         })
         val toInputElem = newExprInput(statement.id, 3, statement.end, "10")(newExprText => {
-          val updatedStmt = statement.copy(end = newExprText)
+          val updatedStmt = programModel.findStatement(stmtId).asInstanceOf[ForLoop].copy(end = newExprText)
           programModel.updateStmt(updatedStmt)
         })
         val byInputElem = newExprInput(statement.id, 3, statement.incr, "1")(newExprText => {
-          val updatedStmt = statement.copy(incr = newExprText)
+          val updatedStmt = programModel.findStatement(stmtId).asInstanceOf[ForLoop].copy(incr = newExprText)
           programModel.updateStmt(updatedStmt)
         })
         flowRunElements.stmtOutput.innerText = ""

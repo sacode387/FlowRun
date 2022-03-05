@@ -37,6 +37,15 @@ class OutputArea(
     flowRunElements.runtimeOutput.innerText = ""
     flowRunElements.runtimeOutput.classList.remove("flowrun--error")
 
+  def runtimeOutput(txt: String, newline: Boolean): Unit = {
+    val newOutput =
+      if newline then
+        if txt.isEmpty then br
+        else div(samp(txt), br)
+      else samp(txt)
+    flowRunElements.runtimeOutput.appendChild(newOutput.render)
+  }
+
   def runtimeError(msg: String, startTime: String, endTime: String): Unit =
     clearStmt()
     clearSyntax()

@@ -130,8 +130,7 @@ class FlowRun(
         outputArea.finished()
       }
     case EvalOutput(output, newline) =>
-      val newOutput = if newline then div(samp(output), br) else samp(output)
-      flowRunElements.runtimeOutput.appendChild(newOutput.render)
+      outputArea.runtimeOutput(output, newline)
     case EvalInput(nodeId, name) =>
       outputArea.evalInput(nodeId, name)
     case SymbolTableUpdated =>
