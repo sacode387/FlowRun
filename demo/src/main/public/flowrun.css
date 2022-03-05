@@ -419,6 +419,10 @@ pre>* {
     color: white;
     border: 1px var(--flowrun-blue-darker) solid;
 }
+.flowrun-context-menu>button:disabled {
+    background-color: var(--flowrun-grey-darker);
+    color: var(--flowrun-blue-darker);
+}
 
 .flowrun-context-menu>*:hover {
     background: var(--flowrun-blue-darker);

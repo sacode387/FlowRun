@@ -3,10 +3,13 @@ package dev.sacode.flowrun.edit
 import org.scalajs.dom
 import reactify.*
 import org.getshaka.nativeconverter.fromJson
+import dev.sacode.flowrun.toastify
+import dev.sacode.flowrun.ToastifyOptions
 import dev.sacode.flowrun.ProgramModel
 import dev.sacode.flowrun.FlowRunElements
 import dev.sacode.flowrun.FlowRun
 import dev.sacode.flowrun.ast.{AST, Statement, Expression}, Statement.*
+import dev.sacode.flowrun.Color
 
 class CtxMenu(programModel: ProgramModel, flowRunElements: FlowRunElements, flowrunChannel: Channel[FlowRun.Event]) {
 
@@ -24,10 +27,24 @@ class CtxMenu(programModel: ProgramModel, flowRunElements: FlowRunElements, flow
   private val nodeContextMenu =
     flowRunElements.mountElem.querySelector(".flowrun-node-context-menu").asInstanceOf[dom.html.Element]
 
+  private val copyButton = nodeContextMenu.querySelector(".flowrun-copy-stmt").asInstanceOf[dom.html.Element]
+  private val deleteButton = nodeContextMenu.querySelector(".flowrun-delete").asInstanceOf[dom.html.Element]
+
+  private val pasteButton = edgeContextMenu.querySelector(".flowrun-paste-stmt").asInstanceOf[dom.html.Button]
+  private val addDeclareButton = edgeContextMenu.querySelector(".flowrun-add-declare").asInstanceOf[dom.html.Element]
+  private val addAssignButton = edgeContextMenu.querySelector(".flowrun-add-assign").asInstanceOf[dom.html.Element]
+  private val addInputButton = edgeContextMenu.querySelector(".flowrun-add-input").asInstanceOf[dom.html.Element]
+  private val addOutputButton = edgeContextMenu.querySelector(".flowrun-add-output").asInstanceOf[dom.html.Element]
+  private val addCallButton = edgeContextMenu.querySelector(".flowrun-add-call").asInstanceOf[dom.html.Element]
+  private val addIfButton = edgeContextMenu.querySelector(".flowrun-add-if").asInstanceOf[dom.html.Element]
+  private val addWhileButton = edgeContextMenu.querySelector(".flowrun-add-while").asInstanceOf[dom.html.Element]
+  private val addDoWhileButton = edgeContextMenu.querySelector(".flowrun-add-do-while").asInstanceOf[dom.html.Element]
+  private val addForLoopButton = edgeContextMenu.querySelector(".flowrun-add-for").asInstanceOf[dom.html.Element]
+
   def init(): Unit =
     attachListeners()
 
-  def handleClick(x: Double, y: Double, n: dom.svg.Element): Unit = {
+  def handleEdgeRightClick(x: Double, y: Double, n: dom.svg.Element): Unit = {
     // here we know which EDGE is clicked
     // we save relevant ids, and then use them when a button is clicked
     hideAllMenus()
@@ -37,9 +54,13 @@ class CtxMenu(programModel: ProgramModel, flowRunElements: FlowRunElements, flow
       edgeContextMenu.style.left = s"${x}px"
       edgeContextMenu.style.top = s"${y}px"
       edgeContextMenu.classList.add("active")
+      dom.window.navigator.clipboard.readText().`then` { copiedText =>
+        val hasText = Option(copiedText).getOrElse("").trim.nonEmpty
+        pasteButton.disabled = !hasText
+      }
   }
 
-  def handleRightClick(event: dom.MouseEvent, nodeId: String, nodeTpe: String): Unit = {
+  def handleNodeRightClick(event: dom.MouseEvent, nodeId: String, nodeTpe: String): Unit = {
     // here we know which NODE is right-clicked
     // we save relevant ids, and then use them when delete is clicked
     hideAllMenus()
@@ -75,20 +96,6 @@ class CtxMenu(programModel: ProgramModel, flowRunElements: FlowRunElements, flow
 
   private def attachListeners(): Unit = {
 
-    val copyButton = nodeContextMenu.querySelector(".flowrun-copy-stmt").asInstanceOf[dom.html.Element]
-    val deleteButton = nodeContextMenu.querySelector(".flowrun-delete").asInstanceOf[dom.html.Element]
-
-    val pasteButton = edgeContextMenu.querySelector(".flowrun-paste-stmt").asInstanceOf[dom.html.Element]
-    val addDeclareButton = edgeContextMenu.querySelector(".flowrun-add-declare").asInstanceOf[dom.html.Element]
-    val addAssignButton = edgeContextMenu.querySelector(".flowrun-add-assign").asInstanceOf[dom.html.Element]
-    val addInputButton = edgeContextMenu.querySelector(".flowrun-add-input").asInstanceOf[dom.html.Element]
-    val addOutputButton = edgeContextMenu.querySelector(".flowrun-add-output").asInstanceOf[dom.html.Element]
-    val addCallButton = edgeContextMenu.querySelector(".flowrun-add-call").asInstanceOf[dom.html.Element]
-    val addIfButton = edgeContextMenu.querySelector(".flowrun-add-if").asInstanceOf[dom.html.Element]
-    val addWhileButton = edgeContextMenu.querySelector(".flowrun-add-while").asInstanceOf[dom.html.Element]
-    val addDoWhileButton = edgeContextMenu.querySelector(".flowrun-add-do-while").asInstanceOf[dom.html.Element]
-    val addForLoopButton = edgeContextMenu.querySelector(".flowrun-add-for").asInstanceOf[dom.html.Element]
-
     // node buttons
     copyButton.addEventListener(
       "click",
@@ -107,9 +114,14 @@ class CtxMenu(programModel: ProgramModel, flowRunElements: FlowRunElements, flow
     pasteButton.addEventListener(
       "click",
       (event: dom.MouseEvent) =>
-        dom.window.navigator.clipboard.readText().`then` { stmtJson =>
-          val newStmt = stmtJson.fromJson[Statement].duplicated
-          addStatement(newStmt)
+        dom.window.navigator.clipboard.readText().`then` { copiedText =>
+          try {
+            val newStmt = copiedText.fromJson[Statement].duplicated
+            addStatement(newStmt)
+          } catch {
+            e => 
+              toastify.Toastify(ToastifyOptions("Not a valid statement", Color.yellow)).showToast()
+          }
         }
     )
 

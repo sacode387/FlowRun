@@ -268,10 +268,10 @@ class FlowRun(
             val idParts = n.id.split("#", -1)
             val nodeId = idParts(0)
             val tpe = idParts(1)
-            ctxMenu.handleRightClick(event, nodeId, tpe)
+            ctxMenu.handleNodeRightClick(event, nodeId, tpe)
           case ("EDGE", n) =>
             programModel.currentEdgeId = Some(n.id)
-            ctxMenu.handleClick(event.clientX, event.clientY, n)
+            ctxMenu.handleEdgeRightClick(event.clientX, event.clientY, n)
             programModel.currentEdgeId.foreach { id =>
               dom.window.document
                 .querySelectorAll(s""" .edge[id*="$id"] """)
