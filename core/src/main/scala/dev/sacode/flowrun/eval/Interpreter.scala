@@ -140,10 +140,10 @@ final class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[Flow
         flowrunChannel := FlowRun.Event.EvalInput(id, name)
         waitForContinue().map(_ => NoVal)
 
-      case Output(id, expr) =>
+      case Output(id, expr, newline) =>
         evalExpr(id, parseExpr(id, expr)).map { outputValue =>
           val newOutput = outputValue.valueOpt.getOrElse("null").toString
-          flowrunChannel := FlowRun.Event.EvalOutput(newOutput)
+          flowrunChannel := FlowRun.Event.EvalOutput(newOutput, newline)
           NoVal
         }
 

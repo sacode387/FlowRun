@@ -129,9 +129,9 @@ class FlowRun(
         functionSelector.loadFunctions()
         outputArea.finished()
       }
-    case EvalOutput(output) =>
-      val newOutput = div(samp(output), br).render
-      flowRunElements.runtimeOutput.appendChild(newOutput)
+    case EvalOutput(output, newline) =>
+      val newOutput = if newline then div(samp(output), br) else samp(output)
+      flowRunElements.runtimeOutput.appendChild(newOutput.render)
     case EvalInput(nodeId, name) =>
       outputArea.evalInput(nodeId, name)
     case SymbolTableUpdated =>
@@ -305,7 +305,7 @@ object FlowRun:
   enum Event:
     case EvalSuccess
     case EvalError(nodeId: String, msg: String, funId: String)
-    case EvalOutput(msg: String)
+    case EvalOutput(msg: String, newline: Boolean)
     case EvalInput(nodeId: String, name: String)
     case SyntaxSuccess
     case StmtDeleted

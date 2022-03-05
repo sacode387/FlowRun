@@ -84,7 +84,7 @@ object InterpreterTests extends TestSuite {
         List(
           S.Declare(getId(), "x", E.Type.Integer, None),
           S.Assign(getId(), "x", "6"),
-          S.Output(getId(), "x")
+          S.Output(getId(), "x", true)
         )
       )
       val flowrunChannel = Channel[FlowRun.Event]

@@ -69,7 +69,7 @@ class JavaGenerator(programAst: Program) extends CodeGenerator {
         val symOpt = Try(symTab.getSymbolVar("", name)).toOption
         val readFun = readFunction(symOpt.map(_.tpe))
         s"$name = scanner.$readFun();".indented(indent)
-      case Output(_, value) =>
+      case Output(_, value, newline) =>
         s"System.out.println($value);".indented(indent)
       case Block(blockId, statements) =>
         statements.map(genStatement).mkString("\n")

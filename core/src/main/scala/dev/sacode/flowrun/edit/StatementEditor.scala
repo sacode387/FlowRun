@@ -147,8 +147,14 @@ final class StatementEditor(
           val updatedStmt = statement.copy(value = newExprText)
           programModel.updateStmt(updatedStmt)
         })
+        val newlineInput = newCheckbox(statement.newline, isEnabled => {
+          val updatedStmt = statement.copy(newline = isEnabled)
+          programModel.updateStmt(updatedStmt)
+        })
         flowRunElements.stmtOutput.innerText = ""
-        flowRunElements.stmtOutput.appendChild(exprInputElem)
+        flowRunElements.stmtOutput.appendChild(
+          stmtElem(exprInputElem, newlineInput).render
+        )
         exprInputElem.focus()
 
       case statement: Assign =>
@@ -341,6 +347,22 @@ final class StatementEditor(
       dom.window.document.getElementById(param.id).remove()
     }
     paramNameInput
+  }
+
+  private def newCheckbox(init: Boolean, onChange: Boolean => Unit) = {
+    val inputId = UUID.randomUUID().toString
+    frag(
+      input(
+        tpe := "checkbox",
+        id := inputId,
+        Option.when(init)(checked),
+        onchange := { (e: dom.Event) =>
+          val thisElem = e.target.asInstanceOf[dom.html.Input]
+          onChange(thisElem.checked)
+        }
+      ),
+      label("New line", `for` := inputId)
+    )
   }
 
 }

@@ -60,8 +60,9 @@ class Scala2Generator(programAst: Program) extends CodeGenerator {
         val symOpt = Try(symTab.getSymbolVar("", name)).toOption
         val readFun = readFunction(symOpt.map(_.tpe))
         s"$name = StdIn.$readFun()".indented(indent)
-      case Output(_, value) =>
-        s"println($value)".indented(indent)
+      case Output(_, value, newline) =>
+        if newline then s"println($value)".indented(indent)
+        else s"print($value)".indented(indent)
       case Block(blockId, statements) =>
         statements.map(genStatement).mkString("\n")
       case Return(_, maybeValue) =>

@@ -55,7 +55,7 @@ object Statement:
     override def duplicated: Input = copy(id = AST.newId)
     override def label = name
 
-  case class Output(override val id: String, value: String) extends Statement(id):
+  case class Output(override val id: String, value: String, newline: Boolean) extends Statement(id):
     override def duplicated: Output = copy(id = AST.newId)
     override def label = value
 

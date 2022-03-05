@@ -142,7 +142,7 @@ class CtxMenu(programModel: ProgramModel, flowRunElements: FlowRunElements, flow
 
     addOutputButton.addEventListener(
       "click",
-      (event: dom.MouseEvent) => addStatement(Output(AST.newId, "\"output\""))
+      (event: dom.MouseEvent) => addStatement(Output(AST.newId, "\"output\"", true))
     )
 
     addCallButton.addEventListener(
