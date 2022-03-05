@@ -83,9 +83,15 @@ class FlowchartPresenter(
     |  node [penwidth=0.5 fontsize="12" shape="box" style="filled" fontcolor="white" fontname="${colorScheme.fontName}"]
     |  edge [penwidth=2 fontsize="10" color="#0A1931" arrowsize=0.8 fontname="${colorScheme.fontName}"]
     |
-    |  $nodesDOT
+    |#########
+    |# NODES #
+    |#########
+    |${nodesDOT.indented(2)}
     |
-    |  $edgesDOT
+    |#########
+    |# EDGES #
+    |#########
+    |${edgesDOT.indented(2)}
     |
     |}
     |""".stripMargin
@@ -120,7 +126,7 @@ class FlowchartPresenter(
         val tooltip = if programModel.currentFunction.isMain then "Begin" else programModel.currentFunction.verboseLabel
         val dot =
           s"""|${stmt.id} [id="$stmtId" ${pos(posX, posY)} ${dimensions(lbl)} $group 
-              | label="$lbl" tooltip="$tooltip" shape="ellipse" ${colorScheme.startEndNode.graphvizColors}]
+              |  label="$lbl" tooltip="$tooltip" shape="ellipse" ${colorScheme.startEndNode.graphvizColors}]
               |""".stripMargin.replaceAll("\n", " ")
         (dot, posY)
 
@@ -128,7 +134,7 @@ class FlowchartPresenter(
         val lbl = if programModel.currentFunction.isMain then "End" else stmt.label
         val dot =
           s"""|${stmt.id} [id="$stmtId" ${pos(posX, posY)} ${dimensions(lbl)} $group 
-              | label="$lbl" tooltip="$lbl" shape="ellipse" ${colorScheme.startEndNode.graphvizColors}]
+              |  label="$lbl" tooltip="$lbl" shape="ellipse" ${colorScheme.startEndNode.graphvizColors}]
               |""".stripMargin.replaceAll("\n", " ")
         (dot, posY)
 
@@ -136,7 +142,7 @@ class FlowchartPresenter(
         val lbl = stmt.label.toGraphvizLbl
         val dot =
           s"""|${stmt.id} [id="$stmtId" ${pos(posX, posY)} ${dimensions(lbl)} $group 
-              | label="$lbl" tooltip="${stmt.verboseLabel.toGraphvizLbl}" ${colorScheme.declareNode.graphvizColors}]
+              |  label="$lbl" tooltip="${stmt.verboseLabel.toGraphvizLbl}" ${colorScheme.declareNode.graphvizColors}]
               |""".stripMargin.replaceAll("\n", " ")
         (dot, posY)
 
@@ -144,7 +150,7 @@ class FlowchartPresenter(
         val lbl = stmt.label.toGraphvizLbl
         val dot =
           s"""|${stmt.id} [id="$stmtId" ${pos(posX, posY)} ${dimensions(lbl)} $group 
-              | label="$lbl" tooltip="$lbl" ${colorScheme.assignNode.graphvizColors}]
+              |  label="$lbl" tooltip="$lbl" ${colorScheme.assignNode.graphvizColors}]
               |""".stripMargin.replaceAll("\n", " ")
         (dot, posY)
 
@@ -152,7 +158,7 @@ class FlowchartPresenter(
         val lbl = stmt.label.toGraphvizLbl
         val dot =
           s"""|${stmt.id} [id="$stmtId" ${pos(posX, posY)} ${dimensions(lbl)} $group 
-              | label="$lbl" tooltip="$lbl" shape="invtrapezium" ${colorScheme.ioNode.graphvizColors}]
+              |  label="$lbl" tooltip="$lbl" shape="invtrapezium" ${colorScheme.ioNode.graphvizColors}]
               |""".stripMargin.replaceAll("\n", " ")
         (dot, posY)
 
@@ -160,7 +166,7 @@ class FlowchartPresenter(
         val lbl = stmt.label.toGraphvizLbl
         val dot =
           s"""|${stmt.id} [id="$stmtId" ${pos(posX, posY)} ${dimensions(lbl)} $group 
-              | label="$lbl" tooltip="$lbl" shape="trapezium" ${colorScheme.ioNode.graphvizColors}]
+              |  label="$lbl" tooltip="$lbl" shape="trapezium" ${colorScheme.ioNode.graphvizColors}]
               |""".stripMargin.replaceAll("\n", " ")
         (dot, posY)
 
@@ -168,13 +174,12 @@ class FlowchartPresenter(
         val lbl = stmt.label.toGraphvizLbl
         val dot =
           s"""|${stmt.id} [id="$stmtId" ${pos(posX, posY)} ${dimensions(lbl)} $group 
-              | label="$lbl" tooltip="$lbl" ${colorScheme.callNode.graphvizColors}]
+              |  label="$lbl" tooltip="$lbl" ${colorScheme.callNode.graphvizColors}]
               |""".stripMargin.replaceAll("\n", " ")
         (dot, posY)
 
       case stmt: If =>
         val lbl = stmt.label.toGraphvizLbl
-        val ifEndId = s"end_${stmt.id}"
 
         val (trueNodeDOTs, trueOffsetX) = locally {
           val block = stmt.trueBlock
@@ -200,9 +205,10 @@ class FlowchartPresenter(
 
         val maxBranchY = trueNodeDOTs._2 max falseNodeDOTs._2
 
+        val ifEndId = s"end_${stmt.id}"
         val dot =
           s"""|${stmt.id} [id="$stmtId" ${pos(posX, posY)} ${dimensions(lbl, true)} $group 
-              | label="$lbl" tooltip="$lbl" shape="diamond" ${colorScheme.loopNode.graphvizColors}]
+              |  label="$lbl" tooltip="$lbl" shape="diamond" ${colorScheme.loopNode.graphvizColors}]
               |
               |true_dummy_up_${stmt.id} [${pos(trueOffsetX, posY)} shape=point width=0]
               |false_dummy_up_${stmt.id} [${pos(falseOffsetX, posY)} shape=point width=0]
@@ -214,7 +220,7 @@ class FlowchartPresenter(
               |false_dummy_down_${stmt.id} [ ${pos(falseOffsetX, maxBranchY)} shape=point width=0]
               |
               |$ifEndId [id="$ifEndId#IfEnd" class="flowrun-not-selectable" ${pos(posX, maxBranchY)} $group ${colorScheme.loopNode.graphvizColors}
-              | label="" tooltip=" " shape="circle" fixedsize=true width=0.2 height=0.2]
+              |  label="" tooltip=" " shape="circle" fixedsize=true width=0.2 height=0.2]
               |
               |""".stripMargin
         (dot, maxBranchY)
@@ -239,7 +245,7 @@ class FlowchartPresenter(
 
         val dot =
           s"""|${stmt.id} [id="$stmtId" ${pos(posX, posY)} ${dimensions(lbl, true)} $group 
-              | label="$lbl" tooltip="$lbl" shape="diamond" ${colorScheme.loopNode.graphvizColors}]
+              |  label="$lbl" tooltip="$lbl" shape="diamond" ${colorScheme.loopNode.graphvizColors}]
               |
               |true_dummy_up_${stmt.id} [${pos(trueOffsetX, posY)} shape=point width=0]
               |false_dummy_up_${stmt.id} [${pos(falseOffsetX, posY)} shape=point width=0]
@@ -274,7 +280,7 @@ class FlowchartPresenter(
 
         val dot =
           s"""|$doWhileEndId [id="$doWhileEndId#DoWhileEndId" class="flowrun-not-selectable" ${pos(posX, posY)} $group 
-              | label="" tooltip=" " shape="circle" fixedsize=true width=0.2 height=0.2 ${colorScheme.loopNode.graphvizColors}]
+              |  label="" tooltip=" " shape="circle" fixedsize=true width=0.2 height=0.2 ${colorScheme.loopNode.graphvizColors}]
               |
               |${blockDOTs._1.mkString("\n")}
               |
@@ -307,7 +313,7 @@ class FlowchartPresenter(
 
         val dot =
           s"""|${stmt.id} [id="$stmtId" ${pos(posX, posY)} ${dimensions(lbl, true)} $group 
-              | label="$lbl" tooltip="$lbl" shape="diamond" ${colorScheme.loopNode.graphvizColors}]
+              |  label="$lbl" tooltip="$lbl" shape="diamond" ${colorScheme.loopNode.graphvizColors}]
               |
               |true_dummy_up_${stmt.id} [${pos(trueOffsetX, posY)} shape=point width=0]
               |false_dummy_up_${stmt.id} [${pos(falseOffsetX, posY)} shape=point width=0]
@@ -410,7 +416,7 @@ class FlowchartPresenter(
           (statementsDot, first, last)
         }
 
-        s"""|## TRUE
+        s"""|## IF-TRUE
             |${stmt.id}:e -> $trueDummyUpId [id="${stmt.id}@${stmt.trueBlock.id}" ${edgeAttrs(trueDummyUpId)} taillabel="true" fontcolor="forestgreen"]
             |$trueDummyUpId -> $firstTrueNodeId:n [id="${stmt.id}@${stmt.trueBlock.id}" ${edgeAttrs(firstTrueNodeId)}]
             |
@@ -419,7 +425,7 @@ class FlowchartPresenter(
             |$trueDummyDownId -> $ifEndId [id="${lastTrueNodeId}@${stmt.trueBlock.id}" ${edgeAttrs(ifEndId)}]
             |
             |
-            |## FALSE
+            |## IF-FALSE
             |${stmt.id}:w -> $falseDummyUpId [id="${stmt.id}@${stmt.falseBlock.id}" ${edgeAttrs(falseDummyUpId)} taillabel="false" fontcolor="red"]
             |$falseDummyUpId -> $firstFalseNodeId:n [id="${stmt.id}@${stmt.falseBlock.id}" ${edgeAttrs(firstFalseNodeId)}]
             |
@@ -455,7 +461,7 @@ class FlowchartPresenter(
           (statementsDot, first, last)
         }
 
-        s"""|## TRUE
+        s"""|## WHILE-TRUE
             |${stmt.id}:e -> $trueDummyUpId [id="${stmt.id}@${stmt.body.id}" ${edgeAttrs(trueDummyUpId)} taillabel="true" fontcolor="forestgreen"]
             |$trueDummyUpId -> $firstTrueNodeId:n [id="${stmt.id}@${stmt.body.id}" ${edgeAttrs(firstTrueNodeId)}]
             |
@@ -466,7 +472,7 @@ class FlowchartPresenter(
         )}]
             |$trueDummyDownLeftId -> ${stmt.id}:s [id="${lastTrueNodeId}@${stmt.body.id}" ${edgeAttrs(stmt.id)}]
             |
-            |## FALSE
+            |## WHILE-FALSE
             |${stmt.id}:w -> $falseDummyUpId [id="${stmt.id}@${blockId}" ${edgeAttrs(falseDummyUpId)} taillabel="false" fontcolor="red"]
             |$falseDummyUpId -> $falseDummyDownId [id="${stmt.id}@${blockId}" ${edgeAttrs(falseDummyDownId)}]
             |$falseDummyDownId -> $endDummyDownId [id="${stmt.id}@${blockId}" ${edgeAttrs(endDummyDownId)}]
@@ -494,16 +500,16 @@ class FlowchartPresenter(
           (statementsDot, first, last)
         }
 
-        s"""|## BODY
+        s"""|## DOWHILE-BODY
             |$doWhileEndId -> $firstBlockNodeId [id="${stmt.id}@${stmt.body.id}" ${edgeAttrs(firstBlockNodeId)} ]
             |$trueEdgeDOTs
             |
-            |## TRUE
+            |## DOWHILE-TRUE
             |${stmt.id}:e -> $trueDummyDownId [${edgeAttrs(trueDummyDownId)} taillabel="true" fontcolor="forestgreen" labelangle=90]
             |$trueDummyDownId -> $trueDummyUpId [${edgeAttrs(trueDummyUpId)}]
             |$trueDummyUpId -> ${doWhileEndId}:e [ ${edgeAttrs(stmt.id)}]
             |
-            |## FALSE
+            |## DOWHILE-FALSE
             |${stmt.id}:s -> $nextStmtId [id="${stmt.id}@${blockId}" ${edgeAttrs(nextStmtId)} taillabel="false" fontcolor="red" labeldistance=2 labelangle=-80]
             |
             |""".stripMargin
@@ -531,7 +537,7 @@ class FlowchartPresenter(
           (statementsDot, first, last)
         }
 
-        s"""|## TRUE
+        s"""|## FORLOOP-TRUE
             |${stmt.id}:e -> $trueDummyUpId [id="${stmt.id}@${stmt.body.id}" ${edgeAttrs(trueDummyUpId)} taillabel="true" fontcolor="forestgreen"]
             |$trueDummyUpId -> $firstTrueNodeId:n [id="${stmt.id}@${stmt.body.id}" ${edgeAttrs(firstTrueNodeId)}]
             |
@@ -542,7 +548,7 @@ class FlowchartPresenter(
         )}]
             |$trueDummyDownLeftId -> ${stmt.id}:s [id="${lastTrueNodeId}@${stmt.body.id}" ${edgeAttrs(stmt.id)}]
             |
-            |## FALSE
+            |## FORLOOP-FALSE
             |${stmt.id}:w -> $falseDummyUpId [id="${stmt.id}@${blockId}" ${edgeAttrs(falseDummyUpId)} taillabel="false" fontcolor="red"]
             |$falseDummyUpId -> $falseDummyDownId [id="${stmt.id}@${blockId}" ${edgeAttrs(falseDummyDownId)}]
             |$falseDummyDownId -> $endDummyDownId [id="${stmt.id}@${blockId}" ${edgeAttrs(endDummyDownId)}]

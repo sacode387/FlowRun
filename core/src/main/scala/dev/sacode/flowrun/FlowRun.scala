@@ -109,7 +109,6 @@ class FlowRun(
       doOnChange()
     case StmtDeleted | StmtAdded =>
       programModel.currentStmtId = None
-      programModel.currentEdgeId = None
       outputArea.clearStmt()
       outputArea.clearSyntax()
       flowchartPresenter.loadCurrentFunction()
@@ -142,14 +141,12 @@ class FlowRun(
       doOnChange()
     case FunctionSelected =>
       programModel.currentStmtId = None
-      programModel.currentEdgeId = None
       outputArea.clearStmt()
       outputArea.clearSyntax()
       functionSelector.loadFunctions()
       flowchartPresenter.loadCurrentFunction()
     case Deselected =>
       programModel.currentStmtId = None
-      programModel.currentEdgeId = None
       outputArea.clearStmt()
       outputArea.clearSyntax()
       flowchartPresenter.clearSelected()
@@ -269,13 +266,7 @@ class FlowRun(
             val tpe = idParts(1)
             ctxMenu.handleNodeRightClick(event, nodeId, tpe)
           case ("EDGE", n) =>
-            programModel.currentEdgeId = Some(n.id)
             ctxMenu.handleEdgeRightClick(event.clientX, event.clientY, n)
-            programModel.currentEdgeId.foreach { id =>
-              dom.window.document
-                .querySelectorAll(s""" .edge[id*="$id"] """)
-                .foreach(_.classList.add("flowrun--selected"))
-            }
           case _ =>
             flowrunChannel := FlowRun.Event.Deselected
         }

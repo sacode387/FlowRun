@@ -13,9 +13,10 @@ import dev.sacode.flowrun.Color
 
 class CtxMenu(programModel: ProgramModel, flowRunElements: FlowRunElements, flowrunChannel: Channel[FlowRun.Event]) {
 
-  /** used for delete */
+  /* when selecting/deleting node */
   private var nodeId = ""
 
+  /* when adding new node */
   private var afterId = ""
   private var blockId = ""
 
@@ -119,8 +120,7 @@ class CtxMenu(programModel: ProgramModel, flowRunElements: FlowRunElements, flow
             val newStmt = copiedText.fromJson[Statement].duplicated
             addStatement(newStmt)
           } catch {
-            e => 
-              toastify.Toastify(ToastifyOptions("Not a valid statement", Color.yellow)).showToast()
+            e => toastify.Toastify(ToastifyOptions("Not a valid statement", Color.yellow)).showToast()
           }
         }
     )
