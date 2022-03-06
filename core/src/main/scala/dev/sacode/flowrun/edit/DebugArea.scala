@@ -17,9 +17,17 @@ class DebugArea(
   def showVariables(): Unit =
     flowRunElements.debugVariables.innerText = ""
     val varValues = interpreter.symTab.varSymbols
-    varValues.foreach { sym =>
-      val symElem = div(s"${sym.key.name}: ${sym.tpe} = ${sym.value.flatMap(_.valueOpt).getOrElse("")}").render
-      flowRunElements.debugVariables.appendChild(symElem)
+    val rows = varValues.map { sym =>
+      tr(
+        td(sym.key.name),
+        td(sym.value.flatMap(_.valueOpt.map(_.toString)).getOrElse(""))
+      )
     }
+    flowRunElements.debugVariables.appendChild(
+      table(
+        tr(th("Name"), th("Value")),
+        rows
+      ).render
+    )
 
 }
