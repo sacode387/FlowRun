@@ -153,7 +153,7 @@ final class StatementEditor(
         flowRunElements.stmtOutput.appendChild(
           stmtElem(
             nameInputElem,
-            span(" prompt:"),
+            span(" Prompt:"),
             promptInputElem
           ).render
         )

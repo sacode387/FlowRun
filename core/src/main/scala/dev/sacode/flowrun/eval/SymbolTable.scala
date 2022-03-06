@@ -32,7 +32,7 @@ class SymbolTable(flowrunChannel: Channel[FlowRun.Event]) {
   def addVar(nodeId: String, name: String, tpe: Type, value: Option[RunVal]): Symbol =
     val key = SymbolKey(name, Symbol.Kind.Variable, nodeId)
     add(nodeId, key, tpe, value)
-  
+
   def addFun(nodeId: String, name: String, tpe: Type, value: Option[RunVal]): Symbol =
     val key = SymbolKey(name, Symbol.Kind.Function, nodeId)
     add(nodeId, key, tpe, value)
@@ -51,11 +51,11 @@ class SymbolTable(flowrunChannel: Channel[FlowRun.Event]) {
 
   def getSymbol(nodeId: String, key: SymbolKey): Symbol =
     currentScope.getSymbol(nodeId, key)
-  
+
   def getSymbolVar(nodeId: String, name: String): Symbol =
     val key = SymbolKey(name, Symbol.Kind.Variable, nodeId)
     getSymbol(nodeId, key)
-  
+
   def getSymbolFun(nodeId: String, name: String): Symbol =
     val key = SymbolKey(name, Symbol.Kind.Function, nodeId)
     getSymbol(nodeId, key)
@@ -99,8 +99,7 @@ class Scope(
   def setValue(nodeId: String, name: String, value: RunVal): Unit =
     val key = SymbolKey(name, Symbol.Kind.Variable, nodeId)
     val sym = getSymbol(nodeId, key)
-    if value.tpe != sym.tpe then
-      error(s"Expected '$name: ${sym.tpe}' but got '${value.pretty}'", nodeId)
+    if value.tpe != sym.tpe then error(s"Expected '$name: ${sym.tpe}' but got '${value.pretty}'", nodeId)
     val updatedSym = sym.copy(value = Some(value))
     sym.scope.set(key, updatedSym)
     flowrunChannel := FlowRun.Event.SymbolTableUpdated

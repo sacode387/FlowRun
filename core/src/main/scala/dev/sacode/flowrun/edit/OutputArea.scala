@@ -41,7 +41,7 @@ class OutputArea(
     val newOutput =
       if newline then
         if txt.isEmpty then br
-        else div(samp(txt), br)
+        else frag(samp(txt), br)
       else samp(txt)
     flowRunElements.runtimeOutput.appendChild(newOutput.render)
   }

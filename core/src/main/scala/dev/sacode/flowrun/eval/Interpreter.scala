@@ -481,12 +481,66 @@ final class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[Flow
   private def handlePredefinedFunction(id: String, f: PredefinedFunction, args: Seq[RunVal]): Future[RunVal] =
     import PredefinedFunction.*
     f match {
+      // numbers
       case func @ Abs =>
         validateArgsNumber(id, func.name, 1, args.size)
         args.head match
           case n: IntegerVal => Future(n.transform(_.abs))
           case n: RealVal    => Future(n.transform(_.abs)) // polymorphic, overloaded..
           case _             => throw EvalException(s"Expected a number argument in function ${func.name}", id)
+      case func @ Floor =>
+        validateArgsNumber(id, func.name, 1, args.size)
+        args.head match
+          case n: RealVal => Future(n.transform(_.floor))
+          case _          => throw EvalException(s"Expected a Real argument in function ${func.name}", id)
+      case func @ Ceil =>
+        validateArgsNumber(id, func.name, 1, args.size)
+        args.head match
+          case n: RealVal => Future(n.transform(_.ceil))
+          case _          => throw EvalException(s"Expected a Real argument in function ${func.name}", id)
+      case func @ RandomInteger =>
+        validateArgsNumber(id, func.name, 1, args.size)
+        args.head match
+          case n: IntegerVal => Future(n.transform(x => Random.nextInt(x)))
+          case _             => throw EvalException(s"Expected a number argument in function ${func.name}", id)
+      case func @ Sin =>
+        validateArgsNumber(id, func.name, 1, args.size)
+        args.head match
+          case n: IntegerVal => Future(RealVal(Math.sin(n.value.toDouble)))
+          case n: RealVal    => Future(n.transform(x => Math.sin(x)))
+          case _             => throw EvalException(s"Expected a number argument in function ${func.name}", id)
+      case func @ Cos =>
+        validateArgsNumber(id, func.name, 1, args.size)
+        args.head match
+          case n: IntegerVal => Future(RealVal(Math.cos(n.value.toDouble)))
+          case n: RealVal    => Future(n.transform(x => Math.cos(x)))
+          case _             => throw EvalException(s"Expected a number argument in function ${func.name}", id)
+      case func @ Tan =>
+        validateArgsNumber(id, func.name, 1, args.size)
+        args.head match
+          case n: IntegerVal => Future(RealVal(Math.tan(n.value.toDouble)))
+          case n: RealVal    => Future(n.transform(x => Math.tan(x)))
+          case _             => throw EvalException(s"Expected a number argument in function ${func.name}", id)
+      case func @ Ln =>
+        validateArgsNumber(id, func.name, 1, args.size)
+        args.head match
+          case n: IntegerVal => Future(RealVal(Math.log(n.value.toDouble)))
+          case n: RealVal    => Future(n.transform(x => Math.log(x)))
+          case _             => throw EvalException(s"Expected a number argument in function ${func.name}", id)
+      case func @ Log10 =>
+        validateArgsNumber(id, func.name, 1, args.size)
+        args.head match
+          case n: IntegerVal => Future(RealVal(Math.log10(n.value.toDouble)))
+          case n: RealVal    => Future(n.transform(x => Math.log10(x)))
+          case _             => throw EvalException(s"Expected a number argument in function ${func.name}", id)
+      case func @ Log2 =>
+        validateArgsNumber(id, func.name, 1, args.size)
+
+        args.head match
+          case n: IntegerVal => Future(RealVal(Math.log(n.value) / Math.log(2)))
+          case n: RealVal    => Future(n.transform(x => Math.log(x) / Math.log(2)))
+          case _             => throw EvalException(s"Expected a number argument in function ${func.name}", id)
+      // strings
       case func @ Length =>
         validateArgsNumber(id, func.name, 1, args.size)
         args.head match
@@ -498,11 +552,18 @@ final class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[Flow
         val idx = args(1)
         (str, idx) match
           case (s: StringVal, i: IntegerVal) => Future(s.transform(_.apply(i.value).toString))
-          case _            => throw EvalException(s"Expected (String, Integer) arguments in function ${func.name}", id)
+          case _ => throw EvalException(s"Expected (String, Integer) arguments in function ${func.name}", id)
+      // conversions
+      case func @ RealToInteger =>
+        validateArgsNumber(id, func.name, 1, args.size)
+        args.head match
+          case n: RealVal => Future(IntegerVal(n.value.toInt))
+          case _          => throw EvalException(s"Expected a Real argument in function ${func.name}", id)
     }
 
   private def validateArgsNumber(id: String, funName: String, expected: Int, got: Int): Unit =
-    if got != expected then throw EvalException(s"Wrong number of arguments in function $funName, expected $expected but got $got", id)
+    if got != expected then
+      throw EvalException(s"Wrong number of arguments in function $funName, expected $expected but got $got", id)
 }
 
 object Interpreter:

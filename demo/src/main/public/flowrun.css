@@ -237,6 +237,7 @@ body {
 
 .flowrun-output samp {
     font-size: 0.9rem;
+    white-space: pre;
 }
 
 .flowrun-output-statement {

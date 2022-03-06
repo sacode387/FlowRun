@@ -14,10 +14,10 @@ enum RunVal(val tpe: Type, val valueOpt: Option[Any]):
   case BooleanVal(value: Boolean) extends RunVal(Type.Boolean, Some(value))
 
   def pretty: String = this match
-    case NoVal => "Void"
+    case NoVal             => "Void"
     case IntegerVal(value) => s"$value: Integer"
-    case RealVal(value) => s"$value: Real"
-    case StringVal(value) => s"$value: String"
+    case RealVal(value)    => s"$value: Real"
+    case StringVal(value)  => s"$value: String"
     case BooleanVal(value) => s"$value: Boolean"
 
   def promote(nodeId: String, expectedName: String, expectedTpe: Type): RunVal =
