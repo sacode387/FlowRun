@@ -84,7 +84,8 @@ final class StatementEditor(
         else
           val exprInputElem = newExprInput(statement.id, 10, statement.maybeValue.getOrElse(""), "x + 1")(
             newExprText => {
-              val updatedStmt = programModel.findStatement(stmtId).asInstanceOf[Return].copy(maybeValue = Some(newExprText))
+              val updatedStmt =
+                programModel.findStatement(stmtId).asInstanceOf[Return].copy(maybeValue = Some(newExprText))
               programModel.updateStmt(updatedStmt)
             },
             (e, newExprText) => {
@@ -109,7 +110,8 @@ final class StatementEditor(
         }
         val exprInputElem = newExprInput(statement.id, 10, statement.initValue.getOrElse(""), "123")(
           newExprText => {
-            val updatedStmt = programModel.findStatement(stmtId).asInstanceOf[Declare].copy(initValue = Some(newExprText))
+            val updatedStmt =
+              programModel.findStatement(stmtId).asInstanceOf[Declare].copy(initValue = Some(newExprText))
             programModel.updateStmt(updatedStmt)
           },
           (e, newExprText) => {
@@ -136,8 +138,25 @@ final class StatementEditor(
           val updatedStmt = programModel.findStatement(stmtId).asInstanceOf[Input].copy(name = newName)
           programModel.updateStmt(updatedStmt)
         }
+        val promptInputElem = newTextInput(statement.id, 20, statement.prompt.getOrElse(""), "Please enter x")(
+          newName => {
+            val updatedStmt = programModel.findStatement(stmtId).asInstanceOf[Input].copy(prompt = Some(newName))
+            programModel.updateStmt(updatedStmt)
+          },
+          _ => {
+            val updatedStmt = programModel.findStatement(stmtId).asInstanceOf[Input].copy(prompt = None)
+            programModel.updateStmt(updatedStmt)
+          }
+        )
+
         flowRunElements.stmtOutput.innerText = ""
-        flowRunElements.stmtOutput.appendChild(nameInputElem)
+        flowRunElements.stmtOutput.appendChild(
+          stmtElem(
+            nameInputElem,
+            span(" prompt:"),
+            promptInputElem
+          ).render
+        )
         nameInputElem.focus()
 
       case statement: Output =>
@@ -145,10 +164,13 @@ final class StatementEditor(
           val updatedStmt = programModel.findStatement(stmtId).asInstanceOf[Output].copy(value = newExprText)
           programModel.updateStmt(updatedStmt)
         })
-        val newlineInput = newCheckbox(statement.newline, isEnabled => {
-          val updatedStmt = programModel.findStatement(stmtId).asInstanceOf[Output].copy(newline = isEnabled)
-          programModel.updateStmt(updatedStmt)
-        })
+        val newlineInput = newCheckbox(
+          statement.newline,
+          isEnabled => {
+            val updatedStmt = programModel.findStatement(stmtId).asInstanceOf[Output].copy(newline = isEnabled)
+            programModel.updateStmt(updatedStmt)
+          }
+        )
         flowRunElements.stmtOutput.innerText = ""
         flowRunElements.stmtOutput.appendChild(
           stmtElem(exprInputElem, newlineInput).render
@@ -289,6 +311,21 @@ final class StatementEditor(
         case Success(_) => onSuccess(newExprText)
         case Failure(e) => onFailure(e, newExprText)
       }
+    }
+    newInput
+  }
+
+  private def newTextInput(nodeId: String, size: Int, value: String, placeHolder: String)(
+      onSuccess: String => Unit,
+      onFailure: String => Unit
+  ): dom.html.Input = {
+    val newInput = flowRunElements.newInputText(size)
+    newInput.value = value
+    newInput.placeholder = placeHolder
+    newInput.oninput = { (_: dom.Event) =>
+      val newText = newInput.value.trim
+      if newText.isEmpty then onFailure(newText)
+      else onSuccess(newText)
     }
     newInput
   }

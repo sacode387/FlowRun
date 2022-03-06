@@ -134,10 +134,10 @@ final class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[Flow
       case Call(id, expr) =>
         evalExpr(id, parseExpr(id, expr)).map(_ => NoVal)
 
-      case Input(id, name) =>
+      case Input(id, name, prompt) =>
         if !symTab.isDeclaredVar(name) then throw EvalException(s"Variable '$name' is not declared.", id)
         state = State.PAUSED
-        flowrunChannel := FlowRun.Event.EvalInput(id, name)
+        flowrunChannel := FlowRun.Event.EvalInput(id, name, prompt)
         waitForContinue().map(_ => NoVal)
 
       case Output(id, expr, newline) =>

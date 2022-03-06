@@ -64,13 +64,14 @@ class OutputArea(
     flowRunElements.syntaxOutput.appendChild(samp("Syntax Error: " + msg).render)
     flowRunElements.syntaxOutput.classList.add("flowrun--error")
 
-  def evalInput(nodeId: String, name: String): Unit = {
+  def evalInput(nodeId: String, name: String, prompt: Option[String]): Unit = {
 
     val valueInputElem = flowRunElements.newInputText()
     val valueBtnElem = flowRunElements.newEnterButton
+    val promptStr = prompt.getOrElse(s"Please enter '$name': ")
     val enterValueDiv = div(
       label(cls := "flowrun-user-inputs")(
-        samp(s"Please enter '$name': "),
+        samp(promptStr),
         valueInputElem,
         valueBtnElem
       )

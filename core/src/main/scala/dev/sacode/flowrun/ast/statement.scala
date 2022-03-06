@@ -51,7 +51,7 @@ object Statement:
     override def duplicated: Call = copy(id = AST.newId)
     override def label = value
 
-  case class Input(override val id: String, name: String) extends Statement(id):
+  case class Input(override val id: String, name: String, prompt: Option[String]) extends Statement(id):
     override def duplicated: Input = copy(id = AST.newId)
     override def label = name
 

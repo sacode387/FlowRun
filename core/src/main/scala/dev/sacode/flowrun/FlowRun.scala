@@ -130,8 +130,8 @@ class FlowRun(
       }
     case EvalOutput(output, newline) =>
       outputArea.runtimeOutput(output, newline)
-    case EvalInput(nodeId, name) =>
-      outputArea.evalInput(nodeId, name)
+    case EvalInput(nodeId, name, prompt) =>
+      outputArea.evalInput(nodeId, name, prompt)
     case SymbolTableUpdated =>
       debugArea.showVariables()
     case FunctionUpdated =>
@@ -296,7 +296,7 @@ object FlowRun:
     case EvalSuccess
     case EvalError(nodeId: String, msg: String, funId: String)
     case EvalOutput(msg: String, newline: Boolean)
-    case EvalInput(nodeId: String, name: String)
+    case EvalInput(nodeId: String, name: String, prompt: Option[String])
     case SyntaxSuccess
     case StmtDeleted
     case StmtAdded

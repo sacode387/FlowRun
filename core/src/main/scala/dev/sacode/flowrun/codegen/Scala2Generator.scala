@@ -56,7 +56,7 @@ class Scala2Generator(programAst: Program) extends CodeGenerator {
         s"$name = $value".indented(indent)
       case Call(_, value) =>
         value.indented(indent)
-      case Input(_, name) =>
+      case Input(_, name, prompt) =>
         val symOpt = Try(symTab.getSymbolVar("", name)).toOption
         val readFun = readFunction(symOpt.map(_.tpe))
         s"$name = StdIn.$readFun()".indented(indent)

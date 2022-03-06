@@ -64,7 +64,7 @@ class JavaGenerator(programAst: Program) extends CodeGenerator {
         s"$name = $value;".indented(indent)
       case Call(_, value) =>
         s"$value;".indented(indent)
-      case Input(_, name) =>
+      case Input(_, name, prompt) =>
         initInput = true
         val symOpt = Try(symTab.getSymbolVar("", name)).toOption
         val readFun = readFunction(symOpt.map(_.tpe))
