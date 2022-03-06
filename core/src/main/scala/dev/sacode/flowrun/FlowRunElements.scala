@@ -46,7 +46,6 @@ class FlowRunElements(
     mountElem.querySelector(".flowrun-btn-fun-delete-param").asInstanceOf[dom.html.Element]
 
   // general
-  // TODO just instantiate new... lolz
   private val enterButton = mountElem.querySelector(".flowrun-btn-enter").asInstanceOf[dom.html.Element]
   private val inputText = mountElem.querySelector(".flowrun-input-text").asInstanceOf[dom.html.Input]
   private val inputSelect = mountElem.querySelector(".flowrun-input-select").asInstanceOf[dom.html.Select]

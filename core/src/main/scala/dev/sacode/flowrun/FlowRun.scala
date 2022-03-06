@@ -96,7 +96,7 @@ class FlowRun(
       val duration = Duration.between(startedTime, finishedTime)
       flowRunElements.runtimeOutput.appendChild(div(br, samp(s"Finished at: ${DTF.format(finishedTime)}")).render)
       flowRunElements.runtimeOutput.appendChild(div(samp(s"Execution time: ${duration.toString.substring(2)}")).render)
-      flowRunElements.debugVariables.innerText = ""
+      debugArea.clear()
       flowchartPresenter.enable()
       functionSelector.enable()
       outputArea.finished()
@@ -127,6 +127,7 @@ class FlowRun(
         functionSelector.enable()
         functionSelector.loadFunctions()
         outputArea.finished()
+        debugArea.clear()
       }
     case EvalOutput(output, newline) =>
       outputArea.runtimeOutput(output, newline)

@@ -52,7 +52,8 @@ class FlowchartPresenter(
     dom.window.document.querySelectorAll(".flowrun--selected").foreach(_.classList.remove("flowrun--selected"))
 
   def highlightError(nodeId: String): Unit =
-    dom.window.document.querySelector(s""" .node[id^="$nodeId"] """).classList.add("flowrun--error")
+    if nodeId != null && nodeId.trim.nonEmpty then
+      dom.window.document.querySelector(s""" .node[id^="$nodeId"] """).classList.add("flowrun--error")
 
   def loadCurrentFunction(): Future[Unit] = {
     val p = Promise[Unit]()

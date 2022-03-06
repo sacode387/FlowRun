@@ -49,6 +49,9 @@ final class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[Flow
       case Failure(e: LexException) =>
         state = State.FINISHED_FAILED
         flowrunChannel := FlowRun.Event.EvalError(e.nodeId, e.getMessage, symTab.currentScope.id)
+      case  Failure(e: StoppedException) =>
+        state = State.FINISHED_STOPPED
+        flowrunChannel := FlowRun.Event.EvalError("", e.getMessage, symTab.currentScope.id)
       case Failure(e) =>
         state = State.FINISHED_FAILED
         // this can be any JS failure, that's why we don't print it to user
@@ -454,7 +457,8 @@ final class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[Flow
     val p = Promise[Unit]()
     val pingHandle: js.timers.SetIntervalHandle = js.timers.setInterval(10) {
       if !p.isCompleted then {
-        if state == State.RUNNING || state == State.FINISHED_STOPPED then p.success({})
+        if state == State.RUNNING then p.success({})
+        else if state == State.FINISHED_STOPPED then p.failure(StoppedException("Program stopped"))
       }
     }
     val f = p.future

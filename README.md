@@ -1,11 +1,4 @@
 
-
-TODO
-
-- clear output button
-- validate return type with return expr !!!
-
-
 # FlowRun
 
 Flowcharts, runnable in your browser!
@@ -46,8 +39,8 @@ The return type can also be `Void`, which means it doesn't return anything, it j
 For example, it could calculate something, print it and exit.
 
 There are also some *predefined functions* that you can use, they are defined automatically in FlowRun:
+- `abs(x)` reutrns absolute value of x
 - `randomInteger(top)` returns a random `x: Integer`, in the range `[0,top)`
-- `abs(x)` calculates absolute value of x
 
 ---
 ## Implementation details

@@ -11,6 +11,9 @@ class DebugArea(
     flowRunElements: FlowRunElements
 ) {
 
+  def clear(): Unit =
+    flowRunElements.debugVariables.innerText = ""
+
   def showVariables(): Unit =
     flowRunElements.debugVariables.innerText = ""
     val varValues = interpreter.symTab.varSymbols
