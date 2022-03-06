@@ -18,7 +18,7 @@ class DebugArea(
     flowRunElements.debugVariables.innerText = ""
     val varValues = interpreter.symTab.varSymbols
     varValues.foreach { sym =>
-      val symElem = div(s"${sym.key.name}: ${sym.tpe} = ${sym.value.getOrElse("")}").render
+      val symElem = div(s"${sym.key.name}: ${sym.tpe} = ${sym.value.flatMap(_.valueOpt).getOrElse("")}").render
       flowRunElements.debugVariables.appendChild(symElem)
     }
 

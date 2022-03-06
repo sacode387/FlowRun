@@ -155,7 +155,7 @@ final class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[Flow
           case condition: BooleanVal =>
             if (condition.value) interpretStatement(ifTrueStatements)
             else interpretStatement(ifFalseStatements)
-          case condValue => throw EvalException(s"Not a valid condition: '${condValue.valueOpt.get}'", id)
+          case condValue => throw EvalException(s"Not a valid condition: '${condValue.valueOpt.getOrElse("")}'", id)
         }
 
       case While(id, condition, body) =>
@@ -164,7 +164,7 @@ final class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[Flow
             case condition: BooleanVal =>
               if (condition.value) interpretStatement(body).flatMap(_ => loop())
               else Future.successful(NoVal)
-            case condValue => throw EvalException(s"Not a valid condition: '${condValue.valueOpt.get}'", id)
+            case condValue => throw EvalException(s"Not a valid condition: '${condValue.valueOpt.getOrElse("")}'", id)
           }
         loop()
 
@@ -174,7 +174,7 @@ final class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[Flow
             case condition: BooleanVal =>
               if (condition.value) interpretStatement(body).flatMap(_ => loop())
               else Future.successful(NoVal)
-            case condValue => throw EvalException(s"Not a valid condition: '${condValue.valueOpt.get}'", id)
+            case condValue => throw EvalException(s"Not a valid condition: '${condValue.valueOpt.getOrElse("")}'", id)
           }
         interpretStatement(body).flatMap(_ => loop())
 
@@ -188,7 +188,7 @@ final class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[Flow
                 loop(conditionExpr, incr)
               }
               else Future.successful(NoVal)
-            case condValue => throw EvalException(s"Not a valid condition: '${condValue.valueOpt.get}'", id)
+            case condValue => throw EvalException(s"Not a valid condition: '${condValue.valueOpt.getOrElse("")}'", id)
           }
 
         for {
@@ -447,13 +447,14 @@ final class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[Flow
                     s"Expected: '${p.pretty}' at index $idx, got value '${arg.pretty}'",
                     id
                   )
-                (p.name, p.tpe, NoVal)
+                (p.name, p.tpe, arg)
               }
               interpretFunction(fun, argsWithTypes)
         }
 
   // adapted https://stackoverflow.com/a/46619347/4496364
   private def waitForContinue(): Future[Unit] = {
+    // TODO if program running TOOOOOOO LONG
     val p = Promise[Unit]()
     val pingHandle: js.timers.SetIntervalHandle = js.timers.setInterval(10) {
       if !p.isCompleted then {
