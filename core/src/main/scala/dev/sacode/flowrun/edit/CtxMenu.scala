@@ -17,8 +17,8 @@ class CtxMenu(programModel: ProgramModel, flowRunElements: FlowRunElements, flow
   private var nodeId = ""
 
   /* when adding new node */
-  private var afterId = ""
   private var blockId = ""
+  private var afterId = ""
 
   private val DeleteableNodeTypes =
     Set("Declare", "Assign", "Input", "Output", "Call", "If", "While", "DoWhile", "ForLoop")
@@ -172,6 +172,6 @@ class CtxMenu(programModel: ProgramModel, flowRunElements: FlowRunElements, flow
   }
 
   private def addStatement(stmt: Statement): Unit =
-    programModel.addStmt(stmt, afterId, blockId)
+    programModel.addStmt(stmt, blockId, afterId)
 
 }

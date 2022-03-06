@@ -69,8 +69,8 @@ class ProgramModel(
     flowrunChannel := FlowRun.Event.FunctionUpdated
 
   /* per-function */
-  def addStmt(stmt: Statement, afterId: String, blockId: String): Unit =
-    update(_.addStmt(stmt, afterId, blockId), FlowRun.Event.StmtAdded)
+  def addStmt(stmt: Statement, blockId: String, afterId: String): Unit =
+    update(_.addStmt(stmt, blockId, afterId), FlowRun.Event.StmtAdded)
 
   def updateStmt(stmt: Statement): Unit =
     update(_.updateStmt(stmt), FlowRun.Event.StmtUpdated)
@@ -104,8 +104,8 @@ case class FunctionModel(
     ast: Function
 ) {
 
-  def addStmt(stmt: Statement, afterId: String, blockId: String): FunctionModel =
-    doInsert(afterId, stmt, blockId)
+  def addStmt(stmt: Statement, blockId: String, afterId: String): FunctionModel =
+    doInsert(stmt, blockId, afterId)
 
   def updateStmt(stmt: Statement): FunctionModel =
     doUpdate(stmt.id, stmt)
@@ -115,89 +115,53 @@ case class FunctionModel(
     this.copy(ast = ast.copy(statements = newStats))
 
   /* HELPERS */
-  private def doInsert(afterId: String, newStatement: Statement, blockId: String): FunctionModel =
-    val newStats = insert(ast.statements, afterId, newStatement, blockId)
+  private def doInsert(newStatement: Statement, blockId: String, afterId: String): FunctionModel =
+    val newStats = insert(ast.statements, ast.id, newStatement, blockId, afterId)
     this.copy(ast = ast.copy(statements = newStats))
 
   private def insert(
       statements: List[Statement],
-      afterId: String,
+      currentBlockId: String,
       newStatement: Statement,
-      blockId: String
+      blockId: String,
+      afterId: String
   ): List[Statement] = {
-    //println(s"insert $newStatement after $afterId in block $blockId")
-    val afterStatementIdx = statements.indexWhere(_.id == afterId)
-    if (afterStatementIdx >= 0) {
-      val afterStatement = statements(afterStatementIdx)
-      if blockId.startsWith("fun-") then return statements.patch(afterStatementIdx + 1, List(newStatement), 0)
+    //println((currentBlockId, newStatement, blockId, afterId))
 
-      afterStatement match {
-        case stmt: If =>
-          val newStmt =
-            if (stmt.trueBlock.id == blockId)
-              stmt.copy(trueBlock =
-                stmt.trueBlock
-                  .copy(statements = stmt.trueBlock.statements.prepended(newStatement))
-              )
-            else
-              stmt.copy(falseBlock =
-                stmt.falseBlock.copy(statements = stmt.falseBlock.statements.prepended(newStatement))
-              )
-          statements.updated(afterStatementIdx, newStmt)
-        case stmt: While =>
-          val newStmt =
-            if (stmt.body.id == blockId)
-              stmt.copy(body = stmt.body.copy(statements = stmt.body.statements.prepended(newStatement)))
-            else
-              stmt
-          statements.updated(afterStatementIdx, newStmt)
-        case stmt: DoWhile =>
-          val newStmt =
-            if (stmt.body.id == blockId)
-              stmt.copy(body = stmt.body.copy(statements = stmt.body.statements.prepended(newStatement)))
-            else
-              stmt
-          statements.updated(afterStatementIdx, newStmt)
-        case stmt: ForLoop =>
-          val newStmt =
-            if (stmt.body.id == blockId)
-              stmt.copy(body = stmt.body.copy(statements = stmt.body.statements.prepended(newStatement)))
-            else
-              stmt
-          statements.updated(afterStatementIdx, newStmt)
-        case _ =>
-          statements.patch(afterStatementIdx + 1, List(newStatement), 0)
-      }
-    } else {
+    if currentBlockId == blockId then
+      val afterStatementIdx = statements.indexWhere(_.id == afterId)
+      statements.patch(afterStatementIdx + 1, List(newStatement), 0)
+    else
       statements.map {
-        case ifStatement: If =>
-          ifStatement.copy(
-            trueBlock = ifStatement.trueBlock
-              .copy(statements = insert(ifStatement.trueBlock.statements, afterId, newStatement, blockId)),
-            falseBlock = ifStatement.falseBlock.copy(statements =
-              insert(ifStatement.falseBlock.statements, afterId, newStatement, blockId)
-            )
+        case stmt: If =>
+          val updatedTrueBlock = stmt.trueBlock.copy(
+            statements = insert(stmt.trueBlock.statements, stmt.trueBlock.id, newStatement, blockId, afterId)
           )
-        case whileStatement: While =>
-          whileStatement.copy(
-            body = whileStatement.body.copy(statements =
-              insert(whileStatement.body.statements, afterId, newStatement, blockId)
-            )
+          val updatedFalseBlock = stmt.falseBlock.copy(
+            statements = insert(stmt.falseBlock.statements, stmt.falseBlock.id, newStatement, blockId, afterId)
           )
-        case doWhileStatement: DoWhile =>
-          doWhileStatement.copy(
-            body = doWhileStatement.body.copy(statements =
-              insert(doWhileStatement.body.statements, afterId, newStatement, blockId)
-            )
+          stmt.copy(trueBlock = updatedTrueBlock, falseBlock = updatedFalseBlock)
+
+        case stmt: While =>
+          val updatedBlock = stmt.body.copy(
+            statements = insert(stmt.body.statements, stmt.body.id, newStatement, blockId, afterId)
           )
+          stmt.copy(body = updatedBlock)
+
+        case stmt: DoWhile =>
+          val updatedBlock = stmt.body.copy(
+            statements = insert(stmt.body.statements, stmt.body.id, newStatement, blockId, afterId)
+          )
+          stmt.copy(body = updatedBlock)
+
         case stmt: ForLoop =>
-          stmt.copy(
-            body = stmt.body.copy(statements = insert(stmt.body.statements, afterId, newStatement, blockId))
+          val updatedBlock = stmt.body.copy(
+            statements = insert(stmt.body.statements, stmt.body.id, newStatement, blockId, afterId)
           )
-        case simple =>
-          simple
+          stmt.copy(body = updatedBlock)
+
+        case other => other
       }
-    }
   }
 
   private def doUpdate(statementId: String, newStatement: Statement): FunctionModel =
