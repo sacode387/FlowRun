@@ -257,6 +257,11 @@ body {
     border-left: 3px var(--flowrun-red) solid;
 }
 
+.flowrun-output-help {
+    background-color: var(--flowrun-grey-darker);
+    color: var(--flowrun-blue-darker);
+}
+
 .flowrun-output-syntax.flowrun--error {
     color: var(--flowrun-red-lighter);
     border-left: 3px var(--flowrun-red-lighter) solid;
@@ -284,6 +289,7 @@ body {
 /**************************/
 .flowrun-gen-code {
     position: relative;
+    padding: 0;
 }
 
 .flowrun-instance.flowrun-layout-f-d-o .flowrun-gen-code,
@@ -292,24 +298,27 @@ body {
     display: none;
 }
 
-.flowrun-code {
-    padding: 0;
+pre.flowrun-code {
+    margin: 0 0 0 0;
+    padding: 2rem 0 0 2rem;
     height: 100%;
+    background-color: white;
 }
 
 .flowrun-code code {
     height: 100%;
+    font-family: 'Courier Prime', monospace;
+}
+pre.flowrun-code {
+    margin: 0;
+    padding-top: 2rem;
 }
 
 pre,
 pre>* {
-    /* using Courier since Graphviz only supports that monospace font */
     font-family: 'Courier Prime', monospace;
 }
 
-.hljs {
-    background-color: white;
-}
 
 /**************************/
 /* NODES */

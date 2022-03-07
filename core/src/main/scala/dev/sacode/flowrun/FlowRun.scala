@@ -94,8 +94,12 @@ class FlowRun(
     case EvalSuccess =>
       val finishedTime = Instant.now()
       val duration = Duration.between(startedTime, finishedTime)
-      flowRunElements.runtimeOutput.appendChild(div(br, samp(s"Finished at: ${DTF.format(finishedTime)}")).render)
-      flowRunElements.runtimeOutput.appendChild(div(samp(s"Execution time: ${duration.toString.substring(2)}")).render)
+      flowRunElements.runtimeOutput.appendChild(
+        div(cls := "flowrun-output-help")(samp(s"[Finished at: ${DTF.format(finishedTime)}]")).render
+      )
+      flowRunElements.runtimeOutput.appendChild(
+        div(cls := "flowrun-output-help")(samp(s"[Execution time: ${duration.toString.substring(2)}]")).render
+      )
       debugArea.clear()
       flowchartPresenter.enable()
       functionSelector.enable()
@@ -196,7 +200,9 @@ class FlowRun(
       flowrunChannel := FlowRun.Event.Deselected
 
       startedTime = Instant.now()
-      flowRunElements.runtimeOutput.appendChild(div(samp(s"Started at: ${DTF.format(startedTime)}"), br, br).render)
+      flowRunElements.runtimeOutput.appendChild(
+        div(cls := "flowrun-output-help")(samp(s"[Started at: ${DTF.format(startedTime)}]")).render
+      )
 
       interpreter = Interpreter(programModel, flowrunChannel) // fresh SymTable etc
       outputArea = OutputArea(interpreter, flowRunElements, flowrunChannel)
@@ -284,9 +290,18 @@ class FlowRun(
   }
 
   private def doOnChange(): Unit = {
-    Option(changeCallback) match
-      case None     => flowRunElements.codeArea.innerText = codeText()
-      case Some(cb) => cb(this)
+    Option(changeCallback).foreach(cb => cb(this))
+    var lang = config().lang.toString
+    if lang.startsWith("scala") then lang = "scala"
+
+    val codeElem = code(cls := s"language-$lang")(
+      codeText()
+    ).render
+
+    val codeArea = flowRunElements.codeArea
+    codeArea.innerText = ""
+    codeArea.appendChild(codeElem)
+    js.Dynamic.global.Prism.highlightElement(codeElem)
   }
 
 }

@@ -18,21 +18,9 @@ import dev.sacode.flowrun.{FlowRun, ColorScheme}
         mountElem = mountElem,
         editable = editable,
         mountCallback = { (fr: FlowRun) =>
+          // JSON text is hidden
+          // only when program is mounted then we show that DIV
           mountElem.classList.remove("flowrun--hidden")
-        },
-        changeCallback = { (fr: FlowRun) =>
-
-          var lang = fr.config().lang.toString
-          if lang.startsWith("scala") then lang = "scala"
-
-          val codeElem = code(cls := s"language-$lang")(
-            fr.codeText()
-          ).render
-
-          val codeArea = fr.flowRunElements.codeArea
-          codeArea.innerText = ""
-          codeArea.appendChild(codeElem)
-          js.Dynamic.global.hljs.highlightElement(codeElem)
         }
       )
     end for

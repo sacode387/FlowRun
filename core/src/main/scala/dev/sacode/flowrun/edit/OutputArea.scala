@@ -50,11 +50,10 @@ class OutputArea(
     clearStmt()
     clearSyntax()
     flowRunElements.runtimeOutput.appendChild(
-      div(
-        samp("Error: " + msg),
+      div(cls := "flowrun-output-help")(
+        samp("[Error: " + msg + "]"),
         br,
-        br,
-        samp(s"Finished (failed) at: $endTime")
+        samp(s"[Finished (failed) at: $endTime]")
       ).render
     )
     flowRunElements.runtimeOutput.classList.add("flowrun--error")

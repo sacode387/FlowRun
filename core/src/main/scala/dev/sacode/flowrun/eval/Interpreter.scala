@@ -49,7 +49,7 @@ final class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[Flow
       case Failure(e: LexException) =>
         state = State.FINISHED_FAILED
         flowrunChannel := FlowRun.Event.EvalError(e.nodeId, e.getMessage, symTab.currentScope.id)
-      case  Failure(e: StoppedException) =>
+      case Failure(e: StoppedException) =>
         state = State.FINISHED_STOPPED
         flowrunChannel := FlowRun.Event.EvalError("", e.getMessage, symTab.currentScope.id)
       case Failure(e) =>
