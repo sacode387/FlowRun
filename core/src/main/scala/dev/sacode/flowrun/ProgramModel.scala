@@ -84,13 +84,14 @@ class ProgramModel(
   private def update(transform: FunctionModel => FunctionModel, evt: FlowRun.Event): Unit = {
     val newFunction = transform(FunctionModel(currentFunction)).ast
     if currentFunction.isMain then ast = ast.copy(main = newFunction)
-    else
+    else {
       ast.functions.indexWhere(_.id == currentFunctionId) match
         case -1 =>
           println(s"Oops, function $currentFunctionId does not exist...")
         case idx =>
           val newFunctions = ast.functions.updated(idx, newFunction)
           ast = ast.copy(functions = newFunctions)
+    }
 
     flowrunChannel := evt
   }

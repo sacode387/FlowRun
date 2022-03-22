@@ -30,7 +30,7 @@ class FlowRun(
     colorScheme: ColorScheme = ColorScheme.default,
     editable: Boolean = true,
     programJson: String = null,
-    mountCallback: js.Function1[FlowRun, Unit] = fr => {},
+    mountCallback: js.Function1[FlowRun, Unit] = null,
     changeCallback: js.Function1[FlowRun, Unit] = null
 ) {
 
@@ -89,6 +89,25 @@ class FlowRun(
 
   functionSelector.loadFunctions()
 
+  @JSExport
+  def config(): FlowRunConfig =
+    flowRunConfig.get
+
+  @JSExport
+  def json(): String =
+    programModel.ast.toJson
+
+  @JSExport
+  def funDOT(): String =
+    flowchartPresenter.funDOT
+
+  @JSExport
+  def codeText(): String =
+    val generator = CodeGeneratorFactory(flowRunConfig.get.lang, programModel.ast)
+    val codeTry = generator.generate
+    if codeTry.isFailure then println("Failed to generate code: " + codeTry.failed)
+    codeTry.getOrElse("Error while generating code:\n" + codeTry.failed.get.getMessage)
+
   import FlowRun.Event.*
   flowrunChannel.attach {
     case EvalSuccess =>
@@ -111,12 +130,14 @@ class FlowRun(
       outputArea.clearSyntax()
       flowchartPresenter.loadCurrentFunction()
       doOnChange()
+      doOnModelChange()
     case StmtDeleted | StmtAdded =>
       programModel.currentStmtId = None
       outputArea.clearStmt()
       outputArea.clearSyntax()
       flowchartPresenter.loadCurrentFunction()
       doOnChange()
+      doOnModelChange()
     case SyntaxError(msg) =>
       outputArea.syntaxError(msg)
       flowchartPresenter.enable()
@@ -144,12 +165,14 @@ class FlowRun(
       functionSelector.loadFunctions()
       outputArea.clearSyntax()
       doOnChange()
+      doOnModelChange()
     case FunctionSelected =>
       programModel.currentStmtId = None
       outputArea.clearStmt()
       outputArea.clearSyntax()
       functionSelector.loadFunctions()
       flowchartPresenter.loadCurrentFunction()
+      doOnModelChange()
     case Deselected =>
       programModel.currentStmtId = None
       outputArea.clearStmt()
@@ -165,31 +188,8 @@ class FlowRun(
     ctxMenu.hideAllMenus()
   }
 
-  flowRunConfig.attachAndFire { _ =>
-    flowrunChannel := FlowRun.Event.ConfigChanged
-  }
-
   // trigger first time to get the ball rolling
   flowrunChannel := FlowRun.Event.SyntaxSuccess
-
-  @JSExport
-  def config(): FlowRunConfig =
-    flowRunConfig.get
-
-  @JSExport
-  def json(): String =
-    programModel.ast.toJson
-
-  @JSExport
-  def funDOT(): String =
-    flowchartPresenter.funDOT
-
-  @JSExport
-  def codeText(): String =
-    val generator = CodeGeneratorFactory(flowRunConfig.get.lang, programModel.ast)
-    val codeTry = generator.generate
-    if codeTry.isFailure then println("Failed to generate code: " + codeTry.failed)
-    codeTry.getOrElse("Error while generating code:\n" + codeTry.failed.get.getMessage)
 
   private def attachRunAndCopyListeners(): Unit = {
     flowRunElements.runButton.onclick = _ => {
@@ -290,7 +290,6 @@ class FlowRun(
   }
 
   private def doOnChange(): Unit = {
-    Option(changeCallback).foreach(cb => cb(this))
     var lang = config().lang.toString
     if lang.startsWith("scala") then lang = "scala"
 
@@ -303,6 +302,9 @@ class FlowRun(
     codeArea.appendChild(codeElem)
     js.Dynamic.global.Prism.highlightElement(codeElem)
   }
+
+  private def doOnModelChange(): Unit =
+    Option(changeCallback).foreach(cb => cb(this))
 
 }
 
