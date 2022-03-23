@@ -9,7 +9,7 @@ import dev.sacode.flowrun.eval.SymbolTable
 import dev.sacode.flowrun.eval.SymbolKey
 import dev.sacode.flowrun.eval.Symbol
 
-class Scala2Generator(programAst: Program) extends CodeGenerator {
+class ScalaGenerator(programAst: Program) extends CodeGenerator {
 
   private val indent = 2
 

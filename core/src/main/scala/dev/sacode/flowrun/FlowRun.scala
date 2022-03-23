@@ -23,6 +23,7 @@ import java.time.Instant
 import java.time.Duration
 import java.time.temporal.TemporalUnit
 import java.time.temporal.ChronoUnit
+import dev.sacode.flowrun.edit.CodeArea
 
 @JSExportTopLevel("FlowRun")
 class FlowRun(
@@ -70,6 +71,7 @@ class FlowRun(
   val flowRunElements = FlowRunElements(mountElem) // needs to come after JSON resolving and template copying
   private val flowchartPresenter = FlowchartPresenter(programModel, flowRunElements, colorScheme, flowrunChannel)
   private var outputArea = OutputArea(interpreter, flowRunElements, flowrunChannel)
+  private var codeArea = CodeArea(flowRunElements, programModel)
   private var debugArea = DebugArea(interpreter, flowRunElements)
 
   private val functionSelector = FunctionSelector(editable, programModel, flowrunChannel, flowRunElements)
@@ -103,10 +105,7 @@ class FlowRun(
 
   @JSExport
   def codeText(): String =
-    val generator = CodeGeneratorFactory(flowRunConfig.get.lang, programModel.ast)
-    val codeTry = generator.generate
-    if codeTry.isFailure then println("Failed to generate code: " + codeTry.failed)
-    codeTry.getOrElse("Error while generating code:\n" + codeTry.failed.get.getMessage)
+    codeArea.codeText(config())
 
   import FlowRun.Event.*
   flowrunChannel.attach {
@@ -289,19 +288,8 @@ class FlowRun(
     )
   }
 
-  private def doOnChange(): Unit = {
-    var lang = config().lang.toString
-    if lang.startsWith("scala") then lang = "scala"
-
-    val codeElem = code(cls := s"language-$lang")(
-      codeText()
-    ).render
-
-    val codeArea = flowRunElements.codeArea
-    codeArea.innerText = ""
-    codeArea.appendChild(codeElem)
-    js.Dynamic.global.Prism.highlightElement(codeElem)
-  }
+  private def doOnChange(): Unit =
+    codeArea.render(config())
 
   private def doOnModelChange(): Unit =
     Option(changeCallback).foreach(cb => cb(this))

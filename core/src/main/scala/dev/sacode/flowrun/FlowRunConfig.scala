@@ -7,13 +7,12 @@ import org.getshaka.nativeconverter.fromJson
 import dev.sacode.flowrun.codegen.Language
 
 final case class FlowRunConfig(
-    lang: Language,
-    layout: String
+    lang: Language
 ) derives NativeConverter
 
 object FlowRunConfig {
 
-  val default = FlowRunConfig(Language.java, "")
+  val default = FlowRunConfig(Language.java)
 
   private val FlowRunConfigKey = "flowrun-config"
   private val localConfig = initLocalConfig()
@@ -30,7 +29,11 @@ object FlowRunConfig {
     val savedConfigJson = dom.window.localStorage.getItem(FlowRunConfigKey)
     val config =
       if (savedConfigJson == null) default
-      else savedConfigJson.fromJson[FlowRunConfig]
+      else
+        try savedConfigJson.fromJson[FlowRunConfig]
+        catch {
+          case e => default
+        }
 
     config$.set(config)
     config$
