@@ -90,6 +90,7 @@ class FlowRun(
   else flowRunElements.addFunButton.remove()
 
   functionSelector.loadFunctions()
+  codeArea.render(config(), "")
 
   @JSExport
   def config(): FlowRunConfig =
@@ -125,7 +126,7 @@ class FlowRun(
     case SyntaxSuccess =>
       outputArea.clearSyntax()
       flowchartPresenter.loadCurrentFunction() // if function name updated
-    case StmtUpdated =>
+    case StmtUpdated(nodeId) =>
       outputArea.clearSyntax()
       flowchartPresenter.loadCurrentFunction()
       doOnChange()
@@ -172,11 +173,15 @@ class FlowRun(
       functionSelector.loadFunctions()
       flowchartPresenter.loadCurrentFunction()
       doOnModelChange()
+      doOnChange()
+    case StmtSelected =>
+      doOnChange()
     case Deselected =>
       programModel.currentStmtId = None
       outputArea.clearStmt()
       outputArea.clearSyntax()
       flowchartPresenter.clearSelected()
+      doOnChange()
     case ConfigChanged =>
       doOnChange()
     case SvgMounted =>
@@ -255,6 +260,7 @@ class FlowRun(
               outputArea.clearSyntax()
               flowchartPresenter.loadCurrentFunction() // to highlight new node..
               statementEditor.edit(nodeId)
+              flowrunChannel := StmtSelected
           case _ =>
             flowrunChannel := FlowRun.Event.Deselected
         }
@@ -289,7 +295,8 @@ class FlowRun(
   }
 
   private def doOnChange(): Unit =
-    codeArea.render(config())
+    val id = programModel.currentStmtId.getOrElse("")
+    codeArea.render(config(), id)
 
   private def doOnModelChange(): Unit =
     Option(changeCallback).foreach(cb => cb(this))
@@ -306,11 +313,12 @@ object FlowRun:
     case SyntaxSuccess
     case StmtDeleted
     case StmtAdded
-    case StmtUpdated
+    case StmtUpdated(nodeId: String)
     case SyntaxError(msg: String)
     case SymbolTableUpdated
     case FunctionUpdated
     case FunctionSelected
+    case StmtSelected
     case Deselected
     case ConfigChanged
     case SvgMounted

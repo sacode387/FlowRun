@@ -12,7 +12,7 @@ final case class FlowRunConfig(
 
 object FlowRunConfig {
 
-  val default = FlowRunConfig(Language.java)
+  val default = FlowRunConfig(Language.scala)
 
   private val FlowRunConfigKey = "flowrun-config"
   private val localConfig = initLocalConfig()

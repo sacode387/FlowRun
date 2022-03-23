@@ -73,7 +73,7 @@ class ProgramModel(
     update(_.addStmt(stmt, blockId, afterId), FlowRun.Event.StmtAdded)
 
   def updateStmt(stmt: Statement): Unit =
-    update(_.updateStmt(stmt), FlowRun.Event.StmtUpdated)
+    update(_.updateStmt(stmt), FlowRun.Event.StmtUpdated(stmt.id))
 
   def delete(id: String): Unit =
     update(_.delete(id), FlowRun.Event.StmtDeleted)

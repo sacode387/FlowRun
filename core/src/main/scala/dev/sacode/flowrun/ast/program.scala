@@ -33,4 +33,6 @@ case class Program(
     name: String,
     main: Function,
     functions: List[Function] = List.empty
-) derives NativeConverter
+) derives NativeConverter:
+  def allFunctions:List[Function] =
+    functions.prepended(main)

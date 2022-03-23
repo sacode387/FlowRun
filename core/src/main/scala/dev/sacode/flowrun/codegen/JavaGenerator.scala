@@ -21,8 +21,11 @@ class JavaGenerator(programAst: Program) extends CodeGenerator {
 
   private var initInput = false
 
-  def generate: Try[String] = Try {
+  def generate: Try[CodeGenRes] = Try {
 
+    null
+
+    /*
     val statements = programAst.main.statements.map(genStatement).map(_.indented(indent)).filterNot(_.trim.isEmpty)
     val functions = programAst.functions.map(genFunction)
     val maybeScanner = if initInput then "\nstatic Scanner scanner = new Scanner(System.in);\n\n" else ""
@@ -36,7 +39,7 @@ class JavaGenerator(programAst: Program) extends CodeGenerator {
         |
         |${functions.mkString("\n\n")}
         |}
-        |""".stripMargin.trim
+        |""".stripMargin.trim*/
   }
 
   private def genFunction(function: Function): String = {

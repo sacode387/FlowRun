@@ -20,7 +20,7 @@ class FlowRunElements(
 
   val debugVariables: dom.Element = mountElem.querySelector(".flowrun-debug-vars")
 
-  val codeArea: dom.Element = mountElem.querySelector(".flowrun-code")
+  val codeArea: dom.html.Element = mountElem.querySelector(".flowrun-code").asInstanceOf[dom.html.Element]
 
   val output: dom.Element = mountElem.querySelector(".flowrun-output")
   val stmtOutput: dom.Element = mountElem.querySelector(".flowrun-output-statement")
