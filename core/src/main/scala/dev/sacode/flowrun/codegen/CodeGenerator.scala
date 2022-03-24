@@ -30,7 +30,7 @@ trait CodeGenerator {
   protected var stmtLineNums: mutable.Map[String, List[Int]] = mutable.Map.empty.withDefaultValue(List.empty)
 
   protected def addLine(text: String, stmtId: String): Unit =
-    lines += text
+    lines += text.indented(indent)
     val lineNums = stmtLineNums.getOrElse(stmtId, List.empty)
     stmtLineNums.put(stmtId, lineNums.appended(lineNum))
     lineNum += 1

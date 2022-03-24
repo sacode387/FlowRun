@@ -14,29 +14,29 @@ import scala.collection.mutable.ListBuffer
 
 class ScalaGenerator(override val programAst: Program) extends CodeGenerator {
 
-  
-
   def generate: Try[CodeGenRes] = Try {
 
     addLine("import scala.io.StdIn", programAst.main.id)
     addEmptyLine()
     addLine(s"object ${programAst.name.toIdentifier} {", programAst.main.id)
+    
     incrIndent()
-    genMain(programAst.main)
+    genMain()
     programAst.functions.foreach(genFunction)
     decrIndent()
+
     addLine("}", programAst.main.id)
 
     CodeGenRes(lines.toList, stmtLineNums.toMap)
   }
 
-  private def genMain(function: Function): Unit = {
+  private def genMain(): Unit = {
+    val function = programAst.main
     symTab.enterScope(function.id, function.name)
 
-    val params = function.parameters.map(p => s"${p.name}: ${getType(p.tpe)}").mkString(", ")
     addEmptyLine()
     addLine(
-      "def main(args: Array[String]): Unit = {".indented(indent),
+      "def main(args: Array[String]): Unit = {",
       function.statements.head.id
     )
 
@@ -44,7 +44,7 @@ class ScalaGenerator(override val programAst: Program) extends CodeGenerator {
     function.statements.foreach(genStatement)
     decrIndent()
 
-    addLine("}".indented(indent), function.id)
+    addLine("}", function.id)
 
     symTab.exitScope()
   }
@@ -55,7 +55,7 @@ class ScalaGenerator(override val programAst: Program) extends CodeGenerator {
     val params = function.parameters.map(p => s"${p.name}: ${getType(p.tpe)}").mkString(", ")
     addEmptyLine()
     addLine(
-      s"def ${function.name}($params): ${getType(function.tpe)} = {".indented(indent),
+      s"def ${function.name}($params): ${getType(function.tpe)} = {",
       function.statements.head.id
     )
 
@@ -63,7 +63,7 @@ class ScalaGenerator(override val programAst: Program) extends CodeGenerator {
     function.statements.foreach(genStatement)
     decrIndent()
 
-    addLine("}".indented(indent), function.id)
+    addLine("}", function.id)
 
     symTab.exitScope()
   }
@@ -77,25 +77,25 @@ class ScalaGenerator(override val programAst: Program) extends CodeGenerator {
         val key = SymbolKey(name, Symbol.Kind.Variable, id)
         symTab.add(id, key, tpe, None)
         val initValue = maybeInitValue.map(v => s" = $v").getOrElse(" = _")
-        addLine(s"var $name: ${getType(tpe)}$initValue".indented(indent), id)
+        addLine(s"var $name: ${getType(tpe)}$initValue", id)
 
       case Assign(id, name, value) =>
-        addLine(s"$name = $value".indented(indent), id)
+        addLine(s"$name = $value", id)
 
       case Call(id, value) =>
-        addLine(value.indented(indent), id)
+        addLine(value, id)
 
       case Input(id, name, prompt) =>
         // TODO prompt
         val symOpt = Try(symTab.getSymbolVar("", name)).toOption
         val readFun = readFunction(symOpt.map(_.tpe))
-        addLine(s"$name = StdIn.$readFun()".indented(indent), id)
+        addLine(s"$name = StdIn.$readFun()", id)
 
       case Output(id, value, newline) =>
         val text =
           if newline then s"println($value)"
           else s"print($value)"
-        addLine(text.indented(indent), id)
+        addLine(text, id)
 
       case Block(_, statements) =>
         incrIndent()
@@ -104,30 +104,30 @@ class ScalaGenerator(override val programAst: Program) extends CodeGenerator {
 
       case Return(id, maybeValue) =>
         maybeValue.foreach { value =>
-          addLine(value.indented(indent), id)
+          addLine(value, id)
         }
 
       case If(id, condition, trueBlock, falseBlock) =>
-        addLine(s"if ($condition) {".indented(indent), id)
+        addLine(s"if ($condition) {", id)
         genStatement(trueBlock)
-        addLine("} else {".indented(indent), id)
+        addLine("} else {", id)
         genStatement(falseBlock)
-        addLine("}".indented(indent), id)
+        addLine("}", id)
 
       case While(id, condition, block) =>
-        addLine(s"while ($condition) {".indented(indent), id)
+        addLine(s"while ($condition) {", id)
         genStatement(block)
-        addLine("}".indented(indent), id)
+        addLine("}", id)
 
       case DoWhile(id, condition, block) =>
-        addLine(s"do {".indented(indent), id)
+        addLine(s"do {", id)
         genStatement(block)
-        addLine(s"} ($condition)".indented(indent), id)
+        addLine(s"} ($condition)", id)
 
       case ForLoop(id, varName, start, incr, end, block) =>
-        addLine(s"for ($varName <- $start to $end) {".indented(indent), id)
+        addLine(s"for ($varName <- $start to $end) {", id)
         genStatement(block)
-        addLine("}".indented(indent), id)
+        addLine("}", id)
 
   private def getType(tpe: Expression.Type): String =
     import Expression.Type, Type._
