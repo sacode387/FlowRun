@@ -1,16 +1,12 @@
 package dev.sacode.flowrun.codegen
 
-import scala.collection.mutable
 import scala.util.Try
-import reactify.*
 import dev.sacode.flowrun.toIdentifier
 import dev.sacode.flowrun.FlowRun
 import dev.sacode.flowrun.ast.*, Expression.Type
-import dev.sacode.flowrun.indented
 import dev.sacode.flowrun.eval.SymbolTable
 import dev.sacode.flowrun.eval.SymbolKey
 import dev.sacode.flowrun.eval.Symbol
-import scala.collection.mutable.ListBuffer
 
 class ScalaGenerator(override val programAst: Program) extends CodeGenerator {
 
@@ -76,8 +72,8 @@ class ScalaGenerator(override val programAst: Program) extends CodeGenerator {
       case Declare(id, name, tpe, maybeInitValue) =>
         val key = SymbolKey(name, Symbol.Kind.Variable, id)
         symTab.add(id, key, tpe, None)
-        val initValue = maybeInitValue.map(v => s" = $v").getOrElse(" = _")
-        addLine(s"var $name: ${getType(tpe)}$initValue", id)
+        val initValue = maybeInitValue.getOrElse(defaultValue(tpe))
+        addLine(s"var $name: ${getType(tpe)} = $initValue", id)
 
       case Assign(id, name, value) =>
         addLine(s"$name = $value", id)
@@ -85,8 +81,10 @@ class ScalaGenerator(override val programAst: Program) extends CodeGenerator {
       case Call(id, value) =>
         addLine(value, id)
 
-      case Input(id, name, prompt) =>
-        // TODO prompt
+      case Input(id, name, promptOpt) =>
+        val prompt = promptOpt.getOrElse(s"Please enter $name: ")
+        addLine(s"""print("$prompt")""", id)
+
         val symOpt = Try(symTab.getSymbolVar("", name)).toOption
         val readFun = readFunction(symOpt.map(_.tpe))
         addLine(s"$name = StdIn.$readFun()", id)
@@ -122,7 +120,7 @@ class ScalaGenerator(override val programAst: Program) extends CodeGenerator {
       case DoWhile(id, condition, block) =>
         addLine(s"do {", id)
         genStatement(block)
-        addLine(s"} ($condition)", id)
+        addLine(s"} while ($condition)", id)
 
       case ForLoop(id, varName, start, incr, end, block) =>
         addLine(s"for ($varName <- $start to $end) {", id)

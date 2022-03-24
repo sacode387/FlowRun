@@ -31,8 +31,9 @@ trait CodeGenerator {
 
   protected def addLine(text: String, stmtId: String): Unit =
     lines += text.indented(indent)
-    val lineNums = stmtLineNums.getOrElse(stmtId, List.empty)
-    stmtLineNums.put(stmtId, lineNums.appended(lineNum))
+    if !stmtId.isBlank then
+      val lineNums = stmtLineNums.getOrElse(stmtId, List.empty)
+      stmtLineNums.put(stmtId, lineNums.appended(lineNum))
     lineNum += 1
 
   protected def addEmptyLine(): Unit =
@@ -43,6 +44,14 @@ trait CodeGenerator {
     indent += indentAmount
   protected def decrIndent(): Unit =
     indent -= indentAmount
+
+  protected def defaultValue(tpe: Type): String = tpe match {
+    case Type.Void => ""
+    case Type.Boolean => "false"
+    case Type.Integer => "0"
+    case Type.Real => "0.0"
+    case Type.String => """ "" """.trim
+  }
 }
 
 case class CodeGenRes(

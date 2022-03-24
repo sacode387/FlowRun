@@ -36,3 +36,21 @@ case class Program(
 ) derives NativeConverter:
   def allFunctions:List[Function] =
     functions.prepended(main)
+  
+  def hasInputs: Boolean = {
+    val allStmts = allFunctions.flatMap(_.statements).flatMap {
+      case Statement.Block(_, blockStats) =>
+        blockStats
+      case stat @ Statement.If(id, expr, trueBlock, falseBlock) =>
+        trueBlock.statements ++ falseBlock.statements
+      case stat @ Statement.While(id, expr, body) =>
+        body.statements
+      case stat @ Statement.DoWhile(id, expr, body) =>
+        body.statements
+      case stat: Statement.ForLoop =>
+        stat.body.statements
+      case st =>
+        List(st)
+    }
+    allStmts.exists(_.isInstanceOf[Statement.Input])
+  }
