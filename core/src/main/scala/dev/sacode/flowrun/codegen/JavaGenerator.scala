@@ -11,17 +11,32 @@ import dev.sacode.flowrun.eval.Symbol
 import scala.util.Try
 import dev.sacode.flowrun.spaces
 
-// TODO prettify empty lines
-class JavaGenerator(programAst: Program) extends CodeGenerator {
+class JavaGenerator(override val programAst: Program) extends CodeGenerator {
 
-  private val indent = 2
 
-  private val dummyChannel = Channel[FlowRun.Event]
-  private val symTab = SymbolTable(dummyChannel) // needed for types of vars
 
-  private var initInput = false
 
   def generate: Try[CodeGenRes] = Try {
+
+    addLine("import java.util.*;", programAst.main.id)
+    addEmptyLine()
+    addLine(s"public class ${programAst.name.toIdentifier} {", programAst.main.id)
+
+
+    CodeGenRes(lines.toList, stmtLineNums.toMap)
+  }
+
+
+
+
+
+
+
+
+
+  
+
+  def generate1: Try[CodeGenRes] = Try {
 
     null
 
@@ -41,7 +56,7 @@ class JavaGenerator(programAst: Program) extends CodeGenerator {
         |}
         |""".stripMargin.trim*/
   }
-
+/*
   private def genFunction(function: Function): String = {
     symTab.enterScope(function.id, function.name)
     val statements = function.statements.map(genStatement).filterNot(_.trim.isEmpty)
@@ -96,7 +111,7 @@ class JavaGenerator(programAst: Program) extends CodeGenerator {
         s"""|for (int $varName = $start; i <= $end; i += $incr) {
             |${genStatement(block)}
             |}""".stripMargin.trim.indented(indent)
-
+*/
   private def getType(tpe: Expression.Type): String =
     import Expression.Type, Type._
     tpe match

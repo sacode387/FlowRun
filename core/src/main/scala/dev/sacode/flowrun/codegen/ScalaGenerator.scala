@@ -3,6 +3,7 @@ package dev.sacode.flowrun.codegen
 import scala.collection.mutable
 import scala.util.Try
 import reactify.*
+import dev.sacode.flowrun.toIdentifier
 import dev.sacode.flowrun.FlowRun
 import dev.sacode.flowrun.ast.*, Expression.Type
 import dev.sacode.flowrun.indented
@@ -11,44 +12,41 @@ import dev.sacode.flowrun.eval.SymbolKey
 import dev.sacode.flowrun.eval.Symbol
 import scala.collection.mutable.ListBuffer
 
-class ScalaGenerator(programAst: Program) extends CodeGenerator {
+class ScalaGenerator(override val programAst: Program) extends CodeGenerator {
 
-  private val indentAmount = 2
-  private var indent = 0
-
-  private val dummyChannel = Channel[FlowRun.Event]
-  private val symTab = SymbolTable(dummyChannel) // needed for types of vars
-
-  private var lineNum = 1
-  private var lines = ListBuffer.empty[String]
-  private var stmtLineNums: mutable.Map[String, List[Int]] = mutable.Map.empty.withDefaultValue(List.empty)
-
-  private def addLine(text: String, stmtId: String): Unit =
-    lines += text
-    val lineNums = stmtLineNums.getOrElse(stmtId, List.empty)
-    stmtLineNums.put(stmtId, lineNums.appended(lineNum))
-    lineNum += 1
-
-  private def addEmptyLine(): Unit =
-    lines += ""
-    lineNum += 1
-
-  private def incrIndent(): Unit =
-    indent += indentAmount
-  private def decrIndent(): Unit =
-    indent -= indentAmount
+  
 
   def generate: Try[CodeGenRes] = Try {
 
     addLine("import scala.io.StdIn", programAst.main.id)
     addEmptyLine()
-    addLine(s"object ${programAst.name.replaceAll(" +", "")} {", programAst.main.id)
+    addLine(s"object ${programAst.name.toIdentifier} {", programAst.main.id)
     incrIndent()
-    programAst.allFunctions.foreach(genFunction)
+    genMain(programAst.main)
+    programAst.functions.foreach(genFunction)
     decrIndent()
     addLine("}", programAst.main.id)
 
     CodeGenRes(lines.toList, stmtLineNums.toMap)
+  }
+
+  private def genMain(function: Function): Unit = {
+    symTab.enterScope(function.id, function.name)
+
+    val params = function.parameters.map(p => s"${p.name}: ${getType(p.tpe)}").mkString(", ")
+    addEmptyLine()
+    addLine(
+      "def main(args: Array[String]): Unit = {".indented(indent),
+      function.statements.head.id
+    )
+
+    incrIndent()
+    function.statements.foreach(genStatement)
+    decrIndent()
+
+    addLine("}".indented(indent), function.id)
+
+    symTab.exitScope()
   }
 
   private def genFunction(function: Function): Unit = {
@@ -88,6 +86,7 @@ class ScalaGenerator(programAst: Program) extends CodeGenerator {
         addLine(value.indented(indent), id)
 
       case Input(id, name, prompt) =>
+        // TODO prompt
         val symOpt = Try(symTab.getSymbolVar("", name)).toOption
         val readFun = readFunction(symOpt.map(_.tpe))
         addLine(s"$name = StdIn.$readFun()".indented(indent), id)

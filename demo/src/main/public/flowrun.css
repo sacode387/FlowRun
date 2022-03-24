@@ -298,14 +298,16 @@ div.code-toolbar {
 }
 
 .flowrun-gencode-btns {
+    display: flex;
+    gap: 1rem;
     position: absolute;
-    left: 3rem;
+    left: 1rem;
     top: 5px;
 }
 
 .flowrun-gen-code {
     position: relative;
-    padding: 1rem 0 0.5rem 0;
+    padding: 1.3rem 0 0.5rem 0;
 }
 
 .flowrun-instance.flowrun-layout-f-d-o .flowrun-gen-code,

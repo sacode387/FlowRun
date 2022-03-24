@@ -34,6 +34,8 @@ class FlowRunElements(
   val copySourceButton: dom.html.Element =
     mountElem.querySelector(".flowrun-btn-copy-source").asInstanceOf[dom.html.Element]
   val copyDotButton: dom.html.Element = mountElem.querySelector(".flowrun-btn-copy-dot").asInstanceOf[dom.html.Element]
+  val copyGencodeButton: dom.html.Element =
+    mountElem.querySelector(".flowrun-btn-copy-gencode").asInstanceOf[dom.html.Element]
 
   val addFunButton: dom.html.Element = mountElem.querySelector(".flowrun-btn-fun-add").asInstanceOf[dom.html.Element]
   private val deleteFunButton: dom.html.Element =

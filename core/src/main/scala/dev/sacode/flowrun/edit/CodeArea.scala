@@ -26,7 +26,7 @@ class CodeArea(
     flowRunElements.codeLang.value = config.lang.name
     flowRunElements.codeLang.onchange = { (e: dom.Event) =>
       config.set {
-        config().copy(lang = Language.valueOf(flowRunElements.codeLang.value))
+        config().copy(lang = Language.values.find(_.name == flowRunElements.codeLang.value).get)
       }
     }
   }
@@ -42,7 +42,8 @@ class CodeArea(
     flowRunElements.codeArea.dataset("line") = lh
     flowRunElements.codeArea.innerText = ""
     flowRunElements.codeArea.appendChild(codeElem)
-    js.Dynamic.global.Prism.highlightElement(codeElem)
+    //js.Dynamic.global.Prism.highlightElement(codeElem)
+    js.Dynamic.global.Prism.highlightAll()
   }
 
   def codeText(): String =
