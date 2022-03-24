@@ -244,10 +244,6 @@ body {
     border-left: 3px var(--flowrun-grey-darker) solid;
 }
 
-.flowrun-output-statement :not(.material-icons) {
-    font-family: 'Courier Prime';
-}
-
 .flowrun-output-runtime {
     border-left: 3px var(--flowrun-green) solid;
 }
@@ -287,9 +283,10 @@ body {
 /**************************/
 /* CODEGEN */
 /**************************/
+
 .flowrun-gen-code {
     position: relative;
-    padding: 0;
+    padding: 1rem 0;
 }
 
 .flowrun-instance.flowrun-layout-f-d-o .flowrun-gen-code,
@@ -298,23 +295,12 @@ body {
     display: none;
 }
 
-pre.flowrun-code {
+.flowrun-code {
     height: 100%;
-    background-color: white;
+    margin: 0;
+    padding: 0;
+    background: white !important;
 }
-/*
-
-
-.flowrun-code code {
-    height: 100%;
-    font-family: 'Courier Prime', monospace;
-}
-
-pre,
-pre>* {
-    font-family: 'Courier Prime', monospace;
-}*/
-
 
 /**************************/
 /* NODES */

@@ -23,8 +23,6 @@ class CodeArea(
       code(cls := s"language-${config.lang.prism}")(
         text
       ).render
-    
-    println(codeElem.innerHTML)
 
     flowRunElements.codeArea.dataset("line") = lh
     flowRunElements.codeArea.innerText = ""
@@ -43,8 +41,6 @@ class CodeArea(
     codeTry match {
       case Success(res) =>
         val lh = res.stmtLineNums.getOrElse(stmtId, List.empty).mkString(",")
-        println(stmtId)
-        println(res.stmtLineNums)
         (res.lines.mkString("\n"), lh)
       case Failure(_) =>
         ("Error while generating code:\n" + codeTry.failed.get.getMessage, "")
