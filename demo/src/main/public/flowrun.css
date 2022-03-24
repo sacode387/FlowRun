@@ -286,7 +286,7 @@ body {
 
 .flowrun-gen-code {
     position: relative;
-    padding: 1rem 0;
+    padding: 2rem 0 0.5rem 0;
 }
 
 .flowrun-instance.flowrun-layout-f-d-o .flowrun-gen-code,
@@ -295,10 +295,9 @@ body {
     display: none;
 }
 
-.flowrun-code {
+pre[class*=language-].flowrun-code {
     height: 100%;
     margin: 0;
-    padding: 0;
     background: white !important;
 }
 
