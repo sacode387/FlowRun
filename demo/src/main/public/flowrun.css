@@ -287,15 +287,25 @@ body {
 /* CODEGEN */
 /**************************/
 
+/* this prism stuff */
 div.code-toolbar {
-    /* this prism stuff */
     height: 100%;
     overflow: auto;
 }
 
+.flowrun-gen-code select {
+    font-family: 'Courier Prime';
+}
+
+.flowrun-gencode-btns {
+    position: absolute;
+    left: 3rem;
+    top: 5px;
+}
+
 .flowrun-gen-code {
     position: relative;
-    padding: 0 0 0.5rem 0;
+    padding: 1rem 0 0.5rem 0;
 }
 
 .flowrun-instance.flowrun-layout-f-d-o .flowrun-gen-code,
@@ -351,12 +361,6 @@ pre[class*=language-].flowrun-code {
     left: 5px;
     top: 5px;
     display: flex;
-}
-
-.flowrun-gencode-copy-btns {
-    position: absolute;
-    left: 5px;
-    top: 5px;
 }
 
 .flowrun-instance button[class^="flowrun-btn"] {

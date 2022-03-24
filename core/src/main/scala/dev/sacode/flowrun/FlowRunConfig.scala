@@ -22,10 +22,8 @@ object FlowRunConfig {
   private def initLocalConfig(): Var[FlowRunConfig] = {
 
     val config$ : Var[FlowRunConfig] = Var(null)
-    config$.attach { newValue =>
-      dom.window.localStorage.setItem(FlowRunConfigKey, newValue.toJson)
-    }
 
+    // load previous value
     val savedConfigJson = dom.window.localStorage.getItem(FlowRunConfigKey)
     val config =
       if (savedConfigJson == null) default
@@ -34,8 +32,21 @@ object FlowRunConfig {
         catch {
           case e => default
         }
-
     config$.set(config)
+
+    // write when changed
+    config$.attach { newValue =>
+      dom.window.localStorage.setItem(FlowRunConfigKey, newValue.toJson)
+    }
+
+    // listen changes in localstorage
+ /*   window.addEventListener('storage', () => {
+  // When local storage changes, dump the list to
+  // the console.
+  console.log(JSON.parse(window.localStorage.getItem('sampleList')));
+});
+*/
+
     config$
   }
 

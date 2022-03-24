@@ -8,5 +8,6 @@ object CodeGeneratorFactory {
     lang match
       case Language.scala => ScalaGenerator(programAst)
       case Language.java  => JavaGenerator(programAst)
+      case _ => ScalaGenerator(programAst)
 
 }

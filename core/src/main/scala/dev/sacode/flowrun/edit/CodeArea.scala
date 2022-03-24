@@ -1,6 +1,7 @@
 package dev.sacode.flowrun.edit
 
 import scala.util.{Success, Failure}
+import reactify.*
 import scala.scalajs.js
 import scala.scalajs.js.annotation.*
 import org.scalajs.dom
@@ -9,16 +10,30 @@ import dev.sacode.flowrun.codegen.CodeGeneratorFactory
 import dev.sacode.flowrun.FlowRunConfig
 import dev.sacode.flowrun.ProgramModel
 import dev.sacode.flowrun.FlowRunElements
+import dev.sacode.flowrun.codegen.Language
 
 class CodeArea(
     flowRunElements: FlowRunElements,
-    programModel: ProgramModel
+    programModel: ProgramModel,
+    config: Var[FlowRunConfig]
 ) {
 
-  def render(config: FlowRunConfig, stmtId: String): Unit = {
+  def init(): Unit = {
+    Language.values.foreach { language =>
+      val item = option(value := language.name)(language.name).render
+      flowRunElements.codeLang.add(item)
+    }
+    flowRunElements.codeLang.value = config.lang.name
+    flowRunElements.codeLang.onchange = { (e: dom.Event) =>
+      config.set {
+        config().copy(lang = Language.valueOf(flowRunElements.codeLang.value))
+      }
+    }
+  }
 
-    val (text, lh) = gen(config, stmtId)
+  def render(stmtId: String): Unit = {
 
+    val (text, lh) = gen(stmtId)
     val codeElem =
       code(cls := s"language-${config.lang.prism}")(
         text
@@ -30,12 +45,12 @@ class CodeArea(
     js.Dynamic.global.Prism.highlightElement(codeElem)
   }
 
-  def codeText(config: FlowRunConfig): String =
-    val (text, _) = gen(config, "")
+  def codeText(): String =
+    val (text, _) = gen("")
     text
 
-  private def gen(config: FlowRunConfig, stmtId: String): (String, String) = {
-    val generator = CodeGeneratorFactory(config.lang, programModel.ast)
+  private def gen(stmtId: String): (String, String) = {
+    val generator = CodeGeneratorFactory(config().lang, programModel.ast)
     val codeTry = generator.generate
     if codeTry.isFailure then println("Failed to generate code: " + codeTry.failed)
     codeTry match {

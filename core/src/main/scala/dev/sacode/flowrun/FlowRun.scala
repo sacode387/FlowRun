@@ -71,7 +71,8 @@ class FlowRun(
   val flowRunElements = FlowRunElements(mountElem) // needs to come after JSON resolving and template copying
   private val flowchartPresenter = FlowchartPresenter(programModel, flowRunElements, colorScheme, flowrunChannel)
   private var outputArea = OutputArea(interpreter, flowRunElements, flowrunChannel)
-  private var codeArea = CodeArea(flowRunElements, programModel)
+  private var codeArea = CodeArea(flowRunElements, programModel, flowRunConfig)
+  codeArea.init()
   private var debugArea = DebugArea(interpreter, flowRunElements)
 
   private val functionSelector = FunctionSelector(editable, programModel, flowrunChannel, flowRunElements)
@@ -90,7 +91,11 @@ class FlowRun(
   else flowRunElements.addFunButton.remove()
 
   functionSelector.loadFunctions()
-  codeArea.render(config(), "")
+  codeArea.render("")
+
+  flowRunConfig.attach { cfg =>
+    doOnChange()
+  }
 
   @JSExport
   def config(): FlowRunConfig =
@@ -106,7 +111,7 @@ class FlowRun(
 
   @JSExport
   def codeText(): String =
-    codeArea.codeText(config())
+    codeArea.codeText()
 
   import FlowRun.Event.*
   flowrunChannel.attach {
@@ -291,7 +296,7 @@ class FlowRun(
 
   private def doOnChange(): Unit =
     val id = programModel.currentStmtId.getOrElse("")
-    codeArea.render(config(), id)
+    codeArea.render(id)
 
   private def doOnModelChange(): Unit =
     Option(changeCallback).foreach(cb => cb(this))
