@@ -237,11 +237,6 @@ class FlowRun(
       dom.window.navigator.clipboard.writeText(flowchartPresenter.funDOT)
       Toastify(ToastifyOptions("Copied DOT to clipboard.", Color.green)).showToast()
     }
-
-    flowRunElements.copyGencodeButton.onclick = _ => {
-      dom.window.navigator.clipboard.writeText(codeText())
-      Toastify(ToastifyOptions("Copied generated code to clipboard.", Color.green)).showToast()
-    }
   }
 
   private def attachEditListeners(): Unit = {

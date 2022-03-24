@@ -243,6 +243,9 @@ body {
 .flowrun-output-statement {
     border-left: 3px var(--flowrun-grey-darker) solid;
 }
+.flowrun-output-statement :not(.material-icons) {
+    font-family: 'Courier Prime';
+}
 
 .flowrun-output-runtime {
     border-left: 3px var(--flowrun-green) solid;
@@ -284,9 +287,15 @@ body {
 /* CODEGEN */
 /**************************/
 
+div.code-toolbar {
+    /* this prism stuff */
+    height: 100%;
+    overflow: auto;
+}
+
 .flowrun-gen-code {
     position: relative;
-    padding: 2rem 0 0.5rem 0;
+    padding: 0 0 0.5rem 0;
 }
 
 .flowrun-instance.flowrun-layout-f-d-o .flowrun-gen-code,
