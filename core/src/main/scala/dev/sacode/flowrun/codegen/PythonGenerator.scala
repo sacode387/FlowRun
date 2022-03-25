@@ -75,15 +75,15 @@ class PythonGenerator(override val programAst: Program) extends CodeGenerator {
         addLine(s"$genValue", id)
 
       case Input(id, name, promptOpt) =>
-        val prompt = promptOpt.getOrElse(s""" "Please enter $name: " """.trim)
+        val prompt = promptOpt.getOrElse(s"Please enter $name: ".trim)
         val symOpt = Try(symTab.getSymbolVar("", name)).toOption
-        addLine(s"$name = input($prompt)", id)
+        addLine(s"""$name = input("$prompt")""", id)
 
       case Output(id, value, newline) =>
         val genValue = parseGenExpr(value)
         val text =
-          if newline then s"print($genValue)"
-          else s"print($genValue, end = '')"
+          if newline then s"""print($genValue)"""
+          else s"""print($genValue, end = '')"""
         addLine(text, id)
 
       case Block(_, statements) =>

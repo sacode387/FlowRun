@@ -12,10 +12,12 @@ class ScalaGenerator(override val programAst: Program) extends CodeGenerator {
 
   def generate: Try[CodeGenRes] = Try {
 
-    addLine("import scala.io.StdIn", programAst.main.id)
-    addEmptyLine()
+    if programAst.hasInputs then
+      addLine("import scala.io.StdIn", programAst.main.id)
+      addEmptyLine()
+
     addLine(s"object ${programAst.name.toIdentifier} {", programAst.main.id)
-    
+
     incrIndent()
     genMain()
     programAst.functions.foreach(genFunction)
@@ -137,7 +139,7 @@ class ScalaGenerator(override val programAst: Program) extends CodeGenerator {
         addLine(s"for ($varName <- $genStart to $genEnd by $genIncr) {", id)
         genStatement(block)
         addLine("}", id)
-      
+
   import PredefinedFunction.*
   override def predefFun(name: String, genArgs: List[String]): String = {
     def argOpt(idx: Int) = genArgs.lift(idx).getOrElse("")
@@ -159,7 +161,7 @@ class ScalaGenerator(override val programAst: Program) extends CodeGenerator {
   }
 
   override def funCall(name: String, genArgs: List[String]): String =
-     s""" $name(${genArgs.mkString(", ")}) """.trim
+    s""" $name(${genArgs.mkString(", ")}) """.trim
 
   private def genType(tpe: Expression.Type): String =
     import Expression.Type, Type._
