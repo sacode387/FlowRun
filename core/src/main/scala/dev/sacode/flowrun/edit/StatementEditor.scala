@@ -139,8 +139,8 @@ final class StatementEditor(
           programModel.updateStmt(updatedStmt)
         }
         val promptInputElem = newTextInput(statement.id, 20, statement.prompt.getOrElse(""), "Please enter x")(
-          newName => {
-            val updatedStmt = programModel.findStatement(stmtId).asInstanceOf[Input].copy(prompt = Some(newName))
+          newPrompt => {
+            val updatedStmt = programModel.findStatement(stmtId).asInstanceOf[Input].copy(prompt = Some(newPrompt))
             programModel.updateStmt(updatedStmt)
           },
           _ => {
@@ -323,8 +323,8 @@ final class StatementEditor(
     newInput.value = value
     newInput.placeholder = placeHolder
     newInput.oninput = { (_: dom.Event) =>
-      val newText = newInput.value.trim
-      if newText.isEmpty then onFailure(newText)
+      val newText = newInput.value
+      if newText.trim.isEmpty then onFailure(newText)
       else onSuccess(newText)
     }
     newInput

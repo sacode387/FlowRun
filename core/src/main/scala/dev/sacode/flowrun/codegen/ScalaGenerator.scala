@@ -48,10 +48,10 @@ class ScalaGenerator(override val programAst: Program) extends CodeGenerator {
   private def genFunction(function: Function): Unit = {
     symTab.enterScope(function.id, function.name)
 
-    val params = function.parameters.map(p => s"${p.name}: ${getType(p.tpe)}").mkString(", ")
+    val params = function.parameters.map(p => s"${p.name}: ${genType(p.tpe)}").mkString(", ")
     addEmptyLine()
     addLine(
-      s"def ${function.name}($params): ${getType(function.tpe)} = {",
+      s"def ${function.name}($params): ${genType(function.tpe)} = {",
       function.statements.head.id
     )
 
@@ -73,7 +73,7 @@ class ScalaGenerator(override val programAst: Program) extends CodeGenerator {
         val key = SymbolKey(name, Symbol.Kind.Variable, id)
         symTab.add(id, key, tpe, None)
         val initValue = maybeInitValue.getOrElse(defaultValue(tpe))
-        addLine(s"var $name: ${getType(tpe)} = $initValue", id)
+        addLine(s"var $name: ${genType(tpe)} = $initValue", id)
 
       case Assign(id, name, value) =>
         addLine(s"$name = $value", id)
@@ -127,7 +127,7 @@ class ScalaGenerator(override val programAst: Program) extends CodeGenerator {
         genStatement(block)
         addLine("}", id)
 
-  private def getType(tpe: Expression.Type): String =
+  private def genType(tpe: Expression.Type): String =
     import Expression.Type, Type._
     tpe match
       case Void    => "Unit"

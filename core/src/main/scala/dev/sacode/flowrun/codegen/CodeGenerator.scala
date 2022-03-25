@@ -20,7 +20,7 @@ trait CodeGenerator {
   def generate: Try[CodeGenRes]
 
   private val indentAmount = 2
-  protected  var indent = 0
+  protected var indent = 0
 
   private val dummyChannel = Channel[FlowRun.Event]
   protected val symTab = SymbolTable(dummyChannel) // needed for types of vars
@@ -46,11 +46,11 @@ trait CodeGenerator {
     indent -= indentAmount
 
   protected def defaultValue(tpe: Type): String = tpe match {
-    case Type.Void => ""
+    case Type.Void    => ""
     case Type.Boolean => "false"
     case Type.Integer => "0"
-    case Type.Real => "0.0"
-    case Type.String => """ "" """.trim
+    case Type.Real    => "0.0"
+    case Type.String  => """ "" """.trim
   }
 }
 
