@@ -138,4 +138,7 @@ class JavascriptGenerator(override val programAst: Program) extends CodeGenerato
     }
   }
 
+  override def funCall(name: String, genArgs: List[String]): String =
+     s""" $name(${genArgs.mkString(", ")}) """.trim
+
 }

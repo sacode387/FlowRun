@@ -124,6 +124,7 @@ case class Token(
 ) derives NativeConverter
 
 object Token {
+  
   enum Type derives NativeConverter {
     case Integer // 123
     case Real // 123.45

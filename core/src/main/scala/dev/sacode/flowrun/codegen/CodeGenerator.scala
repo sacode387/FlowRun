@@ -12,7 +12,7 @@ import dev.sacode.flowrun.eval.SymbolTable
 import dev.sacode.flowrun.eval.SymbolKey
 import dev.sacode.flowrun.eval.Symbol
 import dev.sacode.flowrun.ast.*, Expression.Type, Atom.*, Unary.*
-import dev.sacode.flowrun.parse.{parseExpr}
+import dev.sacode.flowrun.parse.{parseExpr, Token}
 import scala.collection.mutable.ListBuffer
 
 trait CodeGenerator {
@@ -21,7 +21,10 @@ trait CodeGenerator {
 
   def generate: Try[CodeGenRes]
 
-  protected def predefFun(name: String, genArgs: List[String]): String = ""
+  def genToken(token: Token): String = token.text
+
+  protected def predefFun(name: String, genArgs: List[String]): String
+  protected def funCall(name: String, genArgs: List[String]): String
 
   private val indentAmount = 2
   protected var indent = 0
@@ -61,14 +64,18 @@ trait CodeGenerator {
     genExpr(parseExpr("", exprString))
 
   private def genExpr(expr: Expression): String = {
+    val op = Token(Token.Type.Or, "||", 0)
+    val tokenText = genToken(op)
     val bocs = List(genBoolOrComparison(expr.boolOrComparison)) ++ expr.boolOrComparisons.map(boc =>
-      s""" || ${genBoolOrComparison(boc)} """.trim
+      s""" $tokenText ${genBoolOrComparison(boc)} """.trim
     )
     bocs.mkString(" ")
   }
   private def genBoolOrComparison(boc: BoolOrComparison): String = {
+    val op = Token(Token.Type.And, "&&", 0)
+    val tokenText = genToken(op)
     val bacs = List(genBoolAndComparison(boc.boolAndComparison)) ++ boc.boolAndComparisons.map(bac =>
-      s""" && ${genBoolAndComparison(bac)} """.trim
+      s""" $tokenText ${genBoolAndComparison(bac)} """.trim
     )
     bacs.mkString(" ")
   }
@@ -93,16 +100,19 @@ trait CodeGenerator {
     unaries.mkString(" ")
   }
   private def genUnary(unary: Unary): String = unary match {
-    case Prefixed(op, u) => s""" ${op.text}${genUnary(u)} """.trim
-    case Simple(atom)    => genAtom(atom)
+    case Prefixed(op, u) =>
+      val tokenText = genToken(op)
+      if tokenText.forall(_.isLetter) then s""" $tokenText ${genUnary(u)} """.trim
+      else s""" $tokenText${genUnary(u)} """.trim
+    case Simple(atom) => genAtom(atom)
   }
   private def genAtom(atom: Atom): String = atom match {
     case IntegerLit(value)  => value.toString
     case RealLit(value)     => value.toString
     case StringLit(value)   => s""" "$value" """.trim
     case Identifier(name)   => name
-    case TrueLit            => "true"
-    case FalseLit           => "false"
+    case TrueLit            => genToken(Token(Token.Type.True, "true", 0))
+    case FalseLit           => genToken(Token(Token.Type.False, "false", 0))
     case Parens(expression) => s""" (${genExpr(expression)}) """.trim
     case FunctionCall(name, arguments) =>
       val genArgs = arguments.map(genExpr)
@@ -110,9 +120,9 @@ trait CodeGenerator {
         case Some(f) =>
           predefFun(name, genArgs)
         case None =>
-          s""" $name(${genArgs.mkString(", ")}) """.trim
+          funCall(name, genArgs)
   }
-  
+
 }
 
 case class CodeGenRes(

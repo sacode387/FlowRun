@@ -9,9 +9,9 @@ import dev.sacode.flowrun.eval.SymbolTable
 import dev.sacode.flowrun.eval.SymbolKey
 import dev.sacode.flowrun.eval.Symbol
 
-class NodeJsGenerator(override val programAst: Program) extends CodeGenerator {
+class NodeJsGenerator(override val programAst: Program) extends JavascriptGenerator(programAst) {
 
-  def generate: Try[CodeGenRes] = Try {
+  override def generate: Try[CodeGenRes] = Try {
 
 
     if programAst.hasInputs then

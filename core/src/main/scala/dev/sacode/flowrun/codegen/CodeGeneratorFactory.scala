@@ -7,9 +7,10 @@ object CodeGeneratorFactory {
 
   def apply(lang: Language, programAst: Program): CodeGenerator =
     lang match
-      case Language.scala => ScalaGenerator(programAst)
-      case Language.java  => JavaGenerator(programAst)
-      case Language.javascript  => JavascriptGenerator(programAst)
+      case Language.scala      => ScalaGenerator(programAst)
+      case Language.java       => JavaGenerator(programAst)
+      case Language.javascript => JavascriptGenerator(programAst)
+      case Language.python     => PythonGenerator(programAst)
       case _ =>
         new CodeGenerator {
 
@@ -18,6 +19,9 @@ object CodeGeneratorFactory {
           def generate: Try[CodeGenRes] = Try {
             throw new RuntimeException("TODO")
           }
+
+          override def predefFun(name: String, genArgs: List[String]): String = ""
+          override def funCall(name: String, genArgs: List[String]): String = ""
         }
 
 }

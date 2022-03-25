@@ -161,6 +161,9 @@ class JavaGenerator(override val programAst: Program) extends CodeGenerator {
     }
   }
 
+  override def funCall(name: String, genArgs: List[String]): String =
+     s""" $name(${genArgs.mkString(", ")}) """.trim
+
   /* TYPE */
   private def genType(tpe: Expression.Type): String =
     import Expression.Type, Type._
