@@ -3,8 +3,7 @@ package dev.sacode.flowrun.codegen
 import scala.util.Try
 import dev.sacode.flowrun.toIdentifier
 import dev.sacode.flowrun.FlowRun
-import dev.sacode.flowrun.parse.{parseExpr}
-import dev.sacode.flowrun.ast.*, Expression.Type, Atom.*, Unary.*
+import dev.sacode.flowrun.ast.*, Expression.Type
 import dev.sacode.flowrun.eval.SymbolTable
 import dev.sacode.flowrun.eval.SymbolKey
 import dev.sacode.flowrun.eval.Symbol
@@ -142,61 +141,24 @@ class JavaGenerator(override val programAst: Program) extends CodeGenerator {
     }
   }
 
-  /* EXPR */
-  private def parseGenExpr(exprString: String): String =
-    genExpr(parseExpr("", exprString))
-
-  private def genExpr(expr: Expression): String = {
-    val bocs = List(genBoolOrComparison(expr.boolOrComparison)) ++ expr.boolOrComparisons.map(boc =>
-      s""" && ${genBoolOrComparison(boc)} """.trim
-    )
-    bocs.mkString(" ")
-  }
-  private def genBoolOrComparison(boc: BoolOrComparison): String = {
-    val bacs = List(genBoolAndComparison(boc.boolAndComparison)) ++ boc.boolAndComparisons.map(bac =>
-      s""" && ${genBoolAndComparison(bac)} """.trim
-    )
-    bacs.mkString(" ")
-  }
-  private def genBoolAndComparison(bac: BoolAndComparison): String = {
-    val ncs = List(genNumComparison(bac.numComparison)) ++ bac.numComparisons.map(nc =>
-      s""" ${nc.op.text} ${genNumComparison(nc.numComparison)} """.trim
-    )
-    ncs.mkString(" ")
-  }
-  private def genNumComparison(nc: NumComparison): String = {
-    val terms = List(genTerm(nc.term)) ++ nc.terms.map(to => s""" ${to.op.text} ${genTerm(to.term)} """.trim)
-    terms.mkString(" ")
-  }
-  private def genTerm(term: Term): String = {
-    val factors =
-      List(genFactor(term.factor)) ++ term.factors.map(fo => s""" ${fo.op.text} ${genFactor(fo.factor)} """.trim)
-    factors.mkString(" ")
-  }
-  private def genFactor(factor: Factor): String = {
-    val unaries =
-      List(genUnary(factor.unary)) ++ factor.unaries.map(uo => s""" ${uo.op.text} ${genUnary(uo.unary)} """.trim)
-    unaries.mkString(" ")
-  }
-  private def genUnary(unary: Unary): String = unary match {
-    case Prefixed(op, u) => s""" ${op.text}${genUnary(u)} """.trim
-    case Simple(atom)    => genAtom(atom)
-  }
-  private def genAtom(atom: Atom): String = atom match {
-    case IntegerLit(value)  => value.toString
-    case RealLit(value)     => value.toString
-    case StringLit(value)   => s""" "$value" """.trim
-    case Identifier(name)   => name
-    case TrueLit            => "true"
-    case FalseLit           => "false"
-    case Parens(expression) => s""" (${genExpr(expression)}) """.trim
-    case FunctionCall(name, arguments) =>
-      val genArgs = arguments.map(genExpr)
-      PredefinedFunction.withName(name) match
-        case Some(f) =>
-          predefFun(name, genArgs)
-        case None =>
-          s""" $name(${genArgs.mkString(", ")}) """.trim
+  import PredefinedFunction.*
+  override def predefFun(name: String, genArgs: List[String]): String = {
+    def argOpt(idx: Int) = genArgs.lift(idx).getOrElse("")
+    PredefinedFunction.withName(name).get match {
+      case Abs           => s"Math.abs(${argOpt(0)})"
+      case Floor         => s"Math.floor(${argOpt(0)})"
+      case Ceil          => s"Math.ceil(${argOpt(0)})"
+      case RandomInteger => s"Math.abs(${argOpt(0)})"//TODO
+      case Sin           => s"Math.sin(${argOpt(0)})"
+      case Cos           => s"Math.cos(${argOpt(0)})"
+      case Tan           => s"Math.tan(${argOpt(0)})"
+      case Ln            => s"Math.log(${argOpt(0)})"
+      case Log10         => s"Math.log10(${argOpt(0)})"
+      case Log2          => s"Math.log10(${argOpt(0)})/Math.log10(2)"
+      case Length        => s"${argOpt(0)}.length()"
+      case CharAt        => s"${argOpt(0)}.charAt(${argOpt(1)})"
+      case RealToInteger => s"(int)${argOpt(0)}"
+    }
   }
 
   /* TYPE */
@@ -218,25 +180,5 @@ class JavaGenerator(override val programAst: Program) extends CodeGenerator {
         case Type.Real    => "nextDouble()"
         case Type.Boolean => "nextBoolean()"
         case _            => "nextLine()"
-
-  import PredefinedFunction.*
-  private def predefFun(name: String, genArgs: List[String]): String = {
-    def argOpt(idx: Int) = genArgs.lift(idx).getOrElse("")
-    PredefinedFunction.withName(name).get match {
-      case Abs           => s"Math.abs(${argOpt(0)})"
-      case Floor         => s"Math.floor(${argOpt(0)})"
-      case Ceil          => s"Math.ceil(${argOpt(0)})"
-      case RandomInteger => s"Math.abs(${argOpt(0)})"
-      case Sin           => s"Math.sin(${argOpt(0)})"
-      case Cos           => s"Math.cos(${argOpt(0)})"
-      case Tan           => s"Math.tan(${argOpt(0)})"
-      case Ln            => s"Math.log(${argOpt(0)})"
-      case Log10         => s"Math.log10(${argOpt(0)})"
-      case Log2          => s"Math.log10(${argOpt(0)})/Math.log10(2)"
-      case Length        => s"${argOpt(0)}.length()"
-      case CharAt        => s"${argOpt(0)}.charAt(${argOpt(1)})"
-      case RealToInteger => s"(int)${argOpt(0)}"
-    }
-  }
 
 }

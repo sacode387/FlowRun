@@ -11,6 +11,8 @@ import dev.sacode.flowrun.indented
 import dev.sacode.flowrun.eval.SymbolTable
 import dev.sacode.flowrun.eval.SymbolKey
 import dev.sacode.flowrun.eval.Symbol
+import dev.sacode.flowrun.ast.*, Expression.Type, Atom.*, Unary.*
+import dev.sacode.flowrun.parse.{parseExpr}
 import scala.collection.mutable.ListBuffer
 
 trait CodeGenerator {
@@ -18,6 +20,8 @@ trait CodeGenerator {
   def programAst: Program
 
   def generate: Try[CodeGenRes]
+
+  protected def predefFun(name: String, genArgs: List[String]): String = ""
 
   private val indentAmount = 2
   protected var indent = 0
@@ -52,6 +56,63 @@ trait CodeGenerator {
     case Type.Real    => "0.0"
     case Type.String  => """ "" """.trim
   }
+
+  protected def parseGenExpr(exprString: String): String =
+    genExpr(parseExpr("", exprString))
+
+  private def genExpr(expr: Expression): String = {
+    val bocs = List(genBoolOrComparison(expr.boolOrComparison)) ++ expr.boolOrComparisons.map(boc =>
+      s""" || ${genBoolOrComparison(boc)} """.trim
+    )
+    bocs.mkString(" ")
+  }
+  private def genBoolOrComparison(boc: BoolOrComparison): String = {
+    val bacs = List(genBoolAndComparison(boc.boolAndComparison)) ++ boc.boolAndComparisons.map(bac =>
+      s""" && ${genBoolAndComparison(bac)} """.trim
+    )
+    bacs.mkString(" ")
+  }
+  private def genBoolAndComparison(bac: BoolAndComparison): String = {
+    val ncs = List(genNumComparison(bac.numComparison)) ++ bac.numComparisons.map(nc =>
+      s""" ${nc.op.text} ${genNumComparison(nc.numComparison)} """.trim
+    )
+    ncs.mkString(" ")
+  }
+  private def genNumComparison(nc: NumComparison): String = {
+    val terms = List(genTerm(nc.term)) ++ nc.terms.map(to => s""" ${to.op.text} ${genTerm(to.term)} """.trim)
+    terms.mkString(" ")
+  }
+  private def genTerm(term: Term): String = {
+    val factors =
+      List(genFactor(term.factor)) ++ term.factors.map(fo => s""" ${fo.op.text} ${genFactor(fo.factor)} """.trim)
+    factors.mkString(" ")
+  }
+  private def genFactor(factor: Factor): String = {
+    val unaries =
+      List(genUnary(factor.unary)) ++ factor.unaries.map(uo => s""" ${uo.op.text} ${genUnary(uo.unary)} """.trim)
+    unaries.mkString(" ")
+  }
+  private def genUnary(unary: Unary): String = unary match {
+    case Prefixed(op, u) => s""" ${op.text}${genUnary(u)} """.trim
+    case Simple(atom)    => genAtom(atom)
+  }
+  private def genAtom(atom: Atom): String = atom match {
+    case IntegerLit(value)  => value.toString
+    case RealLit(value)     => value.toString
+    case StringLit(value)   => s""" "$value" """.trim
+    case Identifier(name)   => name
+    case TrueLit            => "true"
+    case FalseLit           => "false"
+    case Parens(expression) => s""" (${genExpr(expression)}) """.trim
+    case FunctionCall(name, arguments) =>
+      val genArgs = arguments.map(genExpr)
+      PredefinedFunction.withName(name) match
+        case Some(f) =>
+          predefFun(name, genArgs)
+        case None =>
+          s""" $name(${genArgs.mkString(", ")}) """.trim
+  }
+  
 }
 
 case class CodeGenRes(
