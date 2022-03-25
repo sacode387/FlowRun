@@ -12,6 +12,7 @@ object CodeGeneratorFactory {
       case Language.javascript => JavascriptGenerator(programAst)
       case Language.python     => PythonGenerator(programAst)
       case Language.cSharp     => CSharpGenerator(programAst)
+      case Language.cPLusPLus  => CPlusPlusGenerator(programAst)
       case _ =>
         new CodeGenerator {
 
