@@ -31,7 +31,7 @@ trait CodeGenerator {
 
   protected def addLine(text: String, stmtId: String): Unit =
     lines += text.indented(indent)
-    if !stmtId.isBlank then
+    if !stmtId.trim.isEmpty then
       val lineNums = stmtLineNums.getOrElse(stmtId, List.empty)
       stmtLineNums.put(stmtId, lineNums.appended(lineNum))
     lineNum += 1

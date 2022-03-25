@@ -9,9 +9,13 @@ import dev.sacode.flowrun.eval.SymbolTable
 import dev.sacode.flowrun.eval.SymbolKey
 import dev.sacode.flowrun.eval.Symbol
 
-class JavascriptGenerator(override val programAst: Program) extends CodeGenerator {
+class NodeJsGenerator(override val programAst: Program) extends CodeGenerator {
 
   def generate: Try[CodeGenRes] = Try {
+
+
+    if programAst.hasInputs then
+      addLine("const readline = require('readline');", "")
     
     genMain()
     programAst.functions.foreach(genFunction)
@@ -65,15 +69,17 @@ class JavascriptGenerator(override val programAst: Program) extends CodeGenerato
         addLine(s"$value;", id)
 
       case Input(id, name, promptOpt) =>
-        val prompt = promptOpt.getOrElse(s""" "Please enter $name: " """.trim)
+        val prompt = promptOpt.getOrElse(s"Please enter $name: ")
+        addLine(s"""process.stdout.write("$prompt");""", id)
+
         val symOpt = Try(symTab.getSymbolVar("", name)).toOption
         val readFun = readFunction(symOpt.map(_.tpe))
-        addLine(s"$name = prompt($prompt);", id)
+        addLine(s"$name = readline.$readFun;", id)
 
       case Output(id, value, newline) =>
         val text =
           if newline then s"console.log($value);"
-          else s"console.log($value);"
+          else s"process.stdout.write($value);"
         addLine(text, id)
 
       case Block(_, statements) =>

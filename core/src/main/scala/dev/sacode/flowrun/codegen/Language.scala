@@ -15,3 +15,4 @@ enum Language(val name: String, val prism: String):
   case pascal extends Language("pascal", "pascal")
   case ruby extends Language("ruby", "ruby")
   case rust extends Language("rust", "rust")
+  case nodejs extends Language("nodejs", "javascript")
