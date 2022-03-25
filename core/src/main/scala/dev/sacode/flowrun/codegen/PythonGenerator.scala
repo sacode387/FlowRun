@@ -21,8 +21,12 @@ class PythonGenerator(override val programAst: Program) extends CodeGenerator {
   }
 
   def generate: Try[CodeGenRes] = Try {
+    // TODO optionally import
+    addLine("import math", "")
+    addLine("from random import randrange", "")
 
     programAst.functions.foreach(genFunction)
+    addEmptyLine()
     genMain()
 
     CodeGenRes(lines.toList, stmtLineNums.toMap)
@@ -49,6 +53,7 @@ class PythonGenerator(override val programAst: Program) extends CodeGenerator {
 
     incrIndent()
     function.statements.foreach(genStatement)
+    if function.statements.length == 2 && function.tpe == Type.Void then addLine("pass", function.statements.head.id)
     decrIndent()
 
     symTab.exitScope()
@@ -133,16 +138,16 @@ class PythonGenerator(override val programAst: Program) extends CodeGenerator {
   override def predefFun(name: String, genArgs: List[String]): String = {
     def argOpt(idx: Int) = genArgs.lift(idx).getOrElse("")
     PredefinedFunction.withName(name).get match {
-      case Abs           => s"Math.abs(${argOpt(0)})"
-      case Floor         => s"Math.floor(${argOpt(0)})"
-      case Ceil          => s"Math.ceil(${argOpt(0)})"
-      case RandomInteger => s"Math.floor(Math.random()*${argOpt(0)})"
-      case Sin           => s"Math.sin(${argOpt(0)})"
-      case Cos           => s"Math.cos(${argOpt(0)})"
-      case Tan           => s"Math.tan(${argOpt(0)})"
-      case Ln            => s"Math.log(${argOpt(0)})"
-      case Log10         => s"Math.log10(${argOpt(0)})"
-      case Log2          => s"Math.log2(${argOpt(0)})"
+      case Abs           => s"math.fabs(${argOpt(0)})"
+      case Floor         => s"math.floor(${argOpt(0)})"
+      case Ceil          => s"math.ceil(${argOpt(0)})"
+      case RandomInteger => s"randrange(${argOpt(0)})"
+      case Sin           => s"math.sin(${argOpt(0)})"
+      case Cos           => s"math.cos(${argOpt(0)})"
+      case Tan           => s"math.tan(${argOpt(0)})"
+      case Ln            => s"math.log(${argOpt(0)})"
+      case Log10         => s"math.log10(${argOpt(0)})"
+      case Log2          => s"math.log2(${argOpt(0)})"
       case Length        => s"len(${argOpt(0)})"
       case CharAt        => s"${argOpt(0)}[${argOpt(1)}]"
       case RealToInteger => s"int(${argOpt(0)})"
