@@ -36,6 +36,8 @@ trait CodeGenerator {
   protected var lines = ListBuffer.empty[String]
   protected var stmtLineNums: mutable.Map[String, List[Int]] = mutable.Map.empty.withDefaultValue(List.empty)
 
+  protected def addLine(text: String): Unit =
+    addLine(text, "")
   protected def addLine(text: String, stmtId: String): Unit =
     lines += text.indented(indent)
     if !stmtId.trim.isEmpty then

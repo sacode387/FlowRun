@@ -42,7 +42,7 @@ class ScalaGenerator(override val programAst: Program) extends CodeGenerator {
     function.statements.foreach(genStatement)
     decrIndent()
 
-    addLine("}", function.id)
+    addLine("}", function.statements.head.id)
 
     symTab.exitScope()
   }

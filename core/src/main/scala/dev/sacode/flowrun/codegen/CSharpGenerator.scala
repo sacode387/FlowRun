@@ -8,18 +8,14 @@ import dev.sacode.flowrun.eval.SymbolTable
 import dev.sacode.flowrun.eval.SymbolKey
 import dev.sacode.flowrun.eval.Symbol
 
-class JavaGenerator(override val programAst: Program) extends CodeGenerator {
+class CSharpGenerator(override val programAst: Program) extends CodeGenerator {
 
   def generate: Try[CodeGenRes] = Try {
 
-    if programAst.hasInputs then
-      addLine("import java.util.*;", programAst.main.id)
-      addEmptyLine()
-
-    addLine(s"public class ${programAst.name.toIdentifier} {", programAst.main.id)
+    addLine(s"using System;")
+    addLine(s"class ${programAst.name.toIdentifier} {", programAst.main.id)
 
     incrIndent()
-    if programAst.hasInputs then addLine("static Scanner scanner = new Scanner(System.in);", "")
     genMain()
     programAst.functions.foreach(genFunction)
     decrIndent()
@@ -35,7 +31,7 @@ class JavaGenerator(override val programAst: Program) extends CodeGenerator {
 
     addEmptyLine()
     addLine(
-      "public static void main(String args[]) {",
+      "static void Main() {",
       function.statements.head.id
     )
 
@@ -54,7 +50,7 @@ class JavaGenerator(override val programAst: Program) extends CodeGenerator {
     val params = function.parameters.map(p => s"${genType(p.tpe)} ${p.name}").mkString(", ")
     addEmptyLine()
     addLine(
-      s"public static ${genType(function.tpe)} ${function.name}($params) {",
+      s"static ${genType(function.tpe)} ${function.name}($params) {",
       function.statements.head.id
     )
 
@@ -89,17 +85,17 @@ class JavaGenerator(override val programAst: Program) extends CodeGenerator {
 
       case Input(id, name, promptOpt) =>
         val prompt = promptOpt.getOrElse(s"Please enter $name: ")
-        addLine(s"""System.out.print("$prompt");""", id)
+        addLine(s"""Console.Write("$prompt");""", id)
 
         val symOpt = Try(symTab.getSymbolVar("", name)).toOption
         val readFun = readFunction(symOpt.map(_.tpe))
-        addLine(s"$name = scanner.$readFun;", id)
+        addLine(s"$name = $readFun;", id)
 
       case Output(id, value, newline) =>
         val genValue = parseGenExpr(value)
         val text =
-          if newline then s"System.out.println($genValue);"
-          else s"System.out.print($genValue);"
+          if newline then s"Console.WriteLine($genValue);"
+          else s"Console.Write($genValue);"
         addLine(text, id)
 
       case Block(_, statements) =>
@@ -173,17 +169,17 @@ class JavaGenerator(override val programAst: Program) extends CodeGenerator {
       case Void    => "void"
       case Integer => "int"
       case Real    => "double"
-      case String  => "String"
-      case Boolean => "boolean"
+      case String  => "string"
+      case Boolean => "bool"
 
   /* OTHER */
   private def readFunction(tpeOpt: Option[Type]): String = tpeOpt match
-    case None => "nextLine()"
+    case None => "Console.ReadLine()"
     case Some(tpe) =>
       tpe match
-        case Type.Integer => "nextInt()"
-        case Type.Real    => "nextDouble()"
-        case Type.Boolean => "nextBoolean()"
-        case _            => "nextLine()"
+        case Type.Integer => "Convert.ToInt32(Console.ReadLine())"
+        case Type.Real    => "Convert.ToDouble(Console.ReadLine())"
+        case Type.Boolean => "Convert.ToBoolean(Console.ReadLine())"
+        case _            => "Console.ReadLine()"
 
 }
