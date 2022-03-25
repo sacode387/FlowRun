@@ -56,24 +56,27 @@ class JavascriptGenerator(override val programAst: Program) extends CodeGenerato
         val key = SymbolKey(name, Symbol.Kind.Variable, id)
         symTab.add(id, key, tpe, None)
         val initValue = maybeInitValue.getOrElse(defaultValue(tpe))
-        addLine(s"let $name = $initValue;", id)
+        val genValue = parseGenExpr(initValue)
+        addLine(s"let $name = $genValue;", id)
         
       case Assign(id, name, value) =>
-        addLine(s"$name = $value;", id)
+        val genValue = parseGenExpr(value)
+        addLine(s"$name = $genValue;", id)
 
       case Call(id, value) =>
-        addLine(s"$value;", id)
+        val genValue = parseGenExpr(value)
+        addLine(s"$genValue;", id)
 
       case Input(id, name, promptOpt) =>
         val prompt = promptOpt.getOrElse(s""" "Please enter $name: " """.trim)
         val symOpt = Try(symTab.getSymbolVar("", name)).toOption
-        val readFun = readFunction(symOpt.map(_.tpe))
         addLine(s"$name = prompt($prompt);", id)
 
       case Output(id, value, newline) =>
+        val genValue = parseGenExpr(value)
         val text =
-          if newline then s"console.log($value);"
-          else s"console.log($value);"
+          if newline then s"console.log($genValue);"
+          else s"console.log($genValue);"
         addLine(text, id)
 
       case Block(_, statements) =>
@@ -83,38 +86,56 @@ class JavascriptGenerator(override val programAst: Program) extends CodeGenerato
 
       case Return(id, maybeValue) =>
         maybeValue.foreach { value =>
-          addLine(s"return $value;", id)
+          val genValue = parseGenExpr(value)
+          addLine(s"return $genValue;", id)
         }
 
       case If(id, condition, trueBlock, falseBlock) =>
-        addLine(s"if ($condition) {", id)
+        val genCond = parseGenExpr(condition)
+        addLine(s"if ($genCond) {", id)
         genStatement(trueBlock)
         addLine("} else {", id)
         genStatement(falseBlock)
         addLine("}", id)
 
       case While(id, condition, block) =>
-        addLine(s"while ($condition) {", id)
+        val genCond = parseGenExpr(condition)
+        addLine(s"while ($genCond) {", id)
         genStatement(block)
         addLine("}", id)
 
       case DoWhile(id, condition, block) =>
+        val genCond = parseGenExpr(condition)
         addLine(s"do {", id)
         genStatement(block)
-        addLine(s"} while ($condition);", id)
+        addLine(s"} while ($genCond);", id)
 
       case ForLoop(id, varName, start, incr, end, block) =>
-        addLine(s"for (let $varName = $start; i <= $end; i += $incr) {", id)
+        val genStart = parseGenExpr(start)
+        val genIncr = parseGenExpr(incr)
+        val genEnd = parseGenExpr(end)
+        addLine(s"for (let $varName = $genStart; i <= $genEnd; i += $genIncr) {", id)
         genStatement(block)
         addLine("}", id)
 
-  private def readFunction(tpeOpt: Option[Type]): String = tpeOpt match
-    case None => "line"
-    case Some(tpe) =>
-      tpe match
-        case Type.Integer => "line"
-        case Type.Real    => "line"
-        case Type.Boolean => "line"
-        case _            => "line"
+  import PredefinedFunction.*
+  override def predefFun(name: String, genArgs: List[String]): String = {
+    def argOpt(idx: Int) = genArgs.lift(idx).getOrElse("")
+    PredefinedFunction.withName(name).get match {
+      case Abs           => s"Math.abs(${argOpt(0)})"
+      case Floor         => s"Math.floor(${argOpt(0)})"
+      case Ceil          => s"Math.ceil(${argOpt(0)})"
+      case RandomInteger => s"Math.floor(Math.random()*${argOpt(0)})"
+      case Sin           => s"Math.sin(${argOpt(0)})"
+      case Cos           => s"Math.cos(${argOpt(0)})"
+      case Tan           => s"Math.tan(${argOpt(0)})"
+      case Ln            => s"Math.log(${argOpt(0)})"
+      case Log10         => s"Math.log10(${argOpt(0)})"
+      case Log2          => s"Math.log2(${argOpt(0)})"
+      case Length        => s"${argOpt(0)}.length"
+      case CharAt        => s"${argOpt(0)}.charAt(${argOpt(1)})"
+      case RealToInteger => argOpt(0) // ??
+    }
+  }
 
 }
