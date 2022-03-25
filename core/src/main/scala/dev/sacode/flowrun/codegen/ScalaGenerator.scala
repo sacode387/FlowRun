@@ -92,7 +92,7 @@ class ScalaGenerator(override val programAst: Program) extends CodeGenerator {
 
         val symOpt = Try(symTab.getSymbolVar("", name)).toOption
         val readFun = readFunction(symOpt.map(_.tpe))
-        addLine(s"$name = StdIn.$readFun", id)
+        addLine(s"$name = $readFun", id)
 
       case Output(id, value, newline) =>
         val genValue = parseGenExpr(value)
@@ -173,12 +173,12 @@ class ScalaGenerator(override val programAst: Program) extends CodeGenerator {
       case Boolean => "Boolean"
 
   private def readFunction(tpeOpt: Option[Type]): String = tpeOpt match
-    case None => "readLine()"
+    case None => "StdIn.readLine()"
     case Some(tpe) =>
       tpe match
-        case Type.Integer => "readInt()"
-        case Type.Real    => "readDouble()"
-        case Type.Boolean => "readBoolean()"
-        case _            => "readLine()"
+        case Type.Integer => "StdIn.readInt()"
+        case Type.Real    => "StdIn.readDouble()"
+        case Type.Boolean => "StdIn.readBoolean()"
+        case _            => "StdIn.readLine()"
 
 }
