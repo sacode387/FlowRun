@@ -20,9 +20,12 @@
 }
 
 .flowrun-instance * {
-    margin: 0;
     padding: 0;
     box-sizing: border-box;
+}
+.flowrun-instance *:not(.flowrun-code *) {
+    /* all except prismjs stuff */
+    margin: 0;
 }
 
 .flowrun-functions-list,
@@ -158,6 +161,21 @@
     display: none;
 }
 
+.flowrun-debug-vars table {
+	border-collapse: collapse;
+}
+
+.flowrun-debug-vars th,
+.flowrun-debug-vars td {
+	text-align: left;
+	border-collapse: collapse;
+	border-bottom: 1px solid var(--flowrun-green-darker);
+}
+
+.flowrun-debug-vars th:nth-child(2),
+.flowrun-debug-vars td:nth-child(2) {
+	padding-left: 0.5rem;
+}
 
 /**************************/
 /* OUTPUT */
@@ -221,7 +239,7 @@ div.code-toolbar {
     overflow: auto;
 }
 
-.flowrun-gencode-btns {
+.flowrun-gen-code-btns {
     display: flex;
     gap: 1rem;
     position: absolute;

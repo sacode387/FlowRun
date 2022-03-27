@@ -299,13 +299,14 @@ class FlowRun(
       }
     )
 
+    /*
     flowRunElements.drawArea.addEventListener(
       "dblclick",
       (event: dom.MouseEvent) => {
         Toastify(ToastifyOptions("Please right click on arrow to add more nodes. (Long press on touchscreen)"))
           .showToast()
       }
-    )
+    )*/
   }
 
   private def doOnChange(): Unit =
