@@ -98,8 +98,8 @@ class FlowRun(
   }
 
   @JSExport
-  def config(): FlowRunConfig =
-    flowRunConfig.get
+  def name(): String =
+    programModel.ast.name
 
   @JSExport
   def json(): String =
@@ -112,6 +112,11 @@ class FlowRun(
   @JSExport
   def codeText(): String =
     codeArea.codeText()
+  
+  // remove?
+  @JSExport
+  def config(): FlowRunConfig =
+    flowRunConfig.get
 
   import FlowRun.Event.*
   flowrunChannel.attach {
@@ -250,6 +255,10 @@ class FlowRun(
   }
 
   private def attachEditListeners(): Unit = {
+    flowRunElements.programNameInput.oninput = _ => {
+      programModel.setName(flowRunElements.programNameInput.value.trim)
+    }
+
     flowRunElements.addFunButton.onclick = _ => programModel.addFunction()
 
     flowRunElements.drawArea.addEventListener(

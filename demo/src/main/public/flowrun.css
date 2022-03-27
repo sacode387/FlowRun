@@ -13,6 +13,8 @@
     --flowrun-red-darker: #7a0d03;
     --flowrun-grey: #f6f6f6;
     --flowrun-grey-darker: #dfdfdf;
+    --flowrun-white: #fff;
+
 
     --flowrun-font-monospace: 'Courier Prime';
 }
@@ -52,7 +54,7 @@
 .flowrun--panel {
     padding: 1rem;
     box-shadow: 2px 1px 5px grey;
-    background-color: white;
+    background-color: var(--flowrun-white);
     border-radius: 0.25rem;
 }
 
@@ -65,7 +67,7 @@
 /* FUNCTIONS */
 /****************************/
 .flowrun-functions-list {
-    background-color: white;
+    background-color: var(--flowrun-white);
 }
 
 .flowrun-instance.flowrun-layout-d-o .flowrun-functions-list,
@@ -241,7 +243,7 @@ div.code-toolbar {
 pre[class*=language-].flowrun-code {
     height: 100%;
     margin: 0;
-    background: white !important;
+    background: var(--flowrun-white) !important;
 }
 
 
@@ -340,7 +342,7 @@ pre[class*=language-].flowrun-code {
     padding: 4px 10px;
     font-size: 15px;
     background: var(--flowrun-blue);
-    color: white;
+    color: var(--flowrun-white);
     border: 1px var(--flowrun-blue-darker) solid;
 }
 .flowrun-context-menu>button:disabled {
@@ -377,7 +379,7 @@ pre[class*=language-].flowrun-code {
         gap: 0.5rem;
 
         grid-template-columns: 20% calc(45% - 1rem) 35%;
-        grid-template-rows: 50% calc(50% - 1rem);
+        grid-template-rows: 50% calc(50% - .5rem);
         grid-template-areas:
             "flowrun-functions-list  flowrun-diagram  flowrun-output  "
             "flowrun-functions-list  flowrun-diagram  flowrun-gen-code"
@@ -385,7 +387,7 @@ pre[class*=language-].flowrun-code {
     }
 
     .flowrun-instance.flowrun-layout-f-d-o {
-        grid-template-rows: calc(100% - 1rem);
+        grid-template-rows: 100%;
         grid-template-areas:
             "flowrun-functions-list  flowrun-diagram  flowrun-output"
         ;
@@ -393,7 +395,7 @@ pre[class*=language-].flowrun-code {
 
     .flowrun-instance.flowrun-layout-d-o {
         grid-template-columns: calc(50% - 0.5rem) 50%;
-        grid-template-rows: calc(100% - 1rem);
+        grid-template-rows: 100%;
         grid-template-areas:
             "flowrun-diagram  flowrun-output"
         ;

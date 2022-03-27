@@ -16,6 +16,10 @@ class ProgramModel(
   // currently selected node
   var currentStmtId: Option[String] = None
 
+  def setName(name: String): Unit =
+    ast = ast.copy(name = name)
+    flowrunChannel := FlowRun.Event.FunctionUpdated
+
   def currentFunction: Function =
     if currentFunctionId == MainFunId then ast.main
     else ast.functions.find(_.id == currentFunctionId).get
