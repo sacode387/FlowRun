@@ -8,7 +8,6 @@ inThisBuild(
     scalafmtSbt := true,
     resolvers +=
       "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots",
-    // metadata
     organization := "dev.sacode",
     licenses := List("GPL-3.0" -> url("https://www.gnu.org/licenses/gpl-3.0.html")),
     scmInfo := Some(

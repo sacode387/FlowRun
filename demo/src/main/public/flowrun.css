@@ -1,11 +1,3 @@
-@import url('https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;700&display=swap');
-
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
 
 :root {
     --flowrun-green: #258139;
@@ -21,12 +13,14 @@
     --flowrun-red-darker: #7a0d03;
     --flowrun-grey: #f6f6f6;
     --flowrun-grey-darker: #dfdfdf;
+
+    --flowrun-font-monospace: 'Courier Prime';
 }
 
-body {
-    font-family: 'Open Sans', sans-serif;
-    padding: 1rem;
-    background-color: #8de4ff3b;
+.flowrun-instance * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
 }
 
 #flowrun-template {
@@ -55,86 +49,6 @@ body {
 
 .flowrun-instance>* {
     margin-bottom: 1rem;
-}
-
-@media screen and (min-width: 800px) and (orientation: landscape) {
-    body {
-        width: 90%;
-        margin: auto;
-    }
-
-    .flowrun-meta {
-        grid-area: flowrun-meta;
-    }
-
-    .flowrun-functions-list {
-        grid-area: flowrun-functions-list;
-    }
-
-    .flowrun-output {
-        grid-area: flowrun-output;
-    }
-
-    .flowrun-diagram {
-        grid-area: flowrun-diagram;
-    }
-
-    .flowrun-gen-code {
-        grid-area: flowrun-gen-code;
-    }
-
-    .flowrun-instance {
-        /* FIXED height coz it's easier to work with */
-        height: 90vh;
-        width: 100%;
-
-        display: grid;
-        /* must deduct gap with calc! */
-        gap: 0.5rem;
-
-        grid-template-columns: 20% calc(45% - 1rem) 35%;
-        grid-template-rows: 2rem 50% calc(50% - 3rem);
-        grid-template-areas:
-            ".                       flowrun-meta     .               "
-            "flowrun-functions-list  flowrun-diagram  flowrun-output  "
-            "flowrun-functions-list  flowrun-diagram  flowrun-gen-code"
-        ;
-    }
-
-    .flowrun-instance.flowrun-layout-f-d-o {
-        grid-template-rows: 2rem calc(100% - 3rem);
-        grid-template-areas:
-            ".                       flowrun-meta     ."
-            "flowrun-functions-list  flowrun-diagram  flowrun-output"
-        ;
-    }
-
-    .flowrun-instance.flowrun-layout-d-o {
-        grid-template-columns: calc(50% - 0.5rem) 50%;
-        grid-template-rows: 2rem calc(100% - 3rem);
-        grid-template-areas:
-            "flowrun-meta     ."
-            "flowrun-diagram  flowrun-output"
-        ;
-    }
-
-    .flowrun-instance.flowrun-layout-d_o {
-        height: initial;
-        display: block;
-    }
-
-    .flowrun-instance>* {
-        margin-bottom: 0;
-    }
-}
-
-/**************************/
-/* METADATA */
-/**************************/
-.flowrun-meta {
-    text-align: center;
-    font-weight: bold;
-    font-size: 1.4rem;
 }
 
 
@@ -194,12 +108,18 @@ body {
     font-size: 1.07em;
 }
 
+
 /**************************/
 /* DIAGRAM */
 /**************************/
 .flowrun-diagram {
     position: relative;
     user-select: none;
+}
+
+.flowrun-diagram-header {
+    display: flex;
+    justify-content: space-between;
 }
 
 .flowrun-draw {
@@ -244,7 +164,7 @@ body {
     border-left: 3px var(--flowrun-grey-darker) solid;
 }
 .flowrun-output-statement :not(.material-icons) {
-    font-family: 'Courier Prime';
+    font-family: var(--flowrun-font-monospace);
 }
 
 .flowrun-output-runtime {
@@ -287,14 +207,14 @@ body {
 /* CODEGEN */
 /**************************/
 
-/* this prism stuff */
+/* prism stuff */
 div.code-toolbar {
     height: 100%;
     overflow: auto;
 }
 
 .flowrun-gen-code select {
-    font-family: 'Courier Prime';
+    font-family: var(--flowrun-font-monospace);
 }
 
 .flowrun-gencode-btns {
@@ -322,6 +242,7 @@ pre[class*=language-].flowrun-code {
     background: white !important;
 }
 
+
 /**************************/
 /* NODES */
 /**************************/
@@ -348,20 +269,15 @@ pre[class*=language-].flowrun-code {
     stroke-linejoin: round;
 }
 
+
 /**************************/
 /* BUTTONS */
 /**************************/
 .flowrun-draw-exec-btns {
-    position: absolute;
-    right: 5px;
-    top: 5px;
     display: flex;
 }
 
 .flowrun-draw-copy-btns {
-    position: absolute;
-    left: 5px;
-    top: 5px;
     display: flex;
 }
 
@@ -433,3 +349,61 @@ pre[class*=language-].flowrun-code {
 .flowrun-context-menu>*:hover {
     background: var(--flowrun-blue-darker);
 }
+
+
+@media screen and (min-width: 800px) and (orientation: landscape) {
+
+    .flowrun-functions-list {
+        grid-area: flowrun-functions-list;
+    }
+
+    .flowrun-output {
+        grid-area: flowrun-output;
+    }
+
+    .flowrun-diagram {
+        grid-area: flowrun-diagram;
+    }
+
+    .flowrun-gen-code {
+        grid-area: flowrun-gen-code;
+    }
+
+    .flowrun-instance {
+        display: grid;
+        /* must deduct gap with calc! */
+        gap: 0.5rem;
+
+        grid-template-columns: 20% calc(45% - 1rem) 35%;
+        grid-template-rows: 50% calc(50% - 1rem);
+        grid-template-areas:
+            "flowrun-functions-list  flowrun-diagram  flowrun-output  "
+            "flowrun-functions-list  flowrun-diagram  flowrun-gen-code"
+        ;
+    }
+
+    .flowrun-instance.flowrun-layout-f-d-o {
+        grid-template-rows: calc(100% - 1rem);
+        grid-template-areas:
+            "flowrun-functions-list  flowrun-diagram  flowrun-output"
+        ;
+    }
+
+    .flowrun-instance.flowrun-layout-d-o {
+        grid-template-columns: calc(50% - 0.5rem) 50%;
+        grid-template-rows: calc(100% - 1rem);
+        grid-template-areas:
+            "flowrun-diagram  flowrun-output"
+        ;
+    }
+
+    .flowrun-instance.flowrun-layout-d_o {
+        height: initial;
+        display: block;
+    }
+
+    .flowrun-instance>* {
+        margin-bottom: 0;
+    }
+}
+

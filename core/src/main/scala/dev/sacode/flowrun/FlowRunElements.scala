@@ -11,7 +11,7 @@ class FlowRunElements(
 ) {
 
   // areas
-  val metaData: dom.Element = mountElem.querySelector(".flowrun-meta")
+  val programNameInput: dom.html.Input = mountElem.querySelector(".flowrun-program-name").asInstanceOf[dom.html.Input]
 
   val functionsList: dom.Element = mountElem.querySelector(".flowrun-functions-list")
   val functionsChooser: dom.Element = mountElem.querySelector(".flowrun-fun-chooser")
@@ -55,7 +55,7 @@ class FlowRunElements(
   // clean up
   mountElem.querySelector(".flowrun-template-transient").remove()
 
-  metaData.innerText = ""
+  programNameInput.value = ""
   functionsChooser.innerText = ""
   drawArea.innerText = ""
   debugVariables.innerText = ""

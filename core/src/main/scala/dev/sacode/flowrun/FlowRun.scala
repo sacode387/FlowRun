@@ -81,7 +81,7 @@ class FlowRun(
 
   private var startedTime: Instant = _
 
-  flowRunElements.metaData.innerText = program.name
+  flowRunElements.programNameInput.value = program.name
 
   attachRunAndCopyListeners()
 
