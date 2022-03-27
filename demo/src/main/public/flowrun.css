@@ -23,6 +23,15 @@
     box-sizing: border-box;
 }
 
+.flowrun-functions-list,
+.flowrun-instance select,
+.flowrun-instance input {
+    font-family: var(--flowrun-font-monospace);
+}
+.flowrun-output-statement :not(.material-icons) {
+    font-family: var(--flowrun-font-monospace);
+}
+
 #flowrun-template {
     display: none;
 }
@@ -163,9 +172,6 @@
 .flowrun-output-statement {
     border-left: 3px var(--flowrun-grey-darker) solid;
 }
-.flowrun-output-statement :not(.material-icons) {
-    font-family: var(--flowrun-font-monospace);
-}
 
 .flowrun-output-runtime {
     border-left: 3px var(--flowrun-green) solid;
@@ -211,10 +217,6 @@
 div.code-toolbar {
     height: 100%;
     overflow: auto;
-}
-
-.flowrun-gen-code select {
-    font-family: var(--flowrun-font-monospace);
 }
 
 .flowrun-gencode-btns {
