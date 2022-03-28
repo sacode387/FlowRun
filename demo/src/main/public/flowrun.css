@@ -32,6 +32,7 @@
 .flowrun-instance select,
 .flowrun-instance input {
     font-family: var(--flowrun-font-monospace);
+    padding: 0.1rem;
 }
 .flowrun-output-statement :not(.material-icons) {
     font-family: var(--flowrun-font-monospace);
@@ -127,19 +128,24 @@
 /* DIAGRAM */
 /**************************/
 .flowrun-diagram {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
     position: relative;
     user-select: none;
 }
 
 .flowrun-diagram-header {
+    flex-grow: 0;
+    flex-basis: 2rem;
     display: flex;
     justify-content: space-between;
+    align-items: flex-start;
 }
 
 .flowrun-draw {
-    /* move a bit from top so that buttons can be seen on mobile */
-    padding-top: 2rem;
-    height: 100%;
+    /* no idea, but it works with this :D */
+    display: contents;
 }
 
 .flowrun-draw svg {
@@ -239,6 +245,12 @@ div.code-toolbar {
     overflow: auto;
 }
 
+pre[class*=language-].flowrun-code {
+    height: 100%;
+    margin: 0;
+    background: var(--flowrun-white) !important;
+}
+
 .flowrun-gen-code-btns {
     display: flex;
     gap: 1rem;
@@ -258,11 +270,7 @@ div.code-toolbar {
     display: none;
 }
 
-pre[class*=language-].flowrun-code {
-    height: 100%;
-    margin: 0;
-    background: var(--flowrun-white) !important;
-}
+
 
 
 /**************************/
@@ -414,14 +422,16 @@ pre[class*=language-].flowrun-code {
     .flowrun-instance.flowrun-layout-d-o {
         grid-template-columns: calc(50% - 0.5rem) 50%;
         grid-template-rows: 100%;
-        grid-template-areas:
-            "flowrun-diagram  flowrun-output"
-        ;
+        grid-template-areas: "flowrun-diagram  flowrun-output";
     }
 
     .flowrun-instance.flowrun-layout-d_o {
-        height: initial;
-        display: block;
+        grid-template-columns: 100%;
+        grid-template-rows: calc(70% - 0.5rem) 30%;
+        grid-template-areas:
+            "flowrun-diagram"
+            "flowrun-output"
+        ;
     }
 
     .flowrun-instance>* {

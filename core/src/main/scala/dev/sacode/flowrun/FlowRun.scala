@@ -45,7 +45,7 @@ class FlowRun(
     case None =>
       Program(
         AST.newId,
-        "My Program",
+        "New Program",
         Function(
           "main", // don't touch!
           "main",
@@ -90,6 +90,9 @@ class FlowRun(
     attachEditListeners()
   else flowRunElements.addFunButton.remove()
 
+  flowRunElements.programNameInput.style.width =
+        "" + Math.max(flowRunElements.programNameInput.value.length + 3, 10) + "ch";
+
   functionSelector.loadFunctions()
   codeArea.render("")
 
@@ -112,7 +115,7 @@ class FlowRun(
   @JSExport
   def codeText(): String =
     codeArea.codeText()
-  
+
   // remove?
   @JSExport
   def config(): FlowRunConfig =
@@ -255,8 +258,12 @@ class FlowRun(
   }
 
   private def attachEditListeners(): Unit = {
+    flowRunElements.programNameInput.classList.remove("flowrun--disabled") 
+    flowRunElements.programNameInput.maxLength = 50
     flowRunElements.programNameInput.oninput = _ => {
       programModel.setName(flowRunElements.programNameInput.value.trim)
+      flowRunElements.programNameInput.style.width =
+        "" + Math.max(flowRunElements.programNameInput.value.length + 3, 10) + "ch";
     }
 
     flowRunElements.addFunButton.onclick = _ => programModel.addFunction()
