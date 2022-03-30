@@ -183,6 +183,26 @@
 	padding-left: 0.5rem;
 }
 
+/* config widget */
+.flowrun-config {
+    position: absolute;
+    left: 1rem;
+    top: 3rem;
+    padding: 5px;
+}
+.flowrun-config[open] {
+    width: calc(100% - 2rem);
+    background-color: var(--flowrun-grey-darker);
+}
+.flowrun-instance .flowrun-config summary {
+    margin-bottom: 0.5rem;
+}
+.flowrun-config-layout {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
 /**************************/
 /* OUTPUT */
 /**************************/

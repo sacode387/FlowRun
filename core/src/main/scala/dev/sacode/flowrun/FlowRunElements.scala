@@ -18,6 +18,7 @@ class FlowRunElements(
 
   val drawArea: dom.Element = mountElem.querySelector(".flowrun-draw")
 
+  val configWidget: dom.Element = mountElem.querySelector(".flowrun-config")
   val debugVariables: dom.Element = mountElem.querySelector(".flowrun-debug-vars")
 
   val codeArea: dom.html.Element = mountElem.querySelector(".flowrun-code").asInstanceOf[dom.html.Element]
@@ -45,6 +46,11 @@ class FlowRunElements(
     mountElem.querySelector(".flowrun-btn-fun-add-param").asInstanceOf[dom.html.Element]
   val deleteParamButton: dom.html.Element =
     mountElem.querySelector(".flowrun-btn-fun-delete-param").asInstanceOf[dom.html.Element]
+  
+  val showFunctionsCheckbox: dom.html.Input =
+    mountElem.querySelector(".flowrun-cb-show-functions").asInstanceOf[dom.html.Input]
+  val showCodeCheckbox: dom.html.Input =
+    mountElem.querySelector(".flowrun-cb-show-gen-code").asInstanceOf[dom.html.Input]
 
   // general
   private val enterButton = mountElem.querySelector(".flowrun-btn-enter").asInstanceOf[dom.html.Element]

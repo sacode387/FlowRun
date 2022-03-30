@@ -46,7 +46,7 @@ class FlowRun(
       Program(
         AST.newId,
         "New Program",
-        FlowRunConfig("java", ""),
+        FlowRunConfig("java", true, true),
         Function(
           "main", // don't touch!
           "main",
@@ -83,15 +83,22 @@ class FlowRun(
 
   flowRunElements.programNameInput.value = program.name
 
+
+  flowRunElements.showFunctionsCheckbox.checked = programModel.ast.config.showFunctions
+  flowRunElements.showCodeCheckbox.checked = programModel.ast.config.showGenCode
+  updateLayout()
+
   attachRunAndCopyListeners()
 
   if editable then
     ctxMenu.init()
     attachEditListeners()
-  else flowRunElements.addFunButton.remove()
+  else 
+    flowRunElements.addFunButton.remove()
+    flowRunElements.configWidget.remove()
 
   flowRunElements.programNameInput.style.width =
-        "" + Math.max(flowRunElements.programNameInput.value.length + 3, 10) + "ch";
+    "" + Math.max(flowRunElements.programNameInput.value.length + 3, 10) + "ch";
 
   functionSelector.loadFunctions()
   codeArea.render("")
@@ -113,9 +120,9 @@ class FlowRun(
     codeArea.codeText()
 
   // remove?
- // @JSExport
- // def config(): FlowRunConfig =
- //   program.config
+  // @JSExport
+  // def config(): FlowRunConfig =
+  //   program.config
 
   import FlowRun.Event.*
   flowrunChannel.attach {
@@ -254,7 +261,7 @@ class FlowRun(
   }
 
   private def attachEditListeners(): Unit = {
-    flowRunElements.programNameInput.classList.remove("flowrun--disabled") 
+    flowRunElements.programNameInput.classList.remove("flowrun--disabled")
     flowRunElements.programNameInput.maxLength = 50
     flowRunElements.programNameInput.oninput = _ => {
       programModel.setName(flowRunElements.programNameInput.value.trim)
@@ -302,6 +309,15 @@ class FlowRun(
       }
     )
 
+    flowRunElements.showFunctionsCheckbox.oninput = _ => {
+      setLayout()
+      updateLayout()
+    }
+    flowRunElements.showCodeCheckbox.oninput = _ => {
+      setLayout()
+      updateLayout()
+    }
+
     /*
     flowRunElements.drawArea.addEventListener(
       "dblclick",
@@ -318,6 +334,31 @@ class FlowRun(
 
   private def doOnModelChange(): Unit =
     Option(changeCallback).foreach(cb => cb(this))
+
+  private def updateLayout(): Unit = {
+    val flowrunMount = flowRunElements.mountElem
+    flowrunMount.classList.remove("flowrun-layout-f-d-o")
+    flowrunMount.classList.remove("flowrun-layout-d-o")
+    flowrunMount.classList.remove("flowrun-layout-d_o")
+    val newLayout =
+      resolveLayout(programModel.ast.config.showFunctions, programModel.ast.config.showGenCode)
+    if newLayout.nonEmpty then flowrunMount.classList.add(newLayout)
+  }
+
+  private def setLayout(): Unit = {
+    val oldConfig = programModel.ast.config
+    val newConfig = oldConfig.copy(
+      showFunctions = flowRunElements.showFunctionsCheckbox.checked,
+      showGenCode = flowRunElements.showCodeCheckbox.checked
+    )
+    programModel.setConfig(newConfig)
+  }
+
+  private def resolveLayout(showFunctions: Boolean, showCode: Boolean): String = {
+    if showFunctions && showCode then ""
+    else if showFunctions && !showCode then "flowrun-layout-f-d-o"
+    else "flowrun-layout-d_o"
+  }
 
 }
 

@@ -58,5 +58,6 @@ case class Program(
 
 final case class FlowRunConfig(
     lang: String,
-    layout: String
+    showFunctions: Boolean,
+    showGenCode: Boolean,
 ) derives NativeConverter
