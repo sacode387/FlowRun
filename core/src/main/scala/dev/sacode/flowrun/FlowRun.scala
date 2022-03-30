@@ -28,7 +28,7 @@ import dev.sacode.flowrun.edit.CodeArea
 @JSExportTopLevel("FlowRun")
 class FlowRun(
     mountElem: dom.html.Element,
-    colorScheme: ColorScheme = ColorScheme.default,
+    colorScheme: ColorScheme = null,
     editable: Boolean = true,
     programJson: String = null,
     mountCallback: js.Function1[FlowRun, Unit] = null,
@@ -46,6 +46,7 @@ class FlowRun(
       Program(
         AST.newId,
         "New Program",
+        FlowRunConfig("java", ""),
         Function(
           "main", // don't touch!
           "main",
@@ -61,17 +62,16 @@ class FlowRun(
   mountElem.innerText = ""
   while template.childNodes.length > 0 do mountElem.appendChild(template.childNodes.head)
 
-  private val flowRunConfig = FlowRunConfig.resolve()
-
   private val flowrunChannel = Channel[FlowRun.Event]
   private val programModel = ProgramModel(program, flowrunChannel)
   private var interpreter = Interpreter(programModel, flowrunChannel)
 
   @JSExport
   val flowRunElements = FlowRunElements(mountElem) // needs to come after JSON resolving and template copying
+  private val colorSchemeSelected = Option(colorScheme).getOrElse(ColorScheme.default)
   private val flowchartPresenter = FlowchartPresenter(programModel, flowRunElements, colorScheme, flowrunChannel)
   private var outputArea = OutputArea(interpreter, flowRunElements, flowrunChannel)
-  private var codeArea = CodeArea(flowRunElements, programModel, flowRunConfig)
+  private var codeArea = CodeArea(flowRunElements, programModel)
   codeArea.init()
   private var debugArea = DebugArea(interpreter, flowRunElements)
 
@@ -96,10 +96,6 @@ class FlowRun(
   functionSelector.loadFunctions()
   codeArea.render("")
 
-  flowRunConfig.attach { cfg =>
-    doOnChange()
-  }
-
   @JSExport
   def name(): String =
     programModel.ast.name
@@ -117,9 +113,9 @@ class FlowRun(
     codeArea.codeText()
 
   // remove?
-  @JSExport
-  def config(): FlowRunConfig =
-    flowRunConfig.get
+ // @JSExport
+ // def config(): FlowRunConfig =
+ //   program.config
 
   import FlowRun.Event.*
   flowrunChannel.attach {

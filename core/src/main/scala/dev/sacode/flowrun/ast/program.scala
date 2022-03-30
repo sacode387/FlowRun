@@ -31,6 +31,7 @@ object Function:
 case class Program(
     id: String,
     name: String,
+    config: FlowRunConfig,
     main: Function,
     functions: List[Function] = List.empty
 ) derives NativeConverter:
@@ -54,3 +55,8 @@ case class Program(
     }
     allStmts.exists(_.isInstanceOf[Statement.Input])
   }
+
+final case class FlowRunConfig(
+    lang: String,
+    layout: String
+) derives NativeConverter

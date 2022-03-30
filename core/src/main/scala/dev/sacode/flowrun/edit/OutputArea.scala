@@ -6,6 +6,7 @@ import reactify.*
 import scalatags.JsDom.all.*
 import dev.sacode.flowrun.eval.*
 import dev.sacode.flowrun.ast.Expression.Type
+import dev.sacode.flowrun.eval.Interpreter.State
 
 class OutputArea(
     interpreter: Interpreter,
@@ -49,11 +50,12 @@ class OutputArea(
   def runtimeError(msg: String, startTime: String, endTime: String): Unit =
     clearStmt()
     clearSyntax()
+    val status = if interpreter.state == State.FINISHED_STOPPED then "stopped" else "failed" 
     flowRunElements.runtimeOutput.appendChild(
       div(cls := "flowrun-output-help")(
         samp("[Error: " + msg + "]"),
         br,
-        samp(s"[Finished (failed) at: $endTime]")
+        samp(s"[Finished ($status) at: $endTime]")
       ).render
     )
     flowRunElements.runtimeOutput.classList.add("flowrun--error")

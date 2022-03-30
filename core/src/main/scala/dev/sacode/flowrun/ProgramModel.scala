@@ -19,6 +19,10 @@ class ProgramModel(
   def setName(name: String): Unit =
     ast = ast.copy(name = name)
     flowrunChannel := FlowRun.Event.FunctionUpdated
+  
+  def setConfig(config: FlowRunConfig): Unit =
+    ast = ast.copy(config = config)
+    flowrunChannel := FlowRun.Event.ConfigChanged
 
   def currentFunction: Function =
     if currentFunctionId == MainFunId then ast.main

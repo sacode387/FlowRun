@@ -1,21 +1,19 @@
 package dev.sacode.flowrun.edit
 
 import scala.util.{Success, Failure}
-import reactify.*
 import scala.scalajs.js
 import scala.scalajs.js.annotation.*
 import org.scalajs.dom
 import scalatags.JsDom.all.*
 import dev.sacode.flowrun.codegen.CodeGeneratorFactory
-import dev.sacode.flowrun.FlowRunConfig
+import dev.sacode.flowrun.ast.FlowRunConfig
 import dev.sacode.flowrun.ProgramModel
 import dev.sacode.flowrun.FlowRunElements
 import dev.sacode.flowrun.codegen.Language
 
 class CodeArea(
     flowRunElements: FlowRunElements,
-    programModel: ProgramModel,
-    config: Var[FlowRunConfig]
+    programModel: ProgramModel
 ) {
 
   def init(): Unit = {
@@ -23,27 +21,29 @@ class CodeArea(
       val item = option(value := language.name)(language.name).render
       flowRunElements.codeLang.add(item)
     }
-    flowRunElements.codeLang.value = config.lang.name
+    flowRunElements.codeLang.value = programModel.ast.config.lang
     flowRunElements.codeLang.onchange = { (e: dom.Event) =>
-      config.set {
-        config().copy(lang = Language.values.find(_.name == flowRunElements.codeLang.value).get)
-      }
+      val oldConfig = programModel.ast.config
+      val newConfig = oldConfig.copy(
+        lang = flowRunElements.codeLang.value
+      )
+      programModel.setConfig(newConfig)
     }
   }
 
   def render(stmtId: String): Unit = {
 
     val (text, lh) = gen(stmtId)
+    val language = resolveLang(programModel.ast.config.lang)
     val codeElem =
-      code(cls := s"language-${config.lang.prism}")(
+      code(cls := s"language-${language.prism}")(
         text
       ).render
 
     flowRunElements.codeArea.dataset("line") = lh
     flowRunElements.codeArea.innerText = ""
     flowRunElements.codeArea.appendChild(codeElem)
-    //js.Dynamic.global.Prism.highlightElement(codeElem)
-    js.Dynamic.global.Prism.highlightAll()
+    js.Dynamic.global.Prism.highlightElement(codeElem)
   }
 
   def codeText(): String =
@@ -51,7 +51,8 @@ class CodeArea(
     text
 
   private def gen(stmtId: String): (String, String) = {
-    val generator = CodeGeneratorFactory(config().lang, programModel.ast)
+    val language = resolveLang(programModel.ast.config.lang)
+    val generator = CodeGeneratorFactory(language, programModel.ast)
     val codeTry = generator.generate
     if codeTry.isFailure then println("Failed to generate code: " + codeTry.failed)
     codeTry match {
@@ -62,4 +63,7 @@ class CodeArea(
         ("Error while generating code:\n" + codeTry.failed.get.getMessage, "")
     }
   }
+
+  private def resolveLang(lang: String): Language =
+    Language.values.find(_.name == lang).get
 }
