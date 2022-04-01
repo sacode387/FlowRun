@@ -33,7 +33,8 @@ case class Program(
     name: String,
     config: FlowRunConfig,
     main: Function,
-    functions: List[Function] = List.empty
+    functions: List[Function] = List.empty,
+    version: String = "0.1"
 ) derives NativeConverter:
   def allFunctions:List[Function] =
     functions.prepended(main)

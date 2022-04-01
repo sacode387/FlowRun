@@ -83,11 +83,6 @@ class FlowRun(
 
   flowRunElements.programNameInput.value = program.name
 
-
-  flowRunElements.showFunctionsCheckbox.checked = programModel.ast.config.showFunctions
-  flowRunElements.showCodeCheckbox.checked = programModel.ast.config.showGenCode
-  updateLayout()
-
   attachRunAndCopyListeners()
 
   if editable then
@@ -261,6 +256,7 @@ class FlowRun(
   }
 
   private def attachEditListeners(): Unit = {
+
     flowRunElements.programNameInput.classList.remove("flowrun--disabled")
     flowRunElements.programNameInput.maxLength = 50
     flowRunElements.programNameInput.oninput = _ => {
@@ -309,14 +305,19 @@ class FlowRun(
       }
     )
 
-    flowRunElements.showFunctionsCheckbox.oninput = _ => {
-      setLayout()
+
+    flowRunElements.showFunctionsCheckbox.checked = programModel.ast.config.showFunctions
+    flowRunElements.showCodeCheckbox.checked = programModel.ast.config.showGenCode
+
+    val fixedLayout = flowRunElements.mountElem.classList.exists(_.startsWith("flowrun-layout"))
+    if fixedLayout then
+      flowRunElements.showFunctionsCheckbox.remove()
+      flowRunElements.showCodeCheckbox.remove()
+    else
       updateLayout()
-    }
-    flowRunElements.showCodeCheckbox.oninput = _ => {
-      setLayout()
-      updateLayout()
-    }
+      flowRunElements.showFunctionsCheckbox.oninput = _ => setLayout()
+      flowRunElements.showCodeCheckbox.oninput = _ => setLayout()
+    
 
     /*
     flowRunElements.drawArea.addEventListener(
@@ -352,6 +353,7 @@ class FlowRun(
       showGenCode = flowRunElements.showCodeCheckbox.checked
     )
     programModel.setConfig(newConfig)
+    updateLayout()
   }
 
   private def resolveLayout(showFunctions: Boolean, showCode: Boolean): String = {
