@@ -62,3 +62,6 @@ final case class FlowRunConfig(
     showFunctions: Boolean,
     showGenCode: Boolean,
 ) derives NativeConverter
+
+object FlowRunConfig:
+  val default = FlowRunConfig("java", true, true)
