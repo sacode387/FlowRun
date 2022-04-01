@@ -14,6 +14,11 @@ object CodeGeneratorFactory {
       case Language.cSharp     => CSharpGenerator(programAst)
       case Language.cPLusPLus  => CPlusPlusGenerator(programAst)
       case Language.kotlin     => KotlinGenerator(programAst)
+      case Language.php        => PhpGenerator(programAst)
+      case Language.swift      => SwiftGenerator(programAst)
+      case Language.ruby       => RubyGenerator(programAst)
+
+    //case Language.golang     => GolangGenerator(programAst)
       case _ =>
         new CodeGenerator {
 

@@ -15,6 +15,7 @@ import dev.sacode.flowrun.ast.*, Expression.Type, Atom.*, Unary.*
 import dev.sacode.flowrun.parse.{parseExpr, Token}
 import scala.collection.mutable.ListBuffer
 
+// TODO handle reserved keywords
 trait CodeGenerator {
 
   def programAst: Program
@@ -92,6 +93,7 @@ trait CodeGenerator {
     terms.mkString(" ")
   }
   private def genTerm(term: Term): String = {
+    // TODO handle string concatenation
     val factors =
       List(genFactor(term.factor)) ++ term.factors.map(fo => s""" ${fo.op.text} ${genFactor(fo.factor)} """.trim)
     factors.mkString(" ")

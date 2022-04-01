@@ -23,7 +23,7 @@ final class StatementEditor(
 
     programModel.findStatement(stmtId) match {
       case _: Begin =>
-        if currFun.isMain then Toastify(ToastifyOptions("Begin is not editable.", Color.yellow)).showToast()
+        if currFun.isMain then {}
         else {
           val nameInputElem = newNameInput(10, currFun.name, "myFun") { newName =>
             programModel.updateFunction(stmtId, name = Some(newName))
@@ -78,7 +78,7 @@ final class StatementEditor(
         }
 
       case statement: Return =>
-        if currFun.isMain then Toastify(ToastifyOptions("End is not editable.", Color.yellow)).showToast()
+        if currFun.isMain then {}
         else if currFun.tpe == Expression.Type.Void then
           Toastify(ToastifyOptions("Void function does not return any value.", Color.yellow)).showToast()
         else
