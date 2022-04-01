@@ -9,10 +9,20 @@ enum Language(val name: String, val prism: String):
   case cPLusPLus extends Language("c++", "cpp")
   case kotlin extends Language("kotlin", "kotlin")
   case php extends Language("php", "php")
-  case golang extends Language("golang", "golang")
   case swift extends Language("swift", "swift")
-  case rust extends Language("rust", "rust")
   case ruby extends Language("ruby", "ruby")
-  case nodejs extends Language("nodejs", "javascript")
-  case pascal extends Language("pascal", "pascal")
- // case c extends Language("c", "c")
+
+  // umm..
+  //case golang extends Language("golang", "golang")
+
+  // unknown
+  //case rust extends Language("rust", "rust")
+
+
+  //case nodejs extends Language("nodejs", "javascript")
+
+  // complex? variable declarations
+ // case pascal extends Language("pascal", "pascal") 
+
+ // complex string handling..
+ // case c extends Language("c", "c") 

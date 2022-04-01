@@ -311,8 +311,7 @@ class FlowRun(
 
     val fixedLayout = flowRunElements.mountElem.classList.exists(_.startsWith("flowrun-layout"))
     if fixedLayout then
-      flowRunElements.showFunctionsCheckbox.remove()
-      flowRunElements.showCodeCheckbox.remove()
+      flowRunElements.configWidget.querySelector(".flowrun-config-layout").remove()
     else
       updateLayout()
       flowRunElements.showFunctionsCheckbox.oninput = _ => setLayout()
@@ -339,6 +338,7 @@ class FlowRun(
   private def updateLayout(): Unit = {
     val flowrunMount = flowRunElements.mountElem
     flowrunMount.classList.remove("flowrun-layout-f-d-o")
+    flowrunMount.classList.remove("flowrun-layout-d-o_c")
     flowrunMount.classList.remove("flowrun-layout-d-o")
     flowrunMount.classList.remove("flowrun-layout-d_o")
     val newLayout =
@@ -359,6 +359,7 @@ class FlowRun(
   private def resolveLayout(showFunctions: Boolean, showCode: Boolean): String = {
     if showFunctions && showCode then ""
     else if showFunctions && !showCode then "flowrun-layout-f-d-o"
+    else if !showFunctions && showCode then"flowrun-layout-d-o_c"
     else "flowrun-layout-d_o"
   }
 

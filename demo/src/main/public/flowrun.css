@@ -51,6 +51,11 @@
     opacity: 0.5;
 }
 
+input[type="text"].flowrun--disabled {
+    opacity: 1;
+    border: none;
+}
+
 .flowrun--running {
     border: 3px var(--flowrun-red-lighter) solid;
 }
