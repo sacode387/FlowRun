@@ -60,7 +60,8 @@ input[type="text"].flowrun--disabled {
     border: 3px var(--flowrun-red-lighter) solid;
 }
 
-.flowrun--panel {
+.flowrun-instance .flowrun--panel {
+    margin-bottom: 1rem;
     padding: 1rem;
     box-shadow: 2px 1px 5px grey;
     background-color: var(--flowrun-white);
@@ -85,7 +86,7 @@ input[type="text"].flowrun--disabled {
     display: none;
 }
 
-.flowrun-fun-chooser {
+.flowrun-instance .flowrun-fun-chooser {
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
@@ -406,7 +407,7 @@ pre[class*=language-].flowrun-code {
 }
 
 
-@media screen and (min-width: 800px) and (orientation: landscape) {
+@media screen and (min-width: 600px) and (orientation: landscape) {
 
     .flowrun-functions-list {
         grid-area: flowrun-functions-list;
@@ -467,6 +468,9 @@ pre[class*=language-].flowrun-code {
     }
 
     .flowrun-instance>* {
+        margin-bottom: 0;
+    }
+    .flowrun-instance .flowrun--panel {
         margin-bottom: 0;
     }
 }

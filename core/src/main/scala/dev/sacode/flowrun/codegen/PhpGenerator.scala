@@ -11,6 +11,8 @@ import dev.sacode.flowrun.eval.Symbol
 
 class PhpGenerator(override val programAst: Program) extends CodeGenerator {
 
+  override def identPrefix: String = "$"
+
   def generate: Try[CodeGenRes] = Try {
     
     addLine("<?php")
@@ -33,7 +35,7 @@ class PhpGenerator(override val programAst: Program) extends CodeGenerator {
   private def genFunction(function: Function): Unit = {
     symTab.enterScope(function.id, function.name)
 
-    val params = function.parameters.map(p => s"${p.name}").mkString(", ")
+    val params = function.parameters.map(p => s"$$${p.name}").mkString(", ")
     addEmptyLine()
     addLine(
       s"function ${function.name}($params) {", 
@@ -59,11 +61,11 @@ class PhpGenerator(override val programAst: Program) extends CodeGenerator {
         symTab.add(id, key, tpe, None)
         val initValue = maybeInitValue.getOrElse(defaultValue(tpe))
         val genValue = parseGenExpr(initValue)
-        addLine(s"$name = $genValue;", id)
+        addLine(s"$$$name = $genValue;", id)
         
       case Assign(id, name, value) =>
         val genValue = parseGenExpr(value)
-        addLine(s"$name = $genValue;", id)
+        addLine(s"$$$name = $genValue;", id)
 
       case Call(id, value) =>
         val genValue = parseGenExpr(value)
@@ -72,7 +74,7 @@ class PhpGenerator(override val programAst: Program) extends CodeGenerator {
       case Input(id, name, promptOpt) =>
         val prompt = promptOpt.getOrElse(s""" "Please enter $name: " """.trim)
         val symOpt = Try(symTab.getSymbolVar("", name)).toOption
-        addLine(s"$name = readline($prompt);", id)
+        addLine(s"$$$name = readline($prompt);", id)
 
       case Output(id, value, newline) =>
         val genValue = parseGenExpr(value)

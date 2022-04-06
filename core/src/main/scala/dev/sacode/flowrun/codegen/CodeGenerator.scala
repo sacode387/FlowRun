@@ -26,6 +26,7 @@ trait CodeGenerator {
 
   protected def predefFun(name: String, genArgs: List[String]): String
   protected def funCall(name: String, genArgs: List[String]): String
+  protected def identPrefix: String = ""
 
   private val indentAmount = 2
   protected var indent = 0
@@ -114,7 +115,7 @@ trait CodeGenerator {
     case IntegerLit(value)  => value.toString
     case RealLit(value)     => value.toString
     case StringLit(value)   => s""" "$value" """.trim
-    case Identifier(name)   => name
+    case Identifier(name)   => identPrefix + name
     case TrueLit            => genToken(Token(Token.Type.True, "true", 0))
     case FalseLit           => genToken(Token(Token.Type.False, "false", 0))
     case Parens(expression) => s""" (${genExpr(expression)}) """.trim

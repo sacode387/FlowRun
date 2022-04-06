@@ -85,12 +85,20 @@ class FlowRun(
 
   attachRunAndCopyListeners()
 
+  private val fixedLayout = flowRunElements.mountElem.classList.exists(_.startsWith("flowrun-layout"))
+  if fixedLayout then
+    flowRunElements.configWidget.querySelector(".flowrun-config-layout").remove()
+  else
+    updateLayout()
+
   if editable then
     ctxMenu.init()
     attachEditListeners()
   else 
     flowRunElements.addFunButton.remove()
     flowRunElements.configWidget.remove()
+  
+  
 
   flowRunElements.programNameInput.style.width =
     "" + Math.max(flowRunElements.programNameInput.value.length + 3, 10) + "ch";
@@ -309,11 +317,7 @@ class FlowRun(
     flowRunElements.showFunctionsCheckbox.checked = programModel.ast.config.showFunctions
     flowRunElements.showCodeCheckbox.checked = programModel.ast.config.showGenCode
 
-    val fixedLayout = flowRunElements.mountElem.classList.exists(_.startsWith("flowrun-layout"))
-    if fixedLayout then
-      flowRunElements.configWidget.querySelector(".flowrun-config-layout").remove()
-    else
-      updateLayout()
+    if !fixedLayout then
       flowRunElements.showFunctionsCheckbox.oninput = _ => setLayout()
       flowRunElements.showCodeCheckbox.oninput = _ => setLayout()
     

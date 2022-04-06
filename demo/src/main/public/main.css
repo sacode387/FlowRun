@@ -13,7 +13,7 @@ body {
     background-color: #8de4ff3b;
 }
 
-@media screen and (min-width: 800px) and (orientation: landscape) {
+@media screen and (min-width: 600px) and (orientation: landscape) {
     body {
         width: 90%;
         margin: auto;
