@@ -304,7 +304,7 @@ class FlowRun(
             val tpe = idParts(1)
             ctxMenu.handleNodeRightClick(event, nodeId, tpe)
           case ("EDGE", n) =>
-            ctxMenu.handleEdgeRightClick(event.clientX, event.clientY, n)
+            ctxMenu.handleEdgeRightClick(event, n)
           case _ =>
             flowrunChannel := FlowRun.Event.Deselected
         }

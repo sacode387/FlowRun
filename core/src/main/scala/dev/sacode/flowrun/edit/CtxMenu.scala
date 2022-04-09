@@ -45,15 +45,15 @@ class CtxMenu(programModel: ProgramModel, flowRunElements: FlowRunElements, flow
   def init(): Unit =
     attachListeners()
 
-  def handleEdgeRightClick(x: Double, y: Double, n: dom.svg.Element): Unit = {
+  def handleEdgeRightClick(event: dom.MouseEvent, n: dom.svg.Element): Unit = {
     // here we know which EDGE is clicked
     // we save relevant ids, and then use them when a button is clicked
     hideAllMenus()
 
     val canActivate = setEdgeIds(n.id)
     if canActivate then
-      edgeContextMenu.style.left = s"${x}px"
-      edgeContextMenu.style.top = s"${y}px"
+      edgeContextMenu.style.left = s"${event.clientX}px"
+      edgeContextMenu.style.top = s"${event.clientY}px"
       edgeContextMenu.classList.add("active")
       dom.window.navigator.clipboard.readText().`then` { copiedText =>
         val hasText = Option(copiedText).getOrElse("").trim.nonEmpty
