@@ -203,6 +203,7 @@ class FlowRun(
       doOnChange()
     case ConfigChanged =>
       doOnChange()
+      doOnModelChange()
     case SvgMounted =>
       Option(mountCallback).foreach { cb => cb(this) }
   }

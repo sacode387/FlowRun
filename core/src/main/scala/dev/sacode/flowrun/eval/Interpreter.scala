@@ -18,14 +18,12 @@ final class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[Flow
 
   var state = State.INITIALIZED
 
-  private def allFunctions = programModel.ast.functions
-
   def run(): Future[Unit] = {
 
     state = State.RUNNING
 
     val functionsFuture = Future { // Future needed coz symTab throws
-      allFunctions.foreach { fun =>
+      programModel.ast.allFunctions.foreach { fun =>
         symTab.addFun(fun.id, fun.name, fun.tpe, None)
       }
     }
@@ -102,7 +100,7 @@ final class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[Flow
     }
 
   private def interpretStatement(stmt: Statement): Future[RunVal] = waitForContinue().flatMap { _ =>
-    //println(s"interpreting: $stmt")
+    println(s"interpreting: $stmt")
     import Statement.*
 
     stmt match {
@@ -214,9 +212,19 @@ final class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[Flow
         execSequentially(NoVal, block.statements, (_, s) => interpretStatement(s))
 
       case Return(id, maybeExpr) =>
-        maybeExpr match
+        val retValFut = maybeExpr match
           case None       => Future.successful(NoVal)
           case Some(expr) => evalExpr(id, parseExpr(id, expr))
+        retValFut.map { retVal =>
+          val currentExecFun = programModel.ast.allFunctions.find(_.id == symTab.currentScope.id).get
+          println((symTab.currentScope.id, retVal, currentExecFun))
+          if retVal.tpe != currentExecFun.tpe then
+            throw EvalException(
+              s"Expected function '${currentExecFun.name}' to return '${currentExecFun.tpe}' but got '${retVal.pretty}'",
+              id
+            )
+          else retVal
+        }
 
       case Begin(_) =>
         Future.successful(NoVal)
@@ -439,7 +447,7 @@ final class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[Flow
               handlePredefinedFunction(id, f, args)
             case None =>
               val funSym = symTab.getSymbolFun(id, name)
-              val fun = allFunctions.find(_.name == name).get
+              val fun = programModel.ast.allFunctions.find(_.name == name).get
               validateArgsNumber(id, fun.name, fun.parameters.size, args.size)
               val argsWithTypes = args.zip(fun.parameters).zipWithIndex.map { case ((arg, p), idx) =>
                 if arg.tpe != p.tpe then
