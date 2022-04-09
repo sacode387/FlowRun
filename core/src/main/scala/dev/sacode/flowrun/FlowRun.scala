@@ -190,6 +190,10 @@ class FlowRun(
       outputArea.runtimeOutput(output, newline)
     case EvalInput(nodeId, name, prompt) =>
       outputArea.evalInput(nodeId, name, prompt)
+    case FunctionEntered(fun) =>
+      programModel.currentFunctionId = fun.id
+      functionSelector.loadFunctions()
+      flowchartPresenter.loadCurrentFunction()
     case SymbolTableUpdated =>
       debugArea.showVariables()
     case FunctionUpdated =>
@@ -368,6 +372,7 @@ object FlowRun:
     case EvalError(nodeId: String, msg: String, funId: String)
     case EvalOutput(msg: String, newline: Boolean)
     case EvalInput(nodeId: String, name: String, prompt: Option[String])
+    case FunctionEntered(fun: Function)
     case SyntaxSuccess
     case StmtDeleted
     case StmtAdded

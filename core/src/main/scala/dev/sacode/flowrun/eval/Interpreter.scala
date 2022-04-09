@@ -91,11 +91,13 @@ final class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[Flow
       arguments: List[(String, Type, RunVal)]
   ): Future[RunVal] =
     symTab.enterScope(fun.id, fun.name)
+    flowrunChannel := FlowRun.Event.FunctionEntered(fun)
     arguments.foreach { (name, tpe, value) =>
       symTab.addVar(fun.id, name, tpe, Some(value))
     }
     execSequentially(NoVal, fun.statements, (_, s) => interpretStatement(s)).map { result =>
       symTab.exitScope()
+      flowrunChannel := FlowRun.Event.FunctionEntered(fun)
       result
     }
 
@@ -217,7 +219,6 @@ final class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[Flow
           case Some(expr) => evalExpr(id, parseExpr(id, expr))
         retValFut.map { retVal =>
           val currentExecFun = programModel.ast.allFunctions.find(_.id == symTab.currentScope.id).get
-          println((symTab.currentScope.id, retVal, currentExecFun))
           if retVal.tpe != currentExecFun.tpe then
             throw EvalException(
               s"Expected function '${currentExecFun.name}' to return '${currentExecFun.tpe}' but got '${retVal.pretty}'",
