@@ -108,7 +108,7 @@ input[type="text"].flowrun--disabled {
     padding-left: 1rem;
 }
 
-.flowrun-fun-chooser>div>button {
+.flowrun-instance .flowrun-fun-chooser>div>button {
     margin-right: 0.33rem;
 }
 
@@ -370,7 +370,7 @@ pre[class*=language-].flowrun-code {
 /* CTX menu */
 /**************************/
 .flowrun-context-menu {
-    position: fixed;
+    position: absolute;
     z-index: 10000;
 
     display: flex;

@@ -86,19 +86,37 @@ class FlowRun(
   attachRunAndCopyListeners()
 
   private val fixedLayout = flowRunElements.mountElem.classList.exists(_.startsWith("flowrun-layout"))
-  if fixedLayout then
-    flowRunElements.configWidget.querySelector(".flowrun-config-layout").remove()
-  else
-    updateLayout()
+  if fixedLayout then flowRunElements.configWidget.querySelector(".flowrun-config-layout").remove()
+  else updateLayout()
 
   if editable then
     ctxMenu.init()
     attachEditListeners()
-  else 
+  else
     flowRunElements.addFunButton.remove()
     flowRunElements.configWidget.remove()
-  
-  
+
+  flowRunElements.drawArea.addEventListener(
+    "click",
+    (event: dom.MouseEvent) => {
+      event.preventDefault()
+      DomUtils.getNearestSvgNode(event) match {
+        case ("NODE", n) =>
+          val idParts = n.id.split("#", -1)
+          val nodeId = idParts(0)
+          if !n.classList.contains("flowrun-not-selectable") then
+            programModel.currentStmtId = Some(nodeId)
+            if editable then
+              outputArea.clearSyntax()
+              flowchartPresenter.loadCurrentFunction() // to highlight new node..
+              statementEditor.edit(nodeId)
+            end if
+            flowrunChannel := FlowRun.Event.StmtSelected
+        case _ =>
+          flowrunChannel := FlowRun.Event.Deselected
+      }
+    }
+  )
 
   flowRunElements.programNameInput.style.width =
     "" + Math.max(flowRunElements.programNameInput.value.length + 3, 10) + "ch";
@@ -121,11 +139,6 @@ class FlowRun(
   @JSExport
   def codeText(): String =
     codeArea.codeText()
-
-  // remove?
-  // @JSExport
-  // def config(): FlowRunConfig =
-  //   program.config
 
   import FlowRun.Event.*
   flowrunChannel.attach {
@@ -277,26 +290,6 @@ class FlowRun(
     flowRunElements.addFunButton.onclick = _ => programModel.addFunction()
 
     flowRunElements.drawArea.addEventListener(
-      "click",
-      (event: dom.MouseEvent) => {
-        event.preventDefault()
-        DomUtils.getNearestSvgNode(event) match {
-          case ("NODE", n) =>
-            val idParts = n.id.split("#", -1)
-            val nodeId = idParts(0)
-            if !n.classList.contains("flowrun-not-selectable") then
-              programModel.currentStmtId = Some(nodeId)
-              outputArea.clearSyntax()
-              flowchartPresenter.loadCurrentFunction() // to highlight new node..
-              statementEditor.edit(nodeId)
-              flowrunChannel := StmtSelected
-          case _ =>
-            flowrunChannel := FlowRun.Event.Deselected
-        }
-      }
-    )
-
-    flowRunElements.drawArea.addEventListener(
       "contextmenu",
       (event: dom.MouseEvent) => {
         event.preventDefault()
@@ -314,14 +307,12 @@ class FlowRun(
       }
     )
 
-
     flowRunElements.showFunctionsCheckbox.checked = programModel.ast.config.showFunctions
     flowRunElements.showCodeCheckbox.checked = programModel.ast.config.showGenCode
 
     if !fixedLayout then
       flowRunElements.showFunctionsCheckbox.oninput = _ => setLayout()
       flowRunElements.showCodeCheckbox.oninput = _ => setLayout()
-    
 
     /*
     flowRunElements.drawArea.addEventListener(
@@ -364,7 +355,7 @@ class FlowRun(
   private def resolveLayout(showFunctions: Boolean, showCode: Boolean): String = {
     if showFunctions && showCode then ""
     else if showFunctions && !showCode then "flowrun-layout-f-d-o"
-    else if !showFunctions && showCode then"flowrun-layout-d-o_c"
+    else if !showFunctions && showCode then "flowrun-layout-d-o_c"
     else "flowrun-layout-d_o"
   }
 
