@@ -291,6 +291,7 @@ pre[class*=language-].flowrun-code {
 }
 
 .flowrun-instance.flowrun-layout-f-d-o .flowrun-gen-code,
+.flowrun-instance.flowrun-layout-f-d_o .flowrun-gen-code,
 .flowrun-instance.flowrun-layout-d-o .flowrun-gen-code,
 .flowrun-instance.flowrun-layout-d_o .flowrun-gen-code {
     display: none;
@@ -442,6 +443,15 @@ pre[class*=language-].flowrun-code {
         grid-template-rows: 100%;
         grid-template-areas:
             "flowrun-functions-list  flowrun-diagram  flowrun-output"
+        ;
+    }
+
+    .flowrun-instance.flowrun-layout-f-d_o {
+        grid-template-columns: calc(30% - 0.5rem) 70%;
+        grid-template-rows: calc(70% - 0.5rem) 30%;
+        grid-template-areas:
+            "flowrun-functions-list  flowrun-diagram"
+            "flowrun-functions-list  flowrun-output"
         ;
     }
 

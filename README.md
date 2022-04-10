@@ -38,9 +38,9 @@ For example, if you calculate a sum of two `Integer`s, the result would also be 
 The return type can also be `Void`, which means it doesn't return anything, it just executes and that's it.  
 For example, it could calculate something, print it and exit.
 
-There are also some *predefined functions* that you can use, they are defined automatically in FlowRun:
-- `abs(x)` reutrns absolute value of x
-- `randomInteger(top)` returns a random `x: Integer`, in the range `[0,top)`
+There are also some *predefined functions* that you can use, they are defined automatically in FlowRun.  
+You can find them [here](https://github.com/sacode387/FlowRun/blob/master/core/src/main/scala/dev/sacode/flowrun/ast/PredefinedFunction.scala)
+
 
 ---
 ## Implementation details
