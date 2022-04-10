@@ -31,7 +31,7 @@ lazy val core = (project in file("core"))
   .settings(
     name := "FlowRun",
     libraryDependencies ++= Seq(
-      ("org.scala-js" %%% "scalajs-java-securerandom" % "1.0.0").cross(CrossVersion.for3Use2_13),
+     // TODO ("org.scala-js" %%% "scalajs-java-securerandom" % "1.0.0").cross(CrossVersion.for3Use2_13),
       "io.github.cquiroz" %%% "scala-java-time" % "2.4.0-M1",
       "com.lihaoyi" %%% "scalatags" % "0.11.0",
       "com.lihaoyi" %%% "pprint" % "0.7.1",
