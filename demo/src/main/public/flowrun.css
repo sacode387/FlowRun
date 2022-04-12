@@ -414,7 +414,7 @@ pre[class*=language-].flowrun-code {
     }    
 }
 
-@media screen and (min-width: 600px) and (orientation: landscape) {
+@media screen and (min-width: 600px) {
 
     .flowrun-functions-list {
         grid-area: flowrun-functions-list;
