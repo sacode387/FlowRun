@@ -240,7 +240,7 @@ class FlowchartPresenter(
           (dots, x)
         }
 
-        val falseOffsetX = posX - 1
+        val falseOffsetX = posX - widthFalse(stmt, 0)
 
         val maxBranchY = blockDOTs._2
 
@@ -308,7 +308,7 @@ class FlowchartPresenter(
           (dots, x)
         }
 
-        val falseOffsetX = posX - 1
+        val falseOffsetX = posX - widthFalse(stmt, 0)
 
         val maxBranchY = blockDOTs._2
 
