@@ -10,6 +10,7 @@ import dev.sacode.flowrun.FlowRunElements
 import dev.sacode.flowrun.FlowRun
 import dev.sacode.flowrun.ast.{AST, Statement, Expression}, Statement.*
 import dev.sacode.flowrun.Color
+import dev.sacode.flowrun.asDyn
 
 class CtxMenu(programModel: ProgramModel, flowRunElements: FlowRunElements, flowrunChannel: Channel[FlowRun.Event]) {
 
@@ -52,8 +53,8 @@ class CtxMenu(programModel: ProgramModel, flowRunElements: FlowRunElements, flow
 
     val canActivate = setEdgeIds(n.id)
     if canActivate then
-      edgeContextMenu.style.left = s"${event.clientX}px"
-      edgeContextMenu.style.top = s"${event.clientY}px"
+      edgeContextMenu.style.left = s"${event.asDyn.offsetX}px"
+      edgeContextMenu.style.top = s"${event.asDyn.offsetY}px"
       edgeContextMenu.classList.add("active")
       dom.window.navigator.clipboard.readText().`then` { copiedText =>
         val hasText = Option(copiedText).getOrElse("").trim.nonEmpty
@@ -67,8 +68,8 @@ class CtxMenu(programModel: ProgramModel, flowRunElements: FlowRunElements, flow
     hideAllMenus()
     this.nodeId = nodeId
     if DeleteableNodeTypes(nodeTpe) then
-      nodeContextMenu.style.left = s"${event.clientX}px"
-      nodeContextMenu.style.top = s"${event.clientY}px"
+      edgeContextMenu.style.left = s"${event.asDyn.offsetX}px"
+      edgeContextMenu.style.top = s"${event.asDyn.offsetY}px"
       nodeContextMenu.classList.add("active")
   }
 

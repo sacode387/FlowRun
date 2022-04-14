@@ -13,6 +13,10 @@ body {
     background-color: #8de4ff3b;
 }
 
+pre[class*=language-].flowrun-code {
+    background: var(--flowrun-white) !important;
+}
+
 @media screen and (min-width: 600px) and (orientation: landscape) {
     body {
         width: 90%;
