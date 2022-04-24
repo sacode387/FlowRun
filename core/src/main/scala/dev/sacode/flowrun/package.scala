@@ -71,7 +71,7 @@ object DomUtils {
 
   def getNearestSvgNode(event: dom.MouseEvent): (String, dom.svg.G) = {
     getSvgNode(event.target).getOrElse {
-      for (i <- 1 to 15) { // search around mouse click for nearby edges
+      for (i <- 1 to 48) { // search around mouse click for nearby edges
         val nearNodes = List(
           dom.document.elementFromPoint(event.clientX + i, event.clientY),
           dom.document.elementFromPoint(event.clientX - i, event.clientY),
