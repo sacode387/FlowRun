@@ -26,7 +26,11 @@
 .flowrun-instance *:not(.flowrun-code *) {
     /* all except prismjs stuff */
     margin: 0;
-    /*color: var(--flowrun-font-color);*/
+}
+
+.flowrun-instance a,
+.flowrun-instance a:hover {
+    text-decoration: none;
 }
 
 .flowrun-functions-list,
@@ -37,6 +41,12 @@
 }
 .flowrun-output-statement :not(.material-icons) {
     font-family: var(--flowrun-font-monospace);
+}
+
+.flowrun-functions-list,
+.flowrun-output,
+.flowrun-diagram {   
+    color: var(--flowrun-font-color);
 }
 
 #flowrun-template {
