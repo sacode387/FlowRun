@@ -112,6 +112,8 @@ class FlowRun(
               statementEditor.edit(nodeId)
             end if
             flowrunChannel := FlowRun.Event.StmtSelected
+        case ("EDGE", n) =>
+          ctxMenu.handleEdgeRightClick(event, n)
         case _ =>
           flowrunChannel := FlowRun.Event.Deselected
       }
