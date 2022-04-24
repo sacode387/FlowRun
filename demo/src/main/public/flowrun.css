@@ -26,7 +26,7 @@
 .flowrun-instance *:not(.flowrun-code *) {
     /* all except prismjs stuff */
     margin: 0;
-    color: var(--flowrun-font-color);
+    /*color: var(--flowrun-font-color);*/
 }
 
 .flowrun-functions-list,
@@ -166,6 +166,8 @@ input[type="text"].flowrun--disabled {
     right: 0;
     bottom: 0;
     padding: 5px;
+}
+.flowrun-debug-vars * {
     background-color: var(--flowrun-grey-darker);
 }
 
@@ -383,11 +385,11 @@ pre[class*=language-].flowrun-code {
     transform-origin: top left;
 }
 
-.flowrun-context-menu.active {
+.flowrun-instance .flowrun-context-menu.active {
     transform: scale(1);
 }
 
-.flowrun-context-menu>button {
+.flowrun-instance .flowrun-context-menu>button {
     display: flex;
     align-items: center;
     gap: 5px;
@@ -397,12 +399,12 @@ pre[class*=language-].flowrun-code {
     color: var(--flowrun-white);
     border: 1px var(--flowrun-blue-darker) solid;
 }
-.flowrun-context-menu>button:disabled {
+.flowrun-instance .flowrun-context-menu>button:disabled {
     background-color: var(--flowrun-grey-darker);
     color: var(--flowrun-blue-darker);
 }
 
-.flowrun-context-menu>*:hover {
+.flowrun-instance .flowrun-context-menu>*:hover {
     background: var(--flowrun-blue-darker);
 }
 

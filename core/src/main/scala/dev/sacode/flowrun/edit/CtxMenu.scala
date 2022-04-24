@@ -68,8 +68,8 @@ class CtxMenu(programModel: ProgramModel, flowRunElements: FlowRunElements, flow
     hideAllMenus()
     this.nodeId = nodeId
     if DeleteableNodeTypes(nodeTpe) then
-      edgeContextMenu.style.left = s"${event.asDyn.offsetX}px"
-      edgeContextMenu.style.top = s"${event.asDyn.offsetY}px"
+      nodeContextMenu.style.left = s"${event.asDyn.offsetX}px"
+      nodeContextMenu.style.top = s"${event.asDyn.offsetY}px"
       nodeContextMenu.classList.add("active")
   }
 
