@@ -149,7 +149,7 @@ input[type="text"].flowrun--disabled {
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
-    position: relative;
+    position: relative; /* needed for its inner buttons */
     user-select: none;
 }
 
@@ -382,24 +382,21 @@ pre[class*=language-].flowrun-code {
 /* CTX menu */
 /**************************/
 .flowrun-context-menu {
-    position: absolute;
+    display: none;
+}
+
+.flowrun-context-menu.active {
+    position: absolute; /* relative to the BODY! so it stays there always.. */
     z-index: 10000;
 
+    width: 150px;
     display: flex;
     flex-direction: column;
     
-    width: 150px;
     user-select: none;
-
-    transform: scale(0);
-    transform-origin: top left;
 }
 
-.flowrun-instance .flowrun-context-menu.active {
-    transform: scale(1);
-}
-
-.flowrun-instance .flowrun-context-menu>button {
+.flowrun-context-menu>button {
     display: flex;
     align-items: center;
     gap: 5px;
@@ -409,12 +406,12 @@ pre[class*=language-].flowrun-code {
     color: var(--flowrun-white);
     border: 1px var(--flowrun-blue-darker) solid;
 }
-.flowrun-instance .flowrun-context-menu>button:disabled {
+.flowrun-context-menu>button:disabled {
     background-color: var(--flowrun-grey-darker);
     color: var(--flowrun-blue-darker);
 }
 
-.flowrun-instance .flowrun-context-menu>*:hover {
+.flowrun-context-menu>*:hover {
     background: var(--flowrun-blue-darker);
 }
 

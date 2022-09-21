@@ -28,6 +28,11 @@ class CtxMenu(programModel: ProgramModel, flowRunElements: FlowRunElements, flow
     flowRunElements.mountElem.querySelector(".flowrun-edge-context-menu").asInstanceOf[dom.html.Element]
   private val nodeContextMenu =
     flowRunElements.mountElem.querySelector(".flowrun-node-context-menu").asInstanceOf[dom.html.Element]
+  
+  // move menus to ROOT, <body>
+  // so when you scroll it stays there..
+  dom.document.body.appendChild(edgeContextMenu)
+  dom.document.body.appendChild(nodeContextMenu)
 
   private val copyButton = nodeContextMenu.querySelector(".flowrun-copy-stmt").asInstanceOf[dom.html.Element]
   private val deleteButton = nodeContextMenu.querySelector(".flowrun-delete").asInstanceOf[dom.html.Element]
@@ -53,8 +58,10 @@ class CtxMenu(programModel: ProgramModel, flowRunElements: FlowRunElements, flow
 
     val canActivate = setEdgeIds(n.id)
     if canActivate then
-      edgeContextMenu.style.left = s"${event.asDyn.offsetX}px"
-      edgeContextMenu.style.top = s"${event.asDyn.offsetY}px"
+      val x = event.pageX
+      val y = event.pageY
+      edgeContextMenu.style.left = s"${x}px"
+      edgeContextMenu.style.top = s"${y}px"
       edgeContextMenu.classList.add("active")
       dom.window.navigator.clipboard.readText().`then` { copiedText =>
         val hasText = Option(copiedText).getOrElse("").trim.nonEmpty
@@ -68,8 +75,10 @@ class CtxMenu(programModel: ProgramModel, flowRunElements: FlowRunElements, flow
     hideAllMenus()
     this.nodeId = nodeId
     if DeleteableNodeTypes(nodeTpe) then
-      nodeContextMenu.style.left = s"${event.asDyn.offsetX}px"
-      nodeContextMenu.style.top = s"${event.asDyn.offsetY}px"
+      val x = event.pageX
+      val y = event.pageY
+      nodeContextMenu.style.left = s"${x}px"
+      nodeContextMenu.style.top = s"${y}px"
       nodeContextMenu.classList.add("active")
   }
 
