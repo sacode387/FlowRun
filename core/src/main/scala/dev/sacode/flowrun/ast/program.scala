@@ -1,7 +1,7 @@
 package dev.sacode.flowrun.ast
 
 import java.util.UUID
-import org.getshaka.nativeconverter.NativeConverter
+import ba.sake.tupson.*
 
 case class Function(
     rawId: String,
@@ -9,7 +9,7 @@ case class Function(
     parameters: List[Function.Parameter] = List.empty,
     tpe: Expression.Type = Expression.Type.Void,
     statements: List[Statement] = List.empty
-) derives NativeConverter:
+) derives JsonRW:
 
   val id = s"fun-$rawId"
 
@@ -25,7 +25,7 @@ case class Function(
     s"$title$params: $tpe"
 
 object Function:
-  case class Parameter(id: String, name: String, tpe: Expression.Type):
+  case class Parameter(id: String, name: String, tpe: Expression.Type) derives JsonRW:
     def pretty: String = s"$name: $tpe"
 
 case class Program(
@@ -35,10 +35,11 @@ case class Program(
     main: Function,
     functions: List[Function] = List.empty,
     version: String = "0.1"
-) derives NativeConverter:
-  def allFunctions:List[Function] =
+) derives JsonRW:
+
+  def allFunctions: List[Function] =
     functions.prepended(main)
-  
+
   def hasInputs: Boolean = {
     val allStmts = allFunctions.flatMap(_.statements).flatMap {
       case Statement.Block(_, blockStats) =>
@@ -61,7 +62,8 @@ final case class FlowRunConfig(
     lang: String,
     showFunctions: Boolean,
     showGenCode: Boolean,
-) derives NativeConverter
+    showDebugVars: Boolean = true
+) derives JsonRW
 
 object FlowRunConfig:
   val default = FlowRunConfig("java", true, true)

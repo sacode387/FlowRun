@@ -170,6 +170,16 @@ input[type="text"].flowrun--disabled {
     width: 100%;
 }
 
+/* fix for iPad/iPhone node selection.. */
+.flowrun-draw svg text {
+    pointer-events: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+
 /* debug variables */
 .flowrun-debug-vars {
     position: absolute;

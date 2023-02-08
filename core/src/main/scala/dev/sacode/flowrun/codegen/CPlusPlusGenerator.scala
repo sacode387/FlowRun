@@ -8,14 +8,14 @@ import dev.sacode.flowrun.eval.SymbolTable
 import dev.sacode.flowrun.eval.SymbolKey
 import dev.sacode.flowrun.eval.Symbol
 
-class CPlusPlusGenerator(override val programAst: Program) extends CodeGenerator {
+class CPlusPlusGenerator(val programAst: Program) extends CodeGenerator {
 
   def generate: Try[CodeGenRes] = Try {
 
     addLine(s"#include <iostream>")
     addLine(s"#include <cmath>")
     addLine(s"using namespace std;")
-    
+
     genMain()
     programAst.functions.foreach(genFunction)
 

@@ -17,19 +17,4 @@ object CodeGeneratorFactory {
       case Language.php        => PhpGenerator(programAst)
       case Language.swift      => SwiftGenerator(programAst)
       case Language.ruby       => RubyGenerator(programAst)
-
-    //case Language.golang     => GolangGenerator(programAst)
-      case _ =>
-        new CodeGenerator {
-
-          def programAst: Program = null
-
-          def generate: Try[CodeGenRes] = Try {
-            throw new RuntimeException("TODO")
-          }
-
-          override def predefFun(name: String, genArgs: List[String]): String = ""
-          override def funCall(name: String, genArgs: List[String]): String = ""
-        }
-
 }

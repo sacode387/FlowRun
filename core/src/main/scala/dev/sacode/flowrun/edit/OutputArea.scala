@@ -50,7 +50,7 @@ class OutputArea(
   def runtimeError(msg: String, startTime: String, endTime: String): Unit =
     clearStmt()
     clearSyntax()
-    val status = if interpreter.state == State.FINISHED_STOPPED then "stopped" else "failed" 
+    val status = if interpreter.state == State.FINISHED_STOPPED then "stopped" else "failed"
     flowRunElements.runtimeOutput.appendChild(
       div(cls := "flowrun-output-help")(
         samp("[Error: " + msg + "]"),

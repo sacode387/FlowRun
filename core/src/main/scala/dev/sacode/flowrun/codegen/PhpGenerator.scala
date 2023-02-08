@@ -1,6 +1,5 @@
 package dev.sacode.flowrun.codegen
 
-
 import scala.util.Try
 import dev.sacode.flowrun.toIdentifier
 import dev.sacode.flowrun.FlowRun
@@ -9,12 +8,12 @@ import dev.sacode.flowrun.eval.SymbolTable
 import dev.sacode.flowrun.eval.SymbolKey
 import dev.sacode.flowrun.eval.Symbol
 
-class PhpGenerator(override val programAst: Program) extends CodeGenerator {
+class PhpGenerator(val programAst: Program) extends CodeGenerator {
 
   override def identPrefix: String = "$"
 
   def generate: Try[CodeGenRes] = Try {
-    
+
     addLine("<?php")
     genMain()
     programAst.functions.foreach(genFunction)
@@ -38,7 +37,7 @@ class PhpGenerator(override val programAst: Program) extends CodeGenerator {
     val params = function.parameters.map(p => s"$$${p.name}").mkString(", ")
     addEmptyLine()
     addLine(
-      s"function ${function.name}($params) {", 
+      s"function ${function.name}($params) {",
       function.statements.head.id
     )
 
@@ -62,7 +61,7 @@ class PhpGenerator(override val programAst: Program) extends CodeGenerator {
         val initValue = maybeInitValue.getOrElse(defaultValue(tpe))
         val genValue = parseGenExpr(initValue)
         addLine(s"$$$name = $genValue;", id)
-        
+
       case Assign(id, name, value) =>
         val genValue = parseGenExpr(value)
         addLine(s"$$$name = $genValue;", id)
@@ -143,6 +142,6 @@ class PhpGenerator(override val programAst: Program) extends CodeGenerator {
   }
 
   override def funCall(name: String, genArgs: List[String]): String =
-     s""" $name(${genArgs.mkString(", ")}) """.trim
+    s""" $name(${genArgs.mkString(", ")}) """.trim
 
 }

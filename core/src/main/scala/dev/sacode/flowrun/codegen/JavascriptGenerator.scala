@@ -1,6 +1,5 @@
 package dev.sacode.flowrun.codegen
 
-
 import scala.util.Try
 import dev.sacode.flowrun.toIdentifier
 import dev.sacode.flowrun.FlowRun
@@ -9,10 +8,10 @@ import dev.sacode.flowrun.eval.SymbolTable
 import dev.sacode.flowrun.eval.SymbolKey
 import dev.sacode.flowrun.eval.Symbol
 
-class JavascriptGenerator(override val programAst: Program) extends CodeGenerator {
+class JavascriptGenerator(val programAst: Program) extends CodeGenerator {
 
   def generate: Try[CodeGenRes] = Try {
-    
+
     genMain()
     programAst.functions.foreach(genFunction)
 
@@ -34,7 +33,7 @@ class JavascriptGenerator(override val programAst: Program) extends CodeGenerato
     val params = function.parameters.map(p => s"${p.name}").mkString(", ")
     addEmptyLine()
     addLine(
-      s"function ${function.name}($params) {", 
+      s"function ${function.name}($params) {",
       function.statements.head.id
     )
 
@@ -58,7 +57,7 @@ class JavascriptGenerator(override val programAst: Program) extends CodeGenerato
         val initValue = maybeInitValue.getOrElse(defaultValue(tpe))
         val genValue = parseGenExpr(initValue)
         addLine(s"let $name = $genValue;", id)
-        
+
       case Assign(id, name, value) =>
         val genValue = parseGenExpr(value)
         addLine(s"$name = $genValue;", id)
@@ -139,6 +138,6 @@ class JavascriptGenerator(override val programAst: Program) extends CodeGenerato
   }
 
   override def funCall(name: String, genArgs: List[String]): String =
-     s""" $name(${genArgs.mkString(", ")}) """.trim
+    s""" $name(${genArgs.mkString(", ")}) """.trim
 
 }

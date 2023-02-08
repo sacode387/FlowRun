@@ -1,6 +1,6 @@
 package dev.sacode.flowrun.ast
 
-import org.getshaka.nativeconverter.NativeConverter
+import ba.sake.tupson.*
 import dev.sacode.flowrun.parse.Token
 
 /*
@@ -20,10 +20,9 @@ atom                -> NUMBER | STRING | "true" | "false" | "null"
  */
 
 case class Expression(boolOrComparison: BoolOrComparison, boolOrComparisons: List[BoolOrComparison])
-    derives NativeConverter
 
 object Expression:
-  enum Type derives NativeConverter:
+  enum Type derives JsonRW:
     case Void
     case Integer
     case Real
@@ -35,27 +34,26 @@ object Expression:
 case class BoolOrComparison(
     boolAndComparison: BoolAndComparison,
     boolAndComparisons: List[BoolAndComparison]
-) derives NativeConverter
+)
 
 case class BoolAndComparison(numComparison: NumComparison, numComparisons: List[NumComparisonOpt])
-    derives NativeConverter
 
-case class NumComparison(term: Term, terms: Option[TermOpt]) derives NativeConverter
-case class NumComparisonOpt(op: Token, numComparison: NumComparison) derives NativeConverter
+case class NumComparison(term: Term, terms: Option[TermOpt])
+case class NumComparisonOpt(op: Token, numComparison: NumComparison)
 
-case class Term(factor: Factor, factors: List[FactorOpt]) derives NativeConverter
-case class TermOpt(op: Token, term: Term) derives NativeConverter
+case class Term(factor: Factor, factors: List[FactorOpt])
+case class TermOpt(op: Token, term: Term)
 
-case class Factor(unary: Unary, unaries: List[UnaryOpt]) derives NativeConverter
-case class FactorOpt(op: Token, factor: Factor) derives NativeConverter
+case class Factor(unary: Unary, unaries: List[UnaryOpt])
+case class FactorOpt(op: Token, factor: Factor)
 
-enum Unary derives NativeConverter:
+enum Unary:
   case Prefixed(op: Token, unary: Unary)
   case Simple(atom: Atom)
 
-case class UnaryOpt(op: Token, unary: Unary) derives NativeConverter
+case class UnaryOpt(op: Token, unary: Unary)
 
-enum Atom derives NativeConverter:
+enum Atom:
   case IntegerLit(value: Int)
   case RealLit(value: Double)
   case StringLit(value: String)

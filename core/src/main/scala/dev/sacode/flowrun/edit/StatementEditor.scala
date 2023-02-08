@@ -23,8 +23,7 @@ final class StatementEditor(
 
     programModel.findStatement(stmtId) match {
       case _: Begin =>
-        if currFun.isMain then {}
-        else {
+        if currFun.isMain then {} else {
           val nameInputElem = newNameInput(10, currFun.name, "myFun") { newName =>
             programModel.updateFunction(stmtId, name = Some(newName))
           }
@@ -78,8 +77,7 @@ final class StatementEditor(
         }
 
       case statement: Return =>
-        if currFun.isMain then {}
-        else if currFun.tpe == Expression.Type.Void then
+        if currFun.isMain then {} else if currFun.tpe == Expression.Type.Void then
           Toastify(ToastifyOptions("Void function does not return any value.", Color.yellow)).showToast()
         else
           val exprInputElem = newExprInput(statement.id, 10, statement.maybeValue.getOrElse(""), "x + 1")(

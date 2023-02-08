@@ -2,7 +2,7 @@ package dev.sacode.flowrun.edit
 
 import org.scalajs.dom
 import reactify.*
-import org.getshaka.nativeconverter.fromJson
+import ba.sake.tupson.*
 import dev.sacode.flowrun.toastify
 import dev.sacode.flowrun.ToastifyOptions
 import dev.sacode.flowrun.ProgramModel
@@ -28,7 +28,7 @@ class CtxMenu(programModel: ProgramModel, flowRunElements: FlowRunElements, flow
     flowRunElements.mountElem.querySelector(".flowrun-edge-context-menu").asInstanceOf[dom.html.Element]
   private val nodeContextMenu =
     flowRunElements.mountElem.querySelector(".flowrun-node-context-menu").asInstanceOf[dom.html.Element]
-  
+
   // move menus to ROOT, <body>
   // so when you scroll it stays there..
   dom.document.body.appendChild(edgeContextMenu)
@@ -127,7 +127,7 @@ class CtxMenu(programModel: ProgramModel, flowRunElements: FlowRunElements, flow
       (event: dom.MouseEvent) =>
         dom.window.navigator.clipboard.readText().`then` { copiedText =>
           try {
-            val newStmt = copiedText.fromJson[Statement].duplicated
+            val newStmt = copiedText.parseJson[Statement].duplicated
             addStatement(newStmt)
           } catch {
             e => toastify.Toastify(ToastifyOptions("Not a valid statement", Color.yellow)).showToast()

@@ -1,6 +1,5 @@
 package dev.sacode.flowrun.codegen
 
-
 import scala.util.Try
 import dev.sacode.flowrun.toIdentifier
 import dev.sacode.flowrun.FlowRun
@@ -13,10 +12,8 @@ class NodeJsGenerator(override val programAst: Program) extends JavascriptGenera
 
   override def generate: Try[CodeGenRes] = Try {
 
+    if programAst.hasInputs then addLine("const readline = require('readline');", "")
 
-    if programAst.hasInputs then
-      addLine("const readline = require('readline');", "")
-    
     genMain()
     programAst.functions.foreach(genFunction)
 
@@ -38,7 +35,7 @@ class NodeJsGenerator(override val programAst: Program) extends JavascriptGenera
     val params = function.parameters.map(p => s"${p.name}").mkString(", ")
     addEmptyLine()
     addLine(
-      s"function ${function.name}($params) {", 
+      s"function ${function.name}($params) {",
       function.statements.head.id
     )
 
@@ -61,7 +58,7 @@ class NodeJsGenerator(override val programAst: Program) extends JavascriptGenera
         symTab.add(id, key, tpe, None)
         val initValue = maybeInitValue.getOrElse(defaultValue(tpe))
         addLine(s"let $name = $initValue;", id)
-        
+
       case Assign(id, name, value) =>
         addLine(s"$name = $value;", id)
 

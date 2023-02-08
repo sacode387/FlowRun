@@ -9,7 +9,7 @@ import dev.sacode.flowrun.eval.SymbolKey
 import dev.sacode.flowrun.eval.Symbol
 import dev.sacode.flowrun.parse.Token
 
-class PythonGenerator(override val programAst: Program) extends CodeGenerator {
+class PythonGenerator(val programAst: Program) extends CodeGenerator {
 
   override def genToken(token: Token): String = token.tpe match {
     case Token.Type.True  => "True"

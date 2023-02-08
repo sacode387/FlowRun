@@ -2,12 +2,13 @@ import org.scalajs.linker.interface.OutputPatterns
 
 inThisBuild(
   List(
-    scalaVersion := "3.1.0",
+    scalaVersion := "3.2.2",
     evictionErrorLevel := Level.Warn,
     publish / skip := true,
     scalafmtSbt := true,
     resolvers +=
       "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots",
+    resolvers += "jitpack" at "https://jitpack.io",
     organization := "dev.sacode",
     licenses := List("GPL-3.0" -> url("https://www.gnu.org/licenses/gpl-3.0.html")),
     scmInfo := Some(
@@ -31,19 +32,20 @@ lazy val core = (project in file("core"))
   .settings(
     name := "FlowRun",
     libraryDependencies ++= Seq(
-     // TODO ("org.scala-js" %%% "scalajs-java-securerandom" % "1.0.0").cross(CrossVersion.for3Use2_13),
+      ("org.scala-js" %%% "scalajs-java-securerandom" % "1.0.0").cross(CrossVersion.for3Use2_13),
       "io.github.cquiroz" %%% "scala-java-time" % "2.4.0-M1",
       "com.lihaoyi" %%% "scalatags" % "0.11.0",
-      "com.lihaoyi" %%% "pprint" % "0.7.1",
       "com.outr" %%% "reactify" % "4.0.6",
-      "org.getshaka" %%% "native-converter" % "0.5.2",
-      "com.lihaoyi" %%% "utest" % "0.7.10" % Test
+      "ba.sake" %%% "tupson" % "0.5.1",
+      "com.lihaoyi" %%% "utest" % "0.7.10" % Test,
+      "com.lihaoyi" %%% "pprint" % "0.7.1" % Test
     ),
     scalacOptions ++= Seq(
       "-Xmax-inlines",
       "64",
       "-Ysafe-init",
-      "-deprecation"
+      "-deprecation",
+      "-Yretain-trees"
     ),
     //scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.ESModule) },
 

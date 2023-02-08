@@ -1,7 +1,7 @@
 package dev.sacode.flowrun.parse
 
 import scala.collection.mutable
-import org.getshaka.nativeconverter.NativeConverter
+import ba.sake.tupson.*
 
 final class Lexer(nodeId: String, input: String) {
   import Token.Type
@@ -121,11 +121,11 @@ case class Token(
     tpe: Token.Type,
     text: String,
     pos: Int
-) derives NativeConverter
+) derives JsonRW
 
 object Token {
-  
-  enum Type derives NativeConverter {
+
+  enum Type derives JsonRW {
     case Integer // 123
     case Real // 123.45
     case String // "abc"

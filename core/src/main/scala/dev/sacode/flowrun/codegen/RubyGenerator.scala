@@ -8,11 +8,10 @@ import dev.sacode.flowrun.eval.SymbolTable
 import dev.sacode.flowrun.eval.SymbolKey
 import dev.sacode.flowrun.eval.Symbol
 
-class RubyGenerator(override val programAst: Program) extends CodeGenerator {
+class RubyGenerator(val programAst: Program) extends CodeGenerator {
 
   def generate: Try[CodeGenRes] = Try {
 
-    
     programAst.functions.foreach(genFunction)
 
     addEmptyLine()

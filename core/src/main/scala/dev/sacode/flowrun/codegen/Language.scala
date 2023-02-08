@@ -12,17 +12,16 @@ enum Language(val name: String, val prism: String):
   case swift extends Language("swift", "swift")
   case ruby extends Language("ruby", "ruby")
 
-  // umm..
-  //case golang extends Language("golang", "golang")
+// umm..
+//case golang extends Language("golang", "golang")
 
-  // unknown
-  //case rust extends Language("rust", "rust")
+// unknown
+//case rust extends Language("rust", "rust")
 
+//case nodejs extends Language("nodejs", "javascript")
 
-  //case nodejs extends Language("nodejs", "javascript")
+// complex? variable declarations
+// case pascal extends Language("pascal", "pascal")
 
-  // complex? variable declarations
- // case pascal extends Language("pascal", "pascal") 
-
- // complex string handling..
- // case c extends Language("c", "c") 
+// complex string handling..
+// case c extends Language("c", "c")

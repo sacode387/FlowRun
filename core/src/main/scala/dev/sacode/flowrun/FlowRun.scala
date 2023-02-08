@@ -1,12 +1,17 @@
 package dev.sacode.flowrun
 
+import java.time.Instant
+import java.time.Duration
+import java.time.temporal.TemporalUnit
+import java.time.temporal.ChronoUnit
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.scalajs.js
 import scala.scalajs.js.annotation.*
 import org.scalajs.dom
+
 import scalatags.JsDom.all.*
-import org.getshaka.nativeconverter.fromJson
 import reactify.*
+import ba.sake.tupson.*
 import dev.sacode.flowrun.eval.Interpreter
 import dev.sacode.flowrun.ast.*
 import dev.sacode.flowrun.edit.FlowchartPresenter
@@ -19,10 +24,6 @@ import dev.sacode.flowrun.codegen.CodeGeneratorFactory
 import dev.sacode.flowrun.codegen.Language
 import dev.sacode.flowrun.toastify.*
 import dev.sacode.flowrun.eval.Interpreter.State
-import java.time.Instant
-import java.time.Duration
-import java.time.temporal.TemporalUnit
-import java.time.temporal.ChronoUnit
 import dev.sacode.flowrun.edit.CodeArea
 
 @JSExportTopLevel("FlowRun")
@@ -41,7 +42,7 @@ class FlowRun(
     Option.when(mountElemText.nonEmpty)(mountElemText)
   }
   private val program = jsonSourceOpt match
-    case Some(json) => json.fromJson[Program]
+    case Some(json) => json.parseJson[Program]
     case None =>
       Program(
         AST.newId,
@@ -85,6 +86,8 @@ class FlowRun(
 
   attachRunAndCopyListeners()
 
+  // fixed layout is when you force layout with a class
+  // meaning not-changeable with checkboxes
   private val fixedLayout = flowRunElements.mountElem.classList.exists(_.startsWith("flowrun-layout"))
   if fixedLayout then flowRunElements.configWidget.querySelector(".flowrun-config-layout").remove()
   else updateLayout()
@@ -315,19 +318,15 @@ class FlowRun(
 
     flowRunElements.showFunctionsCheckbox.checked = programModel.ast.config.showFunctions
     flowRunElements.showCodeCheckbox.checked = programModel.ast.config.showGenCode
+    flowRunElements.showDebugVarsCheckbox.checked = programModel.ast.config.showDebugVars
 
     if !fixedLayout then
       flowRunElements.showFunctionsCheckbox.oninput = _ => setLayout()
       flowRunElements.showCodeCheckbox.oninput = _ => setLayout()
 
-    /*
-    flowRunElements.drawArea.addEventListener(
-      "dblclick",
-      (event: dom.MouseEvent) => {
-        Toastify(ToastifyOptions("Please right click on arrow to add more nodes. (Long press on touchscreen)"))
-          .showToast()
-      }
-    )*/
+    flowRunElements.showDebugVarsCheckbox.oninput = _ => {
+      flowRunElements.debugVariables.classList.remove("flowrun--hidden")
+    }
   }
 
   private def doOnChange(): Unit =
@@ -336,6 +335,17 @@ class FlowRun(
 
   private def doOnModelChange(): Unit =
     Option(changeCallback).foreach(cb => cb(this))
+
+  private def setLayout(): Unit = {
+    val oldConfig = programModel.ast.config
+    val newConfig = oldConfig.copy(
+      showFunctions = flowRunElements.showFunctionsCheckbox.checked,
+      showGenCode = flowRunElements.showCodeCheckbox.checked,
+      showDebugVars = flowRunElements.showDebugVarsCheckbox.checked
+    )
+    programModel.setConfig(newConfig)
+    updateLayout()
+  }
 
   private def updateLayout(): Unit = {
     val flowrunMount = flowRunElements.mountElem
@@ -346,16 +356,6 @@ class FlowRun(
     val newLayout =
       resolveLayout(programModel.ast.config.showFunctions, programModel.ast.config.showGenCode)
     if newLayout.nonEmpty then flowrunMount.classList.add(newLayout)
-  }
-
-  private def setLayout(): Unit = {
-    val oldConfig = programModel.ast.config
-    val newConfig = oldConfig.copy(
-      showFunctions = flowRunElements.showFunctionsCheckbox.checked,
-      showGenCode = flowRunElements.showCodeCheckbox.checked
-    )
-    programModel.setConfig(newConfig)
-    updateLayout()
   }
 
   private def resolveLayout(showFunctions: Boolean, showCode: Boolean): String = {
