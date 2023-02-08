@@ -323,10 +323,8 @@ class FlowRun(
     if !fixedLayout then
       flowRunElements.showFunctionsCheckbox.oninput = _ => setLayout()
       flowRunElements.showCodeCheckbox.oninput = _ => setLayout()
-
-    flowRunElements.showDebugVarsCheckbox.oninput = _ => {
-      flowRunElements.debugVariables.classList.remove("flowrun--hidden")
-    }
+    
+    flowRunElements.showDebugVarsCheckbox.oninput = _ => setLayout()
   }
 
   private def doOnChange(): Unit =
@@ -353,9 +351,13 @@ class FlowRun(
     flowrunMount.classList.remove("flowrun-layout-d-o_c")
     flowrunMount.classList.remove("flowrun-layout-d-o")
     flowrunMount.classList.remove("flowrun-layout-d_o")
-    val newLayout =
-      resolveLayout(programModel.ast.config.showFunctions, programModel.ast.config.showGenCode)
+
+    val config = programModel.ast.config
+    val newLayout = resolveLayout(config.showFunctions, config.showGenCode)
     if newLayout.nonEmpty then flowrunMount.classList.add(newLayout)
+    
+    if config.showDebugVars then flowRunElements.debugVariables.classList.remove("flowrun--hidden")
+    else flowRunElements.debugVariables.classList.add("flowrun--hidden")
   }
 
   private def resolveLayout(showFunctions: Boolean, showCode: Boolean): String = {

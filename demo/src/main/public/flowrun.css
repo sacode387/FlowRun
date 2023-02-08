@@ -62,6 +62,10 @@
     opacity: 0.5;
 }
 
+.flowrun--hidden {
+    display: none;
+}
+
 input[type="text"].flowrun--disabled {
     opacity: 1;
     border: none;

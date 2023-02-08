@@ -34,7 +34,7 @@ case class Program(
     config: FlowRunConfig,
     main: Function,
     functions: List[Function] = List.empty,
-    version: String = "0.1"
+    version: String = "0.2"
 ) derives JsonRW:
 
   def allFunctions: List[Function] =
