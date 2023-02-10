@@ -270,6 +270,22 @@ class FlowRun(
       interpreter.state = State.FINISHED_STOPPED
     }
 
+    flowRunElements.downloadButton.onclick = _ => {
+      import js.JSConverters._
+      val file = new dom.Blob(Array(js.Any.fromString(json())).toJSArray)
+      val url = dom.URL.createObjectURL(file)
+      val downloadLink = a(href := url, download := s"${program.name}.flowrun").render
+      dom.document.body.appendChild(downloadLink)
+      downloadLink.click()
+      dom.window.setTimeout(
+        () => {
+          dom.document.body.removeChild(downloadLink)
+          dom.URL.revokeObjectURL(url)
+        },
+        0
+      )
+    }
+
     flowRunElements.copySourceButton.onclick = _ => {
       dom.window.navigator.clipboard.writeText(json())
       Toastify(ToastifyOptions("Copied program source to clipboard.", Color.green)).showToast()
@@ -323,7 +339,7 @@ class FlowRun(
     if !fixedLayout then
       flowRunElements.showFunctionsCheckbox.oninput = _ => setLayout()
       flowRunElements.showCodeCheckbox.oninput = _ => setLayout()
-    
+
     flowRunElements.showDebugVarsCheckbox.oninput = _ => setLayout()
   }
 
@@ -355,7 +371,7 @@ class FlowRun(
     val config = programModel.ast.config
     val newLayout = resolveLayout(config.showFunctions, config.showGenCode)
     if newLayout.nonEmpty then flowrunMount.classList.add(newLayout)
-    
+
     if config.showDebugVars then flowRunElements.debugVariables.classList.remove("flowrun--hidden")
     else flowRunElements.debugVariables.classList.add("flowrun--hidden")
   }
