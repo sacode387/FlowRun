@@ -32,11 +32,19 @@ class FlowRunElements(
   // singletons
   val runButton: dom.html.Element = mountElem.querySelector(".flowrun-btn-run").asInstanceOf[dom.html.Element]
   val stopButton: dom.html.Element = mountElem.querySelector(".flowrun-btn-stop").asInstanceOf[dom.html.Element]
+
   val downloadButton: dom.html.Element =
     mountElem.querySelector(".flowrun-btn-download").asInstanceOf[dom.html.Element]
+  val loadButton: dom.html.Element =
+    mountElem.querySelector(".flowrun-btn-load").asInstanceOf[dom.html.Element]
+
   val copySourceButton: dom.html.Element =
     mountElem.querySelector(".flowrun-btn-copy-source").asInstanceOf[dom.html.Element]
+  val pasteSourceButton: dom.html.Element =
+    mountElem.querySelector(".flowrun-btn-paste-source").asInstanceOf[dom.html.Element]
+
   val copyDotButton: dom.html.Element = mountElem.querySelector(".flowrun-btn-copy-dot").asInstanceOf[dom.html.Element]
+
   val copyGencodeButton: dom.html.Element =
     mountElem.querySelector(".flowrun-btn-copy-gencode").asInstanceOf[dom.html.Element]
 

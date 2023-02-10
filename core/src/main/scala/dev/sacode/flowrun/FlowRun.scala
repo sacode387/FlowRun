@@ -290,6 +290,17 @@ class FlowRun(
       dom.window.navigator.clipboard.writeText(json())
       Toastify(ToastifyOptions("Copied program source to clipboard.", Color.green)).showToast()
     }
+    flowRunElements.pasteSourceButton.onclick = _ => {
+      dom.window.navigator.clipboard.readText().`then` { copiedText =>
+        try {
+          val loadedProgram = copiedText.parseJson[Program].copy(id = AST.newId)
+          programModel.ast = loadedProgram
+          flowrunChannel := FlowRun.Event.FunctionSelected
+        } catch {
+          e => toastify.Toastify(ToastifyOptions("Not a valid program", Color.yellow)).showToast()
+        }
+      }
+    }
 
     flowRunElements.copyDotButton.onclick = _ => {
       dom.window.navigator.clipboard.writeText(flowchartPresenter.funDOT)
