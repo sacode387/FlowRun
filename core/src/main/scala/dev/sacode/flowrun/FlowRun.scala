@@ -270,6 +270,7 @@ class FlowRun(
       interpreter.state = State.FINISHED_STOPPED
     }
 
+    /* DOWNLOAD / LOAD */
     flowRunElements.downloadButton.onclick = _ => {
       import js.JSConverters._
       val file = new dom.Blob(Array(js.Any.fromString(json())).toJSArray)
@@ -285,7 +286,27 @@ class FlowRun(
         0
       )
     }
+    flowRunElements.loadButton.onclick = _ => {
+      import js.JSConverters._
 
+      val inputForFile = input(tpe := "file", accept := ".flowrun").render
+      inputForFile.onchange = (event: dom.Event) => {
+        val file = inputForFile.files.item(0)
+        file.text().`then` { fileText =>
+          try {
+            val loadedProgram = fileText.parseJson[Program].copy(id = AST.newId)
+            programModel.ast = loadedProgram
+            flowRunElements.programNameInput.value = loadedProgram.name
+            flowrunChannel := FlowRun.Event.FunctionSelected
+          } catch {
+            e => toastify.Toastify(ToastifyOptions("Not a valid program", Color.yellow)).showToast()
+          }
+        }
+      }
+      inputForFile.click()
+    }
+
+    /* COPY / PASTE */
     flowRunElements.copySourceButton.onclick = _ => {
       dom.window.navigator.clipboard.writeText(json())
       Toastify(ToastifyOptions("Copied program source to clipboard.", Color.green)).showToast()
