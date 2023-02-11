@@ -286,24 +286,29 @@ class FlowRun(
         0
       )
     }
-    flowRunElements.loadButton.onclick = _ => {
-      import js.JSConverters._
 
-      val inputForFile = input(tpe := "file", accept := ".flowrun").render
-      inputForFile.onchange = (event: dom.Event) => {
-        val file = inputForFile.files.item(0)
-        file.text().`then` { fileText =>
-          try {
-            val loadedProgram = fileText.parseJson[Program].copy(id = AST.newId)
-            programModel.ast = loadedProgram
-            flowRunElements.programNameInput.value = loadedProgram.name
-            flowrunChannel := FlowRun.Event.FunctionSelected
-          } catch {
-            e => toastify.Toastify(ToastifyOptions("Not a valid program", Color.yellow)).showToast()
+    if editable then {
+      flowRunElements.loadButton.onclick = _ => {
+        import js.JSConverters._
+
+        val inputForFile = input(tpe := "file", accept := ".flowrun").render
+        inputForFile.onchange = (event: dom.Event) => {
+          val file = inputForFile.files.item(0)
+          file.text().`then` { fileText =>
+            try {
+              val loadedProgram = fileText.parseJson[Program].copy(id = AST.newId)
+              programModel.ast = loadedProgram
+              flowRunElements.programNameInput.value = loadedProgram.name
+              flowrunChannel := FlowRun.Event.FunctionSelected
+            } catch {
+              e => toastify.Toastify(ToastifyOptions("Not a valid program", Color.yellow)).showToast()
+            }
           }
         }
+        inputForFile.click()
       }
-      inputForFile.click()
+    } else {
+      flowRunElements.loadButton.disabled = true
     }
 
     /* COPY / PASTE */
@@ -311,16 +316,20 @@ class FlowRun(
       dom.window.navigator.clipboard.writeText(json())
       Toastify(ToastifyOptions("Copied program source to clipboard.", Color.green)).showToast()
     }
-    flowRunElements.pasteSourceButton.onclick = _ => {
-      dom.window.navigator.clipboard.readText().`then` { copiedText =>
-        try {
-          val loadedProgram = copiedText.parseJson[Program].copy(id = AST.newId)
-          programModel.ast = loadedProgram
-          flowrunChannel := FlowRun.Event.FunctionSelected
-        } catch {
-          e => toastify.Toastify(ToastifyOptions("Not a valid program", Color.yellow)).showToast()
+    if editable then {
+      flowRunElements.pasteSourceButton.onclick = _ => {
+        dom.window.navigator.clipboard.readText().`then` { copiedText =>
+          try {
+            val loadedProgram = copiedText.parseJson[Program].copy(id = AST.newId)
+            programModel.ast = loadedProgram
+            flowrunChannel := FlowRun.Event.FunctionSelected
+          } catch {
+            e => toastify.Toastify(ToastifyOptions("Not a valid program", Color.yellow)).showToast()
+          }
         }
       }
+    } else {
+      flowRunElements.pasteSourceButton.disabled = true
     }
 
     flowRunElements.copyDotButton.onclick = _ => {

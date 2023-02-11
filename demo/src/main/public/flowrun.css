@@ -391,6 +391,10 @@ pre[class*=language-].flowrun-code {
     display: none;
 }
 
+.flowrun-instance button[disabled] {
+    opacity: 0.5;
+    pointer-events: none;
+}
 
 /**************************/
 /* CTX menu */

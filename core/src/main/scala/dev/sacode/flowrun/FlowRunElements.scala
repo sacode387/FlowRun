@@ -35,13 +35,13 @@ class FlowRunElements(
 
   val downloadButton: dom.html.Element =
     mountElem.querySelector(".flowrun-btn-download").asInstanceOf[dom.html.Element]
-  val loadButton: dom.html.Element =
-    mountElem.querySelector(".flowrun-btn-load").asInstanceOf[dom.html.Element]
+  val loadButton: dom.html.Button =
+    mountElem.querySelector(".flowrun-btn-load").asInstanceOf[dom.html.Button]
 
   val copySourceButton: dom.html.Element =
     mountElem.querySelector(".flowrun-btn-copy-source").asInstanceOf[dom.html.Element]
-  val pasteSourceButton: dom.html.Element =
-    mountElem.querySelector(".flowrun-btn-paste-source").asInstanceOf[dom.html.Element]
+  val pasteSourceButton: dom.html.Button =
+    mountElem.querySelector(".flowrun-btn-paste-source").asInstanceOf[dom.html.Button]
 
   val copyDotButton: dom.html.Element = mountElem.querySelector(".flowrun-btn-copy-dot").asInstanceOf[dom.html.Element]
 
