@@ -160,6 +160,8 @@ class JavaGenerator(val programAst: Program) extends CodeGenerator {
       case Length        => s"${argOpt(0)}.length()"
       case CharAt        => s"${argOpt(0)}.charAt(${argOpt(1)})"
       case RealToInteger => s"(int)${argOpt(0)}"
+      case StringToInteger =>
+        s"""Integer.parseInt(${argOpt(0)})"""
     }
   }
 

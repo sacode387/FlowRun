@@ -151,6 +151,7 @@ class PythonGenerator(val programAst: Program) extends CodeGenerator {
       case Length        => s"len(${argOpt(0)})"
       case CharAt        => s"${argOpt(0)}[${argOpt(1)}]"
       case RealToInteger => s"int(${argOpt(0)})"
+      case StringToInteger => s"int(${argOpt(0)})"
     }
   }
 
