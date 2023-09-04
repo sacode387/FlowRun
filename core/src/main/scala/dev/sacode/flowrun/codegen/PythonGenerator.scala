@@ -63,7 +63,6 @@ class PythonGenerator(val programAst: Program) extends CodeGenerator {
     import Statement._
     stmt match
       case _: Begin => // noop
-
       case Declare(id, name, tpe, maybeInitValue) =>
         val key = SymbolKey(name, Symbol.Kind.Variable, id)
         symTab.add(id, key, tpe, None)
@@ -117,7 +116,7 @@ class PythonGenerator(val programAst: Program) extends CodeGenerator {
         genStatement(block)
         if block.statements.isEmpty then addLine("  pass", id)
 
-      //https://stackoverflow.com/questions/743164/how-to-emulate-a-do-while-loop
+      // https://stackoverflow.com/questions/743164/how-to-emulate-a-do-while-loop
       case DoWhile(id, condition, block) =>
         val genCond = parseGenExpr(condition)
         addLine(s"while True:", id)

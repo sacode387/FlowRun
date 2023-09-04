@@ -102,7 +102,7 @@ final class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[Flow
     }
 
   private def interpretStatement(stmt: Statement): Future[RunVal] = waitForContinue().flatMap { _ =>
-    //println(s"interpreting: $stmt")
+    // println(s"interpreting: $stmt")
     import Statement.*
 
     stmt match {

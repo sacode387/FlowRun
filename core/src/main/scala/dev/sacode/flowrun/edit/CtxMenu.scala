@@ -129,8 +129,8 @@ class CtxMenu(programModel: ProgramModel, flowRunElements: FlowRunElements, flow
           try {
             val newStmt = copiedText.parseJson[Statement].duplicated
             addStatement(newStmt)
-          } catch {
-            e => toastify.Toastify(ToastifyOptions("Not a valid statement", Color.yellow)).showToast()
+          } catch { e =>
+            toastify.Toastify(ToastifyOptions("Not a valid statement", Color.yellow)).showToast()
           }
         }
     )

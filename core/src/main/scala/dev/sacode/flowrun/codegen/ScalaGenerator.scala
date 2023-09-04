@@ -70,7 +70,6 @@ class ScalaGenerator(val programAst: Program) extends CodeGenerator {
     import Statement._
     stmt match
       case _: Begin => // noop
-
       case Declare(id, name, tpe, maybeInitValue) =>
         val key = SymbolKey(name, Symbol.Kind.Variable, id)
         symTab.add(id, key, tpe, None)

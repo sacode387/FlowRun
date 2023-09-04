@@ -273,7 +273,8 @@ class FlowRun(
     /* DOWNLOAD / LOAD */
     flowRunElements.downloadButton.onclick = _ => {
       import js.JSConverters._
-      val file = new dom.Blob(Array(js.Any.fromString(json())).toJSArray)
+      val blobContent = Seq(json())
+      val file = new dom.Blob(blobContent.toJSIterable)
       val url = dom.URL.createObjectURL(file)
       val downloadLink = a(href := url, download := s"${program.name}.flowrun").render
       dom.document.body.appendChild(downloadLink)
@@ -300,8 +301,8 @@ class FlowRun(
               programModel.ast = loadedProgram
               flowRunElements.programNameInput.value = loadedProgram.name
               flowrunChannel := FlowRun.Event.FunctionSelected
-            } catch {
-              e => toastify.Toastify(ToastifyOptions("Not a valid program", Color.yellow)).showToast()
+            } catch { e =>
+              toastify.Toastify(ToastifyOptions("Not a valid program", Color.yellow)).showToast()
             }
           }
         }
@@ -323,8 +324,8 @@ class FlowRun(
             val loadedProgram = copiedText.parseJson[Program].copy(id = AST.newId)
             programModel.ast = loadedProgram
             flowrunChannel := FlowRun.Event.FunctionSelected
-          } catch {
-            e => toastify.Toastify(ToastifyOptions("Not a valid program", Color.yellow)).showToast()
+          } catch { e =>
+            toastify.Toastify(ToastifyOptions("Not a valid program", Color.yellow)).showToast()
           }
         }
       }

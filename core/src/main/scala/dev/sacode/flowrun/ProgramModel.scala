@@ -135,7 +135,7 @@ case class FunctionModel(
       blockId: String,
       afterId: String
   ): List[Statement] = {
-    //println((currentBlockId, newStatement, blockId, afterId))
+    // println((currentBlockId, newStatement, blockId, afterId))
 
     if currentBlockId == blockId then
       val afterStatementIdx = statements.indexWhere(_.id == afterId)
@@ -175,7 +175,7 @@ case class FunctionModel(
 
   private def doUpdate(statementId: String, newStatement: Statement): FunctionModel =
     val newStats = update(ast.statements, statementId, newStatement)
-    //println(s"OLD: ${ast.statements} \nNEW: $newStatement, \nNEW: $newStats")
+    // println(s"OLD: ${ast.statements} \nNEW: $newStatement, \nNEW: $newStats")
     this.copy(ast = ast.copy(statements = newStats))
 
   private def update(

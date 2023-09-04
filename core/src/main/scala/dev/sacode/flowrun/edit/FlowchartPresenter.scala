@@ -220,7 +220,10 @@ class FlowchartPresenter(
               |true_dummy_down_${stmt.id} [ ${pos(trueOffsetX, maxBranchY)} shape=point width=0]
               |false_dummy_down_${stmt.id} [ ${pos(falseOffsetX, maxBranchY)} shape=point width=0]
               |
-              |$ifEndId [id="$ifEndId#IfEnd" class="flowrun-not-selectable" ${pos(posX, maxBranchY)} $group ${colorScheme.loopNode.graphvizColors}
+              |$ifEndId [id="$ifEndId#IfEnd" class="flowrun-not-selectable" ${pos(
+               posX,
+               maxBranchY
+             )} $group ${colorScheme.loopNode.graphvizColors}
               |  label="" tooltip=" " shape="circle" fixedsize=true width=0.2 height=0.2]
               |
               |""".stripMargin
@@ -418,7 +421,9 @@ class FlowchartPresenter(
         }
 
         s"""|## IF-TRUE
-            |${stmt.id}:e -> $trueDummyUpId [id="${stmt.id}@${stmt.trueBlock.id}" ${edgeAttrs(trueDummyUpId)} taillabel="true" fontcolor="forestgreen"]
+            |${stmt.id}:e -> $trueDummyUpId [id="${stmt.id}@${stmt.trueBlock.id}" ${edgeAttrs(
+             trueDummyUpId
+           )} taillabel="true" fontcolor="forestgreen"]
             |$trueDummyUpId -> $firstTrueNodeId:n [id="${stmt.id}@${stmt.trueBlock.id}" ${edgeAttrs(firstTrueNodeId)}]
             |
             |$trueEdgeDOTs
@@ -427,8 +432,12 @@ class FlowchartPresenter(
             |
             |
             |## IF-FALSE
-            |${stmt.id}:w -> $falseDummyUpId [id="${stmt.id}@${stmt.falseBlock.id}" ${edgeAttrs(falseDummyUpId)} taillabel="false" fontcolor="red"]
-            |$falseDummyUpId -> $firstFalseNodeId:n [id="${stmt.id}@${stmt.falseBlock.id}" ${edgeAttrs(firstFalseNodeId)}]
+            |${stmt.id}:w -> $falseDummyUpId [id="${stmt.id}@${stmt.falseBlock.id}" ${edgeAttrs(
+             falseDummyUpId
+           )} taillabel="false" fontcolor="red"]
+            |$falseDummyUpId -> $firstFalseNodeId:n [id="${stmt.id}@${stmt.falseBlock.id}" ${edgeAttrs(
+             firstFalseNodeId
+           )}]
             |
             |$falseEdgeDOTs
             |
@@ -463,18 +472,22 @@ class FlowchartPresenter(
         }
 
         s"""|## WHILE-TRUE
-            |${stmt.id}:e -> $trueDummyUpId [id="${stmt.id}@${stmt.body.id}" ${edgeAttrs(trueDummyUpId)} taillabel="true" fontcolor="forestgreen"]
+            |${stmt.id}:e -> $trueDummyUpId [id="${stmt.id}@${stmt.body.id}" ${edgeAttrs(
+             trueDummyUpId
+           )} taillabel="true" fontcolor="forestgreen"]
             |$trueDummyUpId -> $firstTrueNodeId:n [id="${stmt.id}@${stmt.body.id}" ${edgeAttrs(firstTrueNodeId)}]
             |
             |$trueEdgeDOTs
             |
             |$trueDummyDownId -> $trueDummyDownLeftId [id="${lastTrueNodeId}@${stmt.body.id}" ${edgeAttrs(
-          trueDummyDownLeftId
-        )}]
+             trueDummyDownLeftId
+           )}]
             |$trueDummyDownLeftId -> ${stmt.id}:s [id="${lastTrueNodeId}@${stmt.body.id}" ${edgeAttrs(stmt.id)}]
             |
             |## WHILE-FALSE
-            |${stmt.id}:w -> $falseDummyUpId [id="${stmt.id}@${blockId}" ${edgeAttrs(falseDummyUpId)} taillabel="false" fontcolor="red"]
+            |${stmt.id}:w -> $falseDummyUpId [id="${stmt.id}@${blockId}" ${edgeAttrs(
+             falseDummyUpId
+           )} taillabel="false" fontcolor="red"]
             |$falseDummyUpId -> $falseDummyDownId [id="${stmt.id}@${blockId}" ${edgeAttrs(falseDummyDownId)}]
             |$falseDummyDownId -> $endDummyDownId [id="${stmt.id}@${blockId}" ${edgeAttrs(endDummyDownId)}]
             |$endDummyDownId -> $nextStmtId [id="${stmt.id}@${blockId}" ${edgeAttrs(nextStmtId)}]
@@ -506,12 +519,16 @@ class FlowchartPresenter(
             |$trueEdgeDOTs
             |
             |## DOWHILE-TRUE
-            |${stmt.id}:e -> $trueDummyDownId [${edgeAttrs(trueDummyDownId)} taillabel="true" fontcolor="forestgreen" labelangle=90]
+            |${stmt.id}:e -> $trueDummyDownId [${edgeAttrs(
+             trueDummyDownId
+           )} taillabel="true" fontcolor="forestgreen" labelangle=90]
             |$trueDummyDownId -> $trueDummyUpId [${edgeAttrs(trueDummyUpId)}]
             |$trueDummyUpId -> ${doWhileEndId}:e [ ${edgeAttrs(stmt.id)}]
             |
             |## DOWHILE-FALSE
-            |${stmt.id}:s -> $nextStmtId [id="${stmt.id}@${blockId}" ${edgeAttrs(nextStmtId)} taillabel="false" fontcolor="red" labeldistance=2 labelangle=-80]
+            |${stmt.id}:s -> $nextStmtId [id="${stmt.id}@${blockId}" ${edgeAttrs(
+             nextStmtId
+           )} taillabel="false" fontcolor="red" labeldistance=2 labelangle=-80]
             |
             |""".stripMargin
 
@@ -539,18 +556,22 @@ class FlowchartPresenter(
         }
 
         s"""|## FORLOOP-TRUE
-            |${stmt.id}:e -> $trueDummyUpId [id="${stmt.id}@${stmt.body.id}" ${edgeAttrs(trueDummyUpId)} taillabel="true" fontcolor="forestgreen"]
+            |${stmt.id}:e -> $trueDummyUpId [id="${stmt.id}@${stmt.body.id}" ${edgeAttrs(
+             trueDummyUpId
+           )} taillabel="true" fontcolor="forestgreen"]
             |$trueDummyUpId -> $firstTrueNodeId:n [id="${stmt.id}@${stmt.body.id}" ${edgeAttrs(firstTrueNodeId)}]
             |
             |$trueEdgeDOTs
             |
             |$trueDummyDownId -> $trueDummyDownLeftId [id="${lastTrueNodeId}@${stmt.body.id}" ${edgeAttrs(
-          trueDummyDownLeftId
-        )}]
+             trueDummyDownLeftId
+           )}]
             |$trueDummyDownLeftId -> ${stmt.id}:s [id="${lastTrueNodeId}@${stmt.body.id}" ${edgeAttrs(stmt.id)}]
             |
             |## FORLOOP-FALSE
-            |${stmt.id}:w -> $falseDummyUpId [id="${stmt.id}@${blockId}" ${edgeAttrs(falseDummyUpId)} taillabel="false" fontcolor="red"]
+            |${stmt.id}:w -> $falseDummyUpId [id="${stmt.id}@${blockId}" ${edgeAttrs(
+             falseDummyUpId
+           )} taillabel="false" fontcolor="red"]
             |$falseDummyUpId -> $falseDummyDownId [id="${stmt.id}@${blockId}" ${edgeAttrs(falseDummyDownId)}]
             |$falseDummyDownId -> $endDummyDownId [id="${stmt.id}@${blockId}" ${edgeAttrs(endDummyDownId)}]
             |$endDummyDownId -> $nextStmtId [id="${stmt.id}@${blockId}" ${edgeAttrs(nextStmtId)}]

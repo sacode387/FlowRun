@@ -67,7 +67,6 @@ class CSharpGenerator(val programAst: Program) extends CodeGenerator {
     import Statement._
     stmt match {
       case _: Begin => // noop
-
       case Declare(id, name, tpe, maybeInitValue) =>
         val key = SymbolKey(name, Symbol.Kind.Variable, id)
         symTab.add(id, key, tpe, None)
@@ -146,7 +145,7 @@ class CSharpGenerator(val programAst: Program) extends CodeGenerator {
       case Abs           => s"Math.abs(${argOpt(0)})"
       case Floor         => s"Math.floor(${argOpt(0)})"
       case Ceil          => s"Math.ceil(${argOpt(0)})"
-      case RandomInteger => s"Math.abs(${argOpt(0)})" //TODO
+      case RandomInteger => s"Math.abs(${argOpt(0)})" // TODO
       case Sin           => s"Math.sin(${argOpt(0)})"
       case Cos           => s"Math.cos(${argOpt(0)})"
       case Tan           => s"Math.tan(${argOpt(0)})"

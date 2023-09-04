@@ -61,7 +61,6 @@ class KotlinGenerator(val programAst: Program) extends CodeGenerator {
     import Statement._
     stmt match
       case _: Begin => // noop
-
       case Declare(id, name, tpe, maybeInitValue) =>
         val key = SymbolKey(name, Symbol.Kind.Variable, id)
         symTab.add(id, key, tpe, None)
@@ -138,7 +137,7 @@ class KotlinGenerator(val programAst: Program) extends CodeGenerator {
       case Abs           => s"abs(${argOpt(0)})"
       case Floor         => s"floor(${argOpt(0)})"
       case Ceil          => s"ceil(${argOpt(0)})"
-      case RandomInteger => s"abs(${argOpt(0)})" //TODO
+      case RandomInteger => s"abs(${argOpt(0)})" // TODO
       case Sin           => s"sin(${argOpt(0)})"
       case Cos           => s"cos(${argOpt(0)})"
       case Tan           => s"tan(${argOpt(0)})"
