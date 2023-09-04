@@ -139,6 +139,7 @@ class RubyGenerator(val programAst: Program) extends CodeGenerator {
       case Length        => s"${argOpt(0)}.length"
       case CharAt        => s"${argOpt(0)}.charAt(${argOpt(1)})"
       case RealToInteger => s"${argOpt(0)}.toInt"
+      case StringToInteger => s"${argOpt(0)}.to_i"
     }
   }
 
