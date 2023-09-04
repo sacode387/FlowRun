@@ -574,12 +574,12 @@ final class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[Flow
           case n: RealVal => Future(IntegerVal(n.value.toInt))
           case _          => throw EvalException(s"Expected a Real argument in function ${func.name}", id)
 
-          // conversions
+        // conversions
       case func @ StringToInteger =>
         validateArgsNumber(id, func.name, 1, args.size)
         args.head match
           case n: StringVal => Future(IntegerVal(n.value.toInt))
-          case _          => throw EvalException(s"Expected a String argument in function ${func.name}", id)
+          case _            => throw EvalException(s"Expected a String argument in function ${func.name}", id)
     }
 
   private def validateArgsNumber(id: String, funName: String, expected: Int, got: Int): Unit =

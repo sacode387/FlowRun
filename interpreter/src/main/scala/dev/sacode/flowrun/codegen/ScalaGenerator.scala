@@ -143,19 +143,19 @@ class ScalaGenerator(val programAst: Program) extends CodeGenerator {
   override def predefFun(name: String, genArgs: List[String]): String = {
     def argOpt(idx: Int) = genArgs.lift(idx).getOrElse("")
     PredefinedFunction.withName(name).get match {
-      case Abs           => s"${argOpt(0)}.abs"
-      case Floor         => s"${argOpt(0)}.floor"
-      case Ceil          => s"${argOpt(0)}.ceil"
-      case RandomInteger => s"scala.util.Random(${argOpt(0)})"
-      case Sin           => s"Math.sin(${argOpt(0)})"
-      case Cos           => s"Math.cos(${argOpt(0)})"
-      case Tan           => s"Math.tan(${argOpt(0)})"
-      case Ln            => s"Math.log(${argOpt(0)})"
-      case Log10         => s"Math.log10(${argOpt(0)})"
-      case Log2          => s"Math.log10(${argOpt(0)})/Math.log10(2)"
-      case Length        => s"${argOpt(0)}.length"
-      case CharAt        => s"${argOpt(0)}.charAt(${argOpt(1)})"
-      case RealToInteger => s"${argOpt(0)}.toInt"
+      case Abs             => s"${argOpt(0)}.abs"
+      case Floor           => s"${argOpt(0)}.floor"
+      case Ceil            => s"${argOpt(0)}.ceil"
+      case RandomInteger   => s"scala.util.Random(${argOpt(0)})"
+      case Sin             => s"Math.sin(${argOpt(0)})"
+      case Cos             => s"Math.cos(${argOpt(0)})"
+      case Tan             => s"Math.tan(${argOpt(0)})"
+      case Ln              => s"Math.log(${argOpt(0)})"
+      case Log10           => s"Math.log10(${argOpt(0)})"
+      case Log2            => s"Math.log10(${argOpt(0)})/Math.log10(2)"
+      case Length          => s"${argOpt(0)}.length"
+      case CharAt          => s"${argOpt(0)}.charAt(${argOpt(1)})"
+      case RealToInteger   => s"${argOpt(0)}.toInt"
       case StringToInteger => s"${argOpt(0)}.toInt"
     }
   }

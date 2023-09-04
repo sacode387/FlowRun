@@ -137,19 +137,19 @@ class PythonGenerator(val programAst: Program) extends CodeGenerator {
   override def predefFun(name: String, genArgs: List[String]): String = {
     def argOpt(idx: Int) = genArgs.lift(idx).getOrElse("")
     PredefinedFunction.withName(name).get match {
-      case Abs           => s"math.fabs(${argOpt(0)})"
-      case Floor         => s"math.floor(${argOpt(0)})"
-      case Ceil          => s"math.ceil(${argOpt(0)})"
-      case RandomInteger => s"randrange(${argOpt(0)})"
-      case Sin           => s"math.sin(${argOpt(0)})"
-      case Cos           => s"math.cos(${argOpt(0)})"
-      case Tan           => s"math.tan(${argOpt(0)})"
-      case Ln            => s"math.log(${argOpt(0)})"
-      case Log10         => s"math.log10(${argOpt(0)})"
-      case Log2          => s"math.log2(${argOpt(0)})"
-      case Length        => s"len(${argOpt(0)})"
-      case CharAt        => s"${argOpt(0)}[${argOpt(1)}]"
-      case RealToInteger => s"int(${argOpt(0)})"
+      case Abs             => s"math.fabs(${argOpt(0)})"
+      case Floor           => s"math.floor(${argOpt(0)})"
+      case Ceil            => s"math.ceil(${argOpt(0)})"
+      case RandomInteger   => s"randrange(${argOpt(0)})"
+      case Sin             => s"math.sin(${argOpt(0)})"
+      case Cos             => s"math.cos(${argOpt(0)})"
+      case Tan             => s"math.tan(${argOpt(0)})"
+      case Ln              => s"math.log(${argOpt(0)})"
+      case Log10           => s"math.log10(${argOpt(0)})"
+      case Log2            => s"math.log2(${argOpt(0)})"
+      case Length          => s"len(${argOpt(0)})"
+      case CharAt          => s"${argOpt(0)}[${argOpt(1)}]"
+      case RealToInteger   => s"int(${argOpt(0)})"
       case StringToInteger => s"int(${argOpt(0)})"
     }
   }
