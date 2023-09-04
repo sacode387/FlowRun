@@ -26,14 +26,14 @@ import dev.sacode.flowrun.toastify.*
 import dev.sacode.flowrun.eval.Interpreter.State
 import dev.sacode.flowrun.edit.CodeArea
 
-@JSExportTopLevel("FlowRun")
-class FlowRun(
+@JSExportTopLevel("FlowRunEditor")
+class FlowRunEditor(
     mountElem: dom.html.Element,
     colorScheme: ColorScheme = null,
     editable: Boolean = true,
     programJson: String = null,
-    mountCallback: js.Function1[FlowRun, Unit] = null,
-    changeCallback: js.Function1[FlowRun, Unit] = null
+    mountCallback: js.Function1[FlowRunEditor, Unit] = null,
+    changeCallback: js.Function1[FlowRunEditor, Unit] = null
 ) {
 
   // resolve initial program
@@ -427,24 +427,4 @@ class FlowRun(
 
 }
 
-object FlowRun:
 
-  enum Event:
-    case EvalSuccess
-    case EvalError(nodeId: String, msg: String, funId: String)
-    case EvalOutput(msg: String, newline: Boolean)
-    case EvalInput(nodeId: String, name: String, prompt: Option[String])
-    case FunctionEntered(fun: Function)
-    case SyntaxSuccess
-    case StmtDeleted
-    case StmtAdded
-    case StmtUpdated(nodeId: String)
-    case SyntaxError(msg: String)
-    case SymbolTableUpdated
-    case FunctionUpdated
-    case FunctionSelected
-    case StmtSelected
-    case Deselected
-    case ConfigChanged
-    case SvgMounted
-end FlowRun

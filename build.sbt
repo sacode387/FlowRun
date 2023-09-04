@@ -29,13 +29,36 @@ inThisBuild(
   )
 )
 
-lazy val core = (project in file("core"))
+lazy val editor = (project in file("editor"))
   .settings(
-    name := "FlowRun",
+    name := "flowrun-editor",
+    libraryDependencies ++= Seq(
+      "com.lihaoyi" %%% "scalatags" % "0.12.0",
+      "com.lihaoyi" %%% "utest" % "0.8.1" % Test,
+      "com.lihaoyi" %%% "pprint" % "0.8.1" % Test
+    ),
+    scalacOptions ++= Seq(
+      "-Xmax-inlines",
+      "128",
+      "-Ysafe-init",
+      "-deprecation",
+      "-Yretain-trees"
+    ),
+
+    // tests
+    testFrameworks += new TestFramework("utest.runner.Framework"),
+    Test / parallelExecution := false,
+    Test / jsEnv := new org.scalajs.jsenv.jsdomnodejs.JSDOMNodeJSEnv()
+  )
+  .dependsOn(interpreter)
+  .enablePlugins(ScalaJSPlugin)
+
+lazy val interpreter = (project in file("interpreter"))
+  .settings(
+    name := "flowrun-interpreter",
     libraryDependencies ++= Seq(
       ("org.scala-js" %%% "scalajs-java-securerandom" % "1.0.0").cross(CrossVersion.for3Use2_13),
       "io.github.cquiroz" %%% "scala-java-time" % "2.5.0",
-      "com.lihaoyi" %%% "scalatags" % "0.12.0",
       "com.outr" %%% "reactify" % "4.0.8",
       "ba.sake" %%% "tupson" % "0.7.0",
       "com.lihaoyi" %%% "utest" % "0.8.1" % Test,
@@ -48,12 +71,10 @@ lazy val core = (project in file("core"))
       "-deprecation",
       "-Yretain-trees"
     ),
-    // scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.ESModule) },
 
     // tests
     testFrameworks += new TestFramework("utest.runner.Framework"),
     Test / parallelExecution := false,
-    // Test / scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.NoModule) },
     Test / jsEnv := new org.scalajs.jsenv.jsdomnodejs.JSDOMNodeJSEnv()
   )
   .enablePlugins(ScalaJSPlugin)
@@ -68,5 +89,5 @@ lazy val demo = (project in file("demo"))
     Compile / fastLinkJS / scalaJSLinkerOutputDirectory :=
       (Assets / WebKeys.public).value / "scripts"
   )
-  .dependsOn(core)
+  .dependsOn(editor)
   .enablePlugins(ScalaJSPlugin, SbtWeb)
