@@ -445,7 +445,7 @@ final class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[Flow
         futureArgs.flatMap { args =>
           PredefinedFunction.withName(name) match
             case Some(f) =>
-              handlePredefinedFunction(id, f, args)
+              evalPredefinedFunction(id, f, args)
             case None =>
               val funSym = symTab.getSymbolFun(id, name)
               val fun = programModel.ast.allFunctions.find(_.name == name).get
@@ -461,11 +461,21 @@ final class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[Flow
               interpretFunction(fun, argsWithTypes)
         }
 
-  // adapted https://stackoverflow.com/a/46619347/4496364
+  // TODO if program RUNNING TOOOOOOO LONG
+  /** When program PAUSEs for input or in debug mode, we need to asynchronously wait for a continue condition to happen.
+    *
+    * This can be on input submission:
+    *   - state is set to PAUSED in `case Input` evaluation
+    *   - in setValue (called by editor) state is set to State.RUNNING so we can continue
+    *
+    * Adapted from https://stackoverflow.com/a/46619347/4496364
+    */
   private def waitForContinue(): Future[Unit] = {
-    // TODO if program running TOOOOOOO LONG
     val p = Promise[Unit]()
-    val pingHandle: js.timers.SetIntervalHandle = js.timers.setInterval(10) {
+    // poll every 50ms to check the state of program
+    // - if RUNNING set as success, continue evaluating the program
+    // - if FINISHED_STOPPED set as failed
+    val pingHandle: js.timers.SetIntervalHandle = js.timers.setInterval(50) {
       if !p.isCompleted then {
         if state == State.RUNNING then p.success({})
         else if state == State.FINISHED_STOPPED then p.failure(StoppedException("Program stopped"))
@@ -492,7 +502,7 @@ final class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[Flow
       a.flatMap(acc => f(acc, next))
     }
 
-  private def handlePredefinedFunction(id: String, f: PredefinedFunction, args: Seq[RunVal]): Future[RunVal] =
+  def evalPredefinedFunction(id: String, f: PredefinedFunction, args: Seq[RunVal]): Future[RunVal] =
     import PredefinedFunction.*
     f match {
       // numbers
@@ -574,7 +584,7 @@ final class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[Flow
           case n: RealVal => Future(IntegerVal(n.value.toInt))
           case _          => throw EvalException(s"Expected a Real argument in function ${func.name}", id)
 
-        // conversions
+      // conversions
       case func @ StringToInteger =>
         validateArgsNumber(id, func.name, 1, args.size)
         args.head match
@@ -589,4 +599,9 @@ final class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[Flow
 
 object Interpreter:
   enum State:
-    case INITIALIZED, RUNNING, PAUSED, FINISHED_SUCCESS, FINISHED_STOPPED, FINISHED_FAILED
+    case INITIALIZED
+    case RUNNING
+    case PAUSED
+    case FINISHED_SUCCESS
+    case FINISHED_STOPPED // stopped manually in editor
+    case FINISHED_FAILED
