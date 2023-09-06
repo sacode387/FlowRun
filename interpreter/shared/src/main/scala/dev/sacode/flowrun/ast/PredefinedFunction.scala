@@ -1,6 +1,12 @@
 package dev.sacode.flowrun.ast
 
+private var seen = Set.empty[String]
+
 enum PredefinedFunction(val name: String) {
+
+  if seen(name) then throw RuntimeException(s"Duplicate PredefinedFunction name: $name")
+  seen += name
+
   // numbers
   case Abs extends PredefinedFunction("abs")
   case Floor extends PredefinedFunction("floor")
@@ -12,6 +18,8 @@ enum PredefinedFunction(val name: String) {
   case Ln extends PredefinedFunction("ln")
   case Log10 extends PredefinedFunction("log")
   case Log2 extends PredefinedFunction("log2")
+  case Sqrt extends PredefinedFunction("sqrt")
+  case Pow extends PredefinedFunction("pow")
   // strings
   case Length extends PredefinedFunction("length")
   case CharAt extends PredefinedFunction("charAt")
@@ -20,7 +28,6 @@ enum PredefinedFunction(val name: String) {
   case StringToInteger extends PredefinedFunction("string2int")
 }
 
-object PredefinedFunction {
+object PredefinedFunction:
   def withName(name: String): Option[PredefinedFunction] =
     PredefinedFunction.values.find(_.name == name)
-}

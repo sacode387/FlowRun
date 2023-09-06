@@ -9,8 +9,7 @@ inThisBuild(
     resolvers +=
       "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots",
     organization := "dev.sacode",
-    licenses := List(
-      "Apache-2.0" -> url("http://www.apache.org/licenses/LICENSE-2.0")
+    licenses := List(      "Apache-2.0" -> url("http://www.apache.org/licenses/LICENSE-2.0")
     ),
     scmInfo := Some(
       ScmInfo(
@@ -50,12 +49,14 @@ lazy val editor = (project in file("editor"))
     Test / parallelExecution := false,
     Test / jsEnv := new org.scalajs.jsenv.jsdomnodejs.JSDOMNodeJSEnv()
   )
-  .dependsOn(interpreter)
+  .dependsOn(interpreter.js)
   .enablePlugins(ScalaJSPlugin)
 
-lazy val interpreter = (project in file("interpreter"))
+lazy val interpreter = crossProject(JVMPlatform, JSPlatform)
+  .in(file("interpreter"))
   .settings(
     name := "flowrun-interpreter",
+    publish / skip := false,
     libraryDependencies ++= Seq(
       ("org.scala-js" %%% "scalajs-java-securerandom" % "1.0.0").cross(CrossVersion.for3Use2_13),
       "io.github.cquiroz" %%% "scala-java-time" % "2.5.0",

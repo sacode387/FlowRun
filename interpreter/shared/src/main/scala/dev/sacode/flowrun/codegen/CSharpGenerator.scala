@@ -8,18 +8,14 @@ import dev.sacode.flowrun.eval.SymbolTable
 import dev.sacode.flowrun.eval.SymbolKey
 import dev.sacode.flowrun.eval.Symbol
 
-class JavaGenerator(val programAst: Program) extends CodeGenerator {
+class CSharpGenerator(val programAst: Program) extends CodeGenerator {
 
   def generate: Try[CodeGenRes] = Try {
 
-    if programAst.hasInputs then
-      addLine("import java.util.*;", programAst.main.id)
-      addEmptyLine()
-
-    addLine(s"public class ${programAst.name.toIdentifier} {", programAst.main.id)
+    addLine(s"using System;")
+    addLine(s"class ${programAst.name.toIdentifier} {", programAst.main.id)
 
     incrIndent()
-    if programAst.hasInputs then addLine("static Scanner scanner = new Scanner(System.in);", "")
     genMain()
     programAst.functions.foreach(genFunction)
     decrIndent()
@@ -35,7 +31,7 @@ class JavaGenerator(val programAst: Program) extends CodeGenerator {
 
     addEmptyLine()
     addLine(
-      "public static void main(String args[]) {",
+      "static void Main() {",
       function.statements.head.id
     )
 
@@ -43,7 +39,7 @@ class JavaGenerator(val programAst: Program) extends CodeGenerator {
     function.statements.foreach(genStatement)
     decrIndent()
 
-    addLine("}", function.statements.last.id)
+    addLine("}", function.statements.head.id)
 
     symTab.exitScope()
   }
@@ -54,7 +50,7 @@ class JavaGenerator(val programAst: Program) extends CodeGenerator {
     val params = function.parameters.map(p => s"${genType(p.tpe)} ${p.name}").mkString(", ")
     addEmptyLine()
     addLine(
-      s"public static ${genType(function.tpe)} ${function.name}($params) {",
+      s"static ${genType(function.tpe)} ${function.name}($params) {",
       function.statements.head.id
     )
 
@@ -88,7 +84,7 @@ class JavaGenerator(val programAst: Program) extends CodeGenerator {
 
       case Input(id, name, promptOpt) =>
         val prompt = promptOpt.getOrElse(s"Please enter $name: ")
-        addLine(s"""System.out.print("$prompt");""", id)
+        addLine(s"""Console.Write("$prompt");""", id)
 
         val symOpt = Try(symTab.getSymbolVar("", name)).toOption
         val readFun = readFunction(symOpt.map(_.tpe))
@@ -97,8 +93,8 @@ class JavaGenerator(val programAst: Program) extends CodeGenerator {
       case Output(id, value, newline) =>
         val genValue = parseGenExpr(value)
         val text =
-          if newline then s"System.out.println($genValue);"
-          else s"System.out.print($genValue);"
+          if newline then s"Console.WriteLine($genValue);"
+          else s"Console.Write($genValue);"
         addLine(text, id)
 
       case Block(_, statements) =>
@@ -146,21 +142,22 @@ class JavaGenerator(val programAst: Program) extends CodeGenerator {
   override def predefFun(name: String, genArgs: List[String]): String = {
     def argOpt(idx: Int) = genArgs.lift(idx).getOrElse("")
     PredefinedFunction.withName(name).get match {
-      case Abs           => s"Math.abs(${argOpt(0)})"
-      case Floor         => s"Math.floor(${argOpt(0)})"
-      case Ceil          => s"Math.ceil(${argOpt(0)})"
-      case RandomInteger => s"Math.abs(${argOpt(0)})" // TODO
-      case Sin           => s"Math.sin(${argOpt(0)})"
-      case Cos           => s"Math.cos(${argOpt(0)})"
-      case Tan           => s"Math.tan(${argOpt(0)})"
-      case Ln            => s"Math.log(${argOpt(0)})"
-      case Log10         => s"Math.log10(${argOpt(0)})"
-      case Log2          => s"Math.log10(${argOpt(0)})/Math.log10(2)"
-      case Length        => s"${argOpt(0)}.length()"
-      case CharAt        => s"${argOpt(0)}.charAt(${argOpt(1)})"
-      case RealToInteger => s"(int)${argOpt(0)}"
-      case StringToInteger =>
-        s"""Integer.parseInt(${argOpt(0)})"""
+      case Abs             => s"Math.abs(${argOpt(0)})"
+      case Floor           => s"Math.floor(${argOpt(0)})"
+      case Ceil            => s"Math.ceil(${argOpt(0)})"
+      case RandomInteger   => s"Math.abs(${argOpt(0)})" // TODO
+      case Sin             => s"Math.sin(${argOpt(0)})"
+      case Cos             => s"Math.cos(${argOpt(0)})"
+      case Tan             => s"Math.tan(${argOpt(0)})"
+      case Ln              => s"Math.log(${argOpt(0)})"
+      case Log10           => s"Math.log10(${argOpt(0)})"
+      case Log2            => s"Math.log10(${argOpt(0)})/Math.log10(2)"
+      case Sqrt            => s"Math.sqrt(${argOpt(0)})"
+      case Pow             => s"Math.pow(${argOpt(0)}, ${argOpt(1)})"
+      case Length          => s"${argOpt(0)}.length()"
+      case CharAt          => s"${argOpt(0)}.charAt(${argOpt(1)})"
+      case RealToInteger   => s"(int)${argOpt(0)}"
+      case StringToInteger => s"Convert.ToInt32(${argOpt(0)})"
     }
   }
 
@@ -174,17 +171,17 @@ class JavaGenerator(val programAst: Program) extends CodeGenerator {
       case Void    => "void"
       case Integer => "int"
       case Real    => "double"
-      case String  => "String"
-      case Boolean => "boolean"
+      case String  => "string"
+      case Boolean => "bool"
 
   /* OTHER */
   private def readFunction(tpeOpt: Option[Type]): String = tpeOpt match
-    case None => "scanner.nextLine()"
+    case None => "Console.ReadLine()"
     case Some(tpe) =>
       tpe match
-        case Type.Integer => "scanner.nextInt()"
-        case Type.Real    => "scanner.nextDouble()"
-        case Type.Boolean => "scanner.nextBoolean()"
-        case _            => "scanner.nextLine()"
+        case Type.Integer => "Convert.ToInt32(Console.ReadLine())"
+        case Type.Real    => "Convert.ToDouble(Console.ReadLine())"
+        case Type.Boolean => "Convert.ToBoolean(Console.ReadLine())"
+        case _            => "Console.ReadLine()"
 
 }

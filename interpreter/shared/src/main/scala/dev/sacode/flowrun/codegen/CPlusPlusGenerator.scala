@@ -8,16 +8,16 @@ import dev.sacode.flowrun.eval.SymbolTable
 import dev.sacode.flowrun.eval.SymbolKey
 import dev.sacode.flowrun.eval.Symbol
 
-class PhpGenerator(val programAst: Program) extends CodeGenerator {
-
-  override def identPrefix: String = "$"
+class CPlusPlusGenerator(val programAst: Program) extends CodeGenerator {
 
   def generate: Try[CodeGenRes] = Try {
 
-    addLine("<?php")
+    addLine(s"#include <iostream>")
+    addLine(s"#include <cmath>")
+    addLine(s"using namespace std;")
+
     genMain()
     programAst.functions.foreach(genFunction)
-    addLine("?>")
 
     CodeGenRes(lines.toList, stmtLineNums.toMap)
   }
@@ -26,7 +26,18 @@ class PhpGenerator(val programAst: Program) extends CodeGenerator {
     val function = programAst.main
     symTab.enterScope(function.id, function.name)
 
+    addEmptyLine()
+    addLine(
+      "int main() {",
+      function.statements.head.id
+    )
+
+    incrIndent()
     function.statements.foreach(genStatement)
+    addLine("return 0;")
+    decrIndent()
+
+    addLine("}", function.statements.head.id)
 
     symTab.exitScope()
   }
@@ -34,10 +45,10 @@ class PhpGenerator(val programAst: Program) extends CodeGenerator {
   private def genFunction(function: Function): Unit = {
     symTab.enterScope(function.id, function.name)
 
-    val params = function.parameters.map(p => s"$$${p.name}").mkString(", ")
+    val params = function.parameters.map(p => s"${genType(p.tpe)} ${p.name}").mkString(", ")
     addEmptyLine()
     addLine(
-      s"function ${function.name}($params) {",
+      s"${genType(function.tpe)} ${function.name}($params) {",
       function.statements.head.id
     )
 
@@ -50,35 +61,35 @@ class PhpGenerator(val programAst: Program) extends CodeGenerator {
     symTab.exitScope()
   }
 
-  private def genStatement(stmt: Statement): Unit =
+  private def genStatement(stmt: Statement): Unit = {
     import Statement._
-    stmt match
+    stmt match {
       case _: Begin => // noop
       case Declare(id, name, tpe, maybeInitValue) =>
         val key = SymbolKey(name, Symbol.Kind.Variable, id)
         symTab.add(id, key, tpe, None)
         val initValue = maybeInitValue.getOrElse(defaultValue(tpe))
-        val genValue = parseGenExpr(initValue)
-        addLine(s"$$$name = $genValue;", id)
+        val initValueExpr = parseGenExpr(initValue)
+        addLine(s"${genType(tpe)} $name = $initValueExpr;", id)
 
       case Assign(id, name, value) =>
         val genValue = parseGenExpr(value)
-        addLine(s"$$$name = $genValue;", id)
+        addLine(s"$name = $genValue;", id)
 
       case Call(id, value) =>
         val genValue = parseGenExpr(value)
         addLine(s"$genValue;", id)
 
       case Input(id, name, promptOpt) =>
-        val prompt = promptOpt.getOrElse(s""" "Please enter $name: " """.trim)
-        val symOpt = Try(symTab.getSymbolVar("", name)).toOption
-        addLine(s"$$$name = readline($prompt);", id)
+        val prompt = promptOpt.getOrElse(s"Please enter $name: ")
+        addLine(s"""cout << "$prompt";""", id)
+        addLine(s"cin >> $name;", id)
 
       case Output(id, value, newline) =>
         val genValue = parseGenExpr(value)
         val text =
-          if newline then s"print($genValue);"
-          else s"print($genValue);"
+          if newline then s"cout << $genValue << endl;"
+          else s"cout << $genValue;"
         addLine(text, id)
 
       case Block(_, statements) =>
@@ -116,9 +127,11 @@ class PhpGenerator(val programAst: Program) extends CodeGenerator {
         val genStart = parseGenExpr(start)
         val genIncr = parseGenExpr(incr)
         val genEnd = parseGenExpr(end)
-        addLine(s"for (let $varName = $genStart; i <= $genEnd; i += $genIncr) {", id)
+        addLine(s"for (int $varName = $genStart; i <= $genEnd; i += $genIncr) {", id)
         genStatement(block)
         addLine("}", id)
+    }
+  }
 
   import PredefinedFunction.*
   override def predefFun(name: String, genArgs: List[String]): String = {
@@ -127,22 +140,34 @@ class PhpGenerator(val programAst: Program) extends CodeGenerator {
       case Abs           => s"abs(${argOpt(0)})"
       case Floor         => s"floor(${argOpt(0)})"
       case Ceil          => s"ceil(${argOpt(0)})"
-      case RandomInteger => s"rand(0,${argOpt(0)})"
+      case RandomInteger => s"abs(${argOpt(0)})" // TODO
       case Sin           => s"sin(${argOpt(0)})"
       case Cos           => s"cos(${argOpt(0)})"
       case Tan           => s"tan(${argOpt(0)})"
       case Ln            => s"log(${argOpt(0)})"
       case Log10         => s"log10(${argOpt(0)})"
-      case Log2          => s"log2(${argOpt(0)})"
-      case Length        => s"strlen(${argOpt(0)})"
-      case CharAt        => s"${argOpt(0)}[${argOpt(1)}]"
-      case RealToInteger => argOpt(0) // ??
+      case Log2          => s"log10(${argOpt(0)})/log10(2)"
+      case Sqrt          => s"Math.sqrt(${argOpt(0)})"
+      case Pow           => s"Math.pow(${argOpt(0)}, ${argOpt(1)})"
+      case Length        => s"${argOpt(0)}.length()"
+      case CharAt        => s"${argOpt(0)}.charAt(${argOpt(1)})"
+      case RealToInteger => s"(int)${argOpt(0)}"
       case StringToInteger =>
-        s""" intval(${argOpt(0)}) """.trim
+        s"""try { Convert.ToInt32(${argOpt(0)}) } catch (FormatException) { 0 }"""
     }
   }
 
   override def funCall(name: String, genArgs: List[String]): String =
     s""" $name(${genArgs.mkString(", ")}) """.trim
+
+  /* TYPE */
+  private def genType(tpe: Expression.Type): String =
+    import Expression.Type, Type._
+    tpe match
+      case Void    => "void"
+      case Integer => "int"
+      case Real    => "double"
+      case String  => "string"
+      case Boolean => "bool"
 
 }

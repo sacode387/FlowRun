@@ -7,13 +7,25 @@ import dev.sacode.flowrun.ast.*, Expression.Type
 import dev.sacode.flowrun.eval.SymbolTable
 import dev.sacode.flowrun.eval.SymbolKey
 import dev.sacode.flowrun.eval.Symbol
+import dev.sacode.flowrun.parse.Token
 
-class RubyGenerator(val programAst: Program) extends CodeGenerator {
+class PythonGenerator(val programAst: Program) extends CodeGenerator {
+
+  override def genToken(token: Token): String = token.tpe match {
+    case Token.Type.True  => "True"
+    case Token.Type.False => "False"
+    case Token.Type.Not   => "not"
+    case Token.Type.And   => "and"
+    case Token.Type.Or    => "or"
+    case _                => token.text
+  }
 
   def generate: Try[CodeGenRes] = Try {
+    // TODO optionally import
+    addLine("import math", "")
+    addLine("from random import randrange", "")
 
     programAst.functions.foreach(genFunction)
-
     addEmptyLine()
     genMain()
 
@@ -32,19 +44,17 @@ class RubyGenerator(val programAst: Program) extends CodeGenerator {
   private def genFunction(function: Function): Unit = {
     symTab.enterScope(function.id, function.name)
 
-    // we put an underscore to avoid naming args..
-    val params = function.parameters.map(_.name).mkString(", ")
+    val params = function.parameters.map(p => s"${p.name}").mkString(", ")
     addEmptyLine()
     addLine(
-      s"def ${function.name}($params)",
+      s"def ${function.name}($params):",
       function.statements.head.id
     )
 
     incrIndent()
     function.statements.foreach(genStatement)
+    if function.statements.length == 2 && function.tpe == Type.Void then addLine("pass", function.statements.head.id)
     decrIndent()
-
-    addLine("end", function.id)
 
     symTab.exitScope()
   }
@@ -57,8 +67,8 @@ class RubyGenerator(val programAst: Program) extends CodeGenerator {
         val key = SymbolKey(name, Symbol.Kind.Variable, id)
         symTab.add(id, key, tpe, None)
         val initValue = maybeInitValue.getOrElse(defaultValue(tpe))
-        val initValueExpr = parseGenExpr(initValue)
-        addLine(s"$name = $initValueExpr", id)
+        val genValue = parseGenExpr(initValue)
+        addLine(s"$name = $genValue", id)
 
       case Assign(id, name, value) =>
         val genValue = parseGenExpr(value)
@@ -66,21 +76,18 @@ class RubyGenerator(val programAst: Program) extends CodeGenerator {
 
       case Call(id, value) =>
         val genValue = parseGenExpr(value)
-        addLine(genValue, id)
+        addLine(s"$genValue", id)
 
       case Input(id, name, promptOpt) =>
-        val prompt = promptOpt.getOrElse(s"Please enter $name: ")
-        addLine(s"""print("$prompt")""", id)
-
+        val prompt = promptOpt.getOrElse(s"Please enter $name: ".trim)
         val symOpt = Try(symTab.getSymbolVar("", name)).toOption
-        val readFun = readFunction(symOpt.map(_.tpe))
-        addLine(s"$name = $readFun", id)
+        addLine(s"""$name = input("$prompt")""", id)
 
       case Output(id, value, newline) =>
         val genValue = parseGenExpr(value)
         val text =
-          if newline then s"puts($genValue)"
-          else s"""print($genValue)"""
+          if newline then s"""print($genValue)"""
+          else s"""print($genValue, end = '')"""
         addLine(text, id)
 
       case Block(_, statements) =>
@@ -96,57 +103,60 @@ class RubyGenerator(val programAst: Program) extends CodeGenerator {
 
       case If(id, condition, trueBlock, falseBlock) =>
         val genCond = parseGenExpr(condition)
-        addLine(s"if $genCond then", id)
+        addLine(s"if $genCond:", id)
         genStatement(trueBlock)
-        addLine("else", id)
+        if trueBlock.statements.isEmpty then addLine("  pass", id)
+        addLine("else:", id)
         genStatement(falseBlock)
-        addLine("end", id)
+        if falseBlock.statements.isEmpty then addLine("  pass", id)
 
       case While(id, condition, block) =>
         val genCond = parseGenExpr(condition)
-        addLine(s"while $genCond do", id)
+        addLine(s"while $genCond:", id)
         genStatement(block)
-        addLine("end", id)
+        if block.statements.isEmpty then addLine("  pass", id)
 
+      // https://stackoverflow.com/questions/743164/how-to-emulate-a-do-while-loop
       case DoWhile(id, condition, block) =>
         val genCond = parseGenExpr(condition)
-        addLine(s"repeat {", id)
+        addLine(s"while True:", id)
         genStatement(block)
-        addLine(s"} while $genCond", id)
+        if block.statements.isEmpty then addLine("  pass", id)
+        addLine(s"  if not $genCond:", id)
+        addLine(s"    break", id)
 
       case ForLoop(id, varName, start, incr, end, block) =>
         val genStart = parseGenExpr(start)
         val genIncr = parseGenExpr(incr)
         val genEnd = parseGenExpr(end)
-        addLine(s"for $varName in stride(from: $genStart, through: $genEnd, by: $genIncr) {", id)
+        addLine(s"for $varName in range($genStart, $genEnd+1, $genIncr):", id)
         genStatement(block)
-        addLine("end", id)
+        if block.statements.isEmpty then addLine("  pass", id)
 
   import PredefinedFunction.*
   override def predefFun(name: String, genArgs: List[String]): String = {
     def argOpt(idx: Int) = genArgs.lift(idx).getOrElse("")
     PredefinedFunction.withName(name).get match {
-      case Abs             => s"${argOpt(0)}.abs"
-      case Floor           => s"${argOpt(0)}.floor"
-      case Ceil            => s"${argOpt(0)}.ceil"
-      case RandomInteger   => s"scala.util.Random(${argOpt(0)})"
-      case Sin             => s"Math.sin(${argOpt(0)})"
-      case Cos             => s"Math.cos(${argOpt(0)})"
-      case Tan             => s"Math.tan(${argOpt(0)})"
-      case Ln              => s"Math.log(${argOpt(0)})"
-      case Log10           => s"Math.log10(${argOpt(0)})"
-      case Log2            => s"Math.log10(${argOpt(0)})/Math.log10(2)"
-      case Length          => s"${argOpt(0)}.length"
-      case CharAt          => s"${argOpt(0)}.charAt(${argOpt(1)})"
-      case RealToInteger   => s"${argOpt(0)}.toInt"
-      case StringToInteger => s"${argOpt(0)}.to_i"
+      case Abs             => s"math.fabs(${argOpt(0)})"
+      case Floor           => s"math.floor(${argOpt(0)})"
+      case Ceil            => s"math.ceil(${argOpt(0)})"
+      case RandomInteger   => s"randrange(${argOpt(0)})"
+      case Sin             => s"math.sin(${argOpt(0)})"
+      case Cos             => s"math.cos(${argOpt(0)})"
+      case Tan             => s"math.tan(${argOpt(0)})"
+      case Ln              => s"math.log(${argOpt(0)})"
+      case Log10           => s"math.log10(${argOpt(0)})"
+      case Log2            => s"math.log2(${argOpt(0)})"
+      case Sqrt            => s"sqrt(${argOpt(0)})"
+      case Pow             => s"pow(${argOpt(0)}, ${argOpt(1)})"
+      case Length          => s"len(${argOpt(0)})"
+      case CharAt          => s"${argOpt(0)}[${argOpt(1)}]"
+      case RealToInteger   => s"int(${argOpt(0)})"
+      case StringToInteger => s"int(${argOpt(0)})"
     }
   }
 
   override def funCall(name: String, genArgs: List[String]): String =
-    s""" $name(${genArgs.mkString(", ")}) """.trim
-
-  private def readFunction(tpeOpt: Option[Type]): String =
-    "$stdin.read"
+    s""" $name (${genArgs.mkString(", ")}) """.trim
 
 }

@@ -531,39 +531,54 @@ final class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[Flow
         validateArgsNumber(id, func.name, 1, args.size)
         args.head match
           case n: IntegerVal => Future(RealVal(Math.sin(n.value.toDouble)))
-          case n: RealVal    => Future(n.transform(x => Math.sin(x)))
+          case n: RealVal    => Future(n.transform(Math.sin))
           case _             => throw EvalException(s"Expected a number argument in function ${func.name}", id)
       case func @ Cos =>
         validateArgsNumber(id, func.name, 1, args.size)
         args.head match
           case n: IntegerVal => Future(RealVal(Math.cos(n.value.toDouble)))
-          case n: RealVal    => Future(n.transform(x => Math.cos(x)))
+          case n: RealVal    => Future(n.transform(Math.cos))
           case _             => throw EvalException(s"Expected a number argument in function ${func.name}", id)
       case func @ Tan =>
         validateArgsNumber(id, func.name, 1, args.size)
         args.head match
           case n: IntegerVal => Future(RealVal(Math.tan(n.value.toDouble)))
-          case n: RealVal    => Future(n.transform(x => Math.tan(x)))
+          case n: RealVal    => Future(n.transform(Math.tan))
           case _             => throw EvalException(s"Expected a number argument in function ${func.name}", id)
       case func @ Ln =>
         validateArgsNumber(id, func.name, 1, args.size)
         args.head match
           case n: IntegerVal => Future(RealVal(Math.log(n.value.toDouble)))
-          case n: RealVal    => Future(n.transform(x => Math.log(x)))
+          case n: RealVal    => Future(n.transform(Math.log))
           case _             => throw EvalException(s"Expected a number argument in function ${func.name}", id)
       case func @ Log10 =>
         validateArgsNumber(id, func.name, 1, args.size)
         args.head match
           case n: IntegerVal => Future(RealVal(Math.log10(n.value.toDouble)))
-          case n: RealVal    => Future(n.transform(x => Math.log10(x)))
+          case n: RealVal    => Future(n.transform(Math.log10))
           case _             => throw EvalException(s"Expected a number argument in function ${func.name}", id)
       case func @ Log2 =>
         validateArgsNumber(id, func.name, 1, args.size)
-
         args.head match
           case n: IntegerVal => Future(RealVal(Math.log(n.value) / Math.log(2)))
           case n: RealVal    => Future(n.transform(x => Math.log(x) / Math.log(2)))
           case _             => throw EvalException(s"Expected a number argument in function ${func.name}", id)
+      case func @ Sqrt =>
+        validateArgsNumber(id, func.name, 1, args.size)
+        args.head match
+          case n: IntegerVal => Future(RealVal(Math.sqrt(n.value)))
+          case n: RealVal    => Future(n.transform(Math.sqrt))
+          case _             => throw EvalException(s"Expected a number argument in function ${func.name}", id)
+      case func @ Pow =>
+        validateArgsNumber(id, func.name, 2, args.size)
+        val base = args.head
+        val power = args(1)
+        (base, power) match
+          case (b: IntegerVal, p: IntegerVal) => Future(RealVal(Math.pow(b.value.toDouble, p.value.toDouble)))
+          case (b: IntegerVal, p: RealVal)    => Future(RealVal(Math.pow(b.value.toDouble, p.value)))
+          case (b: RealVal, p: IntegerVal)    => Future(RealVal(Math.pow(b.value, p.value.toDouble)))
+          case (b: RealVal, p: RealVal)       => Future(RealVal(Math.pow(b.value, p.value)))
+          case _ => throw EvalException(s"Expected (Number, Number) arguments in function ${func.name}", id)
       // strings
       case func @ Length =>
         validateArgsNumber(id, func.name, 1, args.size)
