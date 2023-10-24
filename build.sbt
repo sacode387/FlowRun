@@ -2,7 +2,7 @@ import org.scalajs.linker.interface.OutputPatterns
 
 inThisBuild(
   List(
-    scalaVersion := "3.3.0",
+    scalaVersion := "3.3.1",
     evictionErrorLevel := Level.Warn,
     publish / skip := true,
     scalafmtSbt := true,
@@ -58,7 +58,6 @@ lazy val interpreter = crossProject(JVMPlatform, JSPlatform)
     name := "flowrun-interpreter",
     publish / skip := false,
     libraryDependencies ++= Seq(
-      ("org.scala-js" %%% "scalajs-java-securerandom" % "1.0.0").cross(CrossVersion.for3Use2_13),
       "io.github.cquiroz" %%% "scala-java-time" % "2.5.0",
       "com.outr" %%% "reactify" % "4.0.8",
       "ba.sake" %%% "tupson" % "0.7.0",
@@ -78,7 +77,9 @@ lazy val interpreter = crossProject(JVMPlatform, JSPlatform)
     Test / parallelExecution := false,
     Test / jsEnv := new org.scalajs.jsenv.jsdomnodejs.JSDOMNodeJSEnv()
   )
-  .enablePlugins(ScalaJSPlugin)
+  .jsSettings(
+    libraryDependencies += ("org.scala-js" %%% "scalajs-java-securerandom" % "1.0.0").cross(CrossVersion.for3Use2_13),
+  )
 
 lazy val demo = (project in file("demo"))
   .settings(

@@ -3,7 +3,6 @@ package dev.sacode.flowrun.eval
 import scala.util.*
 import scala.concurrent.{Future, Promise}
 import scala.concurrent.ExecutionContext.Implicits.global
-import scalajs.js
 import reactify.*
 import dev.sacode.flowrun.ast.*, Expression.Type
 import dev.sacode.flowrun.parse.{Token, parseExpr, ParseException, LexException}
@@ -11,7 +10,12 @@ import dev.sacode.flowrun.ProgramModel
 import dev.sacode.flowrun.FlowRun
 import RunVal.*
 
-final class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[FlowRun.Event]) {
+final class Interpreter(
+    programModel: ProgramModel,
+    flowrunChannel: Channel[FlowRun.Event],
+    setInterval: (Long, => Unit) => Any,
+    clearInterval: Any => Unit
+) {
   import Interpreter.*
 
   val symTab = SymbolTable(flowrunChannel)
@@ -475,15 +479,16 @@ final class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[Flow
     // poll every 50ms to check the state of program
     // - if RUNNING set as success, continue evaluating the program
     // - if FINISHED_STOPPED set as failed
-    val pingHandle: js.timers.SetIntervalHandle = js.timers.setInterval(50) {
+    val pingHandle = setInterval(50, {
       if !p.isCompleted then {
         if state == State.RUNNING then p.success({})
         else if state == State.FINISHED_STOPPED then p.failure(StoppedException("Program stopped"))
       }
-    }
+    })
+    
     val f = p.future
     f.onComplete { _ =>
-      js.timers.clearInterval(pingHandle)
+      clearInterval(pingHandle)
     }
     f
   }
@@ -574,11 +579,12 @@ final class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[Flow
         val base = args.head
         val power = args(1)
         (base, power) match
-          case (b: IntegerVal, p: IntegerVal) => Future(RealVal(Math.pow(b.value.toDouble, p.value.toDouble)))
+          case (b: IntegerVal, p: IntegerVal) => Future(IntegerVal(Math.pow(b.value.toDouble, p.value.toDouble).toInt))
           case (b: IntegerVal, p: RealVal)    => Future(RealVal(Math.pow(b.value.toDouble, p.value)))
           case (b: RealVal, p: IntegerVal)    => Future(RealVal(Math.pow(b.value, p.value.toDouble)))
           case (b: RealVal, p: RealVal)       => Future(RealVal(Math.pow(b.value, p.value)))
           case _ => throw EvalException(s"Expected (Number, Number) arguments in function ${func.name}", id)
+
       // strings
       case func @ Length =>
         validateArgsNumber(id, func.name, 1, args.size)
@@ -592,14 +598,14 @@ final class Interpreter(programModel: ProgramModel, flowrunChannel: Channel[Flow
         (str, idx) match
           case (s: StringVal, i: IntegerVal) => Future(s.transform(_.apply(i.value).toString))
           case _ => throw EvalException(s"Expected (String, Integer) arguments in function ${func.name}", id)
+
       // conversions
       case func @ RealToInteger =>
         validateArgsNumber(id, func.name, 1, args.size)
         args.head match
-          case n: RealVal => Future(IntegerVal(n.value.toInt))
-          case _          => throw EvalException(s"Expected a Real argument in function ${func.name}", id)
-
-      // conversions
+          case n: IntegerVal => Future(n) // noop
+          case n: RealVal    => Future(IntegerVal(n.value.toInt))
+          case _             => throw EvalException(s"Expected a Real argument in function ${func.name}", id)
       case func @ StringToInteger =>
         validateArgsNumber(id, func.name, 1, args.size)
         args.head match

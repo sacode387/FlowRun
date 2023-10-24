@@ -65,7 +65,14 @@ class FlowRunEditor(
 
   private val flowrunChannel = Channel[FlowRun.Event]
   private val programModel = ProgramModel(program, flowrunChannel)
-  private var interpreter = Interpreter(programModel, flowrunChannel)
+  private var interpreter = newInterpeter
+    
+  private def newInterpeter = Interpreter(
+    programModel,
+    flowrunChannel,
+    setInterval = (interval, body) => js.timers.setInterval(interval.toDouble)(body),
+    clearInterval = (handle) => js.timers.clearInterval(handle.asInstanceOf[js.timers.SetIntervalHandle])
+  )
 
   @JSExport
   val flowRunElements = FlowRunElements(mountElem) // needs to come after JSON resolving and template copying
@@ -250,7 +257,7 @@ class FlowRunEditor(
         div(cls := "flowrun-output-help")(samp(s"[Started at: ${DTF.format(startedTime)}]")).render
       )
 
-      interpreter = Interpreter(programModel, flowrunChannel) // fresh SymTable etc
+      interpreter = newInterpeter // fresh SymTable etc
       outputArea = OutputArea(interpreter, flowRunElements, flowrunChannel)
       debugArea = DebugArea(interpreter, flowRunElements)
 
