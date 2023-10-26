@@ -479,13 +479,15 @@ final class Interpreter(
     // poll every 50ms to check the state of program
     // - if RUNNING set as success, continue evaluating the program
     // - if FINISHED_STOPPED set as failed
-    val pingHandle = setInterval(50, {
-      if !p.isCompleted then {
-        if state == State.RUNNING then p.success({})
-        else if state == State.FINISHED_STOPPED then p.failure(StoppedException("Program stopped"))
+    val pingHandle = setInterval(
+      50, {
+        if !p.isCompleted then {
+          if state == State.RUNNING then p.success({})
+          else if state == State.FINISHED_STOPPED then p.failure(StoppedException("Program stopped"))
+        }
       }
-    })
-    
+    )
+
     val f = p.future
     f.onComplete { _ =>
       clearInterval(pingHandle)

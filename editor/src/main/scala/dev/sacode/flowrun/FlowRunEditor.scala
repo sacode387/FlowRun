@@ -30,11 +30,15 @@ import dev.sacode.flowrun.edit.CodeArea
 class FlowRunEditor(
     mountElem: dom.html.Element,
     colorScheme: ColorScheme = null,
-    editable: Boolean = true,
+    readonly: Option[Boolean] = None,
     programJson: String = null,
     mountCallback: js.Function1[FlowRunEditor, Unit] = null,
     changeCallback: js.Function1[FlowRunEditor, Unit] = null
 ) {
+
+  private val editable = readonly.getOrElse {
+    mountElem.classList.contains("flowrun--editable")
+  }
 
   // resolve initial program
   private val jsonSourceOpt = Option(programJson).filterNot(_.trim.isEmpty).orElse {
@@ -66,7 +70,7 @@ class FlowRunEditor(
   private val flowrunChannel = Channel[FlowRun.Event]
   private val programModel = ProgramModel(program, flowrunChannel)
   private var interpreter = newInterpeter
-    
+
   private def newInterpeter = Interpreter(
     programModel,
     flowrunChannel,
@@ -123,7 +127,7 @@ class FlowRunEditor(
             end if
             flowrunChannel := FlowRun.Event.StmtSelected
         case ("EDGE", n) =>
-          ctxMenu.handleEdgeRightClick(event, n)
+          if editable then ctxMenu.handleEdgeRightClick(event, n)
         case _ =>
           flowrunChannel := FlowRun.Event.Deselected
       }

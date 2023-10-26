@@ -144,6 +144,8 @@ class KotlinGenerator(val programAst: Program) extends CodeGenerator {
       case Ln            => s"log(${argOpt(0)})"
       case Log10         => s"log10(${argOpt(0)})"
       case Log2          => s"log10(${argOpt(0)})/log10(2)"
+      case Sqrt          => s"sqrt(${argOpt(0)})"
+      case Pow           => s"pow(${argOpt(0)}, ${argOpt(1)})"
       case Length        => s"${argOpt(0)}.length()"
       case CharAt        => s"${argOpt(0)}.charAt(${argOpt(1)})"
       case RealToInteger => s"(int)${argOpt(0)}"

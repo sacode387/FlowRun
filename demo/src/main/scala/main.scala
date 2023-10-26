@@ -13,11 +13,9 @@ import dev.sacode.flowrun.*
     val flowRunEditors = document.querySelectorAll(".flowrun-instance")
     for elem <- flowRunEditors do
       val mountElem = elem.asInstanceOf[dom.html.Element]
-      val editable = mountElem.classList.contains("flowrun--editable")
       val flowRunEditor: FlowRunEditor = FlowRunEditor(
         colorScheme = colorScheme,
         mountElem = mountElem,
-        editable = editable,
         mountCallback = { fr =>
           // JSON text is hidden
           // only when program is mounted then we show that DIV

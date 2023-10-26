@@ -21,7 +21,7 @@ object PredefinedFunctionsTest extends TestSuite {
       val main = newFun(List())
       val flowrunChannel = Channel[FlowRun.Event]
       val programModel = ProgramModel(Program("p1", "program", FlowRunConfig.default, main), flowrunChannel)
-      val interpreter = Interpreter(programModel, flowrunChannel)
+      val interpreter = Interpreter(programModel, flowrunChannel, Fixtures.setInterval, Fixtures.clearInterval)
       val intAssertions = Seq((5, 5), (-0, 0), (-7, 7))
         .map((n, e) => (RunVal.IntegerVal(n), RunVal.IntegerVal(e)))
       val realAssertions = Seq((5.5, 5.5), (-0.0, 0.0), (-7.7, 7.7))
@@ -38,7 +38,7 @@ object PredefinedFunctionsTest extends TestSuite {
       val main = newFun(List())
       val flowrunChannel = Channel[FlowRun.Event]
       val programModel = ProgramModel(Program("p1", "program", FlowRunConfig.default, main), flowrunChannel)
-      val interpreter = Interpreter(programModel, flowrunChannel)
+      val interpreter = Interpreter(programModel, flowrunChannel, Fixtures.setInterval, Fixtures.clearInterval)
       val realAssertions = Seq((5.5, 5.0), (0.0, 0.0), (-7.7, -8.0))
         .map((n, e) => (RunVal.RealVal(n), RunVal.RealVal(e)))
       val allAssertions = realAssertions
@@ -53,7 +53,7 @@ object PredefinedFunctionsTest extends TestSuite {
       val main = newFun(List())
       val flowrunChannel = Channel[FlowRun.Event]
       val programModel = ProgramModel(Program("p1", "program", FlowRunConfig.default, main), flowrunChannel)
-      val interpreter = Interpreter(programModel, flowrunChannel)
+      val interpreter = Interpreter(programModel, flowrunChannel, Fixtures.setInterval, Fixtures.clearInterval)
       val realAssertions = Seq((5.5, 6.0), (0.0, 0.0), (-7.7, -7.0))
         .map((n, e) => (RunVal.RealVal(n), RunVal.RealVal(e)))
       val allAssertions = realAssertions
@@ -68,7 +68,7 @@ object PredefinedFunctionsTest extends TestSuite {
       val main = newFun(List())
       val flowrunChannel = Channel[FlowRun.Event]
       val programModel = ProgramModel(Program("p1", "program", FlowRunConfig.default, main), flowrunChannel)
-      val interpreter = Interpreter(programModel, flowrunChannel)
+      val interpreter = Interpreter(programModel, flowrunChannel, Fixtures.setInterval, Fixtures.clearInterval)
       val realAssertions = Seq(("", 0), ("abc", 3), ("     ", 5))
         .map((n, e) => (RunVal.StringVal(n), RunVal.IntegerVal(e)))
       val allAssertions = realAssertions

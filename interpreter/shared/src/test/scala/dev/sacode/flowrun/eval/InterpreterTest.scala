@@ -25,7 +25,7 @@ object InterpreterTests extends TestSuite {
       val main = newFun(List())
       val flowrunChannel = Channel[FlowRun.Event]
       val programModel = ProgramModel(Program("p1", "program", FlowRunConfig.default, main), flowrunChannel)
-      val interpreter = Interpreter(programModel, flowrunChannel)
+      val interpreter = Interpreter(programModel, flowrunChannel, Fixtures.setInterval, Fixtures.clearInterval)
       interpreter.run().map { _ =>
         assert(1 == 1)
       }
@@ -40,7 +40,7 @@ object InterpreterTests extends TestSuite {
 
       val flowrunChannel = Channel[FlowRun.Event]
       val programModel = ProgramModel(Program("p2", "program", FlowRunConfig.default, main), flowrunChannel)
-      val interpreter = Interpreter(programModel, flowrunChannel)
+      val interpreter = Interpreter(programModel, flowrunChannel, Fixtures.setInterval, Fixtures.clearInterval)
 
       interpreter.run().map { _ =>
         val scope = interpreter.symTab.globalScope.childScopes.head
@@ -64,7 +64,7 @@ object InterpreterTests extends TestSuite {
       )
       val flowrunChannel = Channel[FlowRun.Event]
       val programModel = ProgramModel(Program("p2", "program", FlowRunConfig.default, main), flowrunChannel)
-      val interpreter = Interpreter(programModel, flowrunChannel)
+      val interpreter = Interpreter(programModel, flowrunChannel, Fixtures.setInterval, Fixtures.clearInterval)
 
       interpreter.run().map { _ =>
         val scope = interpreter.symTab.globalScope.childScopes.head
@@ -89,7 +89,7 @@ object InterpreterTests extends TestSuite {
       )
       val flowrunChannel = Channel[FlowRun.Event]
       val programModel = ProgramModel(Program("p3", "program", FlowRunConfig.default, main), flowrunChannel)
-      val interpreter = Interpreter(programModel, flowrunChannel)
+      val interpreter = Interpreter(programModel, flowrunChannel, Fixtures.setInterval, Fixtures.clearInterval)
 
       interpreter.run().map { _ =>
         val scope = interpreter.symTab.globalScope.childScopes.head
@@ -111,7 +111,7 @@ object InterpreterTests extends TestSuite {
       )
       val flowrunChannel = Channel[FlowRun.Event]
       val programModel = ProgramModel(Program("p4", "program", FlowRunConfig.default, main), flowrunChannel)
-      val interpreter = Interpreter(programModel, flowrunChannel)
+      val interpreter = Interpreter(programModel, flowrunChannel, Fixtures.setInterval, Fixtures.clearInterval)
 
       interpreter.run().map { _ =>
         val scope = interpreter.symTab.globalScope.childScopes.head
@@ -138,7 +138,7 @@ object InterpreterTests extends TestSuite {
       )
       val flowrunChannel = Channel[FlowRun.Event]
       val programModel = ProgramModel(Program("p4", "program", FlowRunConfig.default, main), flowrunChannel)
-      val interpreter = Interpreter(programModel, flowrunChannel)
+      val interpreter = Interpreter(programModel, flowrunChannel, Fixtures.setInterval, Fixtures.clearInterval)
 
       interpreter.run().map { _ =>
         val scope = interpreter.symTab.globalScope.childScopes.head
@@ -167,7 +167,7 @@ object InterpreterTests extends TestSuite {
       )
       val flowrunChannel = Channel[FlowRun.Event]
       val programModel = ProgramModel(Program("p5", "program", FlowRunConfig.default, main), flowrunChannel)
-      val interpreter = Interpreter(programModel, flowrunChannel)
+      val interpreter = Interpreter(programModel, flowrunChannel, Fixtures.setInterval, Fixtures.clearInterval)
 
       interpreter.run().map { _ =>
         val scope = interpreter.symTab.globalScope.childScopes.head
