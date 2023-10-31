@@ -9,12 +9,15 @@ class ProgramModel(
 ) {
   import ProgramModel.*
 
-  var ast = initAst
+  var ast: Program = initAst
 
   // global vars go brrrrr
   var currentFunctionId: String = MainFunId
   // currently selected node
   var currentStmtId: Option[String] = None
+
+  def incrRevision(): Unit =
+    ast = ast.copy(revision = ast.revision + 1)
 
   def setName(name: String): Unit =
     ast = ast.copy(name = name)

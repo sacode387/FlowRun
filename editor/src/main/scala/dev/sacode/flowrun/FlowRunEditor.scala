@@ -26,19 +26,16 @@ import dev.sacode.flowrun.toastify.*
 import dev.sacode.flowrun.eval.Interpreter.State
 import dev.sacode.flowrun.edit.CodeArea
 
+// dont use Option here !!!
 @JSExportTopLevel("FlowRunEditor")
 class FlowRunEditor(
     mountElem: dom.html.Element,
     colorScheme: ColorScheme = null,
-    readonly: Option[Boolean] = None,
+    editable: Boolean = true,
     programJson: String = null,
     mountCallback: js.Function1[FlowRunEditor, Unit] = null,
     changeCallback: js.Function1[FlowRunEditor, Unit] = null
 ) {
-
-  private val editable = readonly.getOrElse {
-    mountElem.classList.contains("flowrun--editable")
-  }
 
   // resolve initial program
   private val jsonSourceOpt = Option(programJson).filterNot(_.trim.isEmpty).orElse {
@@ -155,6 +152,10 @@ class FlowRunEditor(
   @JSExport
   def codeText(): String =
     codeArea.codeText()
+  
+  @JSExport
+  def revision(): Int =
+    programModel.ast.revision
 
   import FlowRun.Event.*
   flowrunChannel.attach {
@@ -401,6 +402,7 @@ class FlowRunEditor(
     codeArea.render(id)
 
   private def doOnModelChange(): Unit =
+    programModel.incrRevision()
     Option(changeCallback).foreach(cb => cb(this))
 
   private def setLayout(): Unit = {
