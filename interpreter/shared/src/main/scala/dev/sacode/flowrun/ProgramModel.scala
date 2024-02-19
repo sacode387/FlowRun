@@ -12,11 +12,8 @@ class ProgramModel(
   var ast: Program = initAst
 
   // global vars go brrrrr
-  // TODO renameeeeeeeeeeeee
-  var currentFunctionId: String = MainFunId
-  // currently selected node
-  // TODO renameeeeeeeeeeeee
-  var currentStmtId: Option[String] = None
+  var currentSelectedFunctionId: String = MainFunId
+  var currentSelectedStmtId: Option[String] = None
 
   def incrRevision(): Unit =
     ast = ast.copy(revision = ast.revision + 1)
@@ -30,13 +27,13 @@ class ProgramModel(
     flowrunChannel := FlowRun.Event.ConfigChanged
 
   def currentFunction: Function =
-    if currentFunctionId == MainFunId then ast.main
-    else ast.functions.find(_.id == currentFunctionId).get
+    if currentSelectedFunctionId == MainFunId then ast.main
+    else ast.functions.find(_.id == currentSelectedFunctionId).get
 
   def addFunction(fun: Function): Unit =
     val newFunctions = ast.functions.appended(fun)
     ast = ast.copy(functions = newFunctions)
-    currentFunctionId = fun.id
+    currentSelectedFunctionId = fun.id
     flowrunChannel := FlowRun.Event.Deselected
     flowrunChannel := FlowRun.Event.FunctionUpdated
 
@@ -57,7 +54,7 @@ class ProgramModel(
   def deleteFunction(id: String): Unit =
     val newFunctions = ast.functions.filterNot(_.id == id)
     ast = ast.copy(functions = newFunctions)
-    currentFunctionId = MainFunId
+    currentSelectedFunctionId = MainFunId
     flowrunChannel := FlowRun.Event.Deselected
     flowrunChannel := FlowRun.Event.FunctionUpdated
 
@@ -98,9 +95,9 @@ class ProgramModel(
     val newFunction = transform(FunctionModel(currentFunction)).ast
     if currentFunction.isMain then ast = ast.copy(main = newFunction)
     else {
-      ast.functions.indexWhere(_.id == currentFunctionId) match
+      ast.functions.indexWhere(_.id == currentSelectedFunctionId) match
         case -1 =>
-          println(s"Oops, function $currentFunctionId does not exist...")
+          println(s"Oops, function $currentSelectedFunctionId does not exist...")
         case idx =>
           val newFunctions = ast.functions.updated(idx, newFunction)
           ast = ast.copy(functions = newFunctions)

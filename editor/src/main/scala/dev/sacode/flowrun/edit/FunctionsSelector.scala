@@ -26,9 +26,9 @@ class FunctionSelector(
       radio.id = f.id
       radio.value = f.id
       radio.name = s"${programModel.ast.id}-currentFunction"
-      radio.checked = f.id == programModel.currentFunctionId
+      radio.checked = f.id == programModel.currentSelectedFunctionId
       radio.onchange = { (e: dom.Event) =>
-        programModel.currentFunctionId = f.id
+        programModel.currentSelectedFunctionId = f.id
         flowrunChannel := FlowRun.Event.FunctionSelected
       }
 

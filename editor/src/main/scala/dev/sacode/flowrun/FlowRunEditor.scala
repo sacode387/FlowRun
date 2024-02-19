@@ -117,7 +117,7 @@ class FlowRunEditor(
           val idParts = n.id.split("#", -1)
           val nodeId = idParts(0)
           if !n.classList.contains("flowrun-not-selectable") then
-            programModel.currentStmtId = Some(nodeId)
+            programModel.currentSelectedStmtId = Some(nodeId)
             if editable then
               outputArea.clearSyntax()
               flowchartPresenter.loadCurrentFunction() // to highlight new node..
@@ -186,7 +186,7 @@ class FlowRunEditor(
       doOnChange()
       doOnModelChange()
     case StmtDeleted | StmtAdded =>
-      programModel.currentStmtId = None
+      programModel.currentSelectedStmtId = None
       outputArea.clearStmt()
       outputArea.clearSyntax()
       flowchartPresenter.loadCurrentFunction()
@@ -198,7 +198,7 @@ class FlowRunEditor(
       functionSelector.enable()
       outputArea.finished()
     case EvalError(nodeId, msg, funId) =>
-      programModel.currentFunctionId = funId
+      programModel.currentSelectedFunctionId = funId
       flowchartPresenter.loadCurrentFunction().foreach { _ =>
         outputArea.runtimeError(msg, DTF.format(startedTime), DTF.format(Instant.now()))
         flowchartPresenter.highlightError(nodeId)
@@ -213,11 +213,11 @@ class FlowRunEditor(
     case EvalInput(nodeId, name, prompt) =>
       outputArea.evalInput(nodeId, name, prompt)
     case EvalFunctionStarted =>
-      programModel.currentFunctionId = interpreter.currentExecFunctionId.getOrElse(ProgramModel.MainFunId)
+      programModel.currentSelectedFunctionId = interpreter.currentExecFunctionId.getOrElse(ProgramModel.MainFunId)
       functionSelector.loadFunctions()
       flowchartPresenter.loadCurrentFunction()
     case EvalFunctionFinished =>
-      programModel.currentFunctionId = interpreter.currentExecFunctionId.getOrElse(ProgramModel.MainFunId)
+      programModel.currentSelectedFunctionId = interpreter.currentExecFunctionId.getOrElse(ProgramModel.MainFunId)
       flowchartPresenter.highlightExecuting(interpreter.nextExecStatementId)
       functionSelector.loadFunctions()
       flowchartPresenter.loadCurrentFunction()
@@ -230,7 +230,7 @@ class FlowRunEditor(
       doOnChange()
       doOnModelChange()
     case FunctionSelected =>
-      programModel.currentStmtId = None
+      programModel.currentSelectedStmtId = None
       outputArea.clearStmt()
       outputArea.clearSyntax()
       functionSelector.loadFunctions()
@@ -240,7 +240,7 @@ class FlowRunEditor(
     case StmtSelected =>
       doOnChange()
     case Deselected =>
-      programModel.currentStmtId = None
+      programModel.currentSelectedStmtId = None
       outputArea.clearStmt()
       outputArea.clearSyntax()
       flowchartPresenter.clearSelected()
@@ -408,7 +408,7 @@ class FlowRunEditor(
   }
 
   private def doOnChange(): Unit =
-    val id = programModel.currentStmtId.getOrElse("")
+    val id = programModel.currentSelectedStmtId.getOrElse("")
     codeArea.render(id)
 
   private def doOnModelChange(): Unit =

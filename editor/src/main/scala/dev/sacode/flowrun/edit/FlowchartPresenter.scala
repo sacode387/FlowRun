@@ -72,7 +72,7 @@ class FlowchartPresenter(
         (gr: js.Dynamic) => {
           clearSelected()
           clearErrors()
-          programModel.currentStmtId.foreach { id =>
+          programModel.currentSelectedStmtId.foreach { id =>
             dom.window.document
               .querySelectorAll(s""" .node[id*="${id}"] """)
               .foreach(_.classList.add("flowrun--selected"))
