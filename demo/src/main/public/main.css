@@ -1,7 +1,5 @@
-
 @import url('https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;700&display=swap');
-
 
 :root {
     --flowrun-font-monospace: 'Courier Prime';
@@ -13,25 +11,16 @@ body {
     background-color: #8de4ff3b;
 }
 
-pre[class*=language-].flowrun-code {
-    background: var(--flowrun-white) !important;
-}
 
 @media screen and (min-width: 600px) and (orientation: landscape) {
     body {
         width: 90%;
         margin: auto;
     }
+
     .flowrun-instance {
         /* FIXED height coz it's easier to work with */
         height: 90vh;
         width: 100%;
     }
 }
-
-
-
-
-
-
-
