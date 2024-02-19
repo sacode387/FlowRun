@@ -5,10 +5,13 @@ import dev.sacode.flowrun.ast.Function
 object FlowRun:
   enum Event:
     case EvalSuccess
+    case EvalBeforeExecStatement
+    case EvalAfterExecStatement
     case EvalError(nodeId: String, msg: String, funId: String)
     case EvalOutput(msg: String, newline: Boolean)
     case EvalInput(nodeId: String, name: String, prompt: Option[String])
-    case FunctionEntered(fun: Function)
+    case EvalFunctionStarted
+    case EvalFunctionFinished
     case SyntaxSuccess
     case StmtDeleted
     case StmtAdded

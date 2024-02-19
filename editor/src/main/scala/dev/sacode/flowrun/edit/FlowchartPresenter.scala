@@ -55,6 +55,14 @@ class FlowchartPresenter(
     if nodeId != null && nodeId.trim.nonEmpty then
       dom.window.document.querySelector(s""" .node[id^="$nodeId"] """).classList.add("flowrun--error")
 
+  def highlightExecuting(nodeIdOpt: Option[String]): Unit =
+    val cls = "flowrun--to-execute"
+    dom.window.document.querySelectorAll(".node").foreach(_.classList.remove(cls))
+    nodeIdOpt.foreach { nodeId =>
+      val domNode = dom.window.document.querySelector(s""" .node[id^="${nodeId}"] """)
+      if domNode != null && !js.isUndefined(domNode) then domNode.classList.add(cls)
+    }
+
   def loadCurrentFunction(): Future[Unit] = {
     val p = Promise[Unit]()
     graphviz

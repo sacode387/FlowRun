@@ -1,8 +1,7 @@
-import org.scalajs.linker.interface.OutputPatterns
 
 inThisBuild(
   List(
-    scalaVersion := "3.3.1",
+    scalaVersion := "3.4.0",
     evictionErrorLevel := Level.Warn,
     publish / skip := true,
     scalafmtSbt := true,

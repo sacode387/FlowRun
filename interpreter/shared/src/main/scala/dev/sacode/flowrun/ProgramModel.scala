@@ -12,8 +12,10 @@ class ProgramModel(
   var ast: Program = initAst
 
   // global vars go brrrrr
+  // TODO renameeeeeeeeeeeee
   var currentFunctionId: String = MainFunId
   // currently selected node
+  // TODO renameeeeeeeeeeeee
   var currentStmtId: Option[String] = None
 
   def incrRevision(): Unit =

@@ -4,6 +4,7 @@ import java.time.Instant
 import java.time.Duration
 import java.time.temporal.TemporalUnit
 import java.time.temporal.ChronoUnit
+import scala.compiletime.uninitialized
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.scalajs.js
 import scala.scalajs.js.annotation.*
@@ -88,7 +89,7 @@ class FlowRunEditor(
   private val statementEditor = StatementEditor(programModel, flowrunChannel, flowRunElements)
   private val ctxMenu = CtxMenu(programModel, flowRunElements, flowrunChannel)
 
-  private var startedTime: Instant = _
+  private var startedTime: Instant = uninitialized
 
   flowRunElements.programNameInput.value = program.name
 
@@ -152,7 +153,7 @@ class FlowRunEditor(
   @JSExport
   def codeText(): String =
     codeArea.codeText()
-  
+
   @JSExport
   def revision(): Int =
     programModel.ast.revision
@@ -172,6 +173,10 @@ class FlowRunEditor(
       flowchartPresenter.enable()
       functionSelector.enable()
       outputArea.finished()
+    case EvalBeforeExecStatement =>
+      flowchartPresenter.highlightExecuting(interpreter.nextExecStatementId)
+    case EvalAfterExecStatement =>
+      flowchartPresenter.highlightExecuting(interpreter.nextExecStatementId)
     case SyntaxSuccess =>
       outputArea.clearSyntax()
       flowchartPresenter.loadCurrentFunction() // if function name updated
@@ -207,8 +212,13 @@ class FlowRunEditor(
       outputArea.runtimeOutput(output, newline)
     case EvalInput(nodeId, name, prompt) =>
       outputArea.evalInput(nodeId, name, prompt)
-    case FunctionEntered(fun) =>
-      programModel.currentFunctionId = fun.id
+    case EvalFunctionStarted =>
+      programModel.currentFunctionId = interpreter.currentExecFunctionId.getOrElse(ProgramModel.MainFunId)
+      functionSelector.loadFunctions()
+      flowchartPresenter.loadCurrentFunction()
+    case EvalFunctionFinished =>
+      programModel.currentFunctionId = interpreter.currentExecFunctionId.getOrElse(ProgramModel.MainFunId)
+      flowchartPresenter.highlightExecuting(interpreter.nextExecStatementId)
       functionSelector.loadFunctions()
       flowchartPresenter.loadCurrentFunction()
     case SymbolTableUpdated =>
