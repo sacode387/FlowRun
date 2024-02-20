@@ -1,4 +1,3 @@
-
 :root {
     --flowrun-green: #258139;
     --flowrun-green-darker: #214426;
@@ -23,6 +22,7 @@
     padding: 0;
     box-sizing: border-box;
 }
+
 .flowrun-instance *:not(.flowrun-code *) {
     /* all except prismjs stuff */
     margin: 0;
@@ -39,13 +39,14 @@
     font-family: var(--flowrun-font-monospace);
     padding: 0.1rem;
 }
+
 .flowrun-output-statement :not(.material-icons) {
     font-family: var(--flowrun-font-monospace);
 }
 
 .flowrun-functions-list,
 .flowrun-output,
-.flowrun-diagram {   
+.flowrun-diagram {
     color: var(--flowrun-font-color);
 }
 
@@ -153,7 +154,8 @@ input[type="text"].flowrun--disabled {
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
-    position: relative; /* needed for its inner buttons */
+    position: relative;
+    /* needed for its inner buttons */
     user-select: none;
 }
 
@@ -192,6 +194,7 @@ input[type="text"].flowrun--disabled {
     bottom: 0;
     padding: 5px;
 }
+
 .flowrun-debug-vars * {
     background-color: var(--flowrun-grey-darker);
 }
@@ -202,19 +205,19 @@ input[type="text"].flowrun--disabled {
 }
 
 .flowrun-debug-vars table {
-	border-collapse: collapse;
+    border-collapse: collapse;
 }
 
 .flowrun-debug-vars th,
 .flowrun-debug-vars td {
-	text-align: left;
-	border-collapse: collapse;
-	border-bottom: 1px solid var(--flowrun-green-darker);
+    text-align: left;
+    border-collapse: collapse;
+    border-bottom: 1px solid var(--flowrun-green-darker);
 }
 
 .flowrun-debug-vars th:nth-child(2),
 .flowrun-debug-vars td:nth-child(2) {
-	padding-left: 0.5rem;
+    padding-left: 0.5rem;
 }
 
 /* config widget */
@@ -224,12 +227,15 @@ input[type="text"].flowrun--disabled {
     top: 3rem;
     padding: 5px;
 }
+
 .flowrun-config[open] {
     background-color: var(--flowrun-grey-darker);
 }
+
 .flowrun-instance .flowrun-config summary {
     margin-bottom: 0.5rem;
 }
+
 .flowrun-config-layout {
     display: flex;
     flex-direction: column;
@@ -414,13 +420,14 @@ pre[class*=language-].flowrun-code {
 }
 
 .flowrun-context-menu.active {
-    position: absolute; /* relative to the BODY! so it stays there always.. */
+    position: absolute;
+    /* relative to the BODY! so it stays there always.. */
     z-index: 10000;
 
     width: 150px;
     display: flex;
     flex-direction: column;
-    
+
     user-select: none;
 }
 
@@ -434,6 +441,7 @@ pre[class*=language-].flowrun-code {
     color: var(--flowrun-white);
     border: 1px var(--flowrun-blue-darker) solid;
 }
+
 .flowrun-context-menu>button:disabled {
     background-color: var(--flowrun-grey-darker);
     color: var(--flowrun-blue-darker);
@@ -448,7 +456,7 @@ pre[class*=language-].flowrun-code {
 @media screen and (max-width: 600px) {
     .flowrun-draw svg {
         height: 90vh;
-    }    
+    }
 }
 
 @media screen and (min-width: 600px) {
@@ -523,8 +531,8 @@ pre[class*=language-].flowrun-code {
     .flowrun-instance>* {
         margin-bottom: 0;
     }
+
     .flowrun-instance .flowrun--panel {
         margin-bottom: 0;
     }
 }
-

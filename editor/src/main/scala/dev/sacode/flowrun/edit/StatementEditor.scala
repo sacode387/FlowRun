@@ -90,6 +90,7 @@ final class StatementEditor(
               if newExprText.isEmpty then
                 val updatedStmt = programModel.findStatement(stmtId).asInstanceOf[Return].copy(maybeValue = None)
                 programModel.updateStmt(updatedStmt)
+                // TODO update model ANYWAYYYYY
               else flowrunChannel := FlowRun.Event.SyntaxError(e.getMessage)
             }
           )
