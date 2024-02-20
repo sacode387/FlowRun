@@ -31,6 +31,7 @@ class FlowRunElements(
 
   // singletons
   val runButton: dom.html.Element = mountElem.querySelector(".flowrun-btn-run").asInstanceOf[dom.html.Element]
+  val runStepButton: dom.html.Element = mountElem.querySelector(".flowrun-btn-run-step").asInstanceOf[dom.html.Element]
   val stopButton: dom.html.Element = mountElem.querySelector(".flowrun-btn-stop").asInstanceOf[dom.html.Element]
 
   val downloadButton: dom.html.Element =

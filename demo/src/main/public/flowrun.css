@@ -345,6 +345,15 @@ pre[class*=language-].flowrun-code {
     stroke-linejoin: round;
 }
 
+.node.flowrun--to-execute polygon,
+.node.flowrun--to-execute ellipse {
+    stroke: var(--flowrun-green);
+    stroke-width: 3;
+    stroke-dasharray: 10 5;
+    stroke-linejoin: round;
+}
+
+
 .node.flowrun--error polygon {
     stroke: var(--flowrun-red);
     stroke-width: 3px;

@@ -22,10 +22,21 @@ final class Interpreter(
 
   var state: State = State.INITIALIZED
 
+  // when user clicks step_by_step button
+  // exec next statement and again set this to false
+  var stepNext: Boolean = false
+
+  var execMode: ExecMode = ExecMode.NORMAL
+
   var currentExecFunctionId: Option[String] = None
   var nextExecStatementId: Option[String] = None
 
-  def run(): Future[Unit] = {
+  def isRunning: Boolean = state == State.RUNNING || state == State.WAITING_FOR_INPUT
+
+  def run(execMode: ExecMode): Future[Unit] = {
+
+    this.execMode = execMode
+    if execMode == ExecMode.STEP_BY_STEP then this.stepNext = true
 
     state = State.RUNNING
 
@@ -110,13 +121,17 @@ final class Interpreter(
       result
     }
 
-  private def interpretStatement(stmt: Statement): Future[RunVal] = waitForContinue()
+  private def interpretStatement(stmt: Statement): Future[RunVal] = Future
+    .successful {
+      // TODO za Block treba uzet HEAD
+      // al šta ako je prazan...
+      nextExecStatementId = Some(stmt.id)
+      flowrunChannel := FlowRun.Event.EvalBeforeExecStatement
+    }
+    .flatMap(_ => waitForContinue())
     .flatMap { _ =>
       // println(s"interpreting: $stmt")
       import Statement.*
-
-      nextExecStatementId = Some(stmt.id)
-      flowrunChannel := FlowRun.Event.EvalBeforeExecStatement
 
       stmt match {
 
@@ -152,7 +167,7 @@ final class Interpreter(
 
         case Input(id, name, prompt) =>
           if !symTab.isDeclaredVar(name) then throw EvalException(s"Variable '$name' is not declared.", id)
-          state = State.PAUSED
+          state = State.WAITING_FOR_INPUT
           flowrunChannel := FlowRun.Event.EvalInput(id, name, prompt)
           waitForContinue().map(_ => NoVal)
 
@@ -483,7 +498,7 @@ final class Interpreter(
   /** When program PAUSEs for input or in debug mode, we need to asynchronously wait for a continue condition to happen.
     *
     * This can be on input submission:
-    *   - state is set to PAUSED in `case Input` evaluation
+    *   - state is set to WAITING_FOR_INPUT in `case Input` evaluation
     *   - in setValue (called by editor) state is set to State.RUNNING so we can continue
     *
     * Adapted from https://stackoverflow.com/a/46619347/4496364
@@ -496,8 +511,15 @@ final class Interpreter(
     val pingHandle = setInterval(
       PollIntervalMs, {
         if !p.isCompleted then {
-          if state == State.RUNNING then p.success({})
-          else if state == State.FINISHED_STOPPED then p.failure(StoppedException("Program stopped"))
+          if state == State.RUNNING then {
+            if execMode == ExecMode.STEP_BY_STEP then
+              if stepNext then
+                stepNext = false // reset the flag, wait for next statement
+                p.success({})
+
+              // else noop, wait still
+            else p.success({})
+          } else if state == State.FINISHED_STOPPED then p.failure(StoppedException("Program stopped"))
         }
       }
     )
@@ -639,7 +661,12 @@ object Interpreter:
   enum State:
     case INITIALIZED
     case RUNNING
-    case PAUSED
+    case WAITING_FOR_INPUT
     case FINISHED_SUCCESS
     case FINISHED_STOPPED // stopped manually in editor
     case FINISHED_FAILED
+
+  enum ExecMode:
+    case NORMAL // run without stopping
+    case STEP_BY_STEP // run statement by statement
+    case DEBUG // run to the debug point

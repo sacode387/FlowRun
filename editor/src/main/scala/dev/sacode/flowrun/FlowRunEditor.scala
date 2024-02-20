@@ -25,6 +25,7 @@ import dev.sacode.flowrun.codegen.CodeGeneratorFactory
 import dev.sacode.flowrun.codegen.Language
 import dev.sacode.flowrun.toastify.*
 import dev.sacode.flowrun.eval.Interpreter.State
+import dev.sacode.flowrun.eval.Interpreter.ExecMode
 import dev.sacode.flowrun.edit.CodeArea
 
 // dont use Option here !!!
@@ -260,7 +261,8 @@ class FlowRunEditor(
   flowrunChannel := FlowRun.Event.SyntaxSuccess
 
   private def attachRunAndCopyListeners(): Unit = {
-    flowRunElements.runButton.onclick = _ => {
+
+    def doRun(execMode: ExecMode) = {
       outputArea.clearAll()
       outputArea.running()
       flowchartPresenter.clearErrors()
@@ -276,16 +278,26 @@ class FlowRunEditor(
       outputArea = OutputArea(interpreter, flowRunElements, flowrunChannel)
       debugArea = DebugArea(interpreter, flowRunElements)
 
-      interpreter.run()
+      interpreter.run(execMode)
       dom.window.setTimeout(
         () => {
           // check after delay if it's running, to avoid flicker
-          if Set(State.RUNNING, State.PAUSED).contains(interpreter.state) then
+          if Set(State.RUNNING, State.WAITING_FOR_INPUT).contains(interpreter.state) then
             flowchartPresenter.disable()
             functionSelector.disable()
         },
         100
       )
+    }
+    flowRunElements.runButton.onclick = _ => doRun(ExecMode.NORMAL)
+
+    flowRunElements.runStepButton.onclick = _ => {
+      if !interpreter.isRunning then
+        doRun(ExecMode.STEP_BY_STEP)
+      
+      // ako je RUNNING ne dat mu da steppa / restarta
+      if interpreter.isRunning then
+        interpreter.stepNext = true
     }
 
     flowRunElements.stopButton.onclick = _ => {
