@@ -33,6 +33,8 @@ final class Interpreter(
 
   def isRunning: Boolean = state == State.RUNNING || state == State.WAITING_FOR_INPUT
 
+  def run(): Future[Unit] = run(ExecMode.NORMAL)
+
   def run(execMode: ExecMode): Future[Unit] = {
 
     this.execMode = execMode
@@ -123,10 +125,12 @@ final class Interpreter(
 
   private def interpretStatement(stmt: Statement): Future[RunVal] = Future
     .successful {
-      // TODO za Block treba uzet HEAD
-      // al šta ako je prazan...
-      nextExecStatementId = Some(stmt.id)
-      flowrunChannel := FlowRun.Event.EvalBeforeExecStatement
+      // TODO skontat za DoWhile jer je kontra..
+      // TODO skontat za for/while jer se RE-EVALUIRA EXPR!
+      if !stmt.isInstanceOf[Statement.Block] then
+        nextExecStatementId = Some(stmt.id)
+        stepNext = false // reset the flag, wait for next statement
+        flowrunChannel := FlowRun.Event.EvalBeforeExecStatement
     }
     .flatMap(_ => waitForContinue())
     .flatMap { _ =>
@@ -514,7 +518,7 @@ final class Interpreter(
           if state == State.RUNNING then {
             if execMode == ExecMode.STEP_BY_STEP then
               if stepNext then
-                stepNext = false // reset the flag, wait for next statement
+                // stepNext = false // reset the flag, wait for next statement
                 p.success({})
 
               // else noop, wait still
