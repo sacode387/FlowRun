@@ -289,13 +289,18 @@ class FlowRunEditor(
         () => {
           // check after delay if it's running, to avoid flicker
           if Set(State.RUNNING, State.WAITING_FOR_INPUT).contains(interpreter.state) then
-            flowchartPresenter.disable()
+            flowchartPresenter.disable(interpreter.execMode)
             functionSelector.disable()
         },
         100
       )
     }
-    flowRunElements.runButton.onclick = _ => doRun(ExecMode.NORMAL)
+    flowRunElements.runButton.onclick = _ => {
+      if interpreter.isRunning then
+        interpreter.execMode = ExecMode.NORMAL
+      else
+        doRun(ExecMode.NORMAL)
+    }
 
     flowRunElements.runStepButton.onclick = _ => {
       if !interpreter.isRunning then doRun(ExecMode.STEP_BY_STEP)

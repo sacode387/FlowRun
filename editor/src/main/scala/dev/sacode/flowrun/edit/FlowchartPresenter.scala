@@ -9,6 +9,7 @@ import org.scalajs.dom
 import reactify.*
 import dev.sacode.flowrun.parse.*
 import dev.sacode.flowrun.ast.*, Expression.Type, Statement.*
+import dev.sacode.flowrun.eval.Interpreter.ExecMode
 
 /*
 - color==border_color, fillcolor==.. https://stackoverflow.com/questions/9106079/graphviz-how-to-change-border-color
@@ -35,9 +36,10 @@ class FlowchartPresenter(
 
   loadCurrentFunction()
 
-  def disable(): Unit =
+  def disable(mode: ExecMode): Unit =
     flowRunElements.drawArea.classList.add("flowrun--disabled")
-    flowRunElements.runButton.classList.add("flowrun--disabled")
+    if mode == ExecMode.NORMAL then
+      flowRunElements.runButton.classList.add("flowrun--disabled")
     flowRunElements.stopButton.classList.remove("flowrun--disabled")
 
   def enable(): Unit =
