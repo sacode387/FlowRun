@@ -13,7 +13,7 @@ import org.scalajs.dom
 import scalatags.JsDom.all.*
 import reactify.*
 import ba.sake.tupson.*
-import dev.sacode.flowrun.eval.Interpreter
+
 import dev.sacode.flowrun.ast.*
 import dev.sacode.flowrun.edit.FlowchartPresenter
 import dev.sacode.flowrun.edit.FunctionSelector
@@ -24,6 +24,7 @@ import dev.sacode.flowrun.edit.CtxMenu
 import dev.sacode.flowrun.codegen.CodeGeneratorFactory
 import dev.sacode.flowrun.codegen.Language
 import dev.sacode.flowrun.toastify.*
+import dev.sacode.flowrun.eval.Interpreter
 import dev.sacode.flowrun.eval.Interpreter.State
 import dev.sacode.flowrun.eval.Interpreter.ExecMode
 import dev.sacode.flowrun.edit.CodeArea
@@ -246,12 +247,14 @@ class FlowRunEditor(
       doOnChange()
     case StmtSelected =>
       doOnChange()
+      flowRunElements.clearOutputBtn.classList.add("flowrun--disabled")
     case Deselected =>
       programModel.currentSelectedStmtId = None
       outputArea.clearStmt()
       outputArea.clearSyntax()
       flowchartPresenter.clearSelected()
       doOnChange()
+      flowRunElements.clearOutputBtn.classList.remove("flowrun--disabled")
     case ConfigChanged =>
       doOnChange()
       doOnModelChange()
@@ -396,6 +399,11 @@ class FlowRunEditor(
     }
     flowRunElements.closeConfigButton.onclick = _ => {
       flowRunElements.configDialog.asDyn.close()
+    }
+
+    /* OUTPUT */
+    flowRunElements.clearOutputBtn.onclick = _ => {
+      outputArea.clearRuntime()
     }
   }
 

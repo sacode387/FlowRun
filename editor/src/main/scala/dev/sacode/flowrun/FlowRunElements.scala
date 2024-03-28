@@ -75,6 +75,8 @@ class FlowRunElements(
   val configDialog: dom.html.Element =
     mountElem.querySelector(".flowrun-config").asInstanceOf[dom.html.Element]
 
+  val clearOutputBtn = mountElem.querySelector(".flowrun-btn-clear-output").asInstanceOf[dom.html.Element]
+
   // general
   private val enterButton = mountElem.querySelector(".flowrun-btn-enter").asInstanceOf[dom.html.Element]
   private val inputText = mountElem.querySelector(".flowrun-input-text").asInstanceOf[dom.html.Input]

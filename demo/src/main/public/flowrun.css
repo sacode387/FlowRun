@@ -230,6 +230,7 @@
 /**************************/
 .flowrun-output {
     overflow: auto;
+    position: relative; /* for clear output button */
 }
 
 .flowrun-output samp {
@@ -260,10 +261,17 @@
     border-left: 3px var(--flowrun-red-lighter) solid;
 }
 
+.flowrun-btn-clear-output {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+}
+
 .flowrun-scratchpad {
     display: flex;
     flex-direction: column;
     gap: 5px;
+    padding-top: 1rem;
 }
 
 .flowrun-scratchpad>* {
