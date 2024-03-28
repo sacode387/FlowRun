@@ -27,7 +27,7 @@
     box-sizing: border-box;
 }
 
-.flowrun-instance > .flowrun--panel {
+.flowrun-instance>.flowrun--panel {
     margin-bottom: 1rem;
 }
 
@@ -150,12 +150,15 @@ input[type="text"].flowrun--disabled {
 .flowrun-diagram-info {
     grid-area: flowrun-diagram-info;
 }
+
 .flowrun-draw-io-btns {
     grid-area: flowrun-draw-io-btns;
 }
+
 .flowrun-draw-exec-btns {
     grid-area: flowrun-draw-exec-btns;
 }
+
 .flowrun-draw {
     grid-area: flowrun-draw;
 }
@@ -459,21 +462,27 @@ pre[class*=language-].flowrun-code {
 .flowrun-instance.flowrun-readonly svg {
     padding-top: 0;
 }
+
 .flowrun-instance.flowrun-readonly .flowrun-btn-fun-add {
     display: none;
 }
+
 .flowrun-instance.flowrun-readonly .flowrun-btn-fun-delete {
     display: none;
 }
+
 .flowrun-instance.flowrun-readonly .flowrun-diagram-top-left {
     display: none;
 }
+
 .flowrun-instance.flowrun-readonly .flowrun-btn-load {
     display: none;
 }
+
 .flowrun-instance.flowrun-readonly .flowrun-btn-paste-source {
     display: none;
 }
+
 .flowrun-instance.flowrun-readonly .flowrun-btn-config {
     display: none;
 }
@@ -554,7 +563,7 @@ pre[class*=language-].flowrun-code {
     }
 
     /* other */
-    .flowrun-instance > .flowrun--panel {
+    .flowrun-instance>.flowrun--panel {
         margin-bottom: 0;
     }
 }
