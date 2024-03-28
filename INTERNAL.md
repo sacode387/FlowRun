@@ -1,10 +1,7 @@
 
-
-- d3-graphviz (works pretty good) -> problems with overlapping edges
-
-https://stackoverflow.com/questions/5343899/how-to-force-node-position-x-and-y-in-graphviz
-
-
+- d3-graphviz
+    - problems with overlapping edges
+    - solution https://stackoverflow.com/questions/5343899/how-to-force-node-position-x-and-y-in-graphviz
 
 
 Tried and failed approaches:

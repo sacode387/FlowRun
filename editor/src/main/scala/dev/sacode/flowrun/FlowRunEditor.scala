@@ -361,6 +361,12 @@ class FlowRunEditor(
           }
         }
       }
+      flowRunElements.showConfigButton.onclick = _ => {
+        flowRunElements.configDialog.asDyn.showModal()
+      }
+      flowRunElements.closeConfigButton.onclick = _ => {
+        flowRunElements.configDialog.asDyn.close()
+      }
     } else {
       flowRunElements.pasteSourceButton.disabled = true
     }

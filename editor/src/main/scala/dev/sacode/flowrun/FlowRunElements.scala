@@ -64,6 +64,13 @@ class FlowRunElements(
     mountElem.querySelector(".flowrun-cb-show-gen-code").asInstanceOf[dom.html.Input]
   val showDebugVarsCheckbox: dom.html.Input =
     mountElem.querySelector(".flowrun-cb-show-debug-vars").asInstanceOf[dom.html.Input]
+  
+  val showConfigButton =
+    mountElem.querySelector(".flowrun-btn-config").asInstanceOf[dom.html.Element]
+  val closeConfigButton =
+    mountElem.querySelector(".flowrun-btn-config-close").asInstanceOf[dom.html.Element]
+  val configDialog: dom.html.Element =
+    mountElem.querySelector(".flowrun-config").asInstanceOf[dom.html.Element]
 
   // general
   private val enterButton = mountElem.querySelector(".flowrun-btn-enter").asInstanceOf[dom.html.Element]
