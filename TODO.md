@@ -1,8 +1,4 @@
 
-
-###
-restricted mode za studente
-
 ####
 show/hide name
 show/hide copy buttons

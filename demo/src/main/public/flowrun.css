@@ -19,7 +19,7 @@
 }
 
 .flowrun-instance {
-    min-height: 30rem;
+    min-height: 20rem;
 }
 
 .flowrun-instance * {
@@ -567,3 +567,17 @@ pre[class*=language-].flowrun-code {
         margin-bottom: 0;
     }
 }
+
+@media screen and (min-width: 1000px) {
+
+    /* there is space for all 3 sections*/
+    .flowrun-diagram {
+        grid-template-columns: 1fr 1fr 1fr;
+        grid-template-rows: 2rem calc(100% - 2rem);
+        grid-template-areas:
+            "flowrun-draw-io-btns   flowrun-diagram-info    flowrun-draw-exec-btns"
+            "flowrun-draw           flowrun-draw            flowrun-draw"
+        ;
+    }
+}
+
