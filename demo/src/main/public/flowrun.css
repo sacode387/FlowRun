@@ -18,6 +18,10 @@
     --flowrun-font-color: var(--flowrun-green-darker);
 }
 
+.flowrun-instance {
+    min-height: 30rem;
+}
+
 .flowrun-instance * {
     padding: 0;
     box-sizing: border-box;
@@ -59,7 +63,7 @@
 /**************************/
 .flowrun--disabled {
     pointer-events: none;
-    opacity: 0.5;
+    opacity: 0.8;
 }
 
 .flowrun--hidden {
@@ -143,41 +147,54 @@ input[type="text"].flowrun--disabled {
 /**************************/
 /* DIAGRAM */
 /**************************/
-.flowrun-diagram {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-    position: relative;
-    /* needed for its inner buttons */
-    user-select: none;
+.flowrun-diagram-info {
+    grid-area: flowrun-diagram-info;
+}
+.flowrun-draw-io-btns {
+    grid-area: flowrun-draw-io-btns;
+}
+.flowrun-draw-exec-btns {
+    grid-area: flowrun-draw-exec-btns;
+}
+.flowrun-draw {
+    grid-area: flowrun-draw;
 }
 
 .flowrun-diagram {
-    min-height: 20rem;
-    height: 90vh;
+    display: grid;
+    align-items: center;
+    gap: 0.5rem;
+    /* to position debug variables panel */
+    position: relative;
+
+    user-select: none;
+    min-height: 15rem;
+    max-height: 90vh;
+
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 2rem 2rem calc(100% - 4rem);
+    grid-template-areas:
+        "flowrun-diagram-info   flowrun-diagram-info"
+        "flowrun-draw-io-btns   flowrun-draw-exec-btns"
+        "flowrun-draw           flowrun-draw"
+    ;
+}
+
+.flowrun-diagram-info {
+    display: flex;
+    justify-content: center;
+}
+
+.flowrun-draw {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    height: 100%;
 }
 
 .flowrun-draw svg {
     width: 100%;
-    height: 100%;
-    padding-top: 3rem;
-}
-
-.flowrun-draw {
-    /* no idea, but it works with this :D */
-    display: contents;
-}
-
-.flowrun-diagram-top-left {
-    position: absolute;
-    left: 1rem;
-    top: 1rem;
-}
-
-.flowrun-diagram-top-right {
-    position: absolute;
-    right: 1rem;
-    top: 1rem;
+    max-height: 100%;
 }
 
 
@@ -364,7 +381,7 @@ pre[class*=language-].flowrun-code {
     justify-content: flex-end;
 }
 
-.flowrun-draw-copy-btns {
+.flowrun-draw-io-btns {
     display: flex;
 }
 
@@ -463,6 +480,12 @@ pre[class*=language-].flowrun-code {
 
 @media screen and (min-width: 600px) {
 
+    .flowrun-diagram {
+        /* no need to limit on desktop */
+        max-height: unset;
+    }
+
+    /* overall editor layout */
     .flowrun-functions-list {
         grid-area: flowrun-functions-list;
     }
@@ -530,9 +553,8 @@ pre[class*=language-].flowrun-code {
         ;
     }
 
+    /* other */
     .flowrun-instance > .flowrun--panel {
         margin-bottom: 0;
     }
-
-
 }

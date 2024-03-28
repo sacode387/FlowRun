@@ -6,7 +6,7 @@ import reactify.*
 import scalatags.JsDom.all.*
 
 class FunctionSelector(
-    editable: Boolean,
+    mode: EditMode,
     programModel: ProgramModel,
     flowrunChannel: Channel[FlowRun.Event],
     flowRunElements: FlowRunElements
@@ -39,7 +39,7 @@ class FunctionSelector(
 
       div(
         label(title := f.verboseLabel)(radio, span(f.label)),
-        Option.when(!f.isMain && editable)(deleteFunButton)
+        Option.when(!f.isMain && mode.editable)(deleteFunButton)
       )
     }
 

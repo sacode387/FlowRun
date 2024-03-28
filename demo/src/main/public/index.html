@@ -26,28 +26,26 @@
         </div>
 
         <div class="flowrun-diagram flowrun--panel">
-            <div class="flowrun-diagram-top-left">
+            <div class="flowrun-diagram-info">
                 <input class="flowrun-program-name flowrun--disabled" type="text">
             </div>
 
-            <div class="flowrun-diagram-top-right">
-                <div class="flowrun-draw-copy-btns">
-                    <button class="flowrun-btn-config"><span class="material-icons">settings</span></button>
-    
-                    <button class="flowrun-btn-download" title="Download"> <span class="material-icons">file_download</span> </button>
-                    <button class="flowrun-btn-load" title="Load from file"> <span class="material-icons">file_upload</span> </button>
-                    
-                    <button class="flowrun-btn-copy-source" title="Copy Source"> <span class="material-icons">file_copy</span> </button>
-                    <button class="flowrun-btn-paste-source" title="Paste Source"> <span class="material-icons">content_paste</span> </button>
-                    
-                    <button class="flowrun-btn-copy-dot" title="Copy DOT"> <span class="material-icons">account_tree</span> </button>
-                </div>
-    
-                <div class="flowrun-draw-exec-btns">
-                    <button class="flowrun-btn-run" title="Run"> <span class="material-icons">play_arrow</span> </button>
-                    <button class="flowrun-btn-run-step" title="Run Step By Step"> <span class="material-icons">skip_next</span> </button>
-                    <button class="flowrun-btn-stop flowrun--disabled" title="Stop"> <span class="material-icons">stop</span> </button>
-                </div>
+            <div class="flowrun-draw-io-btns">
+                <button class="flowrun-btn-config"><span class="material-icons">settings</span></button>
+
+                <button class="flowrun-btn-download" title="Download"> <span class="material-icons">file_download</span> </button>
+                <button class="flowrun-btn-load" title="Load from file"> <span class="material-icons">file_upload</span> </button>
+                
+                <button class="flowrun-btn-copy-source" title="Copy Source"> <span class="material-icons">file_copy</span> </button>
+                <button class="flowrun-btn-paste-source" title="Paste Source"> <span class="material-icons">content_paste</span> </button>
+                
+                <button class="flowrun-btn-copy-dot" title="Copy DOT"> <span class="material-icons">account_tree</span> </button>
+            </div>
+
+            <div class="flowrun-draw-exec-btns">
+                <button class="flowrun-btn-run" title="Run"> <span class="material-icons">play_arrow</span> </button>
+                <button class="flowrun-btn-run-step" title="Run Step By Step"> <span class="material-icons">skip_next</span> </button>
+                <button class="flowrun-btn-stop flowrun--disabled" title="Stop"> <span class="material-icons">stop</span> </button>
             </div>
 
             <div class="flowrun-draw"> </div>
@@ -103,7 +101,7 @@
         </div>
 
         <dialog class="flowrun-config">
-            <button class="flowrun-btn-config-close"><span class="material-icons">close</span> Close</button>
+            <button class="flowrun-btn-config-close"><span class="material-icons">close</span></button>
             <div class="flowrun-config-layout">
                 <label>
                     <input class="flowrun-cb-show-functions" type="checkbox">
@@ -123,13 +121,27 @@
 
     <!-- blank editor instance -->
     <div class="flowrun-instance"></div>
-    <br>
+
+    <hr>
+    <hr>
+    <hr>
+
+    <!-- restricted instance -->
+    <div class="flowrun-instance flowrun-restricted flowrun--hidden ">
+        {"id":"id_2680a766_5e3f_43c9_90da_f1e651fc3099","version":"0.1", "name":"Restricted","config":{"lang":"scala","showFunctions":true,"showGenCode":true},"main":{"rawId":"main","name":"main","parameters":[],"tpe":"Void","statements":[{"id":"id_87498624_665e_4bd4_ba04_718ac78142a2","@type":"Begin"},{"id":"id_51583a96_edb9_448b_b482_71a9bd8f1624","value":"fib(16)","@type":"Output", "newline": true},{"id":"id_a90ebc25_f9d7_4f36_aa9c_2c8cbb0148ea","maybeValue":null,"@type":"Return"}]},"functions":[{"rawId":"id_3ab18ee6_a2ca_4f61_bd44_0e775335b003","name":"fib","parameters":[{"id":"03049558-c257-420c-aca0-ec0ab9d379ea","name":"n","tpe":"Integer"}],"tpe":"Integer","statements":[{"id":"id_34908360_84e7_4a54_984f_d2784d05deef","@type":"Begin"},{"id":"id_3f36a122_d09c_4733_83d8_7f249fdafa1c","name":"a","tpe":"Integer","initValue":"0","@type":"Declare"},{"id":"id_33033dc0_fdc4_4008_9a50_33edf1642f85","name":"b","tpe":"Integer","initValue":"1","@type":"Declare"},{"id":"id_da88bdb6_c907_4b5c_9f87_f4314e56e6c7","name":"res","tpe":"Integer","initValue":null,"@type":"Declare"},{"id":"id_fc6ab968_021b_48c0_b054_98d0c646ebea","condition":"n > 1","body":{"id":"id_f020a924_da55_4ad7_a235_1b7580ed4141","statements":[{"id":"id_1e1a3b3e_af6f_4ff8_aaa2_b77e8ff755cf","name":"res","value":"a+b","@type":"Assign"},{"id":"id_73f85b36_f964_4af0_9e43_d65fe435b6a6","name":"a","value":"b","@type":"Assign"},{"id":"id_3caffff1_f870_410f_85a6_0c651bb68b95","name":"b","value":"res","@type":"Assign"},{"id":"id_4e81bf27_b791_4a99_bc7e_4de870dedec2","name":"n","value":"n-1","@type":"Assign"}]},"@type":"While"},{"id":"id_67acb368_4b37_4e31_aeea_f168f03526d3","maybeValue":"res","@type":"Return"}]}]}   
+    </div>
+
+    
+    <hr>
+    <hr>
     <hr>
 
     <!-- readonly instance -->
     <div class="flowrun-instance flowrun-readonly flowrun--hidden ">
-        {"id":"id_2680a766_5e3f_43c9_90da_f1e651fc3099","version":"0.1", "name":"Fibonacci","config":{"lang":"scala","showFunctions":true,"showGenCode":true},"main":{"rawId":"main","name":"main","parameters":[],"tpe":"Void","statements":[{"id":"id_87498624_665e_4bd4_ba04_718ac78142a2","@type":"Begin"},{"id":"id_51583a96_edb9_448b_b482_71a9bd8f1624","value":"fib(16)","@type":"Output", "newline": true},{"id":"id_a90ebc25_f9d7_4f36_aa9c_2c8cbb0148ea","maybeValue":null,"@type":"Return"}]},"functions":[{"rawId":"id_3ab18ee6_a2ca_4f61_bd44_0e775335b003","name":"fib","parameters":[{"id":"03049558-c257-420c-aca0-ec0ab9d379ea","name":"n","tpe":"Integer"}],"tpe":"Integer","statements":[{"id":"id_34908360_84e7_4a54_984f_d2784d05deef","@type":"Begin"},{"id":"id_3f36a122_d09c_4733_83d8_7f249fdafa1c","name":"a","tpe":"Integer","initValue":"0","@type":"Declare"},{"id":"id_33033dc0_fdc4_4008_9a50_33edf1642f85","name":"b","tpe":"Integer","initValue":"1","@type":"Declare"},{"id":"id_da88bdb6_c907_4b5c_9f87_f4314e56e6c7","name":"res","tpe":"Integer","initValue":null,"@type":"Declare"},{"id":"id_fc6ab968_021b_48c0_b054_98d0c646ebea","condition":"n > 1","body":{"id":"id_f020a924_da55_4ad7_a235_1b7580ed4141","statements":[{"id":"id_1e1a3b3e_af6f_4ff8_aaa2_b77e8ff755cf","name":"res","value":"a+b","@type":"Assign"},{"id":"id_73f85b36_f964_4af0_9e43_d65fe435b6a6","name":"a","value":"b","@type":"Assign"},{"id":"id_3caffff1_f870_410f_85a6_0c651bb68b95","name":"b","value":"res","@type":"Assign"},{"id":"id_4e81bf27_b791_4a99_bc7e_4de870dedec2","name":"n","value":"n-1","@type":"Assign"}]},"@type":"While"},{"id":"id_67acb368_4b37_4e31_aeea_f168f03526d3","maybeValue":"res","@type":"Return"}]}]}   
+        {"id":"id_2680a766_5e3f_43c9_90da_f1e651fc3099","version":"0.1", "name":"ReadOnly","config":{"lang":"scala","showFunctions":true,"showGenCode":true},"main":{"rawId":"main","name":"main","parameters":[],"tpe":"Void","statements":[{"id":"id_87498624_665e_4bd4_ba04_718ac78142a2","@type":"Begin"},{"id":"id_51583a96_edb9_448b_b482_71a9bd8f1624","value":"fib(16)","@type":"Output", "newline": true},{"id":"id_a90ebc25_f9d7_4f36_aa9c_2c8cbb0148ea","maybeValue":null,"@type":"Return"}]},"functions":[{"rawId":"id_3ab18ee6_a2ca_4f61_bd44_0e775335b003","name":"fib","parameters":[{"id":"03049558-c257-420c-aca0-ec0ab9d379ea","name":"n","tpe":"Integer"}],"tpe":"Integer","statements":[{"id":"id_34908360_84e7_4a54_984f_d2784d05deef","@type":"Begin"},{"id":"id_3f36a122_d09c_4733_83d8_7f249fdafa1c","name":"a","tpe":"Integer","initValue":"0","@type":"Declare"},{"id":"id_33033dc0_fdc4_4008_9a50_33edf1642f85","name":"b","tpe":"Integer","initValue":"1","@type":"Declare"},{"id":"id_da88bdb6_c907_4b5c_9f87_f4314e56e6c7","name":"res","tpe":"Integer","initValue":null,"@type":"Declare"},{"id":"id_fc6ab968_021b_48c0_b054_98d0c646ebea","condition":"n > 1","body":{"id":"id_f020a924_da55_4ad7_a235_1b7580ed4141","statements":[{"id":"id_1e1a3b3e_af6f_4ff8_aaa2_b77e8ff755cf","name":"res","value":"a+b","@type":"Assign"},{"id":"id_73f85b36_f964_4af0_9e43_d65fe435b6a6","name":"a","value":"b","@type":"Assign"},{"id":"id_3caffff1_f870_410f_85a6_0c651bb68b95","name":"b","value":"res","@type":"Assign"},{"id":"id_4e81bf27_b791_4a99_bc7e_4de870dedec2","name":"n","value":"n-1","@type":"Assign"}]},"@type":"While"},{"id":"id_67acb368_4b37_4e31_aeea_f168f03526d3","maybeValue":"res","@type":"Return"}]}]}   
     </div>
+
+    
   
     <!-- graphviz -->
     <script src="vendor/hpcc-js_wasm.min.js"></script>

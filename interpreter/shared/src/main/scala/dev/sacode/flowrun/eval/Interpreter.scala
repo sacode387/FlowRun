@@ -661,7 +661,7 @@ final class Interpreter(
 }
 
 object Interpreter:
-  val PollIntervalMs = 20
+  val PollIntervalMs = 10
   enum State:
     case INITIALIZED
     case RUNNING

@@ -28,16 +28,25 @@ import dev.sacode.flowrun.eval.Interpreter.State
 import dev.sacode.flowrun.eval.Interpreter.ExecMode
 import dev.sacode.flowrun.edit.CodeArea
 
+enum EditMode(val editable: Boolean):
+  case ReadOnly extends EditMode(false)
+  case Restricted extends EditMode(true)
+  case Edit extends EditMode(true)
+
 // dont use Option here !!!
 @JSExportTopLevel("FlowRunEditor")
 class FlowRunEditor(
     mountElem: dom.html.Element,
     colorScheme: ColorScheme = null,
-    editable: Boolean = true,
     programJson: String = null,
     mountCallback: js.Function1[FlowRunEditor, Unit] = null,
     changeCallback: js.Function1[FlowRunEditor, Unit] = null
 ) {
+
+  private val mode: EditMode =
+    if mountElem.classList.contains("flowrun-readonly") then EditMode.ReadOnly
+    else if mountElem.classList.contains("flowrun-restricted") then EditMode.Restricted
+    else EditMode.Edit
 
   // resolve initial program
   private val jsonSourceOpt = Option(programJson).filterNot(_.trim.isEmpty).orElse {
@@ -86,7 +95,7 @@ class FlowRunEditor(
   codeArea.init()
   private var debugArea = DebugArea(interpreter, flowRunElements)
 
-  private val functionSelector = FunctionSelector(editable, programModel, flowrunChannel, flowRunElements)
+  private val functionSelector = FunctionSelector(mode, programModel, flowrunChannel, flowRunElements)
   private val statementEditor = StatementEditor(programModel, flowrunChannel, flowRunElements)
   private val ctxMenu = CtxMenu(programModel, flowRunElements, flowrunChannel)
 
@@ -102,7 +111,7 @@ class FlowRunEditor(
   if fixedLayout then flowRunElements.configWidget.querySelector(".flowrun-config-layout").remove()
   else updateLayout()
 
-  if editable then
+  if mode.editable then
     ctxMenu.init()
     attachEditListeners()
 
@@ -116,14 +125,14 @@ class FlowRunEditor(
           val nodeId = idParts(0)
           if !n.classList.contains("flowrun-not-selectable") then
             programModel.currentSelectedStmtId = Some(nodeId)
-            if editable then
+            if mode.editable then
               outputArea.clearSyntax()
               flowchartPresenter.loadCurrentFunction() // to highlight new node..
               statementEditor.edit(nodeId)
             end if
             flowrunChannel := FlowRun.Event.StmtSelected
         case ("EDGE", n) =>
-          if editable then ctxMenu.handleEdgeRightClick(event, n)
+          if mode.editable then ctxMenu.handleEdgeRightClick(event, n)
         case _ =>
           flowrunChannel := FlowRun.Event.Deselected
       }
@@ -317,7 +326,7 @@ class FlowRunEditor(
       )
     }
 
-    if editable then {
+    if mode == EditMode.Edit then {
       flowRunElements.loadButton.onclick = _ => {
         import js.JSConverters._
 
@@ -337,14 +346,30 @@ class FlowRunEditor(
         }
         inputForFile.click()
       }
+    } else {
+      flowRunElements.loadButton.remove()
     }
 
-    /* COPY / PASTE */
-    flowRunElements.copySourceButton.onclick = _ => {
-      dom.window.navigator.clipboard.writeText(json())
-      Toastify(ToastifyOptions("Copied program source to clipboard.", Color.green)).showToast()
+    /* COPY */
+    if mode == EditMode.ReadOnly then flowRunElements.copySourceButton.remove()
+    else
+      flowRunElements.copySourceButton.onclick = _ => {
+        dom.window.navigator.clipboard.writeText(json())
+        Toastify(ToastifyOptions("Copied program source to clipboard.", Color.green)).showToast()
+      }
+
+    flowRunElements.copyDotButton.onclick = _ => {
+      dom.window.navigator.clipboard.writeText(flowchartPresenter.funDOT)
+      Toastify(ToastifyOptions("Copied DOT to clipboard.", Color.green)).showToast()
     }
-    if editable then {
+
+    flowRunElements.copyGencodeButton.onclick = _ => {
+      dom.window.navigator.clipboard.writeText(codeText())
+      Toastify(ToastifyOptions("Copied generated code to clipboard.", Color.green)).showToast()
+    }
+
+    /* PASTE */
+    if mode == EditMode.Edit then {
       flowRunElements.pasteSourceButton.onclick = _ => {
         dom.window.navigator.clipboard.readText().`then` { copiedText =>
           try {
@@ -356,22 +381,16 @@ class FlowRunEditor(
           }
         }
       }
-      flowRunElements.showConfigButton.onclick = _ => {
-        flowRunElements.configDialog.asDyn.showModal()
-      }
-      flowRunElements.closeConfigButton.onclick = _ => {
-        flowRunElements.configDialog.asDyn.close()
-      }
+    } else {
+      flowRunElements.pasteSourceButton.remove()
     }
 
-    flowRunElements.copyDotButton.onclick = _ => {
-      dom.window.navigator.clipboard.writeText(flowchartPresenter.funDOT)
-      Toastify(ToastifyOptions("Copied DOT to clipboard.", Color.green)).showToast()
+    /* CONFIG DIALOG */
+    flowRunElements.showConfigButton.onclick = _ => {
+      flowRunElements.configDialog.asDyn.showModal()
     }
-
-    flowRunElements.copyGencodeButton.onclick = _ => {
-      dom.window.navigator.clipboard.writeText(codeText())
-      Toastify(ToastifyOptions("Copied generated code to clipboard.", Color.green)).showToast()
+    flowRunElements.closeConfigButton.onclick = _ => {
+      flowRunElements.configDialog.asDyn.close()
     }
   }
 
@@ -385,7 +404,8 @@ class FlowRunEditor(
         "" + Math.max(flowRunElements.programNameInput.value.length + 3, 10) + "ch";
     }
 
-    flowRunElements.addFunButton.onclick = _ => programModel.addFunction()
+    if mode.editable then flowRunElements.addFunButton.onclick = _ => programModel.addFunction()
+    else flowRunElements.addFunButton.remove()
 
     flowRunElements.drawArea.addEventListener(
       "contextmenu",
