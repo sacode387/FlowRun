@@ -105,9 +105,6 @@ class FlowRunEditor(
   if editable then
     ctxMenu.init()
     attachEditListeners()
-  else
-    flowRunElements.addFunButton.remove()
-    flowRunElements.configWidget.remove()
 
   flowRunElements.drawArea.addEventListener(
     "click",
@@ -340,8 +337,6 @@ class FlowRunEditor(
         }
         inputForFile.click()
       }
-    } else {
-      flowRunElements.loadButton.disabled = true
     }
 
     /* COPY / PASTE */
@@ -367,8 +362,6 @@ class FlowRunEditor(
       flowRunElements.closeConfigButton.onclick = _ => {
         flowRunElements.configDialog.asDyn.close()
       }
-    } else {
-      flowRunElements.pasteSourceButton.disabled = true
     }
 
     flowRunElements.copyDotButton.onclick = _ => {

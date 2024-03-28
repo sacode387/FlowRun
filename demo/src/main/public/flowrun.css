@@ -392,10 +392,6 @@ pre[class*=language-].flowrun-code {
     gap: 5px;
 }
 
-.flowrun-instance.flowrun--hidden {
-    display: none;
-}
-
 .flowrun-instance button[disabled] {
     opacity: 0.5;
     pointer-events: none;
@@ -440,9 +436,30 @@ pre[class*=language-].flowrun-code {
     background: var(--flowrun-blue-darker);
 }
 
-
-
-
+/**************************/
+/* ReadOnly mode */
+/**************************/
+.flowrun-instance.flowrun-readonly svg {
+    padding-top: 0;
+}
+.flowrun-instance.flowrun-readonly .flowrun-btn-fun-add {
+    display: none;
+}
+.flowrun-instance.flowrun-readonly .flowrun-btn-fun-delete {
+    display: none;
+}
+.flowrun-instance.flowrun-readonly .flowrun-diagram-top-left {
+    display: none;
+}
+.flowrun-instance.flowrun-readonly .flowrun-btn-load {
+    display: none;
+}
+.flowrun-instance.flowrun-readonly .flowrun-btn-paste-source {
+    display: none;
+}
+.flowrun-instance.flowrun-readonly .flowrun-btn-config {
+    display: none;
+}
 
 @media screen and (min-width: 600px) {
 
