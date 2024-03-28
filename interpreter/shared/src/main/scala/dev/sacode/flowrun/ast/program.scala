@@ -63,7 +63,8 @@ final case class FlowRunConfig(
     lang: String,
     showFunctions: Boolean,
     showGenCode: Boolean,
-    showDebugVars: Boolean = true
+    showDebugVars: Boolean = true,
+    showIoBtns: Boolean = true
 ) derives JsonRW
 
 object FlowRunConfig:

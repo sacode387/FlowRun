@@ -428,12 +428,14 @@ class FlowRunEditor(
     flowRunElements.showFunctionsCheckbox.checked = programModel.ast.config.showFunctions
     flowRunElements.showCodeCheckbox.checked = programModel.ast.config.showGenCode
     flowRunElements.showDebugVarsCheckbox.checked = programModel.ast.config.showDebugVars
+    flowRunElements.showIoBtnsCheckbox.checked = programModel.ast.config.showIoBtns
 
     if !fixedLayout then
       flowRunElements.showFunctionsCheckbox.oninput = _ => setLayout()
       flowRunElements.showCodeCheckbox.oninput = _ => setLayout()
 
     flowRunElements.showDebugVarsCheckbox.oninput = _ => setLayout()
+    flowRunElements.showIoBtnsCheckbox.oninput = _ => setLayout()
   }
 
   private def doOnChange(): Unit =
@@ -449,7 +451,8 @@ class FlowRunEditor(
     val newConfig = oldConfig.copy(
       showFunctions = flowRunElements.showFunctionsCheckbox.checked,
       showGenCode = flowRunElements.showCodeCheckbox.checked,
-      showDebugVars = flowRunElements.showDebugVarsCheckbox.checked
+      showDebugVars = flowRunElements.showDebugVarsCheckbox.checked,
+      showIoBtns = flowRunElements.showIoBtnsCheckbox.checked
     )
     programModel.setConfig(newConfig)
     updateLayout()
@@ -468,6 +471,9 @@ class FlowRunEditor(
 
     if config.showDebugVars then flowRunElements.debugVariables.classList.remove("flowrun--hidden")
     else flowRunElements.debugVariables.classList.add("flowrun--hidden")
+
+    if config.showIoBtns then flowRunElements.flowrunDrawIoBtns.classList.remove("flowrun--hidden")
+    else flowRunElements.flowrunDrawIoBtns.classList.add("flowrun--hidden")
   }
 
   private def resolveLayout(showFunctions: Boolean, showCode: Boolean): String = {

@@ -34,6 +34,7 @@ class FlowRunElements(
   val runStepButton: dom.html.Element = mountElem.querySelector(".flowrun-btn-run-step").asInstanceOf[dom.html.Element]
   val stopButton: dom.html.Element = mountElem.querySelector(".flowrun-btn-stop").asInstanceOf[dom.html.Element]
 
+  val flowrunDrawIoBtns: dom.html.Element = mountElem.querySelector(".flowrun-draw-io-btns").asInstanceOf[dom.html.Element] 
   val downloadButton: dom.html.Element =
     mountElem.querySelector(".flowrun-btn-download").asInstanceOf[dom.html.Element]
   val loadButton: dom.html.Button =
@@ -64,6 +65,8 @@ class FlowRunElements(
     mountElem.querySelector(".flowrun-cb-show-gen-code").asInstanceOf[dom.html.Input]
   val showDebugVarsCheckbox: dom.html.Input =
     mountElem.querySelector(".flowrun-cb-show-debug-vars").asInstanceOf[dom.html.Input]
+  val showIoBtnsCheckbox: dom.html.Input =
+    mountElem.querySelector(".flowrun-cb-show-io-btns").asInstanceOf[dom.html.Input]
   
   val showConfigButton =
     mountElem.querySelector(".flowrun-btn-config").asInstanceOf[dom.html.Element]

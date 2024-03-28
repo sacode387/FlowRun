@@ -27,10 +27,6 @@
     box-sizing: border-box;
 }
 
-.flowrun-instance>.flowrun--panel {
-    margin-bottom: 1rem;
-}
-
 .flowrun-instance a,
 .flowrun-instance a:hover {
     text-decoration: none;
@@ -57,30 +53,9 @@
     display: none;
 }
 
-/**************************/
-/* MISC */
-/* these are on top coz we override them as needed */
-/**************************/
-.flowrun--disabled {
-    pointer-events: none;
-    opacity: 0.8;
-}
-
-.flowrun--hidden {
-    display: none;
-}
-
-input[type="text"].flowrun--disabled {
-    opacity: 1;
-    border: none;
-}
-
-.flowrun--running {
-    border: 3px var(--flowrun-red-lighter) solid;
-}
-
 .flowrun-instance .flowrun--panel {
     padding: 1rem;
+    margin-bottom: 1rem;
     box-shadow: 2px 1px 5px grey;
     background-color: var(--flowrun-white);
     border-radius: 0.25rem;
@@ -581,3 +556,23 @@ pre[class*=language-].flowrun-code {
     }
 }
 
+/**************************/
+/* MISC */
+/**************************/
+.flowrun--disabled {
+    pointer-events: none;
+    opacity: 0.8;
+}
+
+.flowrun--hidden {
+    display: none;
+}
+
+input[type="text"].flowrun--disabled {
+    opacity: 1;
+    border: none;
+}
+
+.flowrun--running {
+    border: 3px var(--flowrun-red-lighter) solid;
+}
