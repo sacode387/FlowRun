@@ -80,19 +80,12 @@ final class StatementEditor(
         if currFun.isMain then {} else if currFun.tpe == Expression.Type.Void then
           Toastify(ToastifyOptions("Void function does not return any value.", Color.yellow)).showToast()
         else
-          val exprInputElem = newExprInput(statement.id, 10, statement.maybeValue.getOrElse(""), "x + 1")(
-            newExprText => {
-              val updatedStmt =
-                programModel.findStatement(stmtId).asInstanceOf[Return].copy(maybeValue = Some(newExprText))
-              programModel.updateStmt(updatedStmt)
-            },
-            (e, newExprText) => {
+          val exprInputElem = newExprInput(statement.id, 10, statement.maybeValue.getOrElse(""), "x + 1") {
+            newExprText =>
               val newValueOpt = Option.when(newExprText.nonEmpty)(newExprText)
               val updatedStmt = programModel.findStatement(stmtId).asInstanceOf[Return].copy(maybeValue = newValueOpt)
               programModel.updateStmt(updatedStmt)
-              flowrunChannel := FlowRun.Event.SyntaxError(e.getMessage)
-            }
-          )
+          }
           flowRunElements.stmtOutput.innerText = ""
           flowRunElements.stmtOutput.appendChild(exprInputElem)
           exprInputElem.focus()
@@ -106,19 +99,11 @@ final class StatementEditor(
           val updatedStmt = programModel.findStatement(stmtId).asInstanceOf[Declare].copy(tpe = newType)
           programModel.updateStmt(updatedStmt)
         }
-        val exprInputElem = newExprInput(statement.id, 10, statement.initValue.getOrElse(""), "123")(
-          newExprText => {
-            val updatedStmt =
-              programModel.findStatement(stmtId).asInstanceOf[Declare].copy(initValue = Some(newExprText))
-            programModel.updateStmt(updatedStmt)
-          },
-          (e, newExprText) => {
-            val newValueOpt = Option.when(newExprText.nonEmpty)(newExprText)
-            val updatedStmt = programModel.findStatement(stmtId).asInstanceOf[Declare].copy(initValue = newValueOpt)
-            programModel.updateStmt(updatedStmt)
-            flowrunChannel := FlowRun.Event.SyntaxError(e.getMessage)
-          }
-        )
+        val exprInputElem = newExprInput(statement.id, 10, statement.initValue.getOrElse(""), "123") { newExprText =>
+          val newValueOpt = Option.when(newExprText.nonEmpty)(newExprText)
+          val updatedStmt = programModel.findStatement(stmtId).asInstanceOf[Declare].copy(initValue = newValueOpt)
+          programModel.updateStmt(updatedStmt)
+        }
 
         flowRunElements.stmtOutput.innerText = ""
         flowRunElements.stmtOutput.appendChild(
@@ -270,7 +255,7 @@ final class StatementEditor(
   private def getParams(): List[Function.Parameter] =
     programModel.currentFunction.parameters
 
-  private def newNameInput(size: Int, value: String, placeHolder: String)(onSuccess: String => Unit): dom.html.Input = {
+  private def newNameInput(size: Int, value: String, placeHolder: String)(callback: String => Unit): dom.html.Input = {
     val newInput = flowRunElements.newInputText(size)
     newInput.value = value
     newInput.placeholder = placeHolder
@@ -279,25 +264,16 @@ final class StatementEditor(
       val errorMsg: Option[String] = NameUtils.validateIdentifier(newName)
       errorMsg match
         case None =>
-          onSuccess(newName)
+          callback(newName)
         case Some(msg) =>
-          onSuccess(newName) // doesnt matter, just store it..
+          callback(newName) // doesnt matter, just store it..
           flowrunChannel := FlowRun.Event.SyntaxError(msg)
     }
     newInput
   }
 
   private def newExprInput(nodeId: String, size: Int, value: String, placeHolder: String)(
-      onSuccess: String => Unit
-  ): dom.html.Input =
-    newExprInput(nodeId, size, value, placeHolder)(
-      onSuccess,
-      (e, newExprText) => flowrunChannel := FlowRun.Event.SyntaxError(e.getMessage)
-    )
-
-  private def newExprInput(nodeId: String, size: Int, value: String, placeHolder: String)(
-      onSuccess: String => Unit,
-      onFailure: (Throwable, String) => Unit
+      callback: String => Unit
   ): dom.html.Input = {
     val newInput = flowRunElements.newInputText(size)
     newInput.value = value
@@ -307,8 +283,11 @@ final class StatementEditor(
       val newExprText = newInput.value.trim
       val maybeNewExpr = Try(parseExpr(nodeId, newExprText))
       maybeNewExpr match {
-        case Success(_) => onSuccess(newExprText)
-        case Failure(e) => onFailure(e, newExprText)
+        case Success(_) =>
+          callback(newExprText)
+        case Failure(e) =>
+          callback(newExprText) // doesnt matter, just store it..
+          flowrunChannel := FlowRun.Event.SyntaxError(e.getMessage)
       }
     }
     newInput
