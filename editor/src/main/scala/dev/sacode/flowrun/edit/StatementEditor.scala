@@ -87,11 +87,10 @@ final class StatementEditor(
               programModel.updateStmt(updatedStmt)
             },
             (e, newExprText) => {
-              if newExprText.isEmpty then
-                val updatedStmt = programModel.findStatement(stmtId).asInstanceOf[Return].copy(maybeValue = None)
-                programModel.updateStmt(updatedStmt)
-                // TODO update model ANYWAYYYYY
-              else flowrunChannel := FlowRun.Event.SyntaxError(e.getMessage)
+              val newValueOpt = Option.when(newExprText.nonEmpty)(newExprText)
+              val updatedStmt = programModel.findStatement(stmtId).asInstanceOf[Return].copy(maybeValue = newValueOpt)
+              programModel.updateStmt(updatedStmt)
+              flowrunChannel := FlowRun.Event.SyntaxError(e.getMessage)
             }
           )
           flowRunElements.stmtOutput.innerText = ""
@@ -114,10 +113,10 @@ final class StatementEditor(
             programModel.updateStmt(updatedStmt)
           },
           (e, newExprText) => {
-            if newExprText.isEmpty then
-              val updatedStmt = programModel.findStatement(stmtId).asInstanceOf[Declare].copy(initValue = None)
-              programModel.updateStmt(updatedStmt)
-            else flowrunChannel := FlowRun.Event.SyntaxError(e.getMessage)
+            val newValueOpt = Option.when(newExprText.nonEmpty)(newExprText)
+            val updatedStmt = programModel.findStatement(stmtId).asInstanceOf[Declare].copy(initValue = newValueOpt)
+            programModel.updateStmt(updatedStmt)
+            flowrunChannel := FlowRun.Event.SyntaxError(e.getMessage)
           }
         )
 
@@ -282,6 +281,7 @@ final class StatementEditor(
         case None =>
           onSuccess(newName)
         case Some(msg) =>
+          onSuccess(newName) // doesnt matter, just store it..
           flowrunChannel := FlowRun.Event.SyntaxError(msg)
     }
     newInput

@@ -6,4 +6,3 @@ pripremit CSS/JS varijable za theming
 ####
 node comment
 
-#### clear output panel
