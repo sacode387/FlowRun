@@ -38,8 +38,7 @@ class FlowchartPresenter(
 
   def disable(mode: ExecMode): Unit =
     flowRunElements.drawArea.classList.add("flowrun--disabled")
-    if mode == ExecMode.NORMAL then
-      flowRunElements.runButton.classList.add("flowrun--disabled")
+    if mode == ExecMode.NORMAL then flowRunElements.runButton.classList.add("flowrun--disabled")
     flowRunElements.stopButton.classList.remove("flowrun--disabled")
 
   def enable(): Unit =
@@ -343,6 +342,14 @@ class FlowchartPresenter(
         (dot, maxBranchY)
 
       case _: Block => ("", posY)
+
+      case _: Comment =>
+        val lbl = stmt.label.toGraphvizLbl
+        val dot =
+          s"""|${stmt.id} [id="$stmtId" ${pos(posX, posY)} ${dimensions(lbl)} $group 
+              |  label="$lbl" tooltip="$lbl" shape="parallelogram" ${colorScheme.commentNode.graphvizColors}]
+              |""".stripMargin.replaceAll("\n", " ")
+        (dot, posY)
     }
   }
 
@@ -590,6 +597,9 @@ class FlowchartPresenter(
 
       case _: Block  => ""
       case _: Return => "" // no edges after return..
+      case _: Comment =>
+        val edgeId = s"${stmt.id}@$blockId"
+        s"""${stmt.id}:s -> $nextStmtId:$nextStmtDir [id="$edgeId" ${edgeAttrs(nextStmtId)}]"""
     }
   }
 

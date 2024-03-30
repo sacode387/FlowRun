@@ -138,6 +138,8 @@ class GolangGenerator(val programAst: Program) extends CodeGenerator {
         addLine(s"for $varName <- $genStart to $genEnd by $genIncr {", id)
         genStatement(block)
         addLine("}", id)
+      case Comment(id, text) =>
+        addLine(s"/* ${text} */", id)
 
   import PredefinedFunction.*
   override def predefFun(name: String, genArgs: List[String]): String = {

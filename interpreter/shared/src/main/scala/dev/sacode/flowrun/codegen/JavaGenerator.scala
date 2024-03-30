@@ -139,6 +139,9 @@ class JavaGenerator(val programAst: Program) extends CodeGenerator {
         addLine(s"for (int $varName = $genStart; i <= $genEnd; i += $genIncr) {", id)
         genStatement(block)
         addLine("}", id)
+
+      case Comment(id, text) =>
+        addLine(s"/* ${text} */", id)
     }
   }
 

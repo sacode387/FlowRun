@@ -120,6 +120,9 @@ class PhpGenerator(val programAst: Program) extends CodeGenerator {
         genStatement(block)
         addLine("}", id)
 
+      case Comment(id, text) =>
+        addLine(s"/* ${text} */", id)
+
   import PredefinedFunction.*
   override def predefFun(name: String, genArgs: List[String]): String = {
     def argOpt(idx: Int) = genArgs.lift(idx).getOrElse("")

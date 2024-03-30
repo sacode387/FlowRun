@@ -107,4 +107,8 @@ object Statement:
     override def duplicated = copy(id = AST.newId, body = body.duplicated)
     override def label = s"$varName = $start to $end by $incr"
 
+  case class Comment(id: String, text: String) extends Statement derives JsonRW:
+    override def duplicated: Comment = copy(id = AST.newId)
+    override def label = text
+
 end Statement

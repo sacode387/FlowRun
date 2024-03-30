@@ -246,6 +246,17 @@ final class StatementEditor(
         )
         nameInputElem.focus()
 
+      case statement: Comment =>
+        val nameInputElem = newNameInput(20, statement.text, "a comment", validate = false) { newName =>
+          val updatedStmt = programModel.findStatement(stmtId).asInstanceOf[Comment].copy(text = newName)
+          programModel.updateStmt(updatedStmt)
+        }
+        flowRunElements.stmtOutput.innerText = ""
+        flowRunElements.stmtOutput.appendChild(
+          stmtElem(nameInputElem).render
+        )
+        nameInputElem.focus()
+
       case _ => ()
     }
   }
@@ -255,14 +266,16 @@ final class StatementEditor(
   private def getParams(): List[Function.Parameter] =
     programModel.currentFunction.parameters
 
-  private def newNameInput(size: Int, value: String, placeHolder: String)(callback: String => Unit): dom.html.Input = {
+  private def newNameInput(size: Int, value: String, placeHolder: String, validate: Boolean = true)(
+      callback: String => Unit
+  ): dom.html.Input = {
     val newInput = flowRunElements.newInputText(size)
     newInput.value = value
     newInput.placeholder = placeHolder
     newInput.oninput = { (_: dom.Event) =>
       val newName = newInput.value.trim
-      val errorMsg: Option[String] = NameUtils.validateIdentifier(newName)
-      errorMsg match
+      val errorMsgOpt = if validate then NameUtils.validateIdentifier(newName) else None
+      errorMsgOpt match
         case None =>
           callback(newName)
         case Some(msg) =>

@@ -299,10 +299,8 @@ class FlowRunEditor(
       )
     }
     flowRunElements.runButton.onclick = _ => {
-      if interpreter.isRunning then
-        interpreter.execMode = ExecMode.NORMAL
-      else
-        doRun(ExecMode.NORMAL)
+      if interpreter.isRunning then interpreter.execMode = ExecMode.NORMAL
+      else doRun(ExecMode.NORMAL)
     }
 
     flowRunElements.runStepButton.onclick = _ => {

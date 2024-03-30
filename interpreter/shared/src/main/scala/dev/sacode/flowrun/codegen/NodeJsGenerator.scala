@@ -110,6 +110,9 @@ class NodeJsGenerator(override val programAst: Program) extends JavascriptGenera
         genStatement(block)
         addLine("}", id)
 
+      case Comment(id, text) =>
+        addLine(s"/* ${text} */", id)
+
   private def readFunction(tpeOpt: Option[Type]): String = tpeOpt match
     case None => "line"
     case Some(tpe) =>

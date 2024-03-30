@@ -133,6 +133,9 @@ class PythonGenerator(val programAst: Program) extends CodeGenerator {
         genStatement(block)
         if block.statements.isEmpty then addLine("  pass", id)
 
+      case Comment(id, text) =>
+        addLine(s""" ""\" ${text} ""\" */""", id)
+
   import PredefinedFunction.*
   override def predefFun(name: String, genArgs: List[String]): String = {
     def argOpt(idx: Int) = genArgs.lift(idx).getOrElse("")

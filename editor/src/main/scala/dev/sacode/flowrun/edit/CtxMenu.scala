@@ -47,6 +47,7 @@ class CtxMenu(programModel: ProgramModel, flowRunElements: FlowRunElements, flow
   private val addWhileButton = edgeContextMenu.querySelector(".flowrun-add-while").asInstanceOf[dom.html.Element]
   private val addDoWhileButton = edgeContextMenu.querySelector(".flowrun-add-do-while").asInstanceOf[dom.html.Element]
   private val addForLoopButton = edgeContextMenu.querySelector(".flowrun-add-for").asInstanceOf[dom.html.Element]
+  private val addCommentButton = edgeContextMenu.querySelector(".flowrun-add-comment").asInstanceOf[dom.html.Element]
 
   def init(): Unit =
     attachListeners()
@@ -178,6 +179,11 @@ class CtxMenu(programModel: ProgramModel, flowRunElements: FlowRunElements, flow
     addForLoopButton.addEventListener(
       "click",
       (event: dom.MouseEvent) => addStatement(ForLoop(AST.newId, "i", "0", "1", "10", Block(AST.newId)))
+    )
+
+    addCommentButton.addEventListener(
+      "click",
+      (event: dom.MouseEvent) => addStatement(Comment(AST.newId, "comment"))
     )
   }
 

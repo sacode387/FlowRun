@@ -262,6 +262,9 @@ final class Interpreter(
 
         case Begin(_) =>
           Future.successful(NoVal)
+
+        case _: Comment =>
+          Future.successful(NoVal)
       }
     }
     .map { res =>

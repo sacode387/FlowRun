@@ -10,7 +10,8 @@ case class ColorScheme(
     assignNode: Color,
     ioNode: Color,
     loopNode: Color,
-    callNode: Color
+    callNode: Color,
+    commentNode: Color
 ) {
   def withFontName(fontName: String) = copy(fontName = fontName)
   def withStartEndNode(startEndNode: Color) = copy(startEndNode = startEndNode)
@@ -19,6 +20,7 @@ case class ColorScheme(
   def withIoNode(ioNode: Color) = copy(ioNode = ioNode)
   def withLoopNode(loopNode: Color) = copy(loopNode = loopNode)
   def withCallNode(callNode: Color) = copy(callNode = callNode)
+  def withCommentNode(commentNode: Color) = copy(commentNode = commentNode)
 }
 
 @JSExportTopLevel("FlowrunColorSchemeObj")
@@ -33,7 +35,8 @@ object ColorScheme:
     assignNode = Color.darkBlue,
     ioNode = Color.blue,
     loopNode = Color.yellow,
-    callNode = Color.blue
+    callNode = Color.blue,
+    commentNode = Color.grey
   )
 
 @JSExportAll
@@ -57,3 +60,4 @@ object Color:
   val darkBlue = Color("#002a3a", "#001117", "white")
   val yellow = Color("#ffd166", "#8f6400", "black")
   val green = Color("#258139", "#214426", "white")
+  val grey = Color("#C0C0C0", "#A9A9A9", "white")

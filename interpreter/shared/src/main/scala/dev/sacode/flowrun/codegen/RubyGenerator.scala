@@ -122,6 +122,14 @@ class RubyGenerator(val programAst: Program) extends CodeGenerator {
         genStatement(block)
         addLine("end", id)
 
+      case Comment(id, text) =>
+        addLine(
+          s"""|=begin
+                    |${text}
+                    |=end""".stripMargin,
+          id
+        )
+
   import PredefinedFunction.*
   override def predefFun(name: String, genArgs: List[String]): String = {
     def argOpt(idx: Int) = genArgs.lift(idx).getOrElse("")
