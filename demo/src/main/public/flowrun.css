@@ -14,8 +14,17 @@
     --flowrun-grey-darker: #dfdfdf;
     --flowrun-white: #fff;
 
+    /* configurable colors */
+    --flowrun-bg-color: var(--flowrun-white);
+
     --flowrun-font-monospace: 'Courier Prime';
     --flowrun-font-color: var(--flowrun-green-darker);
+
+    --flowrun-fun-chooser-bg-color: var(--flowrun-light_blue);
+
+    --flowrun-ctx-menu-bg-color: var(--flowrun-blue);
+    --flowrun-ctx-menu-color: var(--flowrun-white);
+    --flowrun-ctx-menu-hover-color: var(--flowrun-blue-darker);
 }
 
 .flowrun-instance {
@@ -57,7 +66,7 @@
     padding: 1rem;
     margin-bottom: 1rem;
     box-shadow: 2px 1px 5px grey;
-    background-color: var(--flowrun-white);
+    background-color: var(--flowrun-bg-color);
     border-radius: 0.25rem;
 }
 
@@ -65,9 +74,6 @@
 /****************************/
 /* FUNCTIONS LIST */
 /****************************/
-.flowrun-functions-list {
-    background-color: var(--flowrun-white);
-}
 
 .flowrun-instance.flowrun-layout-d-o .flowrun-functions-list,
 .flowrun-instance.flowrun-layout-d_o .flowrun-functions-list,
@@ -85,7 +91,7 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    background: var(--flowrun-light_blue);
+    background: var(--flowrun-fun-chooser-bg.color);
 }
 
 .flowrun-fun-chooser>div>label {
@@ -230,7 +236,8 @@
 /**************************/
 .flowrun-output {
     overflow: auto;
-    position: relative; /* for clear output button */
+    position: relative;
+    /* for clear output button */
 }
 
 .flowrun-output samp {
@@ -425,8 +432,8 @@ pre[class*=language-].flowrun-code {
     gap: 5px;
     padding: 4px 10px;
     font-size: 15px;
-    background: var(--flowrun-blue);
-    color: var(--flowrun-white);
+    background: var(--flowrun-ctx-menu-bg-color);
+    color: var(--flowrun-ctx-menu-color);
     border: 1px var(--flowrun-blue-darker) solid;
 }
 
@@ -436,7 +443,7 @@ pre[class*=language-].flowrun-code {
 }
 
 .flowrun-context-menu>*:hover {
-    background: var(--flowrun-blue-darker);
+    background: var(--flowrun-ctx-menu-hover-color);
 }
 
 /**************************/
