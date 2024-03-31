@@ -21,6 +21,8 @@
     --flowrun-font-color: var(--flowrun-green-darker);
 
     --flowrun-fun-chooser-bg-color: var(--flowrun-light_blue);
+    --flowrun-fun-chooser-hover-color: var(--flowrun-light_blue-darker);
+    --flowrun-btn-fun-add-hover-color: var(--flowrun-light_blue);
 
     --flowrun-ctx-menu-bg-color: var(--flowrun-blue);
     --flowrun-ctx-menu-color: var(--flowrun-white);
@@ -74,7 +76,6 @@
 /****************************/
 /* FUNCTIONS LIST */
 /****************************/
-
 .flowrun-instance.flowrun-layout-d-o .flowrun-functions-list,
 .flowrun-instance.flowrun-layout-d_o .flowrun-functions-list,
 .flowrun-instance.flowrun-layout-d-o_c .flowrun-functions-list {
@@ -85,13 +86,18 @@
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
+    margin-bottom: 0.5rem;
 }
 
 .flowrun-fun-chooser>div {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    background: var(--flowrun-fun-chooser-bg.color);
+    background: var(--flowrun-fun-chooser-bg-color);
+}
+
+.flowrun-fun-chooser>div:hover {
+    background-color: var(--flowrun-fun-chooser-hover-color);
 }
 
 .flowrun-fun-chooser>div>label {
@@ -113,6 +119,10 @@
 .flowrun-btn-fun-add {
     width: 100%;
     text-align: center;
+}
+
+.flowrun-instance .flowrun-functions-list .flowrun-btn-fun-add:hover {
+    background-color: var(--flowrun-btn-fun-add-hover-color);
 }
 
 .flowrun-input-radio {
@@ -311,7 +321,7 @@ pre[class*=language-].flowrun-code {
     display: flex;
     gap: 1rem;
     position: absolute;
-    left: 1rem;
+    right: 1rem;
     top: 5px;
 }
 

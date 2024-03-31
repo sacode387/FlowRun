@@ -247,14 +247,12 @@ class FlowRunEditor(
       doOnChange()
     case StmtSelected =>
       doOnChange()
-      flowRunElements.clearOutputBtn.classList.add("flowrun--disabled")
     case Deselected =>
       programModel.currentSelectedStmtId = None
       outputArea.clearStmt()
       outputArea.clearSyntax()
       flowchartPresenter.clearSelected()
       doOnChange()
-      flowRunElements.clearOutputBtn.classList.remove("flowrun--disabled")
     case ConfigChanged =>
       doOnChange()
       doOnModelChange()
@@ -408,7 +406,7 @@ class FlowRunEditor(
   private def attachEditListeners(): Unit = {
 
     flowRunElements.programNameInput.classList.remove("flowrun--disabled")
-    flowRunElements.programNameInput.maxLength = 50
+    flowRunElements.programNameInput.maxLength = 30
     flowRunElements.programNameInput.oninput = _ => {
       programModel.setName(flowRunElements.programNameInput.value.trim)
       flowRunElements.programNameInput.style.width =
