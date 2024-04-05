@@ -9,12 +9,12 @@ import dev.sacode.flowrun.*
 @main def start(): Unit =
   dom.window.onload = _ => {
 
-    val colorScheme = ColorScheme.default.withFontName("Courier Prime")
+    val theme = FlowRunTheme.default.withFontName("Courier Prime")
     val flowRunEditors = document.querySelectorAll(".flowrun-instance")
     for elem <- flowRunEditors do
       val mountElem = elem.asInstanceOf[dom.html.Element]
       val flowRunEditor: FlowRunEditor = FlowRunEditor(
-        colorScheme = colorScheme,
+        theme = theme,
         mountElem = mountElem,
         mountCallback = { fr =>
           // JSON text is hidden

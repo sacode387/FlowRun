@@ -3,7 +3,8 @@ package dev.sacode.flowrun
 import scala.scalajs.js.annotation.*
 
 @JSExportAll
-case class ColorScheme(
+@JSExportTopLevel("FlowRunTheme")
+case class FlowRunTheme(
     fontName: String,
     startEndNode: Color,
     declareNode: Color,
@@ -23,12 +24,12 @@ case class ColorScheme(
   def withCommentNode(commentNode: Color) = copy(commentNode = commentNode)
 }
 
-@JSExportTopLevel("FlowrunColorSchemeObj")
-object ColorScheme:
+@JSExportTopLevel("FlowRunThemeObj")
+object FlowRunTheme:
   // yellow, light_blue, blue, red
   // #ffd166, #8de4ff, #015692,
   @JSExport
-  val default = ColorScheme(
+  val default = FlowRunTheme(
     fontName = "Courier New",
     startEndNode = Color.lightBlue,
     declareNode = Color.blue,
@@ -40,6 +41,7 @@ object ColorScheme:
   )
 
 @JSExportAll
+@JSExportTopLevel("FlowRunColor")
 case class Color(
     fill: String = "white",
     border: String = "black",
@@ -53,7 +55,6 @@ case class Color(
   def withFont(font: String) = copy(font = font)
 }
 
-@JSExportTopLevel("FlowrunColorObj")
 object Color:
   val lightBlue = Color("#8de4ff", "#00799e", "#982b13")
   val blue = Color("#015692", "#002a3a", "white")

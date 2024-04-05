@@ -29,16 +29,11 @@ import dev.sacode.flowrun.eval.Interpreter.State
 import dev.sacode.flowrun.eval.Interpreter.ExecMode
 import dev.sacode.flowrun.edit.CodeArea
 
-enum EditMode(val editable: Boolean):
-  case ReadOnly extends EditMode(false)
-  case Restricted extends EditMode(true)
-  case Edit extends EditMode(true)
-
 // dont use Option here !!!
 @JSExportTopLevel("FlowRunEditor")
 class FlowRunEditor(
     mountElem: dom.html.Element,
-    colorScheme: ColorScheme = null,
+    theme: FlowRunTheme = null,
     programJson: String = null,
     mountCallback: js.Function1[FlowRunEditor, Unit] = null,
     changeCallback: js.Function1[FlowRunEditor, Unit] = null
@@ -89,8 +84,8 @@ class FlowRunEditor(
 
   @JSExport
   val flowRunElements = FlowRunElements(mountElem) // needs to come after JSON resolving and template copying
-  private val colorSchemeSelected = Option(colorScheme).getOrElse(ColorScheme.default)
-  private val flowchartPresenter = FlowchartPresenter(programModel, flowRunElements, colorScheme, flowrunChannel)
+  private val colorSchemeSelected = Option(theme).getOrElse(FlowRunTheme.default)
+  private val flowchartPresenter = FlowchartPresenter(programModel, flowRunElements, theme, flowrunChannel)
   private var outputArea = OutputArea(interpreter, flowRunElements, flowrunChannel)
   private var codeArea = CodeArea(flowRunElements, programModel)
   codeArea.init()
