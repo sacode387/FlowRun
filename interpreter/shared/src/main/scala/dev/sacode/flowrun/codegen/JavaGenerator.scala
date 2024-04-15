@@ -166,6 +166,7 @@ class JavaGenerator(val programAst: Program) extends CodeGenerator {
       case RealToInteger => s"(int)${argOpt(0)}"
       case StringToInteger =>
         s"""Integer.parseInt(${argOpt(0)})"""
+      case ReadInput       => "Console.ReadLine()"
     }
   }
 

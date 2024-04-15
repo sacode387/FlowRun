@@ -146,6 +146,8 @@ class SwiftGenerator(val programAst: Program) extends CodeGenerator {
         s"""try Int(${argOpt(0)})! catch {
            |  case _: NumberFormatException => 0
            |}""".stripMargin
+      case ReadInput => "Console.ReadLine()"
+
     }
   }
 

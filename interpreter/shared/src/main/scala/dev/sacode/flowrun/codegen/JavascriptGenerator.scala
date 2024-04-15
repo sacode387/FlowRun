@@ -139,6 +139,7 @@ class JavascriptGenerator(val programAst: Program) extends CodeGenerator {
       case CharAt          => s"${argOpt(0)}.charAt(${argOpt(1)})"
       case RealToInteger   => argOpt(0) // ??
       case StringToInteger => s"parseInt(${argOpt(0)})"
+      case ReadInput       => "Console.ReadLine()"
     }
   }
 

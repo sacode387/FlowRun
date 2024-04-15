@@ -1,5 +1,6 @@
 package dev.sacode.flowrun
 
+import scala.util.boundary, boundary.break
 import scala.util.Try
 import scala.util.Success
 import scala.util.Failure
@@ -47,7 +48,8 @@ object DomUtils {
   def isTouchDevice: Boolean =
     dom.window.matchMedia("(pointer: coarse)").matches
 
-  def getNearestSvgNode(event: dom.MouseEvent): (String, dom.svg.G) = {
+  def getNearestSvgNode(event: dom.MouseEvent): (String, dom.svg.G) = boundary {
+    
     getSvgNode(event.target).getOrElse {
       for (i <- 1 to 48) { // search around mouse click for nearby edges
         val nearNodes = List(
@@ -57,7 +59,7 @@ object DomUtils {
           dom.document.elementFromPoint(event.clientX, event.clientY - i)
         ).flatMap(getSvgNode)
         val maybeNode = nearNodes.headOption
-        if maybeNode.isDefined && maybeNode.get._1 == "EDGE" then return maybeNode.get
+        if maybeNode.isDefined && maybeNode.get._1 == "EDGE" then break(maybeNode.get)
       }
       ("", null)
     }

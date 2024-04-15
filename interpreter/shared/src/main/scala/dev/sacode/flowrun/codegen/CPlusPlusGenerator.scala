@@ -156,6 +156,7 @@ class CPlusPlusGenerator(val programAst: Program) extends CodeGenerator {
       case RealToInteger => s"(int)${argOpt(0)}"
       case StringToInteger =>
         s"""try { Convert.ToInt32(${argOpt(0)}) } catch (FormatException) { 0 }"""
+      case ReadInput => "cin >> dummy"
     }
   }
 
