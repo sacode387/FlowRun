@@ -22,7 +22,7 @@ class CtxMenu(programModel: ProgramModel, flowRunElements: FlowRunElements, flow
   private var afterId = ""
 
   private val DeleteableNodeTypes =
-    Set("Declare", "Assign", "Input", "Output", "Call", "If", "While", "DoWhile", "ForLoop")
+    Set("Declare", "Assign", "Input", "Output", "Call", "If", "While", "DoWhile", "ForLoop", "Comment")
 
   private val edgeContextMenu =
     flowRunElements.mountElem.querySelector(".flowrun-edge-context-menu").asInstanceOf[dom.html.Element]

@@ -1,9 +1,10 @@
 package dev.sacode.flowrun.eval
 
 import dev.sacode.flowrun.ast.Expression.Type
+import scala.util.Try
 
 // - we preserve runtime type while evaluating
-// - can't disambiguate Double 5.0 and Integer 5 at runtime in JS.. :)
+// - can't disambiguate Double 5.0 and Integer 5 at runtime in JS.. :')
 // https://gitter.im/scala-js/scala-js?at=621a185c257a35782502f345
 
 enum RunVal(val tpe: Type, val valueOpt: Option[Any]):
@@ -39,6 +40,14 @@ object RunVal:
     case (String, v: String)   => StringVal(v)
     case (Boolean, v: Boolean) => BooleanVal(v)
     case _                     => throw EvalException(s"Cant $tpe.", id)
+
+  def fromString(inputValue: String): RunVal = Try(BooleanVal(inputValue.toBoolean))
+    .orElse(
+      Try(IntegerVal(inputValue.toInt)).orElse(
+        Try(RealVal(inputValue.toDouble))
+      )
+    )
+    .getOrElse(StringVal(inputValue))
 
   extension (iv: IntegerVal) def transform(f: Int => Int): IntegerVal = IntegerVal(f(iv.value))
 

@@ -3,7 +3,6 @@
 
 
 ##
-readInput() funkcija, stonks!
 
 
 

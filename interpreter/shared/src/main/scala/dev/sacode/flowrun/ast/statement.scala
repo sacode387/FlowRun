@@ -111,4 +111,19 @@ object Statement:
     override def duplicated: Comment = copy(id = AST.newId)
     override def label = text
 
+  def getStatType(stmt: Statement): String = stmt match
+    case _: Begin   => "Begin"
+    case _: Return  => "Return"
+    case _: Declare => "Declare"
+    case _: Assign  => "Assign"
+    case _: Call    => "Call"
+    case _: Input   => "Input"
+    case _: Output  => "Output"
+    case _: Block   => "Block"
+    case _: If      => "If"
+    case _: While   => "While"
+    case _: DoWhile => "Do While"
+    case _: ForLoop => "For Loop"
+    case _: Comment => "Comment"
+
 end Statement

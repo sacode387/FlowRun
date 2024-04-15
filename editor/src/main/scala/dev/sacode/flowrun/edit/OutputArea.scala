@@ -7,6 +7,7 @@ import scalatags.JsDom.all.*
 import dev.sacode.flowrun.eval.*
 import dev.sacode.flowrun.ast.Expression.Type
 import dev.sacode.flowrun.eval.Interpreter.State
+import dev.sacode.flowrun.ast.Statement
 
 class OutputArea(
     interpreter: Interpreter,
@@ -81,8 +82,13 @@ class OutputArea(
 
     def inputValueSubmitted(): Unit = {
       val inputValue = valueInputElem.value.trim
-      val res = interpreter.setValue(nodeId, name, inputValue)
-      res.foreach { value =>
+      val resOpt = if interpreter.programModel.findStatement(nodeId).isInstanceOf[Statement.Input] then {
+        interpreter.setValue(nodeId, name, inputValue)
+      } else {
+        val value = interpreter.setLastReadInput(nodeId, inputValue)
+        Some(value)
+      }
+      resOpt.foreach { value =>
         val printVal = if value.tpe == Type.String then s""" "$inputValue" """ else inputValue
         flowRunElements.runtimeOutput.removeChild(enterValueDiv)
         flowRunElements.runtimeOutput.appendChild(

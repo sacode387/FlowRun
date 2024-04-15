@@ -9,9 +9,22 @@ import dev.sacode.flowrun.parse.{Token, parseExpr, ParseException, LexException}
 import dev.sacode.flowrun.ProgramModel
 import dev.sacode.flowrun.FlowRun
 import RunVal.*
+import dev.sacode.flowrun.ast.Statement.Begin
+import dev.sacode.flowrun.ast.Statement.Return
+import dev.sacode.flowrun.ast.Statement.Declare
+import dev.sacode.flowrun.ast.Statement.Assign
+import dev.sacode.flowrun.ast.Statement.Call
+import dev.sacode.flowrun.ast.Statement.Input
+import dev.sacode.flowrun.ast.Statement.Output
+import dev.sacode.flowrun.ast.Statement.Block
+import dev.sacode.flowrun.ast.Statement.If
+import dev.sacode.flowrun.ast.Statement.While
+import dev.sacode.flowrun.ast.Statement.DoWhile
+import dev.sacode.flowrun.ast.Statement.ForLoop
+import dev.sacode.flowrun.ast.Statement.Comment
 
 final class Interpreter(
-    programModel: ProgramModel,
+    val programModel: ProgramModel,
     flowrunChannel: Channel[FlowRun.Event],
     setInterval: (Long, => Unit) => Any,
     clearInterval: Any => Unit
@@ -30,6 +43,9 @@ final class Interpreter(
 
   var currentExecFunctionId: Option[String] = None
   var nextExecStatementId: Option[String] = None
+
+  // input from user
+  private var lastReadInput: Option[RunVal] = None
 
   def isRunning: Boolean = state == State.RUNNING || state == State.WAITING_FOR_INPUT
 
@@ -78,6 +94,13 @@ final class Interpreter(
 
     futureExec.map(_ => {})
   }
+
+  // almost same as setValue, but without any variable name
+  def setLastReadInput(nodeId: String, inputValue: String): RunVal =
+    val value = RunVal.fromString(inputValue)
+    lastReadInput = Some(value)
+    state = State.RUNNING
+    value
 
   def setValue(nodeId: String, name: String, inputValue: String): Option[RunVal] =
     val sym = symTab.getSymbolVar(nodeId, name)
@@ -656,6 +679,23 @@ final class Interpreter(
         args.head match
           case n: StringVal => Future(IntegerVal(n.value.toInt))
           case _            => throw EvalException(s"Expected a String argument in function ${func.name}", id)
+      // misc
+      case ReadInput =>
+        state = State.WAITING_FOR_INPUT
+        val name = programModel.findStatement(id) match
+          case stmt: Declare => stmt.name
+          case stmt: Assign  => stmt.name
+          case stmt: ForLoop => stmt.varName
+          case _: (Return | Call | Output | If | While | DoWhile) =>
+            "value"
+          case other =>
+            val stmtTpe = Statement.getStatType(other)
+            throw EvalException(s"readInput() not supported in ${stmtTpe} statement", id)
+
+        flowrunChannel := FlowRun.Event.EvalInput(id, name, Some(s"Please enter $name: "))
+        waitForContinue().map(_ =>
+          lastReadInput.getOrElse(throw EvalException(s"readInput() did not get any input", id))
+        )
     }
 
   private def validateArgsNumber(id: String, funName: String, expected: Int, got: Int): Unit =
