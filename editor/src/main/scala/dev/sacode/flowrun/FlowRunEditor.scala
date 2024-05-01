@@ -64,10 +64,10 @@ class FlowRunEditor(
         List.empty
       )
 
-  // duplicate a template,
+  // duplicate a <template>,
   // move all its children to mountElem
   // https://stackoverflow.com/a/20910214/4496364
-  private val template = dom.document.getElementById("flowrun-template").cloneNode(true).asInstanceOf[dom.html.Element]
+  private val template = dom.document.getElementById("flowrun-template").asDyn.content.cloneNode(true).asInstanceOf[dom.html.Element]
   mountElem.innerText = ""
   while template.childNodes.length > 0 do mountElem.appendChild(template.childNodes.head)
 

@@ -60,10 +60,6 @@
     color: var(--flowrun-font-color);
 }
 
-#flowrun-template {
-    display: none;
-}
-
 .flowrun-instance .flowrun--panel {
     padding: 1rem;
     margin-bottom: 1rem;
