@@ -29,7 +29,7 @@ class FlowchartPresenter(
     .select(flowRunElements.drawArea)
     .graphviz(
       js.Dynamic.literal(
-        zoom = false,
+        zoom = true,
         fit = true
       )
     )
