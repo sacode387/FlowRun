@@ -24,24 +24,11 @@ extension (any: Any) {
   def asDyn: js.Dynamic = any.asInstanceOf[js.Dynamic]
 }
 
-extension (str: String) {
-
-  def toGraphvizLbl: String =
-    str.replace("\"", "\\\"")
-
-}
-
 extension (integer: Int) {
   def spaces: String =
     " " * integer
 }
 
-extension (stmt: Statement) {
-  def firstNodeId: String = stmt match {
-    case _: Statement.DoWhile => s"end_${stmt.id}"
-    case _                    => stmt.id
-  }
-}
 
 object DomUtils {
 

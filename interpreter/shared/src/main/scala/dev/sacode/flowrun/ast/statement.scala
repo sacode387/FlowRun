@@ -16,6 +16,11 @@ sealed trait Statement derives JsonRW:
   def label: String
   def verboseLabel: String = label
 
+  def firstNodeId: String = this match {
+    case stmt: Statement.DoWhile => s"end_${stmt.id}"
+    case stmt                    => stmt.id
+  }
+
 end Statement
 
 object Statement:

@@ -1,4 +1,3 @@
-
 inThisBuild(
   List(
     scalaVersion := "3.4.2",
@@ -8,8 +7,8 @@ inThisBuild(
     resolvers +=
       "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots",
     organization := "dev.sacode",
-    licenses := List(      "Apache-2.0" -> url("http://www.apache.org/licenses/LICENSE-2.0")
-    ),
+    homepage := Some(url("https://github.com/sacode387/FlowRun")),
+    licenses := List("Apache-2.0" -> url("http://www.apache.org/licenses/LICENSE-2.0")),
     scmInfo := Some(
       ScmInfo(
         url("https://github.com/sacode387/FlowRun"),
@@ -55,7 +54,6 @@ lazy val interpreter = crossProject(JVMPlatform, JSPlatform)
   .in(file("interpreter"))
   .settings(
     name := "flowrun-interpreter",
-    publish / skip := false,
     libraryDependencies ++= Seq(
       "io.github.cquiroz" %%% "scala-java-time" % "2.5.0",
       "com.outr" %%% "reactify" % "4.0.8",
@@ -77,7 +75,11 @@ lazy val interpreter = crossProject(JVMPlatform, JSPlatform)
     Test / jsEnv := new org.scalajs.jsenv.jsdomnodejs.JSDOMNodeJSEnv()
   )
   .jsSettings(
-    libraryDependencies += ("org.scala-js" %%% "scalajs-java-securerandom" % "1.0.0").cross(CrossVersion.for3Use2_13),
+    libraryDependencies += ("org.scala-js" %%% "scalajs-java-securerandom" % "1.0.0").cross(CrossVersion.for3Use2_13)
+  )
+  .jvmSettings(
+    libraryDependencies += "org.scala-js" %% "scalajs-stubs" % "1.1.0" % "provided",
+    publish / skip := false
   )
 
 lazy val demo = (project in file("demo"))
