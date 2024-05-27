@@ -49,7 +49,7 @@ object DomUtils {
     dom.window.matchMedia("(pointer: coarse)").matches
 
   def getNearestSvgNode(event: dom.MouseEvent): (String, dom.svg.G) = boundary {
-    
+
     getSvgNode(event.target).getOrElse {
       for (i <- 1 to 48) { // search around mouse click for nearby edges
         val nearNodes = List(

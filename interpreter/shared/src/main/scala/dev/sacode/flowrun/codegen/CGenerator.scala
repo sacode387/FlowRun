@@ -3,28 +3,21 @@ package dev.sacode.flowrun.codegen
 import scala.util.Try
 import dev.sacode.flowrun.toIdentifier
 import dev.sacode.flowrun.FlowRun
-import dev.sacode.flowrun.ast.*, Expression.Type
+import dev.sacode.flowrun.ast.{Expression, *}
+import Expression.Type
 import dev.sacode.flowrun.eval.SymbolTable
 import dev.sacode.flowrun.eval.SymbolKey
 import dev.sacode.flowrun.eval.Symbol
 
-class JavaGenerator(val programAst: Program) extends CodeGenerator {
+class CGenerator(val programAst: Program) extends CodeGenerator {
 
   def generate: Try[CodeGenRes] = Try {
 
-    if programAst.hasInputs then
-      addLine("import java.util.*;", programAst.main.id)
-      addEmptyLine()
+    addLine("#include <stdio.h>")
+    addLine("#include <stdbool.h>")
 
-    addLine(s"public class ${programAst.name.toIdentifier} {", programAst.main.id)
-
-    incrIndent()
-    if programAst.hasInputs then addLine("static Scanner scanner = new Scanner(System.in);", "")
     genMain()
     programAst.functions.foreach(genFunction)
-    decrIndent()
-
-    addLine("}", programAst.main.id)
 
     CodeGenRes(lines.toList, stmtLineNums.toMap)
   }
@@ -35,15 +28,16 @@ class JavaGenerator(val programAst: Program) extends CodeGenerator {
 
     addEmptyLine()
     addLine(
-      "public static void main(String args[]) {",
+      "int main() {",
       function.statements.head.id
     )
 
     incrIndent()
     function.statements.foreach(genStatement)
+    addLine("return 0;")
     decrIndent()
 
-    addLine("}", function.statements.last.id)
+    addLine("}", function.statements.head.id)
 
     symTab.exitScope()
   }
@@ -54,7 +48,7 @@ class JavaGenerator(val programAst: Program) extends CodeGenerator {
     val params = function.parameters.map(p => s"${genType(p.tpe)} ${p.name}").mkString(", ")
     addEmptyLine()
     addLine(
-      s"public static ${genType(function.tpe)} ${function.name}($params) {",
+      s"${genType(function.tpe)} ${function.name}($params) {",
       function.statements.head.id
     )
 
@@ -76,7 +70,10 @@ class JavaGenerator(val programAst: Program) extends CodeGenerator {
         symTab.add(id, key, tpe, None)
         val initValue = maybeInitValue.getOrElse(defaultValue(tpe))
         val initValueExpr = parseGenExpr(initValue)
-        addLine(s"${genType(tpe)} $name = $initValueExpr;", id)
+        tpe match
+          case Expression.Type.String =>
+            addLine(s"char ${name}[] = $initValueExpr;", id)
+          case _ => addLine(s"${genType(tpe)} $name = $initValueExpr;", id)
 
       case Assign(id, name, value) =>
         val genValue = parseGenExpr(value)
@@ -88,17 +85,19 @@ class JavaGenerator(val programAst: Program) extends CodeGenerator {
 
       case Input(id, name, promptOpt) =>
         val prompt = promptOpt.getOrElse(s"Please enter $name: ")
-        addLine(s"""System.out.print("$prompt");""", id)
-
-        val symOpt = Try(symTab.getSymbolVar("", name)).toOption
-        val readFun = readFunction(symOpt.map(_.tpe))
-        addLine(s"$name = $readFun;", id)
+        addLine(s"""printf("$prompt");""", id)
+        val tpe = Try(symTab.getSymbolVar("", name).tpe).toOption.getOrElse(Type.String)
+        val (format, pointer) = tpe match
+          case Expression.Type.String  => ("%d", name) // array is pointer
+          case Expression.Type.Integer => ("%d", s"&${name}")
+          case Expression.Type.Real    => ("%d", s"&${name}")
+          case Expression.Type.Boolean => ("%d", s"&${name}")
+          case Expression.Type.Void    => throw RuntimeException("Void cannot be entered")
+        addLine(s"""scanf("${format}", ${pointer});""", id)
 
       case Output(id, value, newline) =>
         val genValue = parseGenExpr(value)
-        val text =
-          if newline then s"System.out.println($genValue);"
-          else s"System.out.print($genValue);"
+        val text = s"printf($genValue);"
         addLine(text, id)
 
       case Block(_, statements) =>
@@ -139,7 +138,6 @@ class JavaGenerator(val programAst: Program) extends CodeGenerator {
         addLine(s"for (int $varName = $genStart; i <= $genEnd; i += $genIncr) {", id)
         genStatement(block)
         addLine("}", id)
-
       case Comment(id, text) =>
         addLine(s"/* ${text} */", id)
     }
@@ -149,24 +147,24 @@ class JavaGenerator(val programAst: Program) extends CodeGenerator {
   override def predefFun(name: String, genArgs: List[String]): String = {
     def argOpt(idx: Int) = genArgs.lift(idx).getOrElse("")
     PredefinedFunction.withName(name).get match {
-      case Abs           => s"Math.abs(${argOpt(0)})"
-      case Floor         => s"Math.floor(${argOpt(0)})"
-      case Ceil          => s"Math.ceil(${argOpt(0)})"
-      case RandomInteger => s"Math.abs(${argOpt(0)})" // TODO
-      case Sin           => s"Math.sin(${argOpt(0)})"
-      case Cos           => s"Math.cos(${argOpt(0)})"
-      case Tan           => s"Math.tan(${argOpt(0)})"
-      case Ln            => s"Math.log(${argOpt(0)})"
-      case Log10         => s"Math.log10(${argOpt(0)})"
-      case Log2          => s"Math.log10(${argOpt(0)})/Math.log10(2)"
+      case Abs           => s"abs(${argOpt(0)})"
+      case Floor         => s"floor(${argOpt(0)})"
+      case Ceil          => s"ceil(${argOpt(0)})"
+      case RandomInteger => s"abs(${argOpt(0)})" // TODO
+      case Sin           => s"sin(${argOpt(0)})"
+      case Cos           => s"cos(${argOpt(0)})"
+      case Tan           => s"tan(${argOpt(0)})"
+      case Ln            => s"log(${argOpt(0)})"
+      case Log10         => s"log10(${argOpt(0)})"
+      case Log2          => s"log10(${argOpt(0)})/log10(2)"
       case Sqrt          => s"Math.sqrt(${argOpt(0)})"
       case Pow           => s"Math.pow(${argOpt(0)}, ${argOpt(1)})"
       case Length        => s"${argOpt(0)}.length()"
       case CharAt        => s"${argOpt(0)}.charAt(${argOpt(1)})"
       case RealToInteger => s"(int)${argOpt(0)}"
       case StringToInteger =>
-        s"""Integer.parseInt(${argOpt(0)})"""
-      case ReadInput => "Console.ReadLine()"
+        s"""try { Convert.ToInt32(${argOpt(0)}) } catch (FormatException) { 0 }"""
+      case ReadInput => "TODO"
     }
   }
 
@@ -180,17 +178,7 @@ class JavaGenerator(val programAst: Program) extends CodeGenerator {
       case Void    => "void"
       case Integer => "int"
       case Real    => "double"
-      case String  => "String"
-      case Boolean => "boolean"
-
-  /* OTHER */
-  private def readFunction(tpeOpt: Option[Type]): String = tpeOpt match
-    case None => "scanner.nextLine()"
-    case Some(tpe) =>
-      tpe match
-        case Type.Integer => "scanner.nextInt()"
-        case Type.Real    => "scanner.nextDouble()"
-        case Type.Boolean => "scanner.nextBoolean()"
-        case _            => "scanner.nextLine()"
+      case String  => "char"
+      case Boolean => "bool"
 
 }

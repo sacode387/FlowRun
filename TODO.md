@@ -4,6 +4,6 @@
 
 ##
 
-
+- disable zoom config
 
 

@@ -1,7 +1,7 @@
 
 inThisBuild(
   List(
-    scalaVersion := "3.4.0",
+    scalaVersion := "3.4.2",
     evictionErrorLevel := Level.Warn,
     publish / skip := true,
     scalafmtSbt := true,

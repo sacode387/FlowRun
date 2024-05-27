@@ -13,6 +13,7 @@ object CodeGeneratorFactory {
       case Language.python     => PythonGenerator(programAst)
       case Language.cSharp     => CSharpGenerator(programAst)
       case Language.cPLusPLus  => CPlusPlusGenerator(programAst)
+      case Language.c          => CGenerator(programAst)
       case Language.kotlin     => KotlinGenerator(programAst)
       case Language.php        => PhpGenerator(programAst)
       case Language.swift      => SwiftGenerator(programAst)

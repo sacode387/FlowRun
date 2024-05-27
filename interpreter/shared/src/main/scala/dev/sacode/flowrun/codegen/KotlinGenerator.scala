@@ -154,7 +154,7 @@ class KotlinGenerator(val programAst: Program) extends CodeGenerator {
       case RealToInteger => s"(int)${argOpt(0)}"
       case StringToInteger =>
         s"""try { Integer.parseInt(${argOpt(0)}) } catch (NumberFormatException e) { 0 }"""
-      case ReadInput       => "Console.ReadLine()"
+      case ReadInput => "Console.ReadLine()"
     }
   }
 

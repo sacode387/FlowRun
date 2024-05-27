@@ -144,7 +144,7 @@ class PhpGenerator(val programAst: Program) extends CodeGenerator {
       case RealToInteger => argOpt(0) // ??
       case StringToInteger =>
         s""" intval(${argOpt(0)}) """.trim
-      case ReadInput       => "Console.ReadLine()"
+      case ReadInput => "Console.ReadLine()"
     }
   }
 

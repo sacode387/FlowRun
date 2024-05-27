@@ -7,6 +7,7 @@ enum Language(val name: String, val prism: String):
   case scala extends Language("scala", "scala")
   case cSharp extends Language("c#", "csharp")
   case cPLusPLus extends Language("c++", "cpp")
+  case c extends Language("c", "c")
   case kotlin extends Language("kotlin", "kotlin")
   case php extends Language("php", "php")
   case swift extends Language("swift", "swift")
