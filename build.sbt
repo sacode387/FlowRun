@@ -6,7 +6,7 @@ inThisBuild(
     scalafmtSbt := true,
     resolvers +=
       "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots",
-    organization := "dev.sacode",
+    organization := "ba.sake",
     homepage := Some(url("https://github.com/sacode387/FlowRun")),
     licenses := List("Apache-2.0" -> url("http://www.apache.org/licenses/LICENSE-2.0")),
     scmInfo := Some(
