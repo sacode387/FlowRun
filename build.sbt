@@ -57,7 +57,7 @@ lazy val interpreter = crossProject(JVMPlatform, JSPlatform)
     libraryDependencies ++= Seq(
       "io.github.cquiroz" %%% "scala-java-time" % "2.5.0",
       "com.outr" %%% "reactify" % "4.0.8",
-      "ba.sake" %%% "tupson" % "0.7.0",
+      "ba.sake" %%% "tupson" % "0.11.0",
       "com.lihaoyi" %%% "utest" % "0.8.1" % Test,
       "com.lihaoyi" %%% "pprint" % "0.8.1" % Test
     ),

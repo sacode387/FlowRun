@@ -29,7 +29,6 @@ extension (integer: Int) {
     " " * integer
 }
 
-
 object DomUtils {
 
   def isTouchDevice: Boolean =
