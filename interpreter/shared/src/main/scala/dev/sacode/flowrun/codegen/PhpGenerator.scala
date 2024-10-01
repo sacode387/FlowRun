@@ -116,7 +116,7 @@ class PhpGenerator(val programAst: Program) extends CodeGenerator {
         val genStart = parseGenExpr(start)
         val genIncr = parseGenExpr(incr)
         val genEnd = parseGenExpr(end)
-        addLine(s"for (let $varName = $genStart; i <= $genEnd; i += $genIncr) {", id)
+        addLine(s"for (let $varName = $genStart; $varName <= $genEnd; $varName += $genIncr) {", id)
         genStatement(block)
         addLine("}", id)
 

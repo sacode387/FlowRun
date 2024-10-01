@@ -106,7 +106,7 @@ class NodeJsGenerator(override val programAst: Program) extends JavascriptGenera
         addLine(s"} while ($condition);", id)
 
       case ForLoop(id, varName, start, incr, end, block) =>
-        addLine(s"for (let $varName = $start; i <= $end; i += $incr) {", id)
+        addLine(s"for (let $varName = $start; $varName <= $end; $varName += $incr) {", id)
         genStatement(block)
         addLine("}", id)
 

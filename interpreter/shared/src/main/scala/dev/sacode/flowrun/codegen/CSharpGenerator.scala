@@ -132,7 +132,7 @@ class CSharpGenerator(val programAst: Program) extends CodeGenerator {
         val genStart = parseGenExpr(start)
         val genIncr = parseGenExpr(incr)
         val genEnd = parseGenExpr(end)
-        addLine(s"for (int $varName = $genStart; i <= $genEnd; i += $genIncr) {", id)
+        addLine(s"for (int $varName = $genStart; $varName <= $genEnd; $varName += $genIncr) {", id)
         genStatement(block)
         addLine("}", id)
 
