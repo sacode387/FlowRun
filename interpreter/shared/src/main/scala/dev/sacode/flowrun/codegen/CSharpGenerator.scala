@@ -83,9 +83,13 @@ class CSharpGenerator(val programAst: Program) extends CodeGenerator {
         addLine(s"$genValue;", id)
 
       case Input(id, name, promptOpt) =>
-        val prompt = promptOpt.getOrElse(s"Please enter $name: ")
-        addLine(s"""Console.Write("$prompt");""", id)
-
+        promptOpt
+          .orElse {
+            Option.when(programAst.config.useInputPrompt)(s"Please enter $name: ")
+          }
+          .foreach { prompt =>
+            addLine(s"""Console.Write("$prompt");""", id)
+          }
         val symOpt = Try(symTab.getSymbolVar("", name)).toOption
         val readFun = readFunction(symOpt.map(_.tpe))
         addLine(s"$name = $readFun;", id)
@@ -132,7 +136,7 @@ class CSharpGenerator(val programAst: Program) extends CodeGenerator {
         val genStart = parseGenExpr(start)
         val genIncr = parseGenExpr(incr)
         val genEnd = parseGenExpr(end)
-        addLine(s"for (int $varName = $genStart; i <= $genEnd; i += $genIncr) {", id)
+        addLine(s"for (int $varName = $genStart; $varName <= $genEnd; $varName += $genIncr) {", id)
         genStatement(block)
         addLine("}", id)
 

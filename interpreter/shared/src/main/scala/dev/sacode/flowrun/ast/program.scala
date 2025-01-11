@@ -61,10 +61,12 @@ case class Program(
 
 final case class FlowRunConfig(
     lang: String,
-    showFunctions: Boolean,
-    showGenCode: Boolean,
+    showFunctions: Boolean = false,
+    showGenCode: Boolean = false,
     showDebugVars: Boolean = true,
-    showIoBtns: Boolean = true
+    showIoBtns: Boolean = true,
+    useInputPrompt: Boolean = false,
+    echoEnteredValue: Boolean = false
 ) derives JsonRW
 
 object FlowRunConfig:

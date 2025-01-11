@@ -70,10 +70,11 @@ class OutputArea(
 
     val valueInputElem = flowRunElements.newInputText()
     val valueBtnElem = flowRunElements.newEnterButton
-    val promptStr = prompt.getOrElse(s"Please enter '$name': ")
     val enterValueDiv = div(
       label(cls := "flowrun-user-inputs")(
-        samp(promptStr),
+        Option.when(interpreter.programModel.ast.config.useInputPrompt)(
+          samp(prompt.getOrElse(s"Please enter '$name': "))
+        ),
         valueInputElem,
         valueBtnElem
       )
@@ -91,9 +92,10 @@ class OutputArea(
       resOpt.foreach { value =>
         val printVal = if value.tpe == Type.String then s""" "$inputValue" """ else inputValue
         flowRunElements.runtimeOutput.removeChild(enterValueDiv)
-        flowRunElements.runtimeOutput.appendChild(
-          div(samp(s"You entered $name = $printVal")).render
-        )
+        if interpreter.programModel.ast.config.echoEnteredValue then
+          flowRunElements.runtimeOutput.appendChild(
+            div(samp(s"You entered $name = $printVal")).render
+          )
       }
     }
 

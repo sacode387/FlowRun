@@ -4,6 +4,7 @@ import java.time.Instant
 import java.time.Duration
 import java.time.temporal.TemporalUnit
 import java.time.temporal.ChronoUnit
+import scala.util.control.NonFatal
 import scala.compiletime.uninitialized
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.scalajs.js
@@ -55,7 +56,7 @@ class FlowRunEditor(
       Program(
         AST.newId,
         "New Program",
-        FlowRunConfig("java", true, true),
+        FlowRunConfig(lang = "java"),
         Function(
           "main", // don't touch!
           "main",
@@ -339,8 +340,9 @@ class FlowRunEditor(
               programModel.ast = loadedProgram
               flowRunElements.programNameInput.value = loadedProgram.name
               flowrunChannel := FlowRun.Event.FunctionSelected
-            } catch { e =>
-              toastify.Toastify(ToastifyOptions("Not a valid program", Color.yellow)).showToast()
+            } catch {
+              case NonFatal(_) =>
+                toastify.Toastify(ToastifyOptions("Not a valid program", Color.yellow)).showToast()
             }
           }
         }
@@ -434,6 +436,8 @@ class FlowRunEditor(
     flowRunElements.showCodeCheckbox.checked = programModel.ast.config.showGenCode
     flowRunElements.showDebugVarsCheckbox.checked = programModel.ast.config.showDebugVars
     flowRunElements.showIoBtnsCheckbox.checked = programModel.ast.config.showIoBtns
+    flowRunElements.useInputPromptCheckbox.checked = programModel.ast.config.useInputPrompt
+    flowRunElements.echoEnteredValueCheckbox.checked = programModel.ast.config.echoEnteredValue
 
     if !fixedLayout then
       flowRunElements.showFunctionsCheckbox.oninput = _ => setLayout()
@@ -441,6 +445,19 @@ class FlowRunEditor(
 
     flowRunElements.showDebugVarsCheckbox.oninput = _ => setLayout()
     flowRunElements.showIoBtnsCheckbox.oninput = _ => setLayout()
+
+    flowRunElements.useInputPromptCheckbox.oninput = _ => {
+      val newConfig = programModel.ast.config.copy(
+        useInputPrompt = flowRunElements.useInputPromptCheckbox.checked
+      )
+      programModel.setConfig(newConfig)
+    }
+    flowRunElements.echoEnteredValueCheckbox.oninput = _ => {
+      val newConfig = programModel.ast.config.copy(
+        echoEnteredValue = flowRunElements.echoEnteredValueCheckbox.checked
+      )
+      programModel.setConfig(newConfig)
+    }
   }
 
   private def doOnChange(): Unit =

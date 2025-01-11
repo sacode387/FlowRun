@@ -11,6 +11,8 @@ enum PredefinedFunction(val name: String) {
   case Abs extends PredefinedFunction("abs")
   case Floor extends PredefinedFunction("floor")
   case Ceil extends PredefinedFunction("ceil")
+  case Sqrt extends PredefinedFunction("sqrt")
+  case Pow extends PredefinedFunction("pow")
   case RandomInteger extends PredefinedFunction("randomInt")
   case Sin extends PredefinedFunction("sin")
   case Cos extends PredefinedFunction("cos")
@@ -18,8 +20,6 @@ enum PredefinedFunction(val name: String) {
   case Ln extends PredefinedFunction("ln")
   case Log10 extends PredefinedFunction("log")
   case Log2 extends PredefinedFunction("log2")
-  case Sqrt extends PredefinedFunction("sqrt")
-  case Pow extends PredefinedFunction("pow")
   // strings
   case Length extends PredefinedFunction("length")
   case CharAt extends PredefinedFunction("charAt")

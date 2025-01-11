@@ -81,8 +81,13 @@ class CPlusPlusGenerator(val programAst: Program) extends CodeGenerator {
         addLine(s"$genValue;", id)
 
       case Input(id, name, promptOpt) =>
-        val prompt = promptOpt.getOrElse(s"Please enter $name: ")
-        addLine(s"""cout << "$prompt";""", id)
+        promptOpt
+          .orElse {
+            Option.when(programAst.config.useInputPrompt)(s"Please enter $name: ")
+          }
+          .foreach { prompt =>
+            addLine(s"""cout << "$prompt";""", id)
+          }
         addLine(s"cin >> $name;", id)
 
       case Output(id, value, newline) =>
@@ -127,7 +132,7 @@ class CPlusPlusGenerator(val programAst: Program) extends CodeGenerator {
         val genStart = parseGenExpr(start)
         val genIncr = parseGenExpr(incr)
         val genEnd = parseGenExpr(end)
-        addLine(s"for (int $varName = $genStart; i <= $genEnd; i += $genIncr) {", id)
+        addLine(s"for (int $varName = $genStart; $varName <= $genEnd; $varName += $genIncr) {", id)
         genStatement(block)
         addLine("}", id)
       case Comment(id, text) =>

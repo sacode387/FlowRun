@@ -100,6 +100,7 @@ final class Lexer(nodeId: String, input: String) {
       else if input(i) == '"' then
         i += 1
         var text = ""
+        // TODO handle escape sequences.. \\ \" etc
         while i < input.length && input(i) != '"' do
           text += input(i)
           i += 1

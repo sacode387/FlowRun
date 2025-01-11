@@ -70,9 +70,12 @@ class PhpGenerator(val programAst: Program) extends CodeGenerator {
         addLine(s"$genValue;", id)
 
       case Input(id, name, promptOpt) =>
-        val prompt = promptOpt.getOrElse(s""" "Please enter $name: " """.trim)
-        val symOpt = Try(symTab.getSymbolVar("", name)).toOption
-        addLine(s"$$$name = readline($prompt);", id)
+        promptOpt
+          .orElse {
+            Option.when(programAst.config.useInputPrompt)(s"Please enter $name: ")
+          } match
+          case Some(prompt) => addLine(s"$$$name = readline($prompt);", id)
+          case None         => addLine(s"$$$name = readline();", id)
 
       case Output(id, value, newline) =>
         val genValue = parseGenExpr(value)
@@ -116,7 +119,7 @@ class PhpGenerator(val programAst: Program) extends CodeGenerator {
         val genStart = parseGenExpr(start)
         val genIncr = parseGenExpr(incr)
         val genEnd = parseGenExpr(end)
-        addLine(s"for (let $varName = $genStart; i <= $genEnd; i += $genIncr) {", id)
+        addLine(s"for (let $varName = $genStart; $varName <= $genEnd; $varName += $genIncr) {", id)
         genStatement(block)
         addLine("}", id)
 

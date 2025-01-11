@@ -94,7 +94,7 @@ trait CodeGenerator {
     terms.mkString(" ")
   }
   private def genTerm(term: Term): String = {
-    // TODO handle string concatenation
+    // TODO handle string concatenation, lang specific...
     val factors =
       List(genFactor(term.factor)) ++ term.factors.map(fo => s""" ${fo.op.text} ${genFactor(fo.factor)} """.trim)
     factors.mkString(" ")
