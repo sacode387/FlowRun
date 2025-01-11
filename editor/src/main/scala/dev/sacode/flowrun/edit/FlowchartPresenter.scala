@@ -37,6 +37,9 @@ class FlowchartPresenter(
 
   loadCurrentFunction()
 
+  def resetZoom(): Unit =
+    graphviz.resetZoom()
+
   def disable(mode: ExecMode): Unit =
     flowRunElements.drawArea.classList.add("flowrun--disabled")
     if mode == ExecMode.NORMAL then flowRunElements.runButton.classList.add("flowrun--disabled")

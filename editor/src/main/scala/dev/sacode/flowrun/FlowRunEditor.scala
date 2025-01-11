@@ -395,6 +395,10 @@ class FlowRunEditor(
       flowRunElements.configDialog.asDyn.close()
     }
 
+    flowRunElements.zoomResetButton.onclick = _ => {
+      flowchartPresenter.resetZoom()
+    }
+
     /* OUTPUT */
     flowRunElements.clearOutputBtn.onclick = _ => {
       outputArea.clearRuntime()
