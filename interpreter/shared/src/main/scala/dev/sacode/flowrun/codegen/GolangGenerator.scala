@@ -86,9 +86,13 @@ class GolangGenerator(val programAst: Program) extends CodeGenerator {
         addLine(genValue, id)
 
       case Input(id, name, promptOpt) =>
-        val prompt = promptOpt.getOrElse(s"Please enter $name: ")
-        addLine(s"""fmt.Print("$prompt")""", id)
-
+        promptOpt
+          .orElse {
+            Option.when(programAst.config.useInputPrompt)(s"Please enter $name: ")
+          }
+          .foreach { prompt =>
+            addLine(s"""fmt.Print("$prompt")""", id)
+          }
         val symOpt = Try(symTab.getSymbolVar("", name)).toOption
         val readFun = readFunction(symOpt.map(_.tpe))
         addLine(s"$name = $readFun", id)

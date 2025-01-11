@@ -692,7 +692,10 @@ final class Interpreter(
             val stmtTpe = Statement.getStatType(other)
             throw EvalException(s"readInput() not supported in ${stmtTpe} statement", id)
 
-        flowrunChannel := FlowRun.Event.EvalInput(id, name, Some(s"Please enter $name: "))
+        val prompt = args.headOption match
+          case Some(s: StringVal) => Some(s.value)
+          case _                  => None
+        flowrunChannel := FlowRun.Event.EvalInput(id, name, prompt)
         waitForContinue().map(_ =>
           lastReadInput.getOrElse(throw EvalException(s"readInput() did not get any input", id))
         )

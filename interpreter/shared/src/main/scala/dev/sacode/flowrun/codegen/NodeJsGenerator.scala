@@ -65,9 +65,13 @@ class NodeJsGenerator(override val programAst: Program) extends JavascriptGenera
         addLine(s"$value;", id)
 
       case Input(id, name, promptOpt) =>
-        val prompt = promptOpt.getOrElse(s"Please enter $name: ")
-        addLine(s"""process.stdout.write("$prompt");""", id)
-
+        promptOpt
+          .orElse {
+            Option.when(programAst.config.useInputPrompt)(s"Please enter $name: ")
+          }
+          .foreach { prompt =>
+            addLine(s"""process.stdout.write("$prompt");""", id)
+          }
         val symOpt = Try(symTab.getSymbolVar("", name)).toOption
         val readFun = readFunction(symOpt.map(_.tpe))
         addLine(s"$name = readline.$readFun;", id)

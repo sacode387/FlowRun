@@ -66,9 +66,12 @@ class JavascriptGenerator(val programAst: Program) extends CodeGenerator {
         addLine(s"$genValue;", id)
 
       case Input(id, name, promptOpt) =>
-        val prompt = promptOpt.getOrElse(s""" "Please enter $name: " """.trim)
-        val symOpt = Try(symTab.getSymbolVar("", name)).toOption
-        addLine(s"""$name = prompt("$prompt");""", id)
+        promptOpt
+          .orElse {
+            Option.when(programAst.config.useInputPrompt)(s"Please enter $name: ")
+          } match
+          case Some(prompt) => addLine(s"""$name = prompt("$prompt");""", id)
+          case None         => addLine(s"""$name = prompt();""", id)
 
       case Output(id, value, newline) =>
         val genValue = parseGenExpr(value)

@@ -1,5 +1,6 @@
 package dev.sacode.flowrun.edit
 
+import scala.util.control.NonFatal
 import org.scalajs.dom
 import reactify.*
 import ba.sake.tupson.*
@@ -10,7 +11,6 @@ import dev.sacode.flowrun.FlowRunElements
 import dev.sacode.flowrun.FlowRun
 import dev.sacode.flowrun.ast.{AST, Statement, Expression}, Statement.*
 import dev.sacode.flowrun.Color
-import dev.sacode.flowrun.asDyn
 
 class CtxMenu(programModel: ProgramModel, flowRunElements: FlowRunElements, flowrunChannel: Channel[FlowRun.Event]) {
 
@@ -111,7 +111,7 @@ class CtxMenu(programModel: ProgramModel, flowRunElements: FlowRunElements, flow
     // node buttons
     copyButton.addEventListener(
       "click",
-      (event: dom.MouseEvent) =>
+      (_: dom.MouseEvent) =>
         val stmtJson = programModel.findStatement(nodeId).toJson
         dom.window.navigator.clipboard.writeText(stmtJson)
         flowrunChannel := FlowRun.Event.Deselected
@@ -119,71 +119,74 @@ class CtxMenu(programModel: ProgramModel, flowRunElements: FlowRunElements, flow
 
     deleteButton.addEventListener(
       "click",
-      (event: dom.MouseEvent) => programModel.delete(nodeId)
+      (_: dom.MouseEvent) => programModel.delete(nodeId)
     )
 
     // edge buttons
     pasteButton.addEventListener(
       "click",
-      (event: dom.MouseEvent) =>
+      (_: dom.MouseEvent) =>
         dom.window.navigator.clipboard.readText().`then` { copiedText =>
           try {
             val newStmt = copiedText.parseJson[Statement].duplicated
             addStatement(newStmt)
-          } catch { e =>
-            toastify.Toastify(ToastifyOptions("Not a valid statement", Color.yellow)).showToast()
+          } catch {
+            case NonFatal(_) =>
+              toastify.Toastify(ToastifyOptions("Not a valid statement", Color.yellow)).showToast()
           }
         }
     )
 
     addDeclareButton.addEventListener(
       "click",
-      (event: dom.MouseEvent) => addStatement(Declare(AST.newId, "x", Expression.Type.Integer, None))
+      (_: dom.MouseEvent) => addStatement(Declare(AST.newId, "x", Expression.Type.Integer, None))
     )
 
     addAssignButton.addEventListener(
       "click",
-      (event: dom.MouseEvent) => addStatement(Assign(AST.newId, "x", "19"))
+      (_: dom.MouseEvent) => addStatement(Assign(AST.newId, "x", "19"))
     )
 
     addInputButton.addEventListener(
       "click",
-      (event: dom.MouseEvent) => addStatement(Input(AST.newId, "x", None))
+      (_: dom.MouseEvent) =>
+        val prompt = Option.when(programModel.ast.config.useInputPrompt)("Please enter x:")
+        addStatement(Input(AST.newId, "x", prompt))
     )
 
     addOutputButton.addEventListener(
       "click",
-      (event: dom.MouseEvent) => addStatement(Output(AST.newId, "\"output\"", true))
+      (_: dom.MouseEvent) => addStatement(Output(AST.newId, "\"output\"", true))
     )
 
     addCallButton.addEventListener(
       "click",
-      (event: dom.MouseEvent) => addStatement(Call(AST.newId, "fun1()"))
+      (_: dom.MouseEvent) => addStatement(Call(AST.newId, "fun1()"))
     )
 
     addIfButton.addEventListener(
       "click",
-      (event: dom.MouseEvent) => addStatement(If(AST.newId, "true", Block(AST.newId), Block(AST.newId)))
+      (_: dom.MouseEvent) => addStatement(If(AST.newId, "true", Block(AST.newId), Block(AST.newId)))
     )
 
     addWhileButton.addEventListener(
       "click",
-      (event: dom.MouseEvent) => addStatement(While(AST.newId, "false", Block(AST.newId)))
+      (_: dom.MouseEvent) => addStatement(While(AST.newId, "false", Block(AST.newId)))
     )
 
     addDoWhileButton.addEventListener(
       "click",
-      (event: dom.MouseEvent) => addStatement(DoWhile(AST.newId, "false", Block(AST.newId)))
+      (_: dom.MouseEvent) => addStatement(DoWhile(AST.newId, "false", Block(AST.newId)))
     )
 
     addForLoopButton.addEventListener(
       "click",
-      (event: dom.MouseEvent) => addStatement(ForLoop(AST.newId, "i", "0", "1", "10", Block(AST.newId)))
+      (_: dom.MouseEvent) => addStatement(ForLoop(AST.newId, "i", "0", "1", "10", Block(AST.newId)))
     )
 
     addCommentButton.addEventListener(
       "click",
-      (event: dom.MouseEvent) => addStatement(Comment(AST.newId, "comment"))
+      (_: dom.MouseEvent) => addStatement(Comment(AST.newId, "comment"))
     )
   }
 

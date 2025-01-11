@@ -68,6 +68,10 @@ class FlowRunElements(
     mountElem.querySelector(".flowrun-cb-show-debug-vars").asInstanceOf[dom.html.Input]
   val showIoBtnsCheckbox: dom.html.Input =
     mountElem.querySelector(".flowrun-cb-show-io-btns").asInstanceOf[dom.html.Input]
+  val useInputPromptCheckbox: dom.html.Input =
+    mountElem.querySelector(".flowrun-cb-use-input-prompt").asInstanceOf[dom.html.Input]
+  val echoEnteredValueCheckbox: dom.html.Input =
+    mountElem.querySelector(".flowrun-cb-echo-entered-value").asInstanceOf[dom.html.Input]
 
   val showConfigButton =
     mountElem.querySelector(".flowrun-btn-config").asInstanceOf[dom.html.Element]

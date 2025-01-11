@@ -136,8 +136,12 @@ final class StatementEditor(
         flowRunElements.stmtOutput.appendChild(
           stmtElem(
             nameInputElem,
-            span(" Prompt:"),
-            promptInputElem
+            Option.when(programModel.ast.config.useInputPrompt)(
+              frag(
+                span(" Prompt:"),
+                promptInputElem
+              )
+            )
           ).render
         )
         nameInputElem.focus()
