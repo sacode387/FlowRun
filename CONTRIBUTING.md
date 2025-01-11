@@ -20,7 +20,8 @@ or any "live reload" server...
 
 ## Code organization
 Project has 2 parts:
-- core, which contains all of the logic for the editor/interpreter
+- interpreter, which contains all of the logic for the editor/interpreter
+- editor, which contains all of the logic for the editor/interpreter
 - demo, contains demo code that uses core
 
 Core can be production-optimized with `core/fullLinkJS`.  

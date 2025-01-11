@@ -57,8 +57,8 @@ class DotGenerator(function: Function, flowRunTheme: FlowRunTheme) {
     val stmtId = s"${stmt.id}#${stmt.getClass.getSimpleName}"
     stmt match {
       case _: Begin =>
-        val lbl = if function.isMain then "Begin" else function.label
-        val tooltip = if function.isMain then "Begin" else function.verboseLabel
+        val lbl = if function.isMain then "Begin" else function.label.toGraphvizLbl
+        val tooltip = if function.isMain then "Begin" else function.verboseLabel.toGraphvizLbl
         val dot =
           s"""|${stmt.id} [id="$stmtId" ${pos(posX, posY)} ${dimensions(lbl)} $group 
               |  label="$lbl" tooltip="$tooltip" shape="ellipse" ${flowRunTheme.startEndNode.graphvizColors}]
@@ -66,7 +66,7 @@ class DotGenerator(function: Function, flowRunTheme: FlowRunTheme) {
         (dot, posY)
 
       case retStmt: Return =>
-        val lbl = if function.isMain then "End" else stmt.label
+        val lbl = if function.isMain then "End" else stmt.label.toGraphvizLbl
         val dot =
           s"""|${stmt.id} [id="$stmtId" ${pos(posX, posY)} ${dimensions(lbl)} $group 
               |  label="$lbl" tooltip="$lbl" shape="ellipse" ${flowRunTheme.startEndNode.graphvizColors}]
@@ -591,6 +591,7 @@ class DotGenerator(function: Function, flowRunTheme: FlowRunTheme) {
 
   extension (str: String) {
     def toGraphvizLbl: String =
-      str.replace("\"", "\\\"")
+      val escaped = str.replace("\"", "\\\"")
+      if escaped.endsWith("\\") then s"${escaped}\\" else escaped
   }
 }
