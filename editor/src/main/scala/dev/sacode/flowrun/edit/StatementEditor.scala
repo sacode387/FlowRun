@@ -97,7 +97,6 @@ final class StatementEditor(
         }
         val typeInputElem = newTypeInput(Expression.Type.VarTypes.toSeq, statement.tpe) { newType =>
           val updatedStmt = programModel.findStatement(stmtId).asInstanceOf[Declare].copy(tpe = newType)
-          // if newType.isArray
           programModel.updateStmt(updatedStmt)
           edit(stmtId) // refresh because array inputs are not same as scalar
         }

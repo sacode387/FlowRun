@@ -70,12 +70,6 @@ enum RunVal(val tpe: Type, val valueOpt: Option[Any]):
 
 object RunVal:
   import Type.*
-  /*def fromValue(id: String, tpe: Type, value: Any): RunVal = (tpe, value) match
-    case (Integer, v: Int)     => IntegerVal(v)
-    case (Real, v: Double)     => RealVal(v)
-    case (String, v: String)   => StringVal(v)
-    case (Boolean, v: Boolean) => BooleanVal(v)
-    case _                     => throw EvalException(s"Cant $tpe.", id)*/
 
   def fromString(inputValue: String): RunVal = Try(BooleanVal(inputValue.toBoolean))
     .orElse(
