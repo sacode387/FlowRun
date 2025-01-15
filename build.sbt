@@ -36,7 +36,7 @@ lazy val editor = (project in file("editor"))
     scalacOptions ++= Seq(
       "-Xmax-inlines",
       "128",
-      "-Ysafe-init",
+      "-Wsafe-init",
       "-deprecation",
       "-Yretain-trees"
     ),
@@ -62,7 +62,7 @@ lazy val interpreter = crossProject(JVMPlatform, JSPlatform)
     scalacOptions ++= Seq(
       "-Xmax-inlines",
       "128",
-      "-Ysafe-init",
+      "-Wsafe-init",
       "-deprecation",
       "-Yretain-trees"
     ),

@@ -44,7 +44,7 @@ final class Interpreter(
   var currentExecFunctionId: Option[String] = None
   var nextExecStatementId: Option[String] = None
 
-  // input from user
+  // input from user, needed for ReadInput function
   private var lastReadInput: Option[RunVal] = None
 
   def isRunning: Boolean = state == State.RUNNING || state == State.WAITING_FOR_INPUT
@@ -95,26 +95,18 @@ final class Interpreter(
     futureExec.map(_ => {})
   }
 
-  // almost same as setValue, but without any variable name
+  // almost same as setInputtedValue, but without any variable name
   def setLastReadInput(nodeId: String, inputValue: String): RunVal =
     val value = RunVal.fromString(inputValue)
     lastReadInput = Some(value)
     state = State.RUNNING
     value
 
-  def setValue(nodeId: String, name: String, inputValue: String): Option[RunVal] =
-    val sym = symTab.getSymbolVar(nodeId, name)
-    try {
-      val value = sym.tpe match
-        case Type.Integer => IntegerVal(inputValue.toInt)
-        case Type.Real    => RealVal(inputValue.toDouble)
-        case Type.Boolean => BooleanVal(inputValue.toBoolean)
-        case Type.String  => StringVal(inputValue)
-        case tpe          => throw EvalException(s"Input variables of type ${tpe} are not supported.", nodeId)
-      symTab.setValue(nodeId, name, value)
+  def setInputtedValue(nodeId: String, name: String, inputValue: String): Future[Option[RunVal]] = {
+    assignValue(nodeId, name, inputValue).map{v =>
       state = State.RUNNING
-      Some(value)
-    } catch {
+      Some(v)
+    }.recover {
       case (e: EvalException) => // from symbol table
         state = State.FINISHED_FAILED
         flowrunChannel := FlowRun.Event.EvalError(nodeId, e.getMessage, symTab.currentScope.id)
@@ -123,11 +115,12 @@ final class Interpreter(
         state = State.FINISHED_FAILED
         flowrunChannel := FlowRun.Event.EvalError(
           nodeId,
-          s"You entered invalid ${sym.tpe}: ${inputValue}",
+          s"You entered invalid value ${inputValue}",
           symTab.currentScope.id
         )
         None
     }
+  }
 
   private def interpretFunction(
       fun: Function,
@@ -205,75 +198,14 @@ final class Interpreter(
           }
 
         case Assign(id, name, expr) =>
-          // array[i] = ..
-          if name.contains("[") then {
-            val (arrayName, indexExpr) = name match {
-              case s"$arr[$idx]" => (arr, idx)
-              case _             => throw EvalException(s"Wrong array indexing expression: '$name'", id)
-            }
-            if !symTab.isDeclaredVar(arrayName) then throw EvalException(s"Variable '$arrayName' is not declared.", id)
-            val sym = symTab.getSymbolVar(id, arrayName)
-            evalExpr(id, parseExpr(id, expr)).flatMap { exprValue =>
-              evalExpr(id, parseExpr(id, indexExpr)).map { indexExprValue =>
-                if exprValue.valueOpt.get.toString.isEmpty && sym.tpe != Type.String then
-                  throw EvalException(s"Assign expression cannot be empty.", id)
-                (sym.tpe, exprValue, indexExprValue) match {
-                  case (Type.IntegerArray, IntegerVal(newValue), IntegerVal(index)) =>
-                    val values = sym.value.get.asInstanceOf[IntegerArrayVal].values
-                    if !values.indices.contains(index) then
-                      throw EvalException(s"Index out of bounds: '${index}' (0..${values.length - 1})", id)
-                    values(index) = newValue
-                    NoVal
-                  case (Type.RealArray, RealVal(newValue), IntegerVal(index)) =>
-                    val values = sym.value.get.asInstanceOf[RealArrayVal].values
-                    if !values.indices.contains(index) then
-                      throw EvalException(s"Index out of bounds: '${index}' (0..${values.length - 1})", id)
-                    values(index) = newValue
-                    NoVal
-                  case (Type.RealArray, IntegerVal(newValue), IntegerVal(index)) =>
-                    val values = sym.value.get.asInstanceOf[RealArrayVal].values
-                    if !values.indices.contains(index) then
-                      throw EvalException(s"Index out of bounds: '${index}' (0..${values.length - 1})", id)
-                    values(index) = newValue.toDouble
-                    NoVal
-                  case (Type.StringArray, StringVal(newValue), IntegerVal(index)) =>
-                    val values = sym.value.get.asInstanceOf[StringArrayVal].values
-                    if !values.indices.contains(index) then
-                      throw EvalException(s"Index out of bounds: '${index}' (0..${values.length - 1})", id)
-                    values(index) = newValue
-                    NoVal
-                  case (Type.BooleanArray, BooleanVal(newValue), IntegerVal(index)) =>
-                    val values = sym.value.get.asInstanceOf[BooleanArrayVal].values
-                    if !values.indices.contains(index) then
-                      throw EvalException(s"Index out of bounds: '${index}' (0..${values.length - 1})", id)
-                    values(index) = newValue
-                    NoVal
-                  case (arrayType, newValue, index) =>
-                    throw EvalException(
-                      s"Cannot assign '${newValue.valueAndTypeString}' to element in array of type '${arrayType.pretty}' at index '${index}'",
-                      id
-                    )
-                }
-
-              }
-            }
-          } else {
-            if !symTab.isDeclaredVar(name) then throw EvalException(s"Variable '$name' is not declared.", id)
-            val sym = symTab.getSymbolVar(id, name)
-            evalExpr(id, parseExpr(id, expr)).map { exprValue =>
-              if exprValue.valueOpt.get.toString.isEmpty && sym.tpe != Type.String then
-                throw EvalException(s"Assign expression cannot be empty.", id)
-              val promotedVal = exprValue.promote(id, name, sym.tpe)
-              symTab.setValue(id, name, promotedVal)
-              NoVal
-            }
-          }
+          assignValue(id, name, expr)
 
         case Call(id, expr) =>
           evalExpr(id, parseExpr(id, expr)).map(_ => NoVal)
 
         case Input(id, name, prompt) =>
-          if !symTab.isDeclaredVar(name) then throw EvalException(s"Variable '$name' is not declared.", id)
+          val baseName = name.split("\\[").head
+          if !symTab.isDeclaredVar(baseName) then throw EvalException(s"Variable '$name' is not declared.", id)
           state = State.WAITING_FOR_INPUT
           flowrunChannel := FlowRun.Event.EvalInput(id, name, prompt)
           waitForContinue().map(_ => NoVal)
@@ -375,6 +307,72 @@ final class Interpreter(
       res
     }
 
+  private def assignValue(id: String, name: String, expr: String): Future[RunVal] = {
+    // array[i] = ..
+    if name.contains("[") then {
+      val (arrayName, indexExpr) = name match {
+        case s"$arr[$idx]" => (arr, idx)
+        case _ => throw EvalException(s"Wrong array indexing expression: '$name'", id)
+      }
+      if !symTab.isDeclaredVar(arrayName) then throw EvalException(s"Variable '$arrayName' is not declared.", id)
+      val sym = symTab.getSymbolVar(id, arrayName)
+      evalExpr(id, parseExpr(id, expr)).flatMap { exprValue =>
+        evalExpr(id, parseExpr(id, indexExpr)).map { indexExprValue =>
+          if exprValue.valueOpt.get.toString.isEmpty && sym.tpe != Type.String then
+            throw EvalException(s"Assign expression cannot be empty.", id)
+          (sym.tpe, exprValue, indexExprValue) match {
+            case (Type.IntegerArray, IntegerVal(newValue), IntegerVal(index)) =>
+              val values = sym.value.get.asInstanceOf[IntegerArrayVal].values
+              if !values.indices.contains(index) then
+                throw EvalException(s"Index out of bounds: '${index}' (0..${values.length - 1})", id)
+              values(index) = newValue
+              exprValue
+            case (Type.RealArray, RealVal(newValue), IntegerVal(index)) =>
+              val values = sym.value.get.asInstanceOf[RealArrayVal].values
+              if !values.indices.contains(index) then
+                throw EvalException(s"Index out of bounds: '${index}' (0..${values.length - 1})", id)
+              values(index) = newValue
+              exprValue
+            case (Type.RealArray, IntegerVal(newValue), IntegerVal(index)) =>
+              val values = sym.value.get.asInstanceOf[RealArrayVal].values
+              if !values.indices.contains(index) then
+                throw EvalException(s"Index out of bounds: '${index}' (0..${values.length - 1})", id)
+              values(index) = newValue.toDouble
+              exprValue
+            case (Type.StringArray, StringVal(newValue), IntegerVal(index)) =>
+              val values = sym.value.get.asInstanceOf[StringArrayVal].values
+              if !values.indices.contains(index) then
+                throw EvalException(s"Index out of bounds: '${index}' (0..${values.length - 1})", id)
+              values(index) = newValue
+              exprValue
+            case (Type.BooleanArray, BooleanVal(newValue), IntegerVal(index)) =>
+              val values = sym.value.get.asInstanceOf[BooleanArrayVal].values
+              if !values.indices.contains(index) then
+                throw EvalException(s"Index out of bounds: '${index}' (0..${values.length - 1})", id)
+              values(index) = newValue
+              exprValue
+            case (arrayType, newValue, index) =>
+              throw EvalException(
+                s"Cannot assign '${newValue.valueAndTypeString}' to element in array of type '${arrayType.pretty}' at index '${index}'",
+                id
+              )
+          }
+        }
+      }
+    } else {
+      if !symTab.isDeclaredVar(name) then throw EvalException(s"Variable '$name' is not declared.", id)
+      val sym = symTab.getSymbolVar(id, name)
+      evalExpr(id, parseExpr(id, expr)).map { exprValue =>
+        if exprValue.valueOpt.get.toString.isEmpty && sym.tpe != Type.String then
+          throw EvalException(s"Assign expression cannot be empty.", id)
+        val promotedVal = exprValue.promote(id, name, sym.tpe)
+        symTab.setValue(id, name, promotedVal)
+        exprValue
+      }
+    }
+  }
+
+  // must to be a Future bcoz readInput() ...
   private def evalExpr(id: String, expr: Expression): Future[RunVal] =
     evalBoolOrComparison(id, expr.boolOrComparison).flatMap {
       case boolVal: BooleanVal =>

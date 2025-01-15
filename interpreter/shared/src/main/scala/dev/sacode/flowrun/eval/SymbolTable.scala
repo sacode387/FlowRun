@@ -134,7 +134,7 @@ class Scope(
       maybeSym.orElse(parentScope.allSymbols.get(key))
     }
 
-  private def error(msg: String, nodeId: String) =
+  private def error(msg: String, nodeId: String): Nothing =
     throw EvalException(msg, nodeId)
 end Scope
 
@@ -145,7 +145,7 @@ case class SymbolKey(name: String, kind: Symbol.Kind) {
 }
 
 object SymbolKey {
-  val ReservedWords = Set("true", "false")
+  val ReservedWords: Set[String] = Set("true", "false")
   def apply(name: String, kind: Symbol.Kind, nodeId: String): SymbolKey = scala.util
     .Try {
       SymbolKey(name, kind)

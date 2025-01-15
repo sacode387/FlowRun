@@ -130,20 +130,25 @@ final class StatementEditor(
         nameInputElem.focus()
 
       case statement: Input =>
-        val nameInputElem = newNameInput(10, statement.name, "x") { newName =>
+        // no validation because array[123]
+        val nameInputElem = newNameInput(10, statement.name, "x", validate = false) { newName =>
           val updatedStmt = programModel.findStatement(stmtId).asInstanceOf[Input].copy(name = newName)
           programModel.updateStmt(updatedStmt)
         }
-        val promptInputElem = newTextInput(statement.id, 20, statement.prompt.getOrElse(""), "Please enter x")(
-          newPrompt => {
-            val updatedStmt = programModel.findStatement(stmtId).asInstanceOf[Input].copy(prompt = Some(newPrompt))
-            programModel.updateStmt(updatedStmt)
-          },
-          _ => {
+
+        val promptInputElem = flowRunElements.newInputText(20)
+        promptInputElem.value = statement.prompt.getOrElse("")
+        promptInputElem.placeholder = "Please enter x"
+        promptInputElem.oninput = { (_: dom.Event) =>
+          val newText = promptInputElem.value
+          if newText.trim.isEmpty then {
             val updatedStmt = programModel.findStatement(stmtId).asInstanceOf[Input].copy(prompt = None)
             programModel.updateStmt(updatedStmt)
+          } else {
+            val updatedStmt = programModel.findStatement(stmtId).asInstanceOf[Input].copy(prompt = Some(newText))
+            programModel.updateStmt(updatedStmt)
           }
-        )
+        }
 
         flowRunElements.stmtOutput.innerText = ""
         flowRunElements.stmtOutput.appendChild(
@@ -320,21 +325,6 @@ final class StatementEditor(
           callback(newExprText) // doesnt matter, just store it..
           flowrunChannel := FlowRun.Event.SyntaxError(e.getMessage)
       }
-    }
-    newInput
-  }
-
-  private def newTextInput(nodeId: String, size: Int, value: String, placeHolder: String)(
-      onSuccess: String => Unit,
-      onFailure: String => Unit
-  ): dom.html.Input = {
-    val newInput = flowRunElements.newInputText(size)
-    newInput.value = value
-    newInput.placeholder = placeHolder
-    newInput.oninput = { (_: dom.Event) =>
-      val newText = newInput.value
-      if newText.trim.isEmpty then onFailure(newText)
-      else onSuccess(newText)
     }
     newInput
   }

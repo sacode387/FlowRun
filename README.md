@@ -13,10 +13,14 @@ Flowcharts, runnable in your browser!
 - precise error reporting
 
 ### Data types
-- `Integer` for whole numbers
-- `Real` for decimal numbers
-- `String` for text
-- `Boolean` for true/false
+- `Integer` - whole number
+- `Real` - decimal number
+- `String` - text
+- `Boolean` - true/false
+- `Array[Integer]` - array of `Integer`s
+- `Array[Real]` - array of `Real`s
+- `Array[String]` - array of `String`s
+- `Array[Boolean]` - array of `Boolean`s
 
 ### Operators
 - `+`, `-`, `*`, `/`, `%` for arithmetic operations

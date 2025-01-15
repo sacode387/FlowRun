@@ -1,6 +1,9 @@
 package dev.sacode.flowrun
 package edit
 
+import scala.concurrent.Future
+import scala.concurrent.ExecutionContext.Implicits.global
+
 import org.scalajs.dom
 import reactify.*
 import scalatags.JsDom.all.*
@@ -83,19 +86,22 @@ class OutputArea(
 
     def inputValueSubmitted(): Unit = {
       val inputValue = valueInputElem.value.trim
-      val resOpt = if interpreter.programModel.findStatement(nodeId).isInstanceOf[Statement.Input] then {
-        interpreter.setValue(nodeId, name, inputValue)
+      val resOptF = if interpreter.programModel.findStatement(nodeId).isInstanceOf[Statement.Input] then {
+        interpreter.setInputtedValue(nodeId, name, inputValue)
       } else {
         val value = interpreter.setLastReadInput(nodeId, inputValue)
-        Some(value)
+        Future.successful(Some(value))
       }
-      resOpt.foreach { value =>
-        val printVal = if value.tpe == Type.String then s""" "$inputValue" """ else inputValue
-        flowRunElements.runtimeOutput.removeChild(enterValueDiv)
-        if interpreter.programModel.ast.config.echoEnteredValue then
-          flowRunElements.runtimeOutput.appendChild(
-            div(samp(s"You entered $name = $printVal")).render
-          )
+      resOptF.foreach {
+        _.foreach {
+          value =>
+            val printVal = if value.tpe == Type.String then s""" "$inputValue" """ else inputValue
+            flowRunElements.runtimeOutput.removeChild(enterValueDiv)
+            if interpreter.programModel.ast.config.echoEnteredValue then
+              flowRunElements.runtimeOutput.appendChild(
+                div(samp(s"You entered $name = $printVal")).render
+              )
+        }
       }
     }
 
