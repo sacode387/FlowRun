@@ -71,12 +71,12 @@ class JavaGenerator(val programAst: Program) extends CodeGenerator {
     import Statement._
     stmt match {
       case _: Begin => // noop
-      case Declare(id, name, tpe, maybeInitValue) =>
-        val key = SymbolKey(name, Symbol.Kind.Variable, id)
-        symTab.add(id, key, tpe, None)
-        val initValue = maybeInitValue.getOrElse(defaultValue(tpe))
+      case d: Declare =>
+        val key = SymbolKey(d.name, Symbol.Kind.Variable, d.id)
+        symTab.add(d.id, key, d.tpe, None)
+        val initValue = d.initValue.getOrElse(defaultValue(d.tpe))
         val initValueExpr = parseGenExpr(initValue)
-        addLine(s"${genType(tpe)} $name = $initValueExpr;", id)
+        addLine(s"${genType(d.tpe)} ${d.name} = $initValueExpr;",d. id)
 
       case Assign(id, name, value) =>
         val genValue = parseGenExpr(value)

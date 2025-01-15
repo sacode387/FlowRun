@@ -97,21 +97,35 @@ final class StatementEditor(
         }
         val typeInputElem = newTypeInput(Expression.Type.VarTypes.toSeq, statement.tpe) { newType =>
           val updatedStmt = programModel.findStatement(stmtId).asInstanceOf[Declare].copy(tpe = newType)
+          //if newType.isArray
           programModel.updateStmt(updatedStmt)
+          edit(stmtId) // refresh because array inputs are not same as scalar
         }
         val exprInputElem = newExprInput(statement.id, 10, statement.initValue.getOrElse(""), "123") { newExprText =>
           val newValueOpt = Option.when(newExprText.nonEmpty)(newExprText)
           val updatedStmt = programModel.findStatement(stmtId).asInstanceOf[Declare].copy(initValue = newValueOpt)
           programModel.updateStmt(updatedStmt)
         }
-
+        val arrayLengthInput = newExprInput(statement.id, 10, statement.lengthValue.toString, "5") { newLengthText =>
+          val newLength = newLengthText.trim.toIntOption.getOrElse(0)
+          val updatedStmt = programModel.findStatement(stmtId).asInstanceOf[Declare].copy(lengthValue = newLength)
+          programModel.updateStmt(updatedStmt)
+        }
         flowRunElements.stmtOutput.innerText = ""
         flowRunElements.stmtOutput.appendChild(
           stmtElem(
             nameInputElem,
             typeInputElem,
-            span(" = "),
-            exprInputElem
+            if statement.tpe.isArray then
+              frag(
+                span(" of length "),
+                arrayLengthInput
+              )
+            else
+              frag(
+                span(" = "),
+                exprInputElem
+              )
           ).render
         )
         nameInputElem.focus()
@@ -330,7 +344,7 @@ final class StatementEditor(
   ): dom.html.Select = {
     val newInput = flowRunElements.newInputSelect
     types.foreach { tpe =>
-      val typeItem = option(value := tpe.toString)(tpe.toString).render
+      val typeItem = option(value := tpe.toString)(tpe.pretty).render
       newInput.add(typeItem)
     }
     newInput.value = selectedTpe.toString

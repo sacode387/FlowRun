@@ -110,7 +110,7 @@ final class Interpreter(
         case Type.Real    => RealVal(inputValue.toDouble)
         case Type.Boolean => BooleanVal(inputValue.toBoolean)
         case Type.String  => StringVal(inputValue)
-        case Type.Void    => throw EvalException("Cant set Void var... (should not happen)", nodeId)
+        case tpe          => throw EvalException(s"Input variables of type ${tpe} are not supported.", nodeId)
       symTab.setValue(nodeId, name, value)
       state = State.RUNNING
       Some(value)
@@ -162,20 +162,47 @@ final class Interpreter(
 
       stmt match {
 
-        case Declare(id, name, tpe, initValue) =>
-          val maybeInitValueExpr = initValue.map(iv => parseExpr(id, iv))
-          maybeInitValueExpr match
-            case None =>
+        case d: Declare =>
+          d.tpe match {
+            case Type.IntegerArray =>
               Future {
-                symTab.addVar(id, name, tpe, None)
+                symTab.addVar(d.id, d.name, d.tpe, None)
+                symTab.setValue(d.id, d.name, RunVal.IntegerArrayVal(Seq.fill(d.lengthValue)(0)))
                 NoVal
               }
-            case Some(expr) =>
-              evalExpr(id, expr).map { v =>
-                val promotedVal = v.promote(id, name, tpe)
-                symTab.addVar(id, name, tpe, Some(promotedVal))
+            case Type.RealArray =>
+              Future {
+                symTab.addVar(d.id, d.name, d.tpe, None)
+                symTab.setValue(d.id, d.name, RunVal.RealArrayVal(Seq.fill(d.lengthValue)(0)))
                 NoVal
               }
+            case Type.StringArray =>
+              Future {
+                symTab.addVar(d.id, d.name, d.tpe, None)
+                symTab.setValue(d.id, d.name, RunVal.StringArrayVal(Seq.fill(d.lengthValue)("")))
+                NoVal
+              }
+            case Type.BooleanArray =>
+              Future {
+                symTab.addVar(d.id, d.name, d.tpe, None)
+                symTab.setValue(d.id, d.name, RunVal.BooleanArrayVal(Seq.fill(d.lengthValue)(false)))
+                NoVal
+              }
+            case scalar =>
+              val maybeInitValueExpr = d.initValue.map(iv => parseExpr(d.id, iv))
+              maybeInitValueExpr match
+                case None =>
+                  Future {
+                    symTab.addVar(d.id, d.name, d.tpe, None)
+                    NoVal
+                  }
+                case Some(expr) =>
+                  evalExpr(d.id, expr).map { v =>
+                    val promotedVal = Some(v.promote(d.id, d.name, d.tpe))
+                    symTab.addVar(d.id, d.name, d.tpe, promotedVal)
+                    NoVal
+                  }
+          }
 
         case Assign(id, name, expr) =>
           if !symTab.isDeclaredVar(name) then throw EvalException(s"Variable '$name' is not declared.", id)
@@ -200,7 +227,7 @@ final class Interpreter(
 
         case Output(id, expr, newline) =>
           evalExpr(id, parseExpr(id, expr)).map { outputValue =>
-            val newOutput = outputValue.valueOpt.getOrElse("null").toString
+            val newOutput = outputValue.valueString
             flowrunChannel := FlowRun.Event.EvalOutput(newOutput, newline)
             NoVal
           }
@@ -277,7 +304,7 @@ final class Interpreter(
             val currentExecFun = programModel.ast.allFunctions.find(_.id == symTab.currentScope.id).get
             if retVal.tpe != currentExecFun.tpe then
               throw EvalException(
-                s"Expected function '${currentExecFun.name}' to return '${currentExecFun.tpe}' but got '${retVal.pretty}'",
+                s"Expected function '${currentExecFun.name}' to return '${currentExecFun.tpe}' but got '${retVal}'",
                 id
               )
             else retVal
@@ -308,7 +335,7 @@ final class Interpreter(
                 case nextVal: BooleanVal => acc.transform(_ || nextVal.value)
                 case otherVal =>
                   throw EvalException(
-                    s"Expected a Boolean but got '${otherVal.pretty}' while evaluating || operation.",
+                    s"Expected a Boolean but got '${otherVal}' while evaluating || operation.",
                     id
                   )
               }
@@ -330,7 +357,7 @@ final class Interpreter(
                 case nextVal: BooleanVal => acc.transform(_ && nextVal.value)
                 case otherVal =>
                   throw EvalException(
-                    s"Expected a Boolean but got '${otherVal.pretty}' while evaluating && operation.",
+                    s"Expected a Boolean but got '${otherVal}' while evaluating && operation.",
                     id
                   )
               }
@@ -364,7 +391,7 @@ final class Interpreter(
                 if isEquals then BooleanVal(v1.value == v2.value) else BooleanVal(v1.value != v2.value)
               case (v1, v2) =>
                 throw EvalException(
-                  s"Values '${v1.pretty}' and '${v2.pretty}' are not comparable.",
+                  s"Values '${v1}' and '${v2}' are not comparable.",
                   id
                 )
           }
@@ -412,7 +439,7 @@ final class Interpreter(
                 case (v1, v2) =>
                   val op = if isPlus then "sum" else "deduct"
                   throw EvalException(
-                    s"Cannot $op '${v1.pretty}' and '${v2.pretty}'",
+                    s"Cannot $op '${v1}' and '${v2}'",
                     id
                   )
             }
@@ -424,7 +451,7 @@ final class Interpreter(
           term.factors,
           (acc, nextFactorOpt) => {
             evalFactor(id, nextFactorOpt.factor).map { v =>
-              val nextVal = v.valueOpt.map(_.toString).getOrElse("")
+              val nextVal = v.valueString
               nextFactorOpt.op.tpe match
                 case Token.Type.Plus => acc.transform(_ + nextVal)
                 case _               => throw EvalException("Cannot subtract Strings", id)
@@ -464,7 +491,7 @@ final class Interpreter(
                 case (v1, v2) =>
                   val op = if isTimes then "multiply" else if isDiv then "divide" else "mod"
                   throw EvalException(
-                    s"Cannot $op '${v1.pretty}' and '${v2.pretty}'",
+                    s"Cannot $op '${v1}' and '${v2}'",
                     id
                   )
             }
@@ -481,7 +508,7 @@ final class Interpreter(
             next match
               case n: IntegerVal => n.transform(v => -v)
               case n: RealVal    => n.transform(v => -v)
-              case _             => throw EvalException(s"Cant negate '${next.pretty}'", id)
+              case _             => throw EvalException(s"Cant negate '${next}'", id)
           else next.asInstanceOf[BooleanVal].transform(v => !v)
         }
       case Unary.Simple(atom) => evalAtom(id, atom)
@@ -516,7 +543,7 @@ final class Interpreter(
               val argsWithTypes = args.zip(fun.parameters).zipWithIndex.map { case ((arg, p), idx) =>
                 if arg.tpe != p.tpe then
                   throw EvalException(
-                    s"Expected: '${p.pretty}' at index $idx, got value '${arg.pretty}'",
+                    s"Expected: '${p}' at index $idx, got value '${arg}'",
                     id
                   )
                 (p.name, p.tpe, arg)

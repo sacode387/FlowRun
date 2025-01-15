@@ -139,7 +139,7 @@ class CtxMenu(programModel: ProgramModel, flowRunElements: FlowRunElements, flow
 
     addDeclareButton.addEventListener(
       "click",
-      (_: dom.MouseEvent) => addStatement(Declare(AST.newId, "x", Expression.Type.Integer, None))
+      (_: dom.MouseEvent) => addStatement(Declare(AST.newId, "x", Expression.Type.Integer, None, 1))
     )
 
     addAssignButton.addEventListener(

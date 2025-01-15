@@ -28,6 +28,33 @@ object Expression:
     case Real
     case String
     case Boolean
+    case IntegerArray
+    case RealArray
+    case StringArray
+    case BooleanArray
+
+    def pretty: String = this match
+      case Void         => "Void"
+      case Integer      => "Integer"
+      case Real         => "Real"
+      case String       => "String"
+      case Boolean      => "Boolean"
+      case IntegerArray => "Integer[]"
+      case RealArray    => "Real[]"
+      case StringArray  => "String[]"
+      case BooleanArray => "Boolean[]"
+
+    def isArray: Boolean = this match
+      case IntegerArray => true
+      case RealArray    => true
+      case StringArray  => true
+      case BooleanArray => true
+      case _            => false
+
+  // case IntegerMatrix
+  // case RealMatrix
+  // case StringMatrix
+  // case BooleanMatrix
   object Type:
     val VarTypes = Type.values.filterNot(_ == Type.Void)
 

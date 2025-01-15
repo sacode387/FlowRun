@@ -13,13 +13,42 @@ enum RunVal(val tpe: Type, val valueOpt: Option[Any]):
   case RealVal(value: Double) extends RunVal(Type.Real, Some(value))
   case StringVal(value: String) extends RunVal(Type.String, Some(value))
   case BooleanVal(value: Boolean) extends RunVal(Type.Boolean, Some(value))
+  case IntegerArrayVal(value: Seq[Integer]) extends RunVal(Type.IntegerArray, Some(value))
+  case RealArrayVal(value: Seq[Double]) extends RunVal(Type.RealArray, Some(value))
+  case StringArrayVal(value: Seq[String]) extends RunVal(Type.StringArray, Some(value))
+  case BooleanArrayVal(value: Seq[Boolean]) extends RunVal(Type.BooleanArray, Some(value))
 
-  def pretty: String = this match
-    case NoVal             => "Void"
+  def valueString: String = this match
+    case NoVal                   => "()"
+    case IntegerVal(value)       => s"$value"
+    case RealVal(value)          => s"$value"
+    case StringVal(value)        => s"$value"
+    case BooleanVal(value)       => s"$value"
+    case IntegerArrayVal(values) => values.mkString("[", ",", "]")
+    case RealArrayVal(values)    => values.mkString("[", ",", "]")
+    case StringArrayVal(values)  => values.mkString("[", ",", "]")
+    case BooleanArrayVal(values) => values.mkString("[", ",", "]")
+
+  def valueAndTypeString: String = this match
+    case NoVal             => "(): Void"
     case IntegerVal(value) => s"$value: Integer"
     case RealVal(value)    => s"$value: Real"
     case StringVal(value)  => s"$value: String"
     case BooleanVal(value) => s"$value: Boolean"
+    case IntegerArrayVal(values) =>
+      val arr = values.mkString("[", ",", "]")
+      s"$arr: Integer[]"
+    case RealArrayVal(values) =>
+      val arr = values.mkString("[", ",", "]")
+      s"$arr: Real[]"
+    case StringArrayVal(values) =>
+      val arr = values.mkString("[", ",", "]")
+      s"$arr: String[]"
+    case BooleanArrayVal(values) =>
+      val arr = values.mkString("[", ",", "]")
+      s"$arr: Boolean[]"
+
+  override def toString(): String = valueAndTypeString
 
   def promote(nodeId: String, expectedName: String, expectedTpe: Type): RunVal =
     if expectedTpe == Type.Real then
@@ -27,19 +56,25 @@ enum RunVal(val tpe: Type, val valueOpt: Option[Any]):
         case rv: RealVal    => rv
         case iv: IntegerVal => RealVal(iv.value.toDouble)
         case otherVal =>
-          throw EvalException(s"Expected '$expectedName: $expectedTpe' but got '${valueOpt.get}: ${tpe}'", nodeId)
+          throw EvalException(
+            s"Expected '$expectedName: ${expectedTpe.pretty}' but got '${valueOpt.get}: ${tpe.pretty}'",
+            nodeId
+          )
     else if tpe != expectedTpe then
-      throw EvalException(s"Expected '$expectedName: $expectedTpe' but got '${valueOpt.get}: ${tpe}'", nodeId)
+      throw EvalException(
+        s"Expected '$expectedName: ${expectedTpe.pretty}' but got '${valueOpt.get}: ${tpe.pretty}'",
+        nodeId
+      )
     else this
 
 object RunVal:
   import Type.*
-  def fromValue(id: String, tpe: Type, value: Any): RunVal = (tpe, value) match
+  /*def fromValue(id: String, tpe: Type, value: Any): RunVal = (tpe, value) match
     case (Integer, v: Int)     => IntegerVal(v)
     case (Real, v: Double)     => RealVal(v)
     case (String, v: String)   => StringVal(v)
     case (Boolean, v: Boolean) => BooleanVal(v)
-    case _                     => throw EvalException(s"Cant $tpe.", id)
+    case _                     => throw EvalException(s"Cant $tpe.", id)*/
 
   def fromString(inputValue: String): RunVal = Try(BooleanVal(inputValue.toBoolean))
     .orElse(

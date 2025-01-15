@@ -52,11 +52,11 @@ class NodeJsGenerator(override val programAst: Program) extends JavascriptGenera
     import Statement._
     stmt match
       case _: Begin => // noop
-      case Declare(id, name, tpe, maybeInitValue) =>
-        val key = SymbolKey(name, Symbol.Kind.Variable, id)
-        symTab.add(id, key, tpe, None)
-        val initValue = maybeInitValue.getOrElse(defaultValue(tpe))
-        addLine(s"let $name = $initValue;", id)
+      case d: Declare =>
+        val key = SymbolKey(d.name, Symbol.Kind.Variable,d. id)
+        symTab.add(d.id, key, d.tpe, None)
+        val initValue = d.initValue.getOrElse(defaultValue(d.tpe))
+        addLine(s"let ${d.name} = $initValue;", d.id)
 
       case Assign(id, name, value) =>
         addLine(s"$name = $value;", id)
