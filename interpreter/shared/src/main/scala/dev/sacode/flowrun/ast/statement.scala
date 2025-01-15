@@ -47,10 +47,12 @@ object Statement:
       derives JsonRW:
     override def duplicated: Declare = copy(id = AST.newId)
     override def label =
-      val maybeExprText = initValue.map(e => s" = $e").getOrElse("")
+      // dont show initializer for array
+      val maybeExprText = initValue.map(e => s" = $e").filterNot(_ => tpe.isArray).getOrElse("")
       s"$name$maybeExprText"
     override def verboseLabel =
-      val maybeExprText = initValue.map(e => s" = $e").getOrElse("")
+      // dont show initializer for array
+      val maybeExprText = initValue.map(e => s" = $e").filterNot(_ => tpe.isArray).getOrElse("")
       s"$name: $tpe$maybeExprText"
 
   case class Assign(id: String, name: String, value: String) extends Statement derives JsonRW:

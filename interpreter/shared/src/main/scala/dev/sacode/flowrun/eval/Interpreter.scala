@@ -523,6 +523,36 @@ final class Interpreter(
       case TrueLit            => Future.successful(BooleanVal(true))
       case FalseLit           => Future.successful(BooleanVal(false))
       case Parens(expression) => evalExpr(id, expression)
+      case ArrayIndexAccess(arrayName, indexExpr) =>
+        evalExpr(id, indexExpr).map { indexValue =>
+          val arr = symTab.getValue(id, arrayName)
+          indexValue match {
+            case IntegerVal(indexValueInt) =>
+              arr match {
+                case IntegerArrayVal(values) =>
+                  if !values.indices.contains(indexValueInt) then
+                    throw EvalException(s"Index out of bounds: '${indexValueInt}' (0..${values.length - 1})", id)
+                  IntegerVal(values(indexValueInt))
+                case RealArrayVal(values) =>
+                  if !values.indices.contains(indexValueInt) then
+                    throw EvalException(s"Index out of bounds: '${indexValueInt}' (0..${values.length - 1})", id)
+                  RealVal(values(indexValueInt))
+                case StringArrayVal(values) =>
+                  if !values.indices.contains(indexValueInt) then
+                    throw EvalException(s"Index out of bounds: '${indexValueInt}' (0..${values.length - 1})", id)
+                  StringVal(values(indexValueInt))
+                case BooleanArrayVal(values) =>
+                  if !values.indices.contains(indexValueInt) then
+                    throw EvalException(s"Index out of bounds: '${indexValueInt}' (0..${values.length - 1})", id)
+                  BooleanVal(values(indexValueInt))
+                case other =>
+                  throw EvalException(s"Cannot index into '${other}' because it is not an array", id)
+              }
+            case otherIndex =>
+              throw EvalException(s"Array index has to be an Integer: '${otherIndex}'", id)
+          }
+
+        }
       case FunctionCall(name, argumentExprs) =>
         val futureArgs = execSequentially(
           List.empty[RunVal],

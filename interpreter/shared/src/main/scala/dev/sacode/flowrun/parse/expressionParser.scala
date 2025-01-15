@@ -128,6 +128,11 @@ final class ExpressionParser(nodeId: String, allTokens: List[Token]) {
               arguments += expression()
             eat(Type.RightParen)
             FunctionCall(id.text, arguments.toList)
+        else if lookahead.tpe == Type.LeftBracket then
+           eat(Type.LeftBracket)
+           val indexExpr = expression()
+           eat(Type.RightBracket)
+           ArrayIndexAccess(id.text, indexExpr)
         else Identifier(id.text)
       case Type.LeftParen =>
         eat(Type.LeftParen)

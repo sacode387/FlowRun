@@ -15,7 +15,7 @@ factor              -> unary (("*" |  "/" | "%") unary)* ;
 unary               -> ("!" | "-") unary
                     | atom ;
 atom                -> NUMBER | STRING | "true" | "false" | "null"
-                    | ID
+                    | ID | ID[expression]
                     | "(" expression ")" ;
  */
 
@@ -51,10 +51,6 @@ object Expression:
       case BooleanArray => true
       case _            => false
 
-  // case IntegerMatrix
-  // case RealMatrix
-  // case StringMatrix
-  // case BooleanMatrix
   object Type:
     val VarTypes = Type.values.filterNot(_ == Type.Void)
 
@@ -85,6 +81,7 @@ enum Atom:
   case RealLit(value: Double)
   case StringLit(value: String)
   case Identifier(name: String)
+  case ArrayIndexAccess(name: String, indexExpr: Expression)
   case TrueLit
   case FalseLit
   case Parens(expression: Expression)
