@@ -250,7 +250,7 @@ final class Interpreter(
                     NoVal
                   case (arrayType, newValue, index) =>
                     throw EvalException(
-                      s"Cannot assign ${newValue.valueAndTypeString} to array of type '${arrayType}' at index '${index}'",
+                      s"Cannot assign '${newValue.valueAndTypeString}' to element in array of type '${arrayType.pretty}' at index '${index}'",
                       id
                     )
                 }
@@ -763,12 +763,16 @@ final class Interpreter(
           case (b: RealVal, p: RealVal)       => Future(RealVal(Math.pow(b.value, p.value)))
           case _ => throw EvalException(s"Expected (Number, Number) arguments in function ${func.name}", id)
 
-      // strings
+      // strings and arrays
       case func @ Length =>
         validateArgsNumber(id, func.name, 1, args.size)
         args.head match
-          case s: StringVal => Future(IntegerVal(s.value.length))
-          case _            => throw EvalException(s"Expected a String argument in function ${func.name}", id)
+          case s: StringVal       => Future(IntegerVal(s.value.length))
+          case a: IntegerArrayVal => Future(IntegerVal(a.values.length))
+          case a: RealArrayVal    => Future(IntegerVal(a.values.length))
+          case a: StringArrayVal  => Future(IntegerVal(a.values.length))
+          case a: BooleanArrayVal => Future(IntegerVal(a.values.length))
+          case _ => throw EvalException(s"Expected String or Array argument in function ${func.name}", id)
       case func @ CharAt =>
         validateArgsNumber(id, func.name, 2, args.size)
         val str = args.head
