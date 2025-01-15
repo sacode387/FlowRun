@@ -31,9 +31,12 @@ class FlowchartPresenter(
       )
     )
 
-  graphviz.on("end", { (thiz: js.Dynamic) =>
-    thiz.zoomSelection().on("dblclick.zoom", null)
-  }: js.ThisFunction0[js.Dynamic, Unit])
+  graphviz.on(
+    "end",
+    { (thiz: js.Dynamic) =>
+      thiz.zoomSelection().on("dblclick.zoom", null)
+    }: js.ThisFunction0[js.Dynamic, Unit]
+  )
 
   loadCurrentFunction()
 

@@ -34,7 +34,7 @@ object InterpreterTests extends TestSuite {
     test("declare uninitialized") {
       val main = newFun(
         List(
-          S.Declare(getId(), "empty", E.Type.Integer, None)
+          S.Declare(getId(), "empty", E.Type.Integer, None,1)
         )
       )
 
@@ -54,12 +54,12 @@ object InterpreterTests extends TestSuite {
     test("declare initialized") {
       val main = newFun(
         List(
-          S.Declare(getId(), "integer", E.Type.Integer, Some("5")),
-          S.Declare(getId(), "neg_integer", E.Type.Integer, Some("-123")),
-          S.Declare(getId(), "real", E.Type.Real, Some("12.345")),
-          S.Declare(getId(), "string", E.Type.String, Some("\"abc\"")),
-          S.Declare(getId(), "boolean", E.Type.Boolean, Some("false")),
-          S.Declare(getId(), "neg_boolean", E.Type.Boolean, Some("!false"))
+          S.Declare(getId(), "integer", E.Type.Integer, Some("5"),1),
+          S.Declare(getId(), "neg_integer", E.Type.Integer, Some("-123"),1),
+          S.Declare(getId(), "real", E.Type.Real, Some("12.345"),1),
+          S.Declare(getId(), "string", E.Type.String, Some("\"abc\""),1),
+          S.Declare(getId(), "boolean", E.Type.Boolean, Some("false"),1),
+          S.Declare(getId(), "neg_boolean", E.Type.Boolean, Some("!false"),1)
         )
       )
       val flowrunChannel = Channel[FlowRun.Event]
@@ -82,7 +82,7 @@ object InterpreterTests extends TestSuite {
     test("assign") {
       val main = newFun(
         List(
-          S.Declare(getId(), "x", E.Type.Integer, None),
+          S.Declare(getId(), "x", E.Type.Integer, None,1),
           S.Assign(getId(), "x", "6"),
           S.Output(getId(), "x", true)
         )
@@ -101,12 +101,12 @@ object InterpreterTests extends TestSuite {
     test("arithmetic - integers") {
       val main = newFun(
         List(
-          S.Declare(getId(), "a", E.Type.Integer, Some("5 + 3 * 2")),
-          S.Declare(getId(), "b", E.Type.Integer, Some("15 / 3 - 2")),
-          S.Declare(getId(), "c", E.Type.Integer, Some("15 % (2 + 2)")),
-          S.Declare(getId(), "d", E.Type.Boolean, Some("1 == 1")),
-          S.Declare(getId(), "e", E.Type.Boolean, Some("2 >= 1")),
-          S.Declare(getId(), "f", E.Type.Boolean, Some("2 <= 1"))
+          S.Declare(getId(), "a", E.Type.Integer, Some("5 + 3 * 2"),1),
+          S.Declare(getId(), "b", E.Type.Integer, Some("15 / 3 - 2"),1),
+          S.Declare(getId(), "c", E.Type.Integer, Some("15 % (2 + 2)"),1),
+          S.Declare(getId(), "d", E.Type.Boolean, Some("1 == 1"),1),
+          S.Declare(getId(), "e", E.Type.Boolean, Some("2 >= 1"),1),
+          S.Declare(getId(), "f", E.Type.Boolean, Some("2 <= 1"),1)
         )
       )
       val flowrunChannel = Channel[FlowRun.Event]
@@ -127,13 +127,13 @@ object InterpreterTests extends TestSuite {
     test("arithmetic - reals") {
       val main = newFun(
         List(
-          S.Declare(getId(), "a", E.Type.Real, Some("5.1 + 3.0 * 2.0")),
-          S.Declare(getId(), "b", E.Type.Real, Some("15.0 / 3.0 - 2.5")),
-          S.Declare(getId(), "c", E.Type.Real, Some("15.0 % 4.5")),
-          S.Declare(getId(), "d", E.Type.Boolean, Some("1.0 == 1.0")),
-          S.Declare(getId(), "e", E.Type.Boolean, Some("2.0 >= 1.0")),
-          S.Declare(getId(), "f", E.Type.Boolean, Some("2.0 <= 1.0")),
-          S.Declare(getId(), "g", E.Type.Real, Some("5.0 / 2.0"))
+          S.Declare(getId(), "a", E.Type.Real, Some("5.1 + 3.0 * 2.0"),1),
+          S.Declare(getId(), "b", E.Type.Real, Some("15.0 / 3.0 - 2.5"),1),
+          S.Declare(getId(), "c", E.Type.Real, Some("15.0 % 4.5"),1),
+          S.Declare(getId(), "d", E.Type.Boolean, Some("1.0 == 1.0"),1),
+          S.Declare(getId(), "e", E.Type.Boolean, Some("2.0 >= 1.0"),1),
+          S.Declare(getId(), "f", E.Type.Boolean, Some("2.0 <= 1.0"),1),
+          S.Declare(getId(), "g", E.Type.Real, Some("5.0 / 2.0"),1)
         )
       )
       val flowrunChannel = Channel[FlowRun.Event]
@@ -156,7 +156,7 @@ object InterpreterTests extends TestSuite {
     test("if-else") {
       val main = newFun(
         List(
-          S.Declare(getId(), "x", E.Type.Integer, None),
+          S.Declare(getId(), "x", E.Type.Integer, None,1),
           S.If(
             getId(),
             "true",

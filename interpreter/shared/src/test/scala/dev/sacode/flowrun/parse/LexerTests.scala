@@ -29,6 +29,8 @@ object LexerTests extends TestSuite {
       ||
       (
       )
+      [
+      ]
       ,
 
       """

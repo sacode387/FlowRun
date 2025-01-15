@@ -1,6 +1,6 @@
 inThisBuild(
   List(
-    scalaVersion := "3.4.2",
+    scalaVersion := "3.6.2",
     evictionErrorLevel := Level.Warn,
     publish / skip := true,
     scalafmtSbt := true,
@@ -30,9 +30,8 @@ lazy val editor = (project in file("editor"))
   .settings(
     name := "flowrun-editor",
     libraryDependencies ++= Seq(
-      "com.lihaoyi" %%% "scalatags" % "0.12.0",
-      "com.lihaoyi" %%% "utest" % "0.8.1" % Test,
-      "com.lihaoyi" %%% "pprint" % "0.8.1" % Test
+      "com.lihaoyi" %%% "scalatags" % "0.13.1",
+      "com.lihaoyi" %%% "utest" % "0.8.5" % Test
     ),
     scalacOptions ++= Seq(
       "-Xmax-inlines",
@@ -55,11 +54,10 @@ lazy val interpreter = crossProject(JVMPlatform, JSPlatform)
   .settings(
     name := "flowrun-interpreter",
     libraryDependencies ++= Seq(
-      "io.github.cquiroz" %%% "scala-java-time" % "2.5.0",
-      "com.outr" %%% "reactify" % "4.0.8",
-      "ba.sake" %%% "tupson" % "0.11.0",
-      "com.lihaoyi" %%% "utest" % "0.8.1" % Test,
-      "com.lihaoyi" %%% "pprint" % "0.8.1" % Test
+      "io.github.cquiroz" %%% "scala-java-time" % "2.6.0",
+      "com.outr" %%% "reactify" % "4.1.3",
+      "ba.sake" %%% "tupson" % "0.13.0",
+      "com.lihaoyi" %%% "utest" % "0.8.5" % Test
     ),
     scalacOptions ++= Seq(
       "-Xmax-inlines",

@@ -80,7 +80,7 @@ class FlowRunElements(
   val configDialog: dom.html.Element =
     mountElem.querySelector(".flowrun-config").asInstanceOf[dom.html.Element]
   val zoomResetButton =
-      mountElem.querySelector(".flowrun-btn-zoom-reset").asInstanceOf[dom.html.Element]
+    mountElem.querySelector(".flowrun-btn-zoom-reset").asInstanceOf[dom.html.Element]
 
   val clearOutputBtn = mountElem.querySelector(".flowrun-btn-clear-output").asInstanceOf[dom.html.Element]
 

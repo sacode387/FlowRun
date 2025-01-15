@@ -19,6 +19,12 @@ final class Lexer(nodeId: String, input: String) {
       else if lookahead == ')' then
         i += 1
         tokens += Token(Type.RightParen, lookahead.toString, pos)
+      else if lookahead == '[' then
+        i += 1
+        tokens += Token(Type.LeftBracket, lookahead.toString, pos)
+      else if lookahead == ']' then
+        i += 1
+        tokens += Token(Type.RightBracket, lookahead.toString, pos)
       else if lookahead == ',' then
         i += 1
         tokens += Token(Type.Comma, lookahead.toString, pos)
@@ -151,8 +157,11 @@ object Token {
     case And
     case Or
 
-    case LeftParen
-    case RightParen
+    case LeftParen // (
+    case RightParen // )
+
+    case LeftBracket // [
+    case RightBracket // ]
 
     case Comma
 
