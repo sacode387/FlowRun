@@ -13,6 +13,8 @@ jobs:
 
       - name: Setup Scala
         uses: japgolly/setup-everything-scala@v3.1
+        with:
+          java-version: 11
 
       - name: Build and test
         shell: bash
