@@ -65,7 +65,7 @@ class PythonGenerator(val programAst: Program) extends CodeGenerator {
       case _: Begin => // noop
       case d: Declare =>
         val key = SymbolKey(d.name, Symbol.Kind.Variable, d.id)
-        symTab.add(d.id, key,d. tpe, None)
+        symTab.add(d.id, key, d.tpe, None)
         val initValue = d.initValue.getOrElse(defaultValue(d.tpe))
         val genValue = parseGenExpr(initValue)
         addLine(s"${d.name} = $genValue", d.id)

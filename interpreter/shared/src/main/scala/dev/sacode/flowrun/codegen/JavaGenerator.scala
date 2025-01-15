@@ -76,7 +76,7 @@ class JavaGenerator(val programAst: Program) extends CodeGenerator {
         symTab.add(d.id, key, d.tpe, None)
         val initValue = d.initValue.getOrElse(defaultValue(d.tpe))
         val initValueExpr = parseGenExpr(initValue)
-        addLine(s"${genType(d.tpe)} ${d.name} = $initValueExpr;",d. id)
+        addLine(s"${genType(d.tpe)} ${d.name} = $initValueExpr;", d.id)
 
       case Assign(id, name, value) =>
         val genValue = parseGenExpr(value)

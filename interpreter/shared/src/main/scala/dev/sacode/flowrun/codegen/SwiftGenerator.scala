@@ -54,7 +54,7 @@ class SwiftGenerator(val programAst: Program) extends CodeGenerator {
       case d: Declare =>
         val key = SymbolKey(d.name, Symbol.Kind.Variable, d.id)
         symTab.add(d.id, key, d.tpe, None)
-        val initValue =d.initValue.getOrElse(defaultValue(d.tpe))
+        val initValue = d.initValue.getOrElse(defaultValue(d.tpe))
         val initValueExpr = parseGenExpr(initValue)
         addLine(s"var ${d.name}: ${genType(d.tpe)} = $initValueExpr", d.id)
 

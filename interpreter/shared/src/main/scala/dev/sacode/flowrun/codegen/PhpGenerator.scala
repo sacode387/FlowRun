@@ -55,11 +55,11 @@ class PhpGenerator(val programAst: Program) extends CodeGenerator {
     stmt match
       case _: Begin => // noop
       case d: Declare =>
-        val key = SymbolKey(d.name, Symbol.Kind.Variable,d. id)
+        val key = SymbolKey(d.name, Symbol.Kind.Variable, d.id)
         symTab.add(d.id, key, d.tpe, None)
         val initValue = d.initValue.getOrElse(defaultValue(d.tpe))
         val genValue = parseGenExpr(initValue)
-        addLine(s"$$${d.name} = $genValue;",d. id)
+        addLine(s"$$${d.name} = $genValue;", d.id)
 
       case Assign(id, name, value) =>
         val genValue = parseGenExpr(value)

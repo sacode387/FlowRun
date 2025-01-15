@@ -13,10 +13,10 @@ enum RunVal(val tpe: Type, val valueOpt: Option[Any]):
   case RealVal(value: Double) extends RunVal(Type.Real, Some(value))
   case StringVal(value: String) extends RunVal(Type.String, Some(value))
   case BooleanVal(value: Boolean) extends RunVal(Type.Boolean, Some(value))
-  case IntegerArrayVal(values: Seq[Integer]) extends RunVal(Type.IntegerArray, Some(values))
-  case RealArrayVal(values: Seq[Double]) extends RunVal(Type.RealArray, Some(values))
-  case StringArrayVal(values: Seq[String]) extends RunVal(Type.StringArray, Some(values))
-  case BooleanArrayVal(values: Seq[Boolean]) extends RunVal(Type.BooleanArray, Some(values))
+  case IntegerArrayVal(values: Array[Integer]) extends RunVal(Type.IntegerArray, Some(values))
+  case RealArrayVal(values: Array[Double]) extends RunVal(Type.RealArray, Some(values))
+  case StringArrayVal(values: Array[String]) extends RunVal(Type.StringArray, Some(values))
+  case BooleanArrayVal(values: Array[Boolean]) extends RunVal(Type.BooleanArray, Some(values))
 
   def valueString: String = this match
     case NoVal                   => "()"
@@ -50,6 +50,7 @@ enum RunVal(val tpe: Type, val valueOpt: Option[Any]):
 
   override def toString(): String = valueAndTypeString
 
+  // adapt an integer to real
   def promote(nodeId: String, expectedName: String, expectedTpe: Type): RunVal =
     if expectedTpe == Type.Real then
       this match
