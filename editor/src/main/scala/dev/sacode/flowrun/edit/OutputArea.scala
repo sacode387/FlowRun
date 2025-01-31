@@ -89,18 +89,18 @@ class OutputArea(
       val resOptF = if interpreter.programModel.findStatement(nodeId).isInstanceOf[Statement.Input] then {
         interpreter.setInputtedValue(nodeId, name, inputValue)
       } else {
+        // when readInput() is called
         val value = interpreter.setLastReadInput(nodeId, inputValue)
         Future.successful(Some(value))
       }
       resOptF.foreach {
-        _.foreach {
-          value =>
-            val printVal = if value.tpe == Type.String then s""" "$inputValue" """ else inputValue
-            flowRunElements.runtimeOutput.removeChild(enterValueDiv)
-            if interpreter.programModel.ast.config.echoEnteredValue then
-              flowRunElements.runtimeOutput.appendChild(
-                div(samp(s"You entered $name = $printVal")).render
-              )
+        _.foreach { value =>
+          val printVal = if value.tpe == Type.String then s""" "$inputValue" """ else inputValue
+          flowRunElements.runtimeOutput.removeChild(enterValueDiv)
+          if interpreter.programModel.ast.config.echoEnteredValue then
+            flowRunElements.runtimeOutput.appendChild(
+              div(samp(s"You entered $name = $printVal")).render
+            )
         }
       }
     }

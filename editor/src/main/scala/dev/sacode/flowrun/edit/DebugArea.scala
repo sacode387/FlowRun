@@ -1,8 +1,6 @@
 package dev.sacode.flowrun
 package edit
 
-import org.scalajs.dom
-import reactify.*
 import scalatags.JsDom.all.*
 import dev.sacode.flowrun.eval.*
 
@@ -20,7 +18,7 @@ class DebugArea(
     val rows = varValues.map { sym =>
       tr(
         td(sym.key.name),
-        td(sym.value.flatMap(_.valueOpt.map(_.toString)).getOrElse(""))
+        td(sym.value.map(_.valueString).getOrElse(""))
       )
     }
     flowRunElements.debugVariables.appendChild(

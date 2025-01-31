@@ -106,6 +106,7 @@ final class StatementEditor(
           programModel.updateStmt(updatedStmt)
         }
         val arrayLengthInput = newExprInput(statement.id, 10, statement.lengthValue.toString, "5") { newLengthText =>
+          // TODO ovo mora biti tretirano kao Int expression dinamički !!!
           val newLength = newLengthText.trim.toIntOption.getOrElse(0)
           val updatedStmt = programModel.findStatement(stmtId).asInstanceOf[Declare].copy(lengthValue = newLength)
           programModel.updateStmt(updatedStmt)

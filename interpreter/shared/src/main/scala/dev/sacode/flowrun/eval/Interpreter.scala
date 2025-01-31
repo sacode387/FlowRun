@@ -103,23 +103,25 @@ final class Interpreter(
     value
 
   def setInputtedValue(nodeId: String, name: String, inputValue: String): Future[Option[RunVal]] = {
-    assignValue(nodeId, name, inputValue).map{v =>
-      state = State.RUNNING
-      Some(v)
-    }.recover {
-      case (e: EvalException) => // from symbol table
-        state = State.FINISHED_FAILED
-        flowrunChannel := FlowRun.Event.EvalError(nodeId, e.getMessage, symTab.currentScope.id)
-        None
-      case e: (NumberFormatException | IllegalArgumentException) =>
-        state = State.FINISHED_FAILED
-        flowrunChannel := FlowRun.Event.EvalError(
-          nodeId,
-          s"You entered invalid value ${inputValue}",
-          symTab.currentScope.id
-        )
-        None
-    }
+    assignValue(nodeId, name, inputValue)
+      .map { v =>
+        state = State.RUNNING
+        Some(v)
+      }
+      .recover {
+        case (e: EvalException) => // from symbol table
+          state = State.FINISHED_FAILED
+          flowrunChannel := FlowRun.Event.EvalError(nodeId, e.getMessage, symTab.currentScope.id)
+          None
+        case e: (NumberFormatException | IllegalArgumentException) =>
+          state = State.FINISHED_FAILED
+          flowrunChannel := FlowRun.Event.EvalError(
+            nodeId,
+            s"You entered invalid value ${inputValue}",
+            symTab.currentScope.id
+          )
+          None
+      }
   }
 
   private def interpretFunction(
@@ -312,8 +314,9 @@ final class Interpreter(
     if name.contains("[") then {
       val (arrayName, indexExpr) = name match {
         case s"$arr[$idx]" => (arr, idx)
-        case _ => throw EvalException(s"Wrong array indexing expression: '$name'", id)
+        case _             => throw EvalException(s"Wrong array indexing expression: '$name'", id)
       }
+      // TODO ako je String samo prihvatit vrijednost bez parseExpr
       if !symTab.isDeclaredVar(arrayName) then throw EvalException(s"Variable '$arrayName' is not declared.", id)
       val sym = symTab.getSymbolVar(id, arrayName)
       evalExpr(id, parseExpr(id, expr)).flatMap { exprValue =>
@@ -360,6 +363,7 @@ final class Interpreter(
         }
       }
     } else {
+      // TODO ako je String samo prihvatit vrijednost bez parseExpr
       if !symTab.isDeclaredVar(name) then throw EvalException(s"Variable '$name' is not declared.", id)
       val sym = symTab.getSymbolVar(id, name)
       evalExpr(id, parseExpr(id, expr)).map { exprValue =>
@@ -440,6 +444,7 @@ final class Interpreter(
                 if isEquals then BooleanVal(v1.value == v2.value) else BooleanVal(v1.value != v2.value)
               case (v1: BooleanVal, v2: BooleanVal) =>
                 if isEquals then BooleanVal(v1.value == v2.value) else BooleanVal(v1.value != v2.value)
+              // TODO handle arrays
               case (v1, v2) =>
                 throw EvalException(
                   s"Values '${v1}' and '${v2}' are not comparable.",
@@ -525,8 +530,17 @@ final class Interpreter(
               (acc, nextVal) match
                 case (v1: IntegerVal, v2: IntegerVal) =>
                   if isTimes then IntegerVal(v1.value * v2.value)
-                  else if isDiv then IntegerVal(v1.value / v2.value)
-                  else IntegerVal(v1.value % v2.value)
+                  else if isDiv then {
+                    try IntegerVal(v1.value / v2.value)
+                    catch
+                      case _: ArithmeticException =>
+                        throw EvalException(s"Division by zero ${v1.value} / ${v2.value}", id)
+                  } else {
+                    try IntegerVal(v1.value % v2.value)
+                    catch
+                      case _: ArithmeticException =>
+                        throw EvalException(s"Division by zero ${v1.value} / ${v2.value}", id)
+                  }
                 case (v1: RealVal, v2: RealVal) =>
                   if isTimes then RealVal(v1.value * v2.value)
                   else if isDiv then RealVal(v1.value / v2.value)
@@ -618,7 +632,7 @@ final class Interpreter(
             case Some(f) =>
               evalPredefinedFunction(id, f, args)
             case None =>
-              val funSym = symTab.getSymbolFun(id, name)
+              val funSym = symTab.getSymbolFun(id, name) // make sure it is defined
               val fun = programModel.ast.allFunctions.find(_.name == name).get
               validateArgsNumber(id, fun.name, fun.parameters.size, args.size)
               val argsWithTypes = args.zip(fun.parameters).zipWithIndex.map { case ((arg, p), idx) =>
