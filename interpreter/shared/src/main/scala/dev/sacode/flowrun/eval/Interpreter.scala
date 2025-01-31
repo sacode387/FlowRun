@@ -53,8 +53,8 @@ final class Interpreter(
 
   def run(execMode: ExecMode): Future[Unit] = {
     this.execMode = execMode
-    this.pauseBeforeNext = execMode == ExecMode.STEP_BY_STEP
-    this.state = State.RUNNING
+    pauseBeforeNext = execMode == ExecMode.STEP_BY_STEP
+    state = State.RUNNING
 
     val functionsFuture = Future { // Future needed coz symTab throws
       programModel.ast.allFunctions.foreach { fun =>
@@ -104,6 +104,7 @@ final class Interpreter(
     assignValue(nodeId, name, inputValue)
       .map { v =>
         state = State.RUNNING
+        pauseBeforeNext = false
         Some(v)
       }
       .recover {
@@ -139,114 +140,167 @@ final class Interpreter(
       result
     }
 
-  private def interpretStatement(stmt: Statement): Future[RunVal] = Future
-    .successful {
-      // TODO skontat za DoWhile jer je kontra..
-      // TODO skontat za for/while jer se RE-EVALUIRA EXPR!
-      if !stmt.isInstanceOf[Statement.Block] then
+  private def interpretStatement(stmt: Statement): Future[RunVal] = {
+    // println(s"interpreting: $stmt")
+    import Statement.*
+
+    val stmtExecFuture = stmt match {
+
+      case Begin(_) =>
+        pauseBeforeNext = true
         nextExecStatementId = Some(stmt.id)
-        pauseBeforeNext = true // reset the flag, wait for next statement
         flowrunChannel := FlowRun.Event.EvalBeforeExecStatement
-    }
-    .flatMap(_ => waitForContinue())
-    .flatMap { _ =>
-      // println(s"interpreting: $stmt")
-      import Statement.*
+        waitForContinue().map(_ => NoVal)
 
-      stmt match {
-
-        case d: Declare =>
-          d.tpe match {
-            case Type.IntegerArray =>
-              Future {
-                symTab.addVar(d.id, d.name, d.tpe, None)
-                symTab.setValue(d.id, d.name, RunVal.IntegerArrayVal(Array.fill(d.lengthValue)(0)))
-                NoVal
-              }
-            case Type.RealArray =>
-              Future {
-                symTab.addVar(d.id, d.name, d.tpe, None)
-                symTab.setValue(d.id, d.name, RunVal.RealArrayVal(Array.fill(d.lengthValue)(0)))
-                NoVal
-              }
-            case Type.StringArray =>
-              Future {
-                symTab.addVar(d.id, d.name, d.tpe, None)
-                symTab.setValue(d.id, d.name, RunVal.StringArrayVal(Array.fill(d.lengthValue)("")))
-                NoVal
-              }
-            case Type.BooleanArray =>
-              Future {
-                symTab.addVar(d.id, d.name, d.tpe, None)
-                symTab.setValue(d.id, d.name, RunVal.BooleanArrayVal(Array.fill(d.lengthValue)(false)))
-                NoVal
-              }
-            case scalar =>
-              val maybeInitValueExpr = d.initValue.map(iv => parseExpr(d.id, iv))
-              maybeInitValueExpr match
-                case None =>
-                  Future {
-                    symTab.addVar(d.id, d.name, d.tpe, None)
-                    NoVal
-                  }
-                case Some(expr) =>
+      case d: Declare =>
+        pauseBeforeNext = true
+        nextExecStatementId = Some(stmt.id)
+        flowrunChannel := FlowRun.Event.EvalBeforeExecStatement
+        d.tpe match {
+          case Type.IntegerArray =>
+            waitForContinue().map { _ =>
+              symTab.addVar(d.id, d.name, d.tpe, None)
+              symTab.setValue(d.id, d.name, RunVal.IntegerArrayVal(Array.fill(d.lengthValue)(0)))
+              NoVal
+            }
+          case Type.RealArray =>
+            waitForContinue().map { _ =>
+              symTab.addVar(d.id, d.name, d.tpe, None)
+              symTab.setValue(d.id, d.name, RunVal.RealArrayVal(Array.fill(d.lengthValue)(0)))
+              NoVal
+            }
+          case Type.StringArray =>
+            waitForContinue().map { _ =>
+              symTab.addVar(d.id, d.name, d.tpe, None)
+              symTab.setValue(d.id, d.name, RunVal.StringArrayVal(Array.fill(d.lengthValue)("")))
+              NoVal
+            }
+          case Type.BooleanArray =>
+            waitForContinue().map { _ =>
+              symTab.addVar(d.id, d.name, d.tpe, None)
+              symTab.setValue(d.id, d.name, RunVal.BooleanArrayVal(Array.fill(d.lengthValue)(false)))
+              NoVal
+            }
+          case scalar =>
+            val maybeInitValueExpr = d.initValue.map(iv => parseExpr(d.id, iv))
+            maybeInitValueExpr match
+              case None =>
+                waitForContinue().map { _ =>
+                  symTab.addVar(d.id, d.name, d.tpe, None)
+                  NoVal
+                }
+              case Some(expr) =>
+                waitForContinue().flatMap { _ =>
                   evalExpr(d.id, expr).map { v =>
                     val promotedVal = Some(v.promote(d.id, d.name, d.tpe))
                     symTab.addVar(d.id, d.name, d.tpe, promotedVal)
                     NoVal
                   }
-          }
+                }
+        }
 
-        case Assign(id, name, expr) =>
+      case Assign(id, name, expr) =>
+        pauseBeforeNext = true
+        nextExecStatementId = Some(stmt.id)
+        flowrunChannel := FlowRun.Event.EvalBeforeExecStatement
+        waitForContinue().flatMap { _ =>
           assignValue(id, name, expr)
+        }
 
-        case Call(id, expr) =>
+      case Call(id, expr) =>
+        pauseBeforeNext = true
+        nextExecStatementId = Some(stmt.id)
+        flowrunChannel := FlowRun.Event.EvalBeforeExecStatement
+        waitForContinue().flatMap { _ =>
           evalExpr(id, parseExpr(id, expr)).map(_ => NoVal)
+        }
 
-        case Input(id, name, prompt) =>
-          val baseName = name.split("\\[").head
-          if !symTab.isDeclaredVar(baseName) then throw EvalException(s"Variable '$name' is not declared.", id)
-          state = State.WAITING_FOR_INPUT
-          flowrunChannel := FlowRun.Event.EvalInput(id, name, prompt)
-          waitForContinue().map(_ => NoVal)
+      case Input(id, name, prompt) =>
+        val baseName = name.split("\\[").head
+        if !symTab.isDeclaredVar(baseName) then throw EvalException(s"Variable '$name' is not declared.", id)
+        state = State.WAITING_FOR_INPUT
+        pauseBeforeNext = true
+        nextExecStatementId = Some(stmt.id)
+        flowrunChannel := FlowRun.Event.EvalBeforeExecStatement
+        flowrunChannel := FlowRun.Event.EvalInput(id, name, prompt)
+        waitForContinue().map(_ => NoVal)
 
-        case Output(id, expr, newline) =>
+      case Output(id, expr, newline) =>
+        pauseBeforeNext = true
+        nextExecStatementId = Some(stmt.id)
+        flowrunChannel := FlowRun.Event.EvalBeforeExecStatement
+        waitForContinue().flatMap { _ =>
           evalExpr(id, parseExpr(id, expr)).map { outputValue =>
             val newOutput = outputValue.valueString
             flowrunChannel := FlowRun.Event.EvalOutput(newOutput, newline)
             NoVal
           }
+        }
 
-        case If(id, condition, ifTrueStatements, ifFalseStatements) =>
+      case If(id, condition, ifTrueStatements, ifFalseStatements) =>
+        pauseBeforeNext = true
+        nextExecStatementId = Some(stmt.id)
+        flowrunChannel := FlowRun.Event.EvalBeforeExecStatement
+        waitForContinue().flatMap { _ =>
           evalExpr(id, parseExpr(id, condition)).flatMap {
             case condition: BooleanVal =>
               if (condition.value) interpretStatement(ifTrueStatements)
               else interpretStatement(ifFalseStatements)
             case condValue => throw EvalException(s"Not a valid condition: '${condValue.valueOpt.getOrElse("")}'", id)
           }
+        }
 
-        case While(id, condition, body) =>
-          def loop(): Future[RunVal] =
+      case While(id, condition, body) =>
+        def loop(): Future[RunVal] = {
+          pauseBeforeNext = true
+          nextExecStatementId = Some(stmt.id)
+          flowrunChannel := FlowRun.Event.EvalBeforeExecStatement
+          waitForContinue().flatMap { _ =>
             evalExpr(id, parseExpr(id, condition)).flatMap {
               case condition: BooleanVal =>
-                if (condition.value) interpretStatement(body).flatMap(_ => loop())
-                else Future.successful(NoVal)
+                if condition.value
+                then
+                  interpretStatement(body).flatMap { _ =>
+                    loop()
+                  }
+                else {
+                  Future.successful(NoVal)
+                }
               case condValue => throw EvalException(s"Not a valid condition: '${condValue.valueOpt.getOrElse("")}'", id)
             }
-          loop()
+          }
+        }
 
-        case DoWhile(id, condition, body) =>
-          def loop(): Future[RunVal] =
+        loop()
+
+      case DoWhile(id, condition, body) =>
+        def loop(): Future[RunVal] = {
+          pauseBeforeNext = true
+          nextExecStatementId = Some(stmt.id)
+          flowrunChannel := FlowRun.Event.EvalBeforeExecStatement
+          waitForContinue().flatMap { _ =>
             evalExpr(id, parseExpr(id, condition)).flatMap {
               case condition: BooleanVal =>
-                if (condition.value) interpretStatement(body).flatMap(_ => loop())
-                else Future.successful(NoVal)
+                if condition.value then
+                  interpretStatement(body).flatMap { _ =>
+                    loop()
+                  }
+                else {
+                  Future.successful(NoVal)
+                }
               case condValue => throw EvalException(s"Not a valid condition: '${condValue.valueOpt.getOrElse("")}'", id)
             }
-          interpretStatement(body).flatMap(_ => loop())
+          }
+        }
 
-        case ForLoop(id, varName, startExpr, incrExpr, endExpr, body) =>
-          def loop(conditionExpr: String, incr: Int): Future[RunVal] =
+        interpretStatement(body).flatMap(_ => loop())
+
+      case ForLoop(id, varName, startExpr, incrExpr, endExpr, body) =>
+        def loop(conditionExpr: String, incr: Int): Future[RunVal] = {
+          pauseBeforeNext = true
+          nextExecStatementId = Some(stmt.id)
+          flowrunChannel := FlowRun.Event.EvalBeforeExecStatement
+          waitForContinue().flatMap { _ =>
             evalExpr(id, parseExpr(id, conditionExpr)).flatMap {
               case condition: BooleanVal =>
                 if (condition.value) interpretStatement(body).flatMap { _ =>
@@ -257,55 +311,56 @@ final class Interpreter(
                 else Future.successful(NoVal)
               case condValue => throw EvalException(s"Not a valid condition: '${condValue.valueOpt.getOrElse("")}'", id)
             }
-
-          for {
-            startAny <- evalExpr(id, parseExpr(id, startExpr))
-            incrAny <- evalExpr(id, parseExpr(id, incrExpr))
-            endAny <- evalExpr(id, parseExpr(id, endExpr))
-
-            start = startAny.asInstanceOf[IntegerVal]
-            incr = incrAny.asInstanceOf[IntegerVal]
-            end = endAny.asInstanceOf[IntegerVal]
-
-            // maybe declare a new var
-            _ =
-              if symTab.isDeclaredVar(varName) then symTab.setValue(id, varName, start)
-              else symTab.addVar(id, varName, Type.Integer, Some(start))
-
-            comparator = if incr.value >= 0 then "<=" else ">="
-            conditionExpr = s"$varName $comparator ${end.value}"
-            _ <- loop(conditionExpr, incr.value)
-          } yield NoVal
-
-        case block: Block =>
-          execSequentially(NoVal, block.statements, (_, s) => interpretStatement(s))
-
-        case Return(id, maybeExpr) =>
-          nextExecStatementId = None
-          val retValFut = maybeExpr match
-            case None       => Future.successful(NoVal)
-            case Some(expr) => evalExpr(id, parseExpr(id, expr))
-          retValFut.map { retVal =>
-            val currentExecFun = programModel.ast.allFunctions.find(_.id == symTab.currentScope.id).get
-            if retVal.tpe != currentExecFun.tpe then
-              throw EvalException(
-                s"Expected function '${currentExecFun.name}' to return '${currentExecFun.tpe}' but got '${retVal}'",
-                id
-              )
-            else retVal
           }
+        }
 
-        case Begin(_) =>
-          Future.successful(NoVal)
+        for {
+          startAny <- evalExpr(id, parseExpr(id, startExpr))
+          incrAny <- evalExpr(id, parseExpr(id, incrExpr))
+          endAny <- evalExpr(id, parseExpr(id, endExpr))
 
-        case _: Comment =>
-          Future.successful(NoVal)
-      }
+          start = startAny.asInstanceOf[IntegerVal]
+          incr = incrAny.asInstanceOf[IntegerVal]
+          end = endAny.asInstanceOf[IntegerVal]
+
+          // maybe declare a new var
+          _ =
+            if symTab.isDeclaredVar(varName) then symTab.setValue(id, varName, start)
+            else symTab.addVar(id, varName, Type.Integer, Some(start))
+
+          comparator = if incr.value >= 0 then "<=" else ">="
+          conditionExpr = s"$varName $comparator ${end.value}"
+          _ <- loop(conditionExpr, incr.value)
+        } yield NoVal
+
+      case block: Block =>
+        execSequentially(NoVal, block.statements, (_, s) => interpretStatement(s))
+
+      case Return(id, maybeExpr) =>
+        pauseBeforeNext = true
+        nextExecStatementId = Some(stmt.id)
+        flowrunChannel := FlowRun.Event.EvalBeforeExecStatement
+        val retValFut = maybeExpr match
+          case None       => waitForContinue().map(_ => NoVal)
+          case Some(expr) => waitForContinue().flatMap(_ => evalExpr(id, parseExpr(id, expr)))
+        retValFut.map { retVal =>
+          val currentExecFun = programModel.ast.allFunctions.find(_.id == symTab.currentScope.id).get
+          if retVal.tpe != currentExecFun.tpe then
+            throw EvalException(
+              s"Expected function '${currentExecFun.name}' to return '${currentExecFun.tpe}' but got '${retVal}'",
+              id
+            )
+          else retVal
+        }
+
+      case _: Comment =>
+        Future.successful(NoVal)
     }
-    .map { res =>
+    stmtExecFuture.map { res =>
       flowrunChannel := FlowRun.Event.EvalAfterExecStatement
       res
     }
+  }
 
   private def assignValue(id: String, name: String, expr: String): Future[RunVal] = {
     // array[i] = ..
