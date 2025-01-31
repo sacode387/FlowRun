@@ -497,7 +497,14 @@ final class Interpreter(
                 if isEquals then BooleanVal(v1.value == v2.value) else BooleanVal(v1.value != v2.value)
               case (v1: BooleanVal, v2: BooleanVal) =>
                 if isEquals then BooleanVal(v1.value == v2.value) else BooleanVal(v1.value != v2.value)
-              // TODO handle arrays
+              case (v1: IntegerArrayVal, v2: IntegerArrayVal) =>
+                if isEquals then BooleanVal(v1.values.toSeq == v2.values.toSeq) else BooleanVal(v1.values.toSeq != v2.values.toSeq)
+              case (v1: RealArrayVal, v2: RealArrayVal) =>
+                if isEquals then BooleanVal(v1.values.toSeq == v2.values.toSeq) else BooleanVal(v1.values.toSeq != v2.values.toSeq)
+              case (v1: StringArrayVal, v2: StringArrayVal) =>
+                if isEquals then BooleanVal(v1.values.toSeq == v2.values.toSeq) else BooleanVal(v1.values.toSeq != v2.values.toSeq)
+              case (v1: BooleanArrayVal, v2: BooleanArrayVal) =>
+                if isEquals then BooleanVal(v1.values.toSeq == v2.values.toSeq) else BooleanVal(v1.values.toSeq != v2.values.toSeq)
               case (v1, v2) =>
                 throw EvalException(
                   s"Values '${v1}' and '${v2}' are not comparable.",
