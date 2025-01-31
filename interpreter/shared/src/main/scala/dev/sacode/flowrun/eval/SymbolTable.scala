@@ -159,6 +159,7 @@ object SymbolKey {
 case class Symbol(key: SymbolKey, tpe: Type, value: Option[RunVal] = None, scope: Scope):
   override def toString: String =
     s"${key.name}: ${tpe}" + value.map(v => s" = $v").getOrElse("")
+  def asVar: String = s"${key.name}: ${tpe}"
 
 object Symbol:
   enum Kind:

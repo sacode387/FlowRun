@@ -4,11 +4,12 @@ import scala.util.*
 import scala.concurrent.{Future, Promise}
 import scala.concurrent.ExecutionContext.Implicits.global
 import reactify.*
-import dev.sacode.flowrun.ast.*, Expression.Type
-import dev.sacode.flowrun.parse.{Token, parseExpr, ParseException, LexException}
-import dev.sacode.flowrun.ProgramModel
-import dev.sacode.flowrun.FlowRun
+import dev.sacode.flowrun.ast.{Expression, *}
+import Expression.Type
+import dev.sacode.flowrun.parse.{LexException, ParseException, Token, parseExpr}
+import dev.sacode.flowrun.{FlowRun, ProgramModel, eval}
 import RunVal.*
+import dev.sacode.flowrun
 import dev.sacode.flowrun.ast.Statement.Begin
 import dev.sacode.flowrun.ast.Statement.Return
 import dev.sacode.flowrun.ast.Statement.Declare
@@ -22,6 +23,8 @@ import dev.sacode.flowrun.ast.Statement.While
 import dev.sacode.flowrun.ast.Statement.DoWhile
 import dev.sacode.flowrun.ast.Statement.ForLoop
 import dev.sacode.flowrun.ast.Statement.Comment
+
+import scala.util.control.NonFatal
 
 final class Interpreter(
     val programModel: ProgramModel,
@@ -101,25 +104,16 @@ final class Interpreter(
     value
 
   def setInputtedValue(nodeId: String, name: String, inputValue: String): Future[Option[RunVal]] = {
-    assignValue(nodeId, name, inputValue)
+    assignInputtedValue(nodeId, name, inputValue)
       .map { v =>
         state = State.RUNNING
         pauseBeforeNext = false
         Some(v)
       }
-      .recover {
-        case (e: EvalException) => // from symbol table
-          state = State.FINISHED_FAILED
-          flowrunChannel := FlowRun.Event.EvalError(nodeId, e.getMessage, symTab.currentScope.id)
-          None
-        case e: (NumberFormatException | IllegalArgumentException) =>
-          state = State.FINISHED_FAILED
-          flowrunChannel := FlowRun.Event.EvalError(
-            nodeId,
-            s"You entered invalid value ${inputValue}",
-            symTab.currentScope.id
-          )
-          None
+      .recover { case (e: EvalException) => // from symbol table
+        state = State.FINISHED_FAILED
+        flowrunChannel := FlowRun.Event.EvalError(nodeId, e.getMessage, symTab.currentScope.id)
+        None
       }
   }
 
@@ -204,7 +198,7 @@ final class Interpreter(
         nextExecStatementId = Some(stmt.id)
         flowrunChannel := FlowRun.Event.EvalBeforeExecStatement
         waitForContinue().flatMap { _ =>
-          assignValue(id, name, expr)
+          assignExpr(id, name, expr)
         }
 
       case Call(id, expr) =>
@@ -362,14 +356,13 @@ final class Interpreter(
     }
   }
 
-  private def assignValue(id: String, name: String, expr: String): Future[RunVal] = {
+  private def assignExpr(id: String, name: String, expr: String): Future[RunVal] = {
     // array[i] = ..
     if name.contains("[") then {
       val (arrayName, indexExpr) = name match {
         case s"$arr[$idx]" => (arr, idx)
         case _             => throw EvalException(s"Wrong array indexing expression: '$name'", id)
       }
-      // TODO ako je String samo prihvatit vrijednost bez parseExpr
       if !symTab.isDeclaredVar(arrayName) then throw EvalException(s"Variable '$arrayName' is not declared.", id)
       val sym = symTab.getSymbolVar(id, arrayName)
       evalExpr(id, parseExpr(id, expr)).flatMap { exprValue =>
@@ -416,7 +409,6 @@ final class Interpreter(
         }
       }
     } else {
-      // TODO ako je String samo prihvatit vrijednost bez parseExpr
       if !symTab.isDeclaredVar(name) then throw EvalException(s"Variable '$name' is not declared.", id)
       val sym = symTab.getSymbolVar(id, name)
       evalExpr(id, parseExpr(id, expr)).map { exprValue =>
@@ -425,6 +417,108 @@ final class Interpreter(
         val promotedVal = exprValue.promote(id, name, sym.tpe)
         symTab.setValue(id, name, promotedVal)
         exprValue
+      }
+    }
+  }
+
+  private def assignInputtedValue(id: String, name: String, inputValue: String): Future[RunVal] = {
+    // array[i] = ..
+    if name.contains("[") then {
+      val (arrayName, indexExpr) = name match {
+        case s"$arr[$idx]" => (arr, idx.trim)
+        case _             => throw EvalException(s"Wrong array indexing expression: '$name'", id)
+      }
+      if !symTab.isDeclaredVar(arrayName) then throw EvalException(s"Variable '$arrayName' is not declared.", id)
+      val sym = symTab.getSymbolVar(id, arrayName)
+      val arrayValue = symTab.getValue(id, arrayName)
+      evalExpr(id, parseExpr(id, indexExpr)).map { indexExprValue =>
+        val index = indexExprValue match {
+          case IntegerVal(value) => value
+          case other             => throw EvalException(s"Wrong array index type: '$other'. Expected an Integer", id)
+        }
+        arrayValue match
+          case RunVal.IntegerArrayVal(values) =>
+            if !values.indices.contains(index) then
+              throw EvalException(s"Index out of bounds: '${index}' (0..${values.length - 1})", id)
+            try {
+              val value = inputValue.toInt
+              values(index) = value
+              IntegerVal(value)
+            } catch {
+              case _: NumberFormatException =>
+                throw EvalException(s"You entered invalid value for '${sym.asVar}' : '${inputValue}'.", id)
+            }
+          case RunVal.RealArrayVal(values) =>
+            if !values.indices.contains(index) then
+              throw EvalException(s"Index out of bounds: '${index}' (0..${values.length - 1})", id)
+            try {
+              val value = inputValue.toDouble
+              values(index) = value
+              RealVal(value)
+            } catch {
+              case _: NumberFormatException =>
+                throw EvalException(s"You entered invalid value for '${sym.asVar}' : '${inputValue}'.", id)
+            }
+          case RunVal.StringArrayVal(values) =>
+            if !values.indices.contains(index) then
+              throw EvalException(s"Index out of bounds: '${index}' (0..${values.length - 1})", id)
+            values(index) = inputValue
+            StringVal(inputValue)
+          case RunVal.BooleanArrayVal(values) =>
+            if !values.indices.contains(index) then
+              throw EvalException(s"Index out of bounds: '${index}' (0..${values.length - 1})", id)
+            try {
+              val value = inputValue.toBoolean
+              values(index) = value
+              BooleanVal(value)
+            } catch {
+              case _: IllegalArgumentException =>
+                throw EvalException(s"You entered invalid value for '${sym.asVar}' : '${inputValue}'.", id)
+            }
+          case _ =>
+            throw EvalException(
+              s"Cannot assign '${inputValue}' to element in array of type '${sym.tpe.pretty}' at index '${index}'",
+              id
+            )
+      }
+    } else {
+      if !symTab.isDeclaredVar(name) then throw EvalException(s"Variable '$name' is not declared.", id)
+      val sym = symTab.getSymbolVar(id, name)
+      Future {
+        sym.tpe match
+          case Type.Integer =>
+            try {
+              val runVal = IntegerVal(inputValue.toInt)
+              symTab.setValue(id, name, runVal)
+              runVal
+            } catch {
+              case _: NumberFormatException =>
+                throw EvalException(s"You entered invalid value for '${sym.asVar}' : '${inputValue}'.", id)
+            }
+          case Type.Real =>
+            try {
+              val runVal = RealVal(inputValue.toDouble)
+              symTab.setValue(id, name, runVal)
+              runVal
+            } catch {
+              case _: NumberFormatException =>
+                throw EvalException(s"You entered invalid value for '${sym.asVar}' : '${inputValue}'.", id)
+            }
+          case Type.Boolean =>
+            try {
+              val runVal = BooleanVal(inputValue.toBoolean)
+              symTab.setValue(id, name, runVal)
+              runVal
+            } catch {
+              case _: IllegalArgumentException =>
+                throw EvalException(s"You entered invalid value for '${sym.asVar}' : '${inputValue}'.", id)
+            }
+          case Type.String =>
+            val runVal = StringVal(inputValue)
+            symTab.setValue(id, name, runVal)
+            runVal
+          case other => throw EvalException(s"Input of type '${other.pretty}' is not supported.", id)
+
       }
     }
   }
@@ -498,13 +592,17 @@ final class Interpreter(
               case (v1: BooleanVal, v2: BooleanVal) =>
                 if isEquals then BooleanVal(v1.value == v2.value) else BooleanVal(v1.value != v2.value)
               case (v1: IntegerArrayVal, v2: IntegerArrayVal) =>
-                if isEquals then BooleanVal(v1.values.toSeq == v2.values.toSeq) else BooleanVal(v1.values.toSeq != v2.values.toSeq)
+                if isEquals then BooleanVal(v1.values.toSeq == v2.values.toSeq)
+                else BooleanVal(v1.values.toSeq != v2.values.toSeq)
               case (v1: RealArrayVal, v2: RealArrayVal) =>
-                if isEquals then BooleanVal(v1.values.toSeq == v2.values.toSeq) else BooleanVal(v1.values.toSeq != v2.values.toSeq)
+                if isEquals then BooleanVal(v1.values.toSeq == v2.values.toSeq)
+                else BooleanVal(v1.values.toSeq != v2.values.toSeq)
               case (v1: StringArrayVal, v2: StringArrayVal) =>
-                if isEquals then BooleanVal(v1.values.toSeq == v2.values.toSeq) else BooleanVal(v1.values.toSeq != v2.values.toSeq)
+                if isEquals then BooleanVal(v1.values.toSeq == v2.values.toSeq)
+                else BooleanVal(v1.values.toSeq != v2.values.toSeq)
               case (v1: BooleanArrayVal, v2: BooleanArrayVal) =>
-                if isEquals then BooleanVal(v1.values.toSeq == v2.values.toSeq) else BooleanVal(v1.values.toSeq != v2.values.toSeq)
+                if isEquals then BooleanVal(v1.values.toSeq == v2.values.toSeq)
+                else BooleanVal(v1.values.toSeq != v2.values.toSeq)
               case (v1, v2) =>
                 throw EvalException(
                   s"Values '${v1}' and '${v2}' are not comparable.",
