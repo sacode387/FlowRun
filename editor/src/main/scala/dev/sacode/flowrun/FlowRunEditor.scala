@@ -301,10 +301,12 @@ class FlowRunEditor(
     }
 
     flowRunElements.runStepButton.onclick = _ => {
-      if !interpreter.isRunning then doRun(ExecMode.STEP_BY_STEP)
+      if interpreter.isRunning
+      then interpreter.pauseBeforeNext = false // proceed
+      else doRun(ExecMode.STEP_BY_STEP)
 
       // ako je RUNNING ne dat mu da steppa / restarta
-      if interpreter.isRunning then interpreter.stepNext = true
+      // if interpreter.isRunning then interpreter.pauseBeforeNext = true
     }
 
     flowRunElements.stopButton.onclick = _ => {

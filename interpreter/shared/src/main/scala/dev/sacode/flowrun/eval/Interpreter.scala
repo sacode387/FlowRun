@@ -37,7 +37,7 @@ final class Interpreter(
 
   // when user clicks step_by_step button
   // exec next statement and again set this to false
-  var stepNext: Boolean = false
+  var pauseBeforeNext: Boolean = false
 
   var execMode: ExecMode = ExecMode.NORMAL
 
@@ -52,11 +52,9 @@ final class Interpreter(
   def run(): Future[Unit] = run(ExecMode.NORMAL)
 
   def run(execMode: ExecMode): Future[Unit] = {
-
     this.execMode = execMode
-    if execMode == ExecMode.STEP_BY_STEP then this.stepNext = true
-
-    state = State.RUNNING
+    this.pauseBeforeNext = execMode == ExecMode.STEP_BY_STEP
+    this.state = State.RUNNING
 
     val functionsFuture = Future { // Future needed coz symTab throws
       programModel.ast.allFunctions.foreach { fun =>
@@ -147,7 +145,7 @@ final class Interpreter(
       // TODO skontat za for/while jer se RE-EVALUIRA EXPR!
       if !stmt.isInstanceOf[Statement.Block] then
         nextExecStatementId = Some(stmt.id)
-        stepNext = false // reset the flag, wait for next statement
+        pauseBeforeNext = true // reset the flag, wait for next statement
         flowrunChannel := FlowRun.Event.EvalBeforeExecStatement
     }
     .flatMap(_ => waitForContinue())
@@ -664,14 +662,13 @@ final class Interpreter(
       PollIntervalMs, {
         if !p.isCompleted then {
           if state == State.RUNNING then {
-            if execMode == ExecMode.STEP_BY_STEP then
-              if stepNext then
-                // stepNext = false // reset the flag, wait for next statement
-                p.success({})
-
-              // else noop, wait still
-            else p.success({})
-          } else if state == State.FINISHED_STOPPED then p.failure(StoppedException("Program stopped"))
+            if execMode == ExecMode.STEP_BY_STEP then {
+              // proceed with execution
+              if !pauseBeforeNext then p.success({})
+            } else p.success({})
+          } else if state == State.FINISHED_STOPPED then {
+            p.failure(StoppedException("Program stopped"))
+          }
         }
       }
     )

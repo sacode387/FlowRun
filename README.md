@@ -25,7 +25,8 @@ Flowcharts, runnable in your browser!
 ### Operators
 - `+`, `-`, `*`, `/`, `%` for arithmetic operations
 - `&&`, `||`, `!` for boolean operations
-- `<`, `<=`, `==`, `!=`, `>`, `>=` for comparing values
+- `<`, `<=`, `==`, `!=`, `>`, `>=` for comparing numbers
+- `==`, `!=` for comparing non-numeric values
 
 The rules of precedence should be familiar to you from mathematics.  
 For example:
