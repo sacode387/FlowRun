@@ -42,7 +42,7 @@ object Statement:
       name: String,
       tpe: Expression.Type,
       initValue: Option[String],
-      lengthValue: Int = 0
+      lengthValue: String = "10" // expr
   ) extends Statement
       derives JsonRW:
     override def duplicated: Declare = copy(id = AST.newId)

@@ -2,13 +2,15 @@ package dev.sacode.flowrun
 package edit
 
 import java.util.UUID
+import scala.concurrent.ExecutionContext.Implicits.global
 import scalajs.js
 import org.scalajs.dom
-import scalatags.JsDom.all.{name => _, *}
+import scalatags.JsDom.all.{name as _, *}
 import reactify.*
 import dev.sacode.flowrun.parse.*
 import dev.sacode.flowrun.toastify.*
-import dev.sacode.flowrun.ast.*, Statement.*
+import dev.sacode.flowrun.ast.*
+import Statement.*
 
 /** Editor for selected statement or function signature. */
 final class StatementEditor(
@@ -105,10 +107,8 @@ final class StatementEditor(
           val updatedStmt = programModel.findStatement(stmtId).asInstanceOf[Declare].copy(initValue = newValueOpt)
           programModel.updateStmt(updatedStmt)
         }
-        val arrayLengthInput = newExprInput(statement.id, 10, statement.lengthValue.toString, "5") { newLengthText =>
-          // TODO ovo mora biti tretirano kao Int expression dinamički !!!
-          val newLength = newLengthText.trim.toIntOption.getOrElse(0)
-          val updatedStmt = programModel.findStatement(stmtId).asInstanceOf[Declare].copy(lengthValue = newLength)
+        val arrayLengthInput = newExprInput(statement.id, 10, statement.lengthValue, "5") { newLengthText =>
+          val updatedStmt = programModel.findStatement(stmtId).asInstanceOf[Declare].copy(lengthValue = newLengthText)
           programModel.updateStmt(updatedStmt)
         }
         flowRunElements.stmtOutput.innerText = ""

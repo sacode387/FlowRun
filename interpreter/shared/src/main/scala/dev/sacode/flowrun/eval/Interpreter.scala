@@ -152,28 +152,64 @@ final class Interpreter(
         flowrunChannel := FlowRun.Event.EvalBeforeExecStatement
         d.tpe match {
           case Type.IntegerArray =>
-            waitForContinue().map { _ =>
-              symTab.addVar(d.id, d.name, d.tpe, None)
-              symTab.setValue(d.id, d.name, RunVal.IntegerArrayVal(Array.fill(d.lengthValue)(0)))
-              NoVal
+            waitForContinue().flatMap { _ =>
+              evalExpr(stmt.id, parseExpr(stmt.id, d.lengthValue)).map {
+                case IntegerVal(length) =>
+                  if length < 0 then throw EvalException(s"Array length can not be negative: '${length}'", stmt.id)
+                  symTab.addVar(d.id, d.name, d.tpe, None)
+                  symTab.setValue(d.id, d.name, RunVal.IntegerArrayVal(Array.fill(length)(0)))
+                  NoVal
+                case other =>
+                  throw EvalException(
+                    s"Unsupported array length value: '${other.valueAndTypeString}'. Expected Integer",
+                    stmt.id
+                  )
+              }
             }
           case Type.RealArray =>
-            waitForContinue().map { _ =>
-              symTab.addVar(d.id, d.name, d.tpe, None)
-              symTab.setValue(d.id, d.name, RunVal.RealArrayVal(Array.fill(d.lengthValue)(0)))
-              NoVal
+            waitForContinue().flatMap { _ =>
+              evalExpr(stmt.id, parseExpr(stmt.id, d.lengthValue)).map {
+                case IntegerVal(length) =>
+                  if length < 0 then throw EvalException(s"Array length can not be negative: '${length}'", stmt.id)
+                  symTab.addVar(d.id, d.name, d.tpe, None)
+                  symTab.setValue(d.id, d.name, RunVal.RealArrayVal(Array.fill(length)(0)))
+                  NoVal
+                case other =>
+                  throw EvalException(
+                    s"Unsupported array length value: '${other.valueAndTypeString}'. Expected Integer",
+                    stmt.id
+                  )
+              }
             }
           case Type.StringArray =>
-            waitForContinue().map { _ =>
-              symTab.addVar(d.id, d.name, d.tpe, None)
-              symTab.setValue(d.id, d.name, RunVal.StringArrayVal(Array.fill(d.lengthValue)("")))
-              NoVal
+            waitForContinue().flatMap { _ =>
+              evalExpr(stmt.id, parseExpr(stmt.id, d.lengthValue)).map {
+                case IntegerVal(length) =>
+                  if length < 0 then throw EvalException(s"Array length can not be negative: '${length}'", stmt.id)
+                  symTab.addVar(d.id, d.name, d.tpe, None)
+                  symTab.setValue(d.id, d.name, RunVal.StringArrayVal(Array.fill(length)("")))
+                  NoVal
+                case other =>
+                  throw EvalException(
+                    s"Unsupported array length value: '${other.valueAndTypeString}'. Expected Integer",
+                    stmt.id
+                  )
+              }
             }
           case Type.BooleanArray =>
-            waitForContinue().map { _ =>
-              symTab.addVar(d.id, d.name, d.tpe, None)
-              symTab.setValue(d.id, d.name, RunVal.BooleanArrayVal(Array.fill(d.lengthValue)(false)))
-              NoVal
+            waitForContinue().flatMap { _ =>
+              evalExpr(stmt.id, parseExpr(stmt.id, d.lengthValue)).map {
+                case IntegerVal(length) =>
+                  if length < 0 then throw EvalException(s"Array length can not be negative: '${length}'", stmt.id)
+                  symTab.addVar(d.id, d.name, d.tpe, None)
+                  symTab.setValue(d.id, d.name, RunVal.BooleanArrayVal(Array.fill(length)(false)))
+                  NoVal
+                case other =>
+                  throw EvalException(
+                    s"Unsupported array length value: '${other.valueAndTypeString}'. Expected Integer",
+                    stmt.id
+                  )
+              }
             }
           case scalar =>
             val maybeInitValueExpr = d.initValue.map(iv => parseExpr(d.id, iv))
@@ -434,7 +470,7 @@ final class Interpreter(
       evalExpr(id, parseExpr(id, indexExpr)).map { indexExprValue =>
         val index = indexExprValue match {
           case IntegerVal(value) => value
-          case other             => throw EvalException(s"Wrong array index type: '$other'. Expected an Integer", id)
+          case other             => throw EvalException(s"Invalid array index type: '$other'. Expected an Integer", id)
         }
         arrayValue match
           case RunVal.IntegerArrayVal(values) =>
@@ -990,7 +1026,7 @@ final class Interpreter(
 }
 
 object Interpreter:
-  val PollIntervalMs = 10
+  private val PollIntervalMs = 10
   enum State:
     case INITIALIZED
     case RUNNING
