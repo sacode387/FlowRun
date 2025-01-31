@@ -95,6 +95,7 @@ final class ExpressionParser(nodeId: String, allTokens: List[Token]) {
 
   private def atom(): Atom =
     import Atom.*
+
     lookahead.tpe match
       case Type.True =>
         eat(Type.True)
@@ -130,9 +131,14 @@ final class ExpressionParser(nodeId: String, allTokens: List[Token]) {
             FunctionCall(id.text, arguments.toList)
         else if lookahead.tpe == Type.LeftBracket then
           eat(Type.LeftBracket)
-          val indexExpr = expression()
+          val indexExpr1 = expression()
           eat(Type.RightBracket)
-          ArrayIndexAccess(id.text, indexExpr)
+          if lookahead.tpe == Type.LeftBracket then
+            eat(Type.LeftBracket)
+            val indexExpr2 = expression()
+            eat(Type.RightBracket)
+            MatrixIndexAccess(id.text, indexExpr1, indexExpr2)
+          else ArrayIndexAccess(id.text, indexExpr1)
         else Identifier(id.text)
       case Type.LeftParen =>
         eat(Type.LeftParen)

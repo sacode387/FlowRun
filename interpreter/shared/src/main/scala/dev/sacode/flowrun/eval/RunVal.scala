@@ -17,17 +17,25 @@ enum RunVal(val tpe: Type, val valueOpt: Option[Any]):
   case RealArrayVal(values: Array[Double]) extends RunVal(Type.RealArray, Some(values))
   case StringArrayVal(values: Array[String]) extends RunVal(Type.StringArray, Some(values))
   case BooleanArrayVal(values: Array[Boolean]) extends RunVal(Type.BooleanArray, Some(values))
+  case IntegerMatrixVal(values: Array[Array[Integer]]) extends RunVal(Type.IntegerMatrix, Some(values))
+  case RealMatrixVal(values: Array[Array[Double]]) extends RunVal(Type.RealMatrix, Some(values))
+  case StringMatrixVal(values: Array[Array[String]]) extends RunVal(Type.StringMatrix, Some(values))
+  case BooleanMatrixVal(values: Array[Array[Boolean]]) extends RunVal(Type.BooleanMatrix, Some(values))
 
   def valueString: String = this match
-    case NoVal                   => "()"
-    case IntegerVal(value)       => s"$value"
-    case RealVal(value)          => s"$value"
-    case StringVal(value)        => s"$value"
-    case BooleanVal(value)       => s"$value"
-    case IntegerArrayVal(values) => values.mkString("[", ",", "]")
-    case RealArrayVal(values)    => values.mkString("[", ",", "]")
-    case StringArrayVal(values)  => values.mkString("[", ",", "]")
-    case BooleanArrayVal(values) => values.mkString("[", ",", "]")
+    case NoVal                    => "()"
+    case IntegerVal(value)        => s"$value"
+    case RealVal(value)           => s"$value"
+    case StringVal(value)         => s"$value"
+    case BooleanVal(value)        => s"$value"
+    case IntegerArrayVal(values)  => values.mkString("[", ",", "]")
+    case RealArrayVal(values)     => values.mkString("[", ",", "]")
+    case StringArrayVal(values)   => values.mkString("[", ",", "]")
+    case BooleanArrayVal(values)  => values.mkString("[", ",", "]")
+    case IntegerMatrixVal(values) => values.map(_.mkString("[", ",", "]")).mkString("[", ",\n ", "]")
+    case RealMatrixVal(values)    => values.map(_.mkString("[", ",", "]")).mkString("[", ",\n ", "]")
+    case StringMatrixVal(values)  => values.map(_.mkString("[", ",", "]")).mkString("[", ",\n ", "]")
+    case BooleanMatrixVal(values) => values.map(_.mkString("[", ",", "]")).mkString("[", ",\n ", "]")
 
   def valueAndTypeString: String = this match
     case NoVal             => "(): Void"
@@ -35,20 +43,24 @@ enum RunVal(val tpe: Type, val valueOpt: Option[Any]):
     case RealVal(value)    => s"$value: Real"
     case StringVal(value)  => s"$value: String"
     case BooleanVal(value) => s"$value: Boolean"
-    case IntegerArrayVal(values) =>
-      val arr = values.mkString("[", ",", "]")
-      s"$arr: Integer[]"
-    case RealArrayVal(values) =>
-      val arr = values.mkString("[", ",", "]")
-      s"$arr: Real[]"
-    case StringArrayVal(values) =>
-      val arr = values.mkString("[", ",", "]")
-      s"$arr: String[]"
-    case BooleanArrayVal(values) =>
-      val arr = values.mkString("[", ",", "]")
-      s"$arr: Boolean[]"
+    case _: IntegerArrayVal =>
+      s"$valueString: Integer[]"
+    case _: RealArrayVal =>
+      s"$valueString: Real[]"
+    case _: StringArrayVal =>
+      s"$valueString: String[]"
+    case _: BooleanArrayVal =>
+      s"$valueString: Boolean[]"
+    case _: IntegerMatrixVal =>
+      s"$valueString: Integer[][]"
+    case _: RealMatrixVal =>
+      s"$valueString: Real[][]"
+    case _: StringMatrixVal =>
+      s"$valueString: String[][]"
+    case _: BooleanMatrixVal =>
+      s"$valueString: Boolean[][]"
 
-  override def toString(): String = valueAndTypeString
+  override def toString: String = valueAndTypeString
 
   // adapt an integer to real
   def promote(nodeId: String, expectedName: String, expectedTpe: Type): RunVal =

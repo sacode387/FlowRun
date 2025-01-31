@@ -42,7 +42,8 @@ object Statement:
       name: String,
       tpe: Expression.Type,
       initValue: Option[String],
-      lengthValue: String = "10" // expr
+      lengthValue: String = "5", // expr, length of array, or number of matrix rows
+      length2Value: String = "5" // expr, number of matrix columns
   ) extends Statement
       derives JsonRW:
     override def duplicated: Declare = copy(id = AST.newId)

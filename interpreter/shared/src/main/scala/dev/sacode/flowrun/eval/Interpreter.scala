@@ -211,6 +211,94 @@ final class Interpreter(
                   )
               }
             }
+          case Type.IntegerMatrix =>
+            waitForContinue().flatMap { _ =>
+              evalExpr(stmt.id, parseExpr(stmt.id, d.lengthValue))
+                .zip(
+                  evalExpr(stmt.id, parseExpr(stmt.id, d.length2Value))
+                )
+                .map {
+                  case (IntegerVal(length1), IntegerVal(length2)) =>
+                    if length1 < 0 then
+                      throw EvalException(s"Matrix rows length can not be negative: '${length1}'", stmt.id)
+                    if length2 < 0 then
+                      throw EvalException(s"Matrix columns length can not be negative: '${length2}'", stmt.id)
+                    symTab.addVar(d.id, d.name, d.tpe, None)
+                    symTab.setValue(d.id, d.name, RunVal.IntegerMatrixVal(Array.fill(length1, length2)(0)))
+                    NoVal
+                  case (other1, other2) =>
+                    throw EvalException(
+                      s"Unsupported matrix length values: '${other1.valueAndTypeString}' and '${other2.valueAndTypeString}'. Expected Integers",
+                      stmt.id
+                    )
+                }
+            }
+          case Type.RealMatrix =>
+            waitForContinue().flatMap { _ =>
+              evalExpr(stmt.id, parseExpr(stmt.id, d.lengthValue))
+                .zip(
+                  evalExpr(stmt.id, parseExpr(stmt.id, d.length2Value))
+                )
+                .map {
+                  case (IntegerVal(length1), IntegerVal(length2)) =>
+                    if length1 < 0 then
+                      throw EvalException(s"Matrix rows length can not be negative: '${length1}'", stmt.id)
+                    if length2 < 0 then
+                      throw EvalException(s"Matrix columns length can not be negative: '${length2}'", stmt.id)
+                    symTab.addVar(d.id, d.name, d.tpe, None)
+                    symTab.setValue(d.id, d.name, RunVal.RealMatrixVal(Array.fill(length1, length2)(0)))
+                    NoVal
+                  case (other1, other2) =>
+                    throw EvalException(
+                      s"Unsupported matrix length values: '${other1.valueAndTypeString}' and '${other2.valueAndTypeString}'. Expected Integers",
+                      stmt.id
+                    )
+                }
+            }
+          case Type.StringMatrix =>
+            waitForContinue().flatMap { _ =>
+              evalExpr(stmt.id, parseExpr(stmt.id, d.lengthValue))
+                .zip(
+                  evalExpr(stmt.id, parseExpr(stmt.id, d.length2Value))
+                )
+                .map {
+                  case (IntegerVal(length1), IntegerVal(length2)) =>
+                    if length1 < 0 then
+                      throw EvalException(s"Matrix rows length can not be negative: '${length1}'", stmt.id)
+                    if length2 < 0 then
+                      throw EvalException(s"Matrix columns length can not be negative: '${length2}'", stmt.id)
+                    symTab.addVar(d.id, d.name, d.tpe, None)
+                    symTab.setValue(d.id, d.name, RunVal.StringMatrixVal(Array.fill(length1, length2)("")))
+                    NoVal
+                  case (other1, other2) =>
+                    throw EvalException(
+                      s"Unsupported matrix length values: '${other1.valueAndTypeString}' and '${other2.valueAndTypeString}'. Expected Integers",
+                      stmt.id
+                    )
+                }
+            }
+          case Type.BooleanMatrix =>
+            waitForContinue().flatMap { _ =>
+              evalExpr(stmt.id, parseExpr(stmt.id, d.lengthValue))
+                .zip(
+                  evalExpr(stmt.id, parseExpr(stmt.id, d.length2Value))
+                )
+                .map {
+                  case (IntegerVal(length1), IntegerVal(length2)) =>
+                    if length1 < 0 then
+                      throw EvalException(s"Matrix rows length can not be negative: '${length1}'", stmt.id)
+                    if length2 < 0 then
+                      throw EvalException(s"Matrix columns length can not be negative: '${length2}'", stmt.id)
+                    symTab.addVar(d.id, d.name, d.tpe, None)
+                    symTab.setValue(d.id, d.name, RunVal.BooleanMatrixVal(Array.fill(length1, length2)(false)))
+                    NoVal
+                  case (other1, other2) =>
+                    throw EvalException(
+                      s"Unsupported matrix length values: '${other1.valueAndTypeString}' and '${other2.valueAndTypeString}'. Expected Integers",
+                      stmt.id
+                    )
+                }
+            }
           case scalar =>
             val maybeInitValueExpr = d.initValue.map(iv => parseExpr(d.id, iv))
             maybeInitValueExpr match
@@ -393,169 +481,358 @@ final class Interpreter(
   }
 
   private def assignExpr(id: String, name: String, expr: String): Future[RunVal] = {
+    // matrix[i][j] = ..
     // array[i] = ..
-    if name.contains("[") then {
-      val (arrayName, indexExpr) = name match {
-        case s"$arr[$idx]" => (arr, idx)
-        case _             => throw EvalException(s"Wrong array indexing expression: '$name'", id)
-      }
-      if !symTab.isDeclaredVar(arrayName) then throw EvalException(s"Variable '$arrayName' is not declared.", id)
-      val sym = symTab.getSymbolVar(id, arrayName)
-      evalExpr(id, parseExpr(id, expr)).flatMap { exprValue =>
-        evalExpr(id, parseExpr(id, indexExpr)).map { indexExprValue =>
-          if exprValue.valueOpt.get.toString.isEmpty && sym.tpe != Type.String then
-            throw EvalException(s"Assign expression cannot be empty.", id)
-          (sym.tpe, exprValue, indexExprValue) match {
-            case (Type.IntegerArray, IntegerVal(newValue), IntegerVal(index)) =>
-              val values = sym.value.get.asInstanceOf[IntegerArrayVal].values
-              if !values.indices.contains(index) then
-                throw EvalException(s"Index out of bounds: '${index}' (0..${values.length - 1})", id)
-              values(index) = newValue
-              exprValue
-            case (Type.RealArray, RealVal(newValue), IntegerVal(index)) =>
-              val values = sym.value.get.asInstanceOf[RealArrayVal].values
-              if !values.indices.contains(index) then
-                throw EvalException(s"Index out of bounds: '${index}' (0..${values.length - 1})", id)
-              values(index) = newValue
-              exprValue
-            case (Type.RealArray, IntegerVal(newValue), IntegerVal(index)) =>
-              val values = sym.value.get.asInstanceOf[RealArrayVal].values
-              if !values.indices.contains(index) then
-                throw EvalException(s"Index out of bounds: '${index}' (0..${values.length - 1})", id)
-              values(index) = newValue.toDouble
-              exprValue
-            case (Type.StringArray, StringVal(newValue), IntegerVal(index)) =>
-              val values = sym.value.get.asInstanceOf[StringArrayVal].values
-              if !values.indices.contains(index) then
-                throw EvalException(s"Index out of bounds: '${index}' (0..${values.length - 1})", id)
-              values(index) = newValue
-              exprValue
-            case (Type.BooleanArray, BooleanVal(newValue), IntegerVal(index)) =>
-              val values = sym.value.get.asInstanceOf[BooleanArrayVal].values
-              if !values.indices.contains(index) then
-                throw EvalException(s"Index out of bounds: '${index}' (0..${values.length - 1})", id)
-              values(index) = newValue
-              exprValue
-            case (arrayType, newValue, index) =>
-              throw EvalException(
-                s"Cannot assign '${newValue.valueAndTypeString}' to element in array of type '${arrayType.pretty}' at index '${index}'",
-                id
-              )
+    // abc = ..
+    name match {
+      case s"${matrixName}[${indexExpr1}][${indexExpr2}]" =>
+        if !symTab.isDeclaredVar(matrixName) then throw EvalException(s"Variable '$matrixName' is not declared.", id)
+        val sym = symTab.getSymbolVar(id, matrixName)
+        evalExpr(id, parseExpr(id, expr)).flatMap { exprValue =>
+          evalExpr(id, parseExpr(id, indexExpr1)).zip(evalExpr(id, parseExpr(id, indexExpr2))).map {
+            (indexValue1, indexValue2) =>
+              val index1 = indexValue1 match {
+                case IntegerVal(indexValueInt) => indexValueInt
+                case other =>
+                  throw EvalException(
+                    s"Matrix row index has to be an Integer but got: '${other.valueAndTypeString}'",
+                    id
+                  )
+              }
+              val index2 = indexValue2 match {
+                case IntegerVal(indexValueInt) => indexValueInt
+                case other =>
+                  throw EvalException(
+                    s"Matrix column index has to be an Integer but got: '${other.valueAndTypeString}'",
+                    id
+                  )
+              }
+              val matrixValue = symTab.getValue(id, matrixName)
+              matrixValue match {
+                case RunVal.IntegerMatrixVal(values) =>
+                  if !values.indices.contains(index1) then
+                    throw EvalException(s"Row index out of bounds: '${index1}' (0..${values.length - 1})", id)
+                  if !values(index1).indices.contains(index2) then
+                    throw EvalException(
+                      s"Column index out of bounds: '${index2}' (0..${values(index1).length - 1})",
+                      id
+                    )
+                  exprValue match
+                    case IntegerVal(newValue) =>
+                      values(index1)(index1) = newValue
+                      exprValue
+                    case other =>
+                      throw EvalException(
+                        s"Cannot assign '${other.valueAndTypeString}' to an item of '${sym.asVar}'",
+                        id
+                      )
+                case RunVal.RealMatrixVal(values) =>
+                  if !values.indices.contains(index1) then
+                    throw EvalException(s"Row index out of bounds: '${index1}' (0..${values.length - 1})", id)
+                  if !values(index1).indices.contains(index2) then
+                    throw EvalException(
+                      s"Column index out of bounds: '${index2}' (0..${values(index1).length - 1})",
+                      id
+                    )
+                  exprValue match
+                    case RealVal(newValue) =>
+                      values(index1)(index1) = newValue
+                      exprValue
+                    case IntegerVal(newValue) =>
+                      values(index1)(index1) = newValue
+                      exprValue
+                    case other =>
+                      throw EvalException(
+                        s"Cannot assign '${other.valueAndTypeString}' to an item of '${sym.asVar}'",
+                        id
+                      )
+                case RunVal.StringMatrixVal(values) =>
+                  if !values.indices.contains(index1) then
+                    throw EvalException(s"Row index out of bounds: '${index1}' (0..${values.length - 1})", id)
+                  if !values(index1).indices.contains(index2) then
+                    throw EvalException(
+                      s"Column index out of bounds: '${index2}' (0..${values(index1).length - 1})",
+                      id
+                    )
+                  exprValue match
+                    case StringVal(newValue) =>
+                      values(index1)(index1) = newValue
+                      exprValue
+                    case other =>
+                      throw EvalException(
+                        s"Cannot assign '${other.valueAndTypeString}' to an item of '${sym.asVar}'",
+                        id
+                      )
+                case RunVal.BooleanMatrixVal(values) =>
+                  if !values.indices.contains(index1) then
+                    throw EvalException(s"Row index out of bounds: '${index1}' (0..${values.length - 1})", id)
+                  if !values(index1).indices.contains(index2) then
+                    throw EvalException(
+                      s"Column index out of bounds: '${index2}' (0..${values(index1).length - 1})",
+                      id
+                    )
+                  exprValue match
+                    case BooleanVal(newValue) =>
+                      values(index1)(index1) = newValue
+                      exprValue
+                    case other =>
+                      throw EvalException(
+                        s"Cannot assign '${other.valueAndTypeString}' to an item of '${sym.asVar}'",
+                        id
+                      )
+                case other =>
+                  throw EvalException(
+                    s"Cannot assign '${exprValue}' to '${matrixName}[${index1}][${index2}]' since '${matrixName}' is not a matrix",
+                    id
+                  )
+              }
           }
         }
-      }
-    } else {
-      if !symTab.isDeclaredVar(name) then throw EvalException(s"Variable '$name' is not declared.", id)
-      val sym = symTab.getSymbolVar(id, name)
-      evalExpr(id, parseExpr(id, expr)).map { exprValue =>
-        if exprValue.valueOpt.get.toString.isEmpty && sym.tpe != Type.String then
-          throw EvalException(s"Assign expression cannot be empty.", id)
-        val promotedVal = exprValue.promote(id, name, sym.tpe)
-        symTab.setValue(id, name, promotedVal)
-        exprValue
-      }
+      case s"${arrayName}[${indexExpr}]" =>
+        if !symTab.isDeclaredVar(arrayName) then throw EvalException(s"Variable '$arrayName' is not declared.", id)
+        val sym = symTab.getSymbolVar(id, arrayName)
+        evalExpr(id, parseExpr(id, expr)).flatMap { exprValue =>
+          evalExpr(id, parseExpr(id, indexExpr)).map { indexExprValue =>
+            if exprValue.valueOpt.get.toString.isEmpty && sym.tpe != Type.String then
+              throw EvalException(s"Assign expression cannot be empty.", id)
+            val index = indexExprValue match {
+              case IntegerVal(indexValueInt) => indexValueInt
+              case other =>
+                throw EvalException(s"Array index has to be an Integer but got: '${other.valueAndTypeString}'", id)
+            }
+            val arrayValue = symTab.getValue(id, arrayName)
+            arrayValue match {
+              case RunVal.IntegerArrayVal(values) =>
+                if !values.indices.contains(index) then
+                  throw EvalException(s"Array index out of bounds: '${index}' (0..${values.length - 1})", id)
+                exprValue match
+                  case IntegerVal(newValue) =>
+                    values(index) = newValue
+                    exprValue
+                  case other =>
+                    throw EvalException(s"Cannot assign '${other.valueAndTypeString}' to an item of '${sym.asVar}'", id)
+              case RunVal.RealArrayVal(values) =>
+                if !values.indices.contains(index) then
+                  throw EvalException(s"Array index out of bounds: '${index}' (0..${values.length - 1})", id)
+                exprValue match
+                  case RealVal(newValue) =>
+                    values(index) = newValue
+                    exprValue
+                  case IntegerVal(newValue) =>
+                    values(index) = newValue
+                    exprValue
+                  case other =>
+                    throw EvalException(s"Cannot assign '${other.valueAndTypeString}' to an item of '${sym.asVar}'", id)
+              case RunVal.StringArrayVal(values) =>
+                if !values.indices.contains(index) then
+                  throw EvalException(s"Array index out of bounds: '${index}' (0..${values.length - 1})", id)
+                exprValue match
+                  case StringVal(newValue) =>
+                    values(index) = newValue
+                    exprValue
+                  case other =>
+                    throw EvalException(s"Cannot assign '${other.valueAndTypeString}' to an item of '${sym.asVar}'", id)
+              case RunVal.BooleanArrayVal(values) =>
+                if !values.indices.contains(index) then
+                  throw EvalException(s"Array index out of bounds: '${index}' (0..${values.length - 1})", id)
+                exprValue match
+                  case BooleanVal(newValue) =>
+                    values(index) = newValue
+                    exprValue
+                  case other =>
+                    throw EvalException(s"Cannot assign '${other.valueAndTypeString}' to an item of '${sym.asVar}'", id)
+              case other =>
+                throw EvalException(
+                  s"Cannot assign '${exprValue}' to '${arrayName}[${index}]' since '${arrayName}' is not an array",
+                  id
+                )
+            }
+          }
+        }
+      case _ =>
+        if !symTab.isDeclaredVar(name) then throw EvalException(s"Variable '$name' is not declared.", id)
+        val sym = symTab.getSymbolVar(id, name)
+        evalExpr(id, parseExpr(id, expr)).map { exprValue =>
+          if exprValue.valueOpt.get.toString.isEmpty && sym.tpe != Type.String then
+            throw EvalException(s"Assign expression cannot be empty.", id)
+          val promotedVal = exprValue.promote(id, name, sym.tpe)
+          symTab.setValue(id, name, promotedVal)
+          exprValue
+        }
     }
   }
 
   private def assignInputtedValue(id: String, name: String, inputValue: String): Future[RunVal] = {
+    // matrix[i][j] = ..
     // array[i] = ..
-    if name.contains("[") then {
-      val (arrayName, indexExpr) = name match {
-        case s"$arr[$idx]" => (arr, idx.trim)
-        case _             => throw EvalException(s"Wrong array indexing expression: '$name'", id)
-      }
-      if !symTab.isDeclaredVar(arrayName) then throw EvalException(s"Variable '$arrayName' is not declared.", id)
-      val sym = symTab.getSymbolVar(id, arrayName)
-      val arrayValue = symTab.getValue(id, arrayName)
-      evalExpr(id, parseExpr(id, indexExpr)).map { indexExprValue =>
-        val index = indexExprValue match {
-          case IntegerVal(value) => value
-          case other             => throw EvalException(s"Invalid array index type: '$other'. Expected an Integer", id)
+    // abc = ..
+    name match {
+      case s"${matrixName}[${index1Expr}][${index2Expr}]" =>
+        if !symTab.isDeclaredVar(matrixName) then throw EvalException(s"Variable '$matrixName' is not declared.", id)
+        val sym = symTab.getSymbolVar(id, matrixName)
+        val arrayValue = symTab.getValue(id, matrixName)
+        evalExpr(id, parseExpr(id, index1Expr))
+          .zip(evalExpr(id, parseExpr(id, index2Expr)))
+          .map {
+            case (IntegerVal(index1), IntegerVal(index2)) =>
+              arrayValue match
+                case RunVal.IntegerMatrixVal(values) =>
+                  if !values.indices.contains(index1) then
+                    throw EvalException(s"Row index out of bounds: '${index1}' (0..${values.length - 1})", id)
+                  if !values(index1).indices.contains(index2) then
+                    throw EvalException(
+                      s"Column index out of bounds: '${index2}' (0..${values(index1).length - 1})",
+                      id
+                    )
+                  try {
+                    val value = inputValue.toInt
+                    values(index1)(index2) = value
+                    IntegerVal(value)
+                  } catch {
+                    case _: NumberFormatException =>
+                      throw EvalException(s"You entered invalid value for '${sym.asVar}' : '${inputValue}'.", id)
+                  }
+                case RunVal.RealMatrixVal(values) =>
+                  if !values.indices.contains(index1) then
+                    throw EvalException(s"Row index out of bounds: '${index1}' (0..${values.length - 1})", id)
+                  if !values(index1).indices.contains(index2) then
+                    throw EvalException(
+                      s"Column index out of bounds: '${index2}' (0..${values(index1).length - 1})",
+                      id
+                    )
+                  try {
+                    val value = inputValue.toDouble
+                    values(index1)(index2) = value
+                    RealVal(value)
+                  } catch {
+                    case _: NumberFormatException =>
+                      throw EvalException(s"You entered invalid value for '${sym.asVar}' : '${inputValue}'.", id)
+                  }
+                case RunVal.StringMatrixVal(values) =>
+                  if !values.indices.contains(index1) then
+                    throw EvalException(s"Row index out of bounds: '${index1}' (0..${values.length - 1})", id)
+                  if !values(index1).indices.contains(index2) then
+                    throw EvalException(
+                      s"Column index out of bounds: '${index2}' (0..${values(index1).length - 1})",
+                      id
+                    )
+                  values(index1)(index2) = inputValue
+                  StringVal(inputValue)
+                case RunVal.BooleanMatrixVal(values) =>
+                  if !values.indices.contains(index1) then
+                    throw EvalException(s"Row index out of bounds: '${index1}' (0..${values.length - 1})", id)
+                  if !values(index1).indices.contains(index2) then
+                    throw EvalException(
+                      s"Column index out of bounds: '${index2}' (0..${values(index1).length - 1})",
+                      id
+                    )
+                  try {
+                    val value = inputValue.toBoolean
+                    values(index1)(index2) = value
+                    BooleanVal(value)
+                  } catch {
+                    case _: IllegalArgumentException =>
+                      throw EvalException(s"You entered invalid value for '${sym.asVar}' : '${inputValue}'.", id)
+                  }
+                case _ =>
+                  throw EvalException(
+                    s"Cannot assign '${inputValue}' to element in ${matrixName} since it is not a matrix",
+                    id
+                  )
+            case other => throw EvalException(s"Invalid array index type: '$other'. Expected an Integer", id)
+          }
+      case s"${arrayName}[${indexExpr}]" =>
+        if !symTab.isDeclaredVar(arrayName) then throw EvalException(s"Variable '$arrayName' is not declared.", id)
+        val sym = symTab.getSymbolVar(id, arrayName)
+        val arrayValue = symTab.getValue(id, arrayName)
+        evalExpr(id, parseExpr(id, indexExpr)).map { indexExprValue =>
+          val index = indexExprValue match {
+            case IntegerVal(value) => value
+            case other => throw EvalException(s"Invalid array index type: '$other'. Expected an Integer", id)
+          }
+          arrayValue match
+            case RunVal.IntegerArrayVal(values) =>
+              if !values.indices.contains(index) then
+                throw EvalException(s"Index out of bounds: '${index}' (0..${values.length - 1})", id)
+              try {
+                val value = inputValue.toInt
+                values(index) = value
+                IntegerVal(value)
+              } catch {
+                case _: NumberFormatException =>
+                  throw EvalException(s"You entered invalid value for '${sym.asVar}' : '${inputValue}'.", id)
+              }
+            case RunVal.RealArrayVal(values) =>
+              if !values.indices.contains(index) then
+                throw EvalException(s"Index out of bounds: '${index}' (0..${values.length - 1})", id)
+              try {
+                val value = inputValue.toDouble
+                values(index) = value
+                RealVal(value)
+              } catch {
+                case _: NumberFormatException =>
+                  throw EvalException(s"You entered invalid value for '${sym.asVar}' : '${inputValue}'.", id)
+              }
+            case RunVal.StringArrayVal(values) =>
+              if !values.indices.contains(index) then
+                throw EvalException(s"Index out of bounds: '${index}' (0..${values.length - 1})", id)
+              values(index) = inputValue
+              StringVal(inputValue)
+            case RunVal.BooleanArrayVal(values) =>
+              if !values.indices.contains(index) then
+                throw EvalException(s"Index out of bounds: '${index}' (0..${values.length - 1})", id)
+              try {
+                val value = inputValue.toBoolean
+                values(index) = value
+                BooleanVal(value)
+              } catch {
+                case _: IllegalArgumentException =>
+                  throw EvalException(s"You entered invalid value for '${sym.asVar}' : '${inputValue}'.", id)
+              }
+            case _ =>
+              throw EvalException(
+                s"Cannot assign '${inputValue}' to '${arrayName}[${index}]' since '${arrayName}' is not an array",
+                id
+              )
         }
-        arrayValue match
-          case RunVal.IntegerArrayVal(values) =>
-            if !values.indices.contains(index) then
-              throw EvalException(s"Index out of bounds: '${index}' (0..${values.length - 1})", id)
-            try {
-              val value = inputValue.toInt
-              values(index) = value
-              IntegerVal(value)
-            } catch {
-              case _: NumberFormatException =>
-                throw EvalException(s"You entered invalid value for '${sym.asVar}' : '${inputValue}'.", id)
-            }
-          case RunVal.RealArrayVal(values) =>
-            if !values.indices.contains(index) then
-              throw EvalException(s"Index out of bounds: '${index}' (0..${values.length - 1})", id)
-            try {
-              val value = inputValue.toDouble
-              values(index) = value
-              RealVal(value)
-            } catch {
-              case _: NumberFormatException =>
-                throw EvalException(s"You entered invalid value for '${sym.asVar}' : '${inputValue}'.", id)
-            }
-          case RunVal.StringArrayVal(values) =>
-            if !values.indices.contains(index) then
-              throw EvalException(s"Index out of bounds: '${index}' (0..${values.length - 1})", id)
-            values(index) = inputValue
-            StringVal(inputValue)
-          case RunVal.BooleanArrayVal(values) =>
-            if !values.indices.contains(index) then
-              throw EvalException(s"Index out of bounds: '${index}' (0..${values.length - 1})", id)
-            try {
-              val value = inputValue.toBoolean
-              values(index) = value
-              BooleanVal(value)
-            } catch {
-              case _: IllegalArgumentException =>
-                throw EvalException(s"You entered invalid value for '${sym.asVar}' : '${inputValue}'.", id)
-            }
-          case _ =>
-            throw EvalException(
-              s"Cannot assign '${inputValue}' to element in array of type '${sym.tpe.pretty}' at index '${index}'",
-              id
-            )
-      }
-    } else {
-      if !symTab.isDeclaredVar(name) then throw EvalException(s"Variable '$name' is not declared.", id)
-      val sym = symTab.getSymbolVar(id, name)
-      Future {
-        sym.tpe match
-          case Type.Integer =>
-            try {
-              val runVal = IntegerVal(inputValue.toInt)
+      case _ =>
+        if !symTab.isDeclaredVar(name) then throw EvalException(s"Variable '$name' is not declared.", id)
+        val sym = symTab.getSymbolVar(id, name)
+        Future {
+          sym.tpe match
+            case Type.Integer =>
+              try {
+                val runVal = IntegerVal(inputValue.toInt)
+                symTab.setValue(id, name, runVal)
+                runVal
+              } catch {
+                case _: NumberFormatException =>
+                  throw EvalException(s"You entered invalid value for '${sym.asVar}' : '${inputValue}'.", id)
+              }
+            case Type.Real =>
+              try {
+                val runVal = RealVal(inputValue.toDouble)
+                symTab.setValue(id, name, runVal)
+                runVal
+              } catch {
+                case _: NumberFormatException =>
+                  throw EvalException(s"You entered invalid value for '${sym.asVar}' : '${inputValue}'.", id)
+              }
+            case Type.Boolean =>
+              try {
+                val runVal = BooleanVal(inputValue.toBoolean)
+                symTab.setValue(id, name, runVal)
+                runVal
+              } catch {
+                case _: IllegalArgumentException =>
+                  throw EvalException(s"You entered invalid value for '${sym.asVar}' : '${inputValue}'.", id)
+              }
+            case Type.String =>
+              val runVal = StringVal(inputValue)
               symTab.setValue(id, name, runVal)
               runVal
-            } catch {
-              case _: NumberFormatException =>
-                throw EvalException(s"You entered invalid value for '${sym.asVar}' : '${inputValue}'.", id)
-            }
-          case Type.Real =>
-            try {
-              val runVal = RealVal(inputValue.toDouble)
-              symTab.setValue(id, name, runVal)
-              runVal
-            } catch {
-              case _: NumberFormatException =>
-                throw EvalException(s"You entered invalid value for '${sym.asVar}' : '${inputValue}'.", id)
-            }
-          case Type.Boolean =>
-            try {
-              val runVal = BooleanVal(inputValue.toBoolean)
-              symTab.setValue(id, name, runVal)
-              runVal
-            } catch {
-              case _: IllegalArgumentException =>
-                throw EvalException(s"You entered invalid value for '${sym.asVar}' : '${inputValue}'.", id)
-            }
-          case Type.String =>
-            val runVal = StringVal(inputValue)
-            symTab.setValue(id, name, runVal)
-            runVal
-          case other => throw EvalException(s"Input of type '${other.pretty}' is not supported.", id)
-
-      }
+            case other => throw EvalException(s"Input of type '${other.pretty}' is not supported.", id)
+        }
     }
   }
 
@@ -785,32 +1062,88 @@ final class Interpreter(
       case ArrayIndexAccess(arrayName, indexExpr) =>
         evalExpr(id, indexExpr).map { indexValue =>
           val arr = symTab.getValue(id, arrayName)
-          indexValue match {
-            case IntegerVal(indexValueInt) =>
-              arr match {
-                case IntegerArrayVal(values) =>
-                  if !values.indices.contains(indexValueInt) then
-                    throw EvalException(s"Index out of bounds: '${indexValueInt}' (0..${values.length - 1})", id)
-                  IntegerVal(values(indexValueInt))
-                case RealArrayVal(values) =>
-                  if !values.indices.contains(indexValueInt) then
-                    throw EvalException(s"Index out of bounds: '${indexValueInt}' (0..${values.length - 1})", id)
-                  RealVal(values(indexValueInt))
-                case StringArrayVal(values) =>
-                  if !values.indices.contains(indexValueInt) then
-                    throw EvalException(s"Index out of bounds: '${indexValueInt}' (0..${values.length - 1})", id)
-                  StringVal(values(indexValueInt))
-                case BooleanArrayVal(values) =>
-                  if !values.indices.contains(indexValueInt) then
-                    throw EvalException(s"Index out of bounds: '${indexValueInt}' (0..${values.length - 1})", id)
-                  BooleanVal(values(indexValueInt))
-                case other =>
-                  throw EvalException(s"Cannot index into '${other}' because it is not an array", id)
-              }
-            case otherIndex =>
-              throw EvalException(s"Array index has to be an Integer: '${otherIndex}'", id)
+          val index = indexValue match {
+            case IntegerVal(indexValueInt) => indexValueInt
+            case other =>
+              throw EvalException(s"Array index has to be an Integer but got: '${other.valueAndTypeString}'", id)
           }
-
+          arr match {
+            case IntegerArrayVal(values) =>
+              if !values.indices.contains(index) then
+                throw EvalException(s"Array index out of bounds: '${index}' (0..${values.length - 1})", id)
+              IntegerVal(values(index))
+            case RealArrayVal(values) =>
+              if !values.indices.contains(index) then
+                throw EvalException(s"Array index out of bounds: '${index}' (0..${values.length - 1})", id)
+              RealVal(values(index))
+            case StringArrayVal(values) =>
+              if !values.indices.contains(index) then
+                throw EvalException(s"Array index out of bounds: '${index}' (0..${values.length - 1})", id)
+              StringVal(values(index))
+            case BooleanArrayVal(values) =>
+              if !values.indices.contains(index) then
+                throw EvalException(s"Array index out of bounds: '${index}' (0..${values.length - 1})", id)
+              BooleanVal(values(index))
+            case other =>
+              throw EvalException(s"Cannot index into '${other}' because it is not an array", id)
+          }
+        }
+      case MatrixIndexAccess(matrixName, indexExpr1, indexExpr2) =>
+        evalExpr(id, indexExpr1).zip(evalExpr(id, indexExpr2)).map { (indexValue1, indexValue2) =>
+          val arr = symTab.getValue(id, matrixName)
+          val index1 = indexValue1 match {
+            case IntegerVal(indexValueInt) => indexValueInt
+            case other =>
+              throw EvalException(s"Matrix row index has to be an Integer but got: '${other.valueAndTypeString}'", id)
+          }
+          val index2 = indexValue2 match {
+            case IntegerVal(indexValueInt) => indexValueInt
+            case other =>
+              throw EvalException(
+                s"Matrix column index has to be an Integer but got: '${other.valueAndTypeString}'",
+                id
+              )
+          }
+          arr match {
+            case IntegerMatrixVal(values) =>
+              if !values.indices.contains(index1) then
+                throw EvalException(s"Matrix row index out of bounds: '${index1}' (0..${values.length - 1})", id)
+              if !values(index1).indices.contains(index2) then
+                throw EvalException(
+                  s"Matrix column index out of bounds: '${index2}' (0..${values(index1).length - 1})",
+                  id
+                )
+              IntegerVal(values(index1)(index2))
+            case RealMatrixVal(values) =>
+              if !values.indices.contains(index1) then
+                throw EvalException(s"Matrix row index out of bounds: '${index1}' (0..${values.length - 1})", id)
+              if !values(index1).indices.contains(index2) then
+                throw EvalException(
+                  s"Matrix column index out of bounds: '${index2}' (0..${values(index1).length - 1})",
+                  id
+                )
+              RealVal(values(index1)(index2))
+            case StringMatrixVal(values) =>
+              if !values.indices.contains(index1) then
+                throw EvalException(s"Matrix row index out of bounds: '${index1}' (0..${values.length - 1})", id)
+              if !values(index1).indices.contains(index2) then
+                throw EvalException(
+                  s"Matrix column index out of bounds: '${index2}' (0..${values(index1).length - 1})",
+                  id
+                )
+              StringVal(values(index1)(index2))
+            case BooleanMatrixVal(values) =>
+              if !values.indices.contains(index1) then
+                throw EvalException(s"Matrix row index out of bounds: '${index1}' (0..${values.length - 1})", id)
+              if !values(index1).indices.contains(index2) then
+                throw EvalException(
+                  s"Matrix column index out of bounds: '${index2}' (0..${values(index1).length - 1})",
+                  id
+                )
+              BooleanVal(values(index1)(index2))
+            case other =>
+              throw EvalException(s"Cannot index into '${other}' because it is not an array", id)
+          }
         }
       case FunctionCall(name, argumentExprs) =>
         val futureArgs = execSequentially(

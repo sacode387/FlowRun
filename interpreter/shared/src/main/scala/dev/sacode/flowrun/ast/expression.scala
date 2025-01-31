@@ -32,17 +32,25 @@ object Expression:
     case RealArray
     case StringArray
     case BooleanArray
+    case IntegerMatrix
+    case RealMatrix
+    case StringMatrix
+    case BooleanMatrix
 
     def pretty: String = this match
-      case Void         => "Void"
-      case Integer      => "Integer"
-      case Real         => "Real"
-      case String       => "String"
-      case Boolean      => "Boolean"
-      case IntegerArray => "Integer[]"
-      case RealArray    => "Real[]"
-      case StringArray  => "String[]"
-      case BooleanArray => "Boolean[]"
+      case Void          => "Void"
+      case Integer       => "Integer"
+      case Real          => "Real"
+      case String        => "String"
+      case Boolean       => "Boolean"
+      case IntegerArray  => "Integer[]"
+      case RealArray     => "Real[]"
+      case StringArray   => "String[]"
+      case BooleanArray  => "Boolean[]"
+      case IntegerMatrix => "Integer[][]"
+      case RealMatrix    => "Real[][]"
+      case StringMatrix  => "String[][]"
+      case BooleanMatrix => "Boolean[][]"
 
     def isArray: Boolean = this match
       case IntegerArray => true
@@ -50,6 +58,13 @@ object Expression:
       case StringArray  => true
       case BooleanArray => true
       case _            => false
+
+    def isMatrix: Boolean = this match
+      case IntegerMatrix => true
+      case RealMatrix    => true
+      case StringMatrix  => true
+      case BooleanMatrix => true
+      case _             => false
 
   object Type:
     val VarTypes = Type.values.filterNot(_ == Type.Void)
@@ -82,6 +97,7 @@ enum Atom:
   case StringLit(value: String)
   case Identifier(name: String)
   case ArrayIndexAccess(name: String, indexExpr: Expression)
+  case MatrixIndexAccess(name: String, indexExpr1: Expression, indexExpr2: Expression)
   case TrueLit
   case FalseLit
   case Parens(expression: Expression)

@@ -107,8 +107,12 @@ final class StatementEditor(
           val updatedStmt = programModel.findStatement(stmtId).asInstanceOf[Declare].copy(initValue = newValueOpt)
           programModel.updateStmt(updatedStmt)
         }
-        val arrayLengthInput = newExprInput(statement.id, 10, statement.lengthValue, "5") { newLengthText =>
+        val length1Input = newExprInput(statement.id, 10, statement.lengthValue, "5") { newLengthText =>
           val updatedStmt = programModel.findStatement(stmtId).asInstanceOf[Declare].copy(lengthValue = newLengthText)
+          programModel.updateStmt(updatedStmt)
+        }
+        val length2Input = newExprInput(statement.id, 10, statement.length2Value, "5") { newLengthText =>
+          val updatedStmt = programModel.findStatement(stmtId).asInstanceOf[Declare].copy(length2Value = newLengthText)
           programModel.updateStmt(updatedStmt)
         }
         flowRunElements.stmtOutput.innerText = ""
@@ -119,7 +123,14 @@ final class StatementEditor(
             if statement.tpe.isArray then
               frag(
                 span(" of length "),
-                arrayLengthInput
+                length1Input
+              )
+            else if statement.tpe.isMatrix then
+              frag(
+                span(" of rows "),
+                length1Input,
+                span(" and cols "),
+                length2Input
               )
             else
               frag(
