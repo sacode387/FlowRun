@@ -133,7 +133,7 @@ object InterpreterTests extends TestSuite {
           S.Declare(getId(), "d", E.Type.Boolean, Some("1.0 == 1.0"), "1"),
           S.Declare(getId(), "e", E.Type.Boolean, Some("2.0 >= 1.0"), "1"),
           S.Declare(getId(), "f", E.Type.Boolean, Some("2.0 <= 1.0"), "1"),
-          S.Declare(getId(), "g", E.Type.Real, Some("5.0 / 2.0"), 1)
+          S.Declare(getId(), "g", E.Type.Real, Some("5.0 / 2.0"), "1")
         )
       )
       val flowrunChannel = Channel[FlowRun.Event]
