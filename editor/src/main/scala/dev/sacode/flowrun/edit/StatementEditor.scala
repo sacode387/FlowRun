@@ -107,12 +107,12 @@ final class StatementEditor(
           val updatedStmt = programModel.findStatement(stmtId).asInstanceOf[Declare].copy(initValue = newValueOpt)
           programModel.updateStmt(updatedStmt)
         }
-        val length1Input = newExprInput(statement.id, 10, statement.lengthValue, "5") { newLengthText =>
-          val updatedStmt = programModel.findStatement(stmtId).asInstanceOf[Declare].copy(lengthValue = newLengthText)
+        val length1Input = newExprInput(statement.id, 10, statement.getLength1, "5") { newLengthText =>
+          val updatedStmt = programModel.findStatement(stmtId).asInstanceOf[Declare].copy(lengthValue1 = newLengthText)
           programModel.updateStmt(updatedStmt)
         }
-        val length2Input = newExprInput(statement.id, 10, statement.length2Value, "5") { newLengthText =>
-          val updatedStmt = programModel.findStatement(stmtId).asInstanceOf[Declare].copy(length2Value = newLengthText)
+        val length2Input = newExprInput(statement.id, 10, statement.lengthValue2, "5") { newLengthText =>
+          val updatedStmt = programModel.findStatement(stmtId).asInstanceOf[Declare].copy(lengthValue2 = newLengthText)
           programModel.updateStmt(updatedStmt)
         }
         flowRunElements.stmtOutput.innerText = ""

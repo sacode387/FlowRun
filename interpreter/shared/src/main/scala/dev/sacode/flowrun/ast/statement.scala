@@ -42,8 +42,10 @@ object Statement:
       name: String,
       tpe: Expression.Type,
       initValue: Option[String],
-      lengthValue: String = "5", // expr, length of array, or number of matrix rows
-      length2Value: String = "5" // expr, number of matrix columns
+      @deprecated("first version did not support length as an expr, kept for backwards compatibility")
+      lengthValue: Int = -1, // expr, length of array, or number of matrix rows
+      lengthValue1: String = "", // expr, length of array, or number of matrix rows
+      lengthValue2: String = "" // expr, number of matrix columns
   ) extends Statement
       derives JsonRW:
     override def duplicated: Declare = copy(id = AST.newId)
@@ -55,6 +57,7 @@ object Statement:
       // dont show initializer for array
       val maybeExprText = initValue.map(e => s" = $e").filterNot(_ => tpe.isArray).getOrElse("")
       s"$name: $tpe$maybeExprText"
+    def getLength1: String = if lengthValue1.isEmpty && lengthValue != -1 then lengthValue.toString else lengthValue1
 
   case class Assign(id: String, name: String, value: String) extends Statement derives JsonRW:
     override def duplicated: Assign = copy(id = AST.newId)

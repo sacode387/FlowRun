@@ -153,7 +153,7 @@ final class Interpreter(
         d.tpe match {
           case Type.IntegerArray =>
             waitForContinue().flatMap { _ =>
-              evalExpr(stmt.id, parseExpr(stmt.id, d.lengthValue)).map {
+              evalExpr(stmt.id, parseExpr(stmt.id, d.getLength1)).map {
                 case IntegerVal(length) =>
                   if length < 0 then throw EvalException(s"Array length can not be negative: '${length}'", stmt.id)
                   symTab.addVar(d.id, d.name, d.tpe, None)
@@ -168,7 +168,7 @@ final class Interpreter(
             }
           case Type.RealArray =>
             waitForContinue().flatMap { _ =>
-              evalExpr(stmt.id, parseExpr(stmt.id, d.lengthValue)).map {
+              evalExpr(stmt.id, parseExpr(stmt.id, d.getLength1)).map {
                 case IntegerVal(length) =>
                   if length < 0 then throw EvalException(s"Array length can not be negative: '${length}'", stmt.id)
                   symTab.addVar(d.id, d.name, d.tpe, None)
@@ -183,7 +183,7 @@ final class Interpreter(
             }
           case Type.StringArray =>
             waitForContinue().flatMap { _ =>
-              evalExpr(stmt.id, parseExpr(stmt.id, d.lengthValue)).map {
+              evalExpr(stmt.id, parseExpr(stmt.id, d.getLength1)).map {
                 case IntegerVal(length) =>
                   if length < 0 then throw EvalException(s"Array length can not be negative: '${length}'", stmt.id)
                   symTab.addVar(d.id, d.name, d.tpe, None)
@@ -198,7 +198,7 @@ final class Interpreter(
             }
           case Type.BooleanArray =>
             waitForContinue().flatMap { _ =>
-              evalExpr(stmt.id, parseExpr(stmt.id, d.lengthValue)).map {
+              evalExpr(stmt.id, parseExpr(stmt.id, d.getLength1)).map {
                 case IntegerVal(length) =>
                   if length < 0 then throw EvalException(s"Array length can not be negative: '${length}'", stmt.id)
                   symTab.addVar(d.id, d.name, d.tpe, None)
@@ -213,9 +213,9 @@ final class Interpreter(
             }
           case Type.IntegerMatrix =>
             waitForContinue().flatMap { _ =>
-              evalExpr(stmt.id, parseExpr(stmt.id, d.lengthValue))
+              evalExpr(stmt.id, parseExpr(stmt.id, d.getLength1))
                 .zip(
-                  evalExpr(stmt.id, parseExpr(stmt.id, d.length2Value))
+                  evalExpr(stmt.id, parseExpr(stmt.id, d.lengthValue2))
                 )
                 .map {
                   case (IntegerVal(length1), IntegerVal(length2)) =>
@@ -235,9 +235,9 @@ final class Interpreter(
             }
           case Type.RealMatrix =>
             waitForContinue().flatMap { _ =>
-              evalExpr(stmt.id, parseExpr(stmt.id, d.lengthValue))
+              evalExpr(stmt.id, parseExpr(stmt.id, d.getLength1))
                 .zip(
-                  evalExpr(stmt.id, parseExpr(stmt.id, d.length2Value))
+                  evalExpr(stmt.id, parseExpr(stmt.id, d.lengthValue2))
                 )
                 .map {
                   case (IntegerVal(length1), IntegerVal(length2)) =>
@@ -257,9 +257,9 @@ final class Interpreter(
             }
           case Type.StringMatrix =>
             waitForContinue().flatMap { _ =>
-              evalExpr(stmt.id, parseExpr(stmt.id, d.lengthValue))
+              evalExpr(stmt.id, parseExpr(stmt.id, d.getLength1))
                 .zip(
-                  evalExpr(stmt.id, parseExpr(stmt.id, d.length2Value))
+                  evalExpr(stmt.id, parseExpr(stmt.id, d.lengthValue2))
                 )
                 .map {
                   case (IntegerVal(length1), IntegerVal(length2)) =>
@@ -279,9 +279,9 @@ final class Interpreter(
             }
           case Type.BooleanMatrix =>
             waitForContinue().flatMap { _ =>
-              evalExpr(stmt.id, parseExpr(stmt.id, d.lengthValue))
+              evalExpr(stmt.id, parseExpr(stmt.id, d.getLength1))
                 .zip(
-                  evalExpr(stmt.id, parseExpr(stmt.id, d.length2Value))
+                  evalExpr(stmt.id, parseExpr(stmt.id, d.lengthValue2))
                 )
                 .map {
                   case (IntegerVal(length1), IntegerVal(length2)) =>
