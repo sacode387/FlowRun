@@ -17,10 +17,14 @@ Flowcharts, runnable in your browser!
 - `Real` - decimal number
 - `String` - text
 - `Boolean` - true/false
-- `Array[Integer]` - array of `Integer`s
-- `Array[Real]` - array of `Real`s
-- `Array[String]` - array of `String`s
-- `Array[Boolean]` - array of `Boolean`s
+- `Integer[]` - array of `Integer`s
+- `Real[]` - array of `Real`s
+- `String[]` - array of `String`s
+- `Boolean[]` - array of `Boolean`s
+- `Integer[][]` - matrix of `Integer`s
+- `Real[][]` - matrix of `Real`s
+- `String[][]` - matrix of `String`s
+- `Boolean[][]` - matrix of `Boolean`s
 
 ### Operators
 - `+`, `-`, `*`, `/`, `%` for arithmetic operations
