@@ -20,9 +20,12 @@ enum PredefinedFunction(val name: String) {
   case Ln extends PredefinedFunction("ln")
   case Log10 extends PredefinedFunction("log")
   case Log2 extends PredefinedFunction("log2")
-  // strings
+  // strings, arrays
   case Length extends PredefinedFunction("length")
   case CharAt extends PredefinedFunction("charAt")
+  // matrices
+  case NumRows extends PredefinedFunction("numRows")
+  case NumCols extends PredefinedFunction("numCols")
   // conversions
   case RealToInteger extends PredefinedFunction("real2int")
   case StringToInteger extends PredefinedFunction("string2int")

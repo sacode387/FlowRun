@@ -519,7 +519,7 @@ final class Interpreter(
                     )
                   exprValue match
                     case IntegerVal(newValue) =>
-                      values(index1)(index1) = newValue
+                      values(index1)(index2) = newValue
                       exprValue
                     case other =>
                       throw EvalException(
@@ -536,10 +536,10 @@ final class Interpreter(
                     )
                   exprValue match
                     case RealVal(newValue) =>
-                      values(index1)(index1) = newValue
+                      values(index1)(index2) = newValue
                       exprValue
                     case IntegerVal(newValue) =>
-                      values(index1)(index1) = newValue
+                      values(index1)(index2) = newValue
                       exprValue
                     case other =>
                       throw EvalException(
@@ -556,7 +556,7 @@ final class Interpreter(
                     )
                   exprValue match
                     case StringVal(newValue) =>
-                      values(index1)(index1) = newValue
+                      values(index1)(index2) = newValue
                       exprValue
                     case other =>
                       throw EvalException(
@@ -573,7 +573,7 @@ final class Interpreter(
                     )
                   exprValue match
                     case BooleanVal(newValue) =>
-                      values(index1)(index1) = newValue
+                      values(index1)(index2) = newValue
                       exprValue
                     case other =>
                       throw EvalException(
@@ -690,7 +690,7 @@ final class Interpreter(
                     IntegerVal(value)
                   } catch {
                     case _: NumberFormatException =>
-                      throw EvalException(s"You entered invalid value for '${sym.asVar}' : '${inputValue}'.", id)
+                      throw EvalException(s"You entered invalid value for '${matrixName}[${index1}][${index2}]' : '${inputValue}'.", id)
                   }
                 case RunVal.RealMatrixVal(values) =>
                   if !values.indices.contains(index1) then
@@ -706,7 +706,7 @@ final class Interpreter(
                     RealVal(value)
                   } catch {
                     case _: NumberFormatException =>
-                      throw EvalException(s"You entered invalid value for '${sym.asVar}' : '${inputValue}'.", id)
+                      throw EvalException(s"You entered invalid value for '${matrixName}[${index1}][${index2}]' : '${inputValue}'.", id)
                   }
                 case RunVal.StringMatrixVal(values) =>
                   if !values.indices.contains(index1) then
@@ -732,7 +732,7 @@ final class Interpreter(
                     BooleanVal(value)
                   } catch {
                     case _: IllegalArgumentException =>
-                      throw EvalException(s"You entered invalid value for '${sym.asVar}' : '${inputValue}'.", id)
+                      throw EvalException(s"You entered invalid value for '${matrixName}[${index1}][${index2}]' : '${inputValue}'.", id)
                   }
                 case _ =>
                   throw EvalException(
@@ -760,7 +760,7 @@ final class Interpreter(
                 IntegerVal(value)
               } catch {
                 case _: NumberFormatException =>
-                  throw EvalException(s"You entered invalid value for '${sym.asVar}' : '${inputValue}'.", id)
+                  throw EvalException(s"You entered invalid value for '${arrayName}[${index}]' : '${inputValue}'.", id)
               }
             case RunVal.RealArrayVal(values) =>
               if !values.indices.contains(index) then
@@ -771,7 +771,7 @@ final class Interpreter(
                 RealVal(value)
               } catch {
                 case _: NumberFormatException =>
-                  throw EvalException(s"You entered invalid value for '${sym.asVar}' : '${inputValue}'.", id)
+                  throw EvalException(s"You entered invalid value for '${arrayName}[${index}]' : '${inputValue}'.", id)
               }
             case RunVal.StringArrayVal(values) =>
               if !values.indices.contains(index) then
@@ -787,7 +787,7 @@ final class Interpreter(
                 BooleanVal(value)
               } catch {
                 case _: IllegalArgumentException =>
-                  throw EvalException(s"You entered invalid value for '${sym.asVar}' : '${inputValue}'.", id)
+                  throw EvalException(s"You entered invalid value for '${arrayName}[${index}]' : '${inputValue}'.", id)
               }
             case _ =>
               throw EvalException(
@@ -1331,6 +1331,23 @@ final class Interpreter(
         args.head match
           case n: StringVal => Future(IntegerVal(n.value.toInt))
           case _            => throw EvalException(s"Expected a String argument in function ${func.name}", id)
+      // matrices
+      case func @ NumRows =>
+        validateArgsNumber(id, func.name, 1, args.size)
+        args.head match
+          case m: IntegerMatrixVal => Future(IntegerVal(m.values.length))
+          case m: RealMatrixVal    => Future(IntegerVal(m.values.length))
+          case m: StringMatrixVal  => Future(IntegerVal(m.values.length))
+          case m: BooleanMatrixVal => Future(IntegerVal(m.values.length))
+          case _                   => throw EvalException(s"Expected Matrix argument in function ${func.name}", id)
+      case func @ NumCols =>
+        validateArgsNumber(id, func.name, 1, args.size)
+        args.head match
+          case m: IntegerMatrixVal => Future(IntegerVal(if m.values.isEmpty then 0 else m.values(0).length))
+          case m: RealMatrixVal    => Future(IntegerVal(if m.values.isEmpty then 0 else m.values(0).length))
+          case m: StringMatrixVal  => Future(IntegerVal(if m.values.isEmpty then 0 else m.values(0).length))
+          case m: BooleanMatrixVal => Future(IntegerVal(if m.values.isEmpty then 0 else m.values(0).length))
+          case _                   => throw EvalException(s"Expected Matrix argument in function ${func.name}", id)
       // misc
       case ReadInput =>
         state = State.WAITING_FOR_INPUT
