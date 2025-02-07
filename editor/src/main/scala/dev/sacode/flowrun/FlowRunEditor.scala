@@ -106,9 +106,10 @@ class FlowRunEditor(
   // fixed layout is when you force layout with a class
   // meaning not-changeable with checkboxes
   private val fixedLayout = flowRunElements.mountElem.classList.exists(_.startsWith("flowrun-layout"))
-  // TODO ne removat sve nego samo neke opcije unutar...
 
-  if fixedLayout then flowRunElements.configWidget.querySelector(".flowrun-config-layout").remove()
+  if fixedLayout then 
+    flowRunElements.configWidget.querySelector(".flowrun-config-layout").remove()
+    flowRunElements.showConfigButton.remove()
   else updateLayout()
 
   if mode.editable then

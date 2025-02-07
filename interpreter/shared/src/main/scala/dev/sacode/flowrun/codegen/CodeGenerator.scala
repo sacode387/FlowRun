@@ -29,20 +29,20 @@ trait CodeGenerator {
   protected def identPrefix: String = ""
 
   private val indentAmount = 2
-  protected var indent = 0
+  private var indent = 0
 
   private val dummyChannel = Channel[FlowRun.Event]
   protected val symTab = SymbolTable(dummyChannel) // needed for types of vars
 
   private var lineNum = 1
-  protected var lines = ListBuffer.empty[String]
+  protected var lines: ListBuffer[String] = ListBuffer.empty[String]
   protected var stmtLineNums: mutable.Map[String, List[Int]] = mutable.Map.empty.withDefaultValue(List.empty)
 
   protected def addLine(text: String): Unit =
     addLine(text, "")
   protected def addLine(text: String, stmtId: String): Unit =
     lines += text.indented(indent)
-    if !stmtId.trim.isEmpty then
+    if stmtId.trim.nonEmpty then
       val lineNums = stmtLineNums.getOrElse(stmtId, List.empty)
       stmtLineNums.put(stmtId, lineNums.appended(lineNum))
     lineNum += 1
@@ -57,13 +57,20 @@ trait CodeGenerator {
     indent -= indentAmount
 
   protected def defaultValue(tpe: Type): String = tpe match {
-    case Type.Void    => ""
-    case Type.Boolean => "false"
-    case Type.Integer => "0"
-    case Type.Real    => "0.0"
-    case Type.String  => """ "" """.trim
+    case Type.Void          => ""
+    case Type.Boolean       => "false"
+    case Type.Integer       => "0"
+    case Type.Real          => "0.0"
+    case Type.String        => """ "" """.trim
+    case Type.IntegerArray  => sys.error(s"No default value for array or matrix")
   }
 
+  /** Parse FlowRun expression and generate real code
+    * @param exprString
+    *   expression string to parse
+    * @return
+    *   generated real code
+    */
   protected def parseGenExpr(exprString: String): String =
     genExpr(parseExpr("", exprString))
 
@@ -126,6 +133,13 @@ trait CodeGenerator {
           predefFun(name, genArgs)
         case None =>
           funCall(name, genArgs)
+    case ArrayIndexAccess(name, idxExpr) =>
+      val idx = genExpr(idxExpr)
+      s""" ${name}[${idx}] """
+    case MatrixIndexAccess(name, idxExpr1, idxExpr2) =>
+      val idx1 = genExpr(idxExpr1)
+      val idx2 = genExpr(idxExpr2)
+      s""" ${name}[${idx1}][${idx2}] """
   }
 
 }

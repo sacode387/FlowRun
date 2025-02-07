@@ -2,6 +2,7 @@ package dev.sacode.flowrun.ast
 
 import java.util.UUID
 import ba.sake.tupson.*
+import dev.sacode.flowrun.parse.parseExpr
 
 case class Function(
     rawId: String,
@@ -19,7 +20,7 @@ case class Function(
     val title = if isMain then "main" else name
     val params = if isMain then "" else s"(${parameters.map(p => s"${p.name}").mkString(", ")})"
     s"$title$params"
-  def verboseLabel =
+  def verboseLabel: String =
     val title = if isMain then "main" else name
     val params = if isMain then "" else s"(${parameters.map(p => s"${p.name}: ${p.tpe}").mkString(", ")})"
     s"$title$params: $tpe"
@@ -41,23 +42,62 @@ case class Program(
   def allFunctions: List[Function] =
     functions.prepended(main)
 
-  def hasInputs: Boolean = {
-    val allStmts = allFunctions.flatMap(_.statements).flatMap {
-      case Statement.Block(_, blockStats) =>
-        blockStats
-      case stat @ Statement.If(id, expr, trueBlock, falseBlock) =>
-        trueBlock.statements ++ falseBlock.statements
-      case stat @ Statement.While(id, expr, body) =>
-        body.statements
-      case stat @ Statement.DoWhile(id, expr, body) =>
-        body.statements
-      case stat: Statement.ForLoop =>
-        stat.body.statements
-      case st =>
-        List(st)
+  def hasInputs: Boolean =
+    allStmts.exists(_.isInstanceOf[Statement.Input]) ||
+      usesFunction(PredefinedFunction.ReadInput)
+    
+  def usesFunction(f: PredefinedFunction): Boolean =
+    allExprs.exists{exprStr =>
+      val expr = parseExpr("dummy", exprStr)
+      expr.collectAtoms.exists {
+        case fc: Atom.FunctionCall => fc.name == f.name
+        case _=> false
+      }
     }
-    allStmts.exists(_.isInstanceOf[Statement.Input])
+  
+  private def allStmts: Seq[Statement] = {
+    def getStatements(s: Statement): Seq[Statement] = s match {
+      case stmt: Statement.Block =>
+        stmt.statements.flatMap(getStatements)
+      case stmt: Statement.If =>
+        getStatements(stmt.trueBlock) ++ getStatements(stmt.falseBlock)
+      case stmt: Statement.While =>
+         getStatements(stmt.body)
+      case stmt: Statement.DoWhile =>
+        getStatements(stmt.body)
+      case stmt: Statement.ForLoop =>
+        getStatements(stmt.body)
+      case _ => Seq(s)
+    }
+    allFunctions.flatMap(_.statements).flatMap(getStatements)
   }
+  
+  private def allExprs : Seq[String] = {
+    def getExprs(s: Statement): Seq[String] = s match {
+      case stmt: Statement.Return =>
+        stmt.maybeValue.toSeq
+      case stmt: Statement.Declare =>
+        stmt.initValue.toSeq
+      case stmt: Statement.Assign =>
+        Seq(stmt.value)
+      case stmt: Statement.Call =>
+        Seq(stmt.value)
+      case stmt: Statement.Output =>
+        Seq(stmt.value)
+      case stmt: Statement.Block =>
+        stmt.statements.flatMap(getExprs)
+      case stmt: Statement.If =>
+        Seq(stmt.condition) ++ getExprs(stmt.trueBlock) ++ getExprs(stmt.falseBlock)
+      case stmt: Statement.While =>
+        Seq(stmt.condition) ++ getExprs(stmt.body)
+      case stmt: Statement.DoWhile =>
+        Seq(stmt.condition) ++ getExprs(stmt.body)
+      case stmt: Statement.ForLoop =>
+        Seq(stmt.start) ++ Seq(stmt.incr) ++ Seq(stmt.end) ++ getExprs(stmt.body)
+      case _ => Seq.empty
+    }
+    allStmts.flatMap(getExprs)
+  } 
 
 final case class FlowRunConfig(
     lang: String,

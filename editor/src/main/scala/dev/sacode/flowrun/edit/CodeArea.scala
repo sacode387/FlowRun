@@ -54,7 +54,7 @@ class CodeArea(
     val language = resolveLang(programModel.ast.config.lang)
     val generator = CodeGeneratorFactory(language, programModel.ast)
     val codeTry = generator.generate
-    if codeTry.isFailure then println("Failed to generate code: " + codeTry.failed)
+    if codeTry.isFailure then codeTry.failed.get.printStackTrace()
     codeTry match {
       case Success(res) =>
         val lh = res.stmtLineNums.getOrElse(stmtId, List.empty).mkString(",")

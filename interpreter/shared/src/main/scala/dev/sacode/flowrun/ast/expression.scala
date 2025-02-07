@@ -19,7 +19,10 @@ atom                -> NUMBER | STRING | "true" | "false" | "null"
                     | "(" expression ")" ;
  */
 
-case class Expression(boolOrComparison: BoolOrComparison, boolOrComparisons: List[BoolOrComparison])
+case class Expression(boolOrComparison: BoolOrComparison, boolOrComparisons: List[BoolOrComparison]) {
+  def collectAtoms: List[Atom] =
+    (List(boolOrComparison) ++ boolOrComparisons).flatMap(_.collectAtoms)
+}
 
 object Expression:
   enum Type derives JsonRW:
@@ -72,24 +75,51 @@ object Expression:
 case class BoolOrComparison(
     boolAndComparison: BoolAndComparison,
     boolAndComparisons: List[BoolAndComparison]
-)
+) {
+  def collectAtoms: List[Atom] = 
+    (List(boolAndComparison) ++ boolAndComparisons).flatMap(_.collectAtoms)
+}
 
-case class BoolAndComparison(numComparison: NumComparison, numComparisons: List[NumComparisonOpt])
+case class BoolAndComparison(numComparison: NumComparison, numComparisons: List[NumComparisonOpt]) {
+  def collectAtoms: List[Atom] = 
+    numComparison.collectAtoms ++ numComparisons.flatMap(_.collectAtoms)
+}
 
-case class NumComparison(term: Term, terms: Option[TermOpt])
-case class NumComparisonOpt(op: Token, numComparison: NumComparison)
+case class NumComparison(term: Term, terms: Option[TermOpt]) {
+  def collectAtoms: List[Atom] =
+    term.collectAtoms ++ terms.toList.flatMap(_.collectAtoms)
+}
+case class NumComparisonOpt(op: Token, numComparison: NumComparison) {
+  def collectAtoms: List[Atom] = numComparison.collectAtoms
+}
 
-case class Term(factor: Factor, factors: List[FactorOpt])
-case class TermOpt(op: Token, term: Term)
+case class Term(factor: Factor, factors: List[FactorOpt]) {
+  def collectAtoms: List[Atom] =
+    factor.collectAtoms ++ factors.flatMap(_.collectAtoms)
+}
+case class TermOpt(op: Token, term: Term){
+  def collectAtoms: List[Atom] = term.collectAtoms
+}
 
-case class Factor(unary: Unary, unaries: List[UnaryOpt])
-case class FactorOpt(op: Token, factor: Factor)
+case class Factor(unary: Unary, unaries: List[UnaryOpt]){
+  def collectAtoms: List[Atom] =
+    unary.collectAtoms ++ unaries.flatMap(_.collectAtoms)
+}
+case class FactorOpt(op: Token, factor: Factor){
+  def collectAtoms: List[Atom] = factor.collectAtoms
+}
 
 enum Unary:
   case Prefixed(op: Token, unary: Unary)
   case Simple(atom: Atom)
 
-case class UnaryOpt(op: Token, unary: Unary)
+  def collectAtoms: List[Atom] = this match
+    case Unary.Prefixed(op, unary) => unary.collectAtoms
+    case Unary.Simple(atom) => List(atom)
+
+case class UnaryOpt(op: Token, unary: Unary) {
+  def collectAtoms: List[Atom] = unary.collectAtoms
+}
 
 enum Atom:
   case IntegerLit(value: Int)

@@ -20,6 +20,8 @@ class JavaGenerator(val programAst: Program) extends CodeGenerator {
 
     incrIndent()
     if programAst.hasInputs then addLine("static Scanner scanner = new Scanner(System.in);", "")
+    if programAst.usesFunction(PredefinedFunction.RandomInteger) then
+      addLine("static Random random = new Random();", "")
     genMain()
     programAst.functions.foreach(genFunction)
     decrIndent()
@@ -52,6 +54,9 @@ class JavaGenerator(val programAst: Program) extends CodeGenerator {
     symTab.enterScope(function.id, function.name)
 
     val params = function.parameters.map(p => s"${genType(p.tpe)} ${p.name}").mkString(", ")
+    function.parameters.foreach { param =>
+      symTab.addVar(function.id, param.name, param.tpe, None)
+    }
     addEmptyLine()
     addLine(
       s"public static ${genType(function.tpe)} ${function.name}($params) {",
@@ -74,9 +79,8 @@ class JavaGenerator(val programAst: Program) extends CodeGenerator {
       case d: Declare =>
         val key = SymbolKey(d.name, Symbol.Kind.Variable, d.id)
         symTab.add(d.id, key, d.tpe, None)
-        val initValue = d.initValue.getOrElse(defaultValue(d.tpe))
-        val initValueExpr = parseGenExpr(initValue)
-        addLine(s"${genType(d.tpe)} ${d.name} = $initValueExpr;", d.id)
+        val initExpr = generateExpr(d)
+        addLine(s"${genType(d.tpe)} ${d.name} = $initExpr;", d.id)
 
       case Assign(id, name, value) =>
         val genValue = parseGenExpr(value)
@@ -94,7 +98,8 @@ class JavaGenerator(val programAst: Program) extends CodeGenerator {
           .foreach { prompt =>
             addLine(s"""System.out.print("$prompt");""", id)
           }
-        val symOpt = Try(symTab.getSymbolVar("", name)).toOption
+        val baseName = name.takeWhile(_ != '[')
+        val symOpt = Try(symTab.getSymbolVar("", baseName)).toOption
         val readFun = readFunction(symOpt.map(_.tpe))
         addLine(s"$name = $readFun;", id)
 
@@ -149,14 +154,53 @@ class JavaGenerator(val programAst: Program) extends CodeGenerator {
     }
   }
 
+  private def generateExpr(d: Statement.Declare) =
+    d.tpe match {
+      case Type.Void    => d.initValue.map(parseGenExpr).getOrElse("{}")
+      case Type.Integer => parseGenExpr(d.initValue.getOrElse("0"))
+      case Type.Real    => parseGenExpr(d.initValue.getOrElse("0.0"))
+      case Type.String  => parseGenExpr(d.initValue.getOrElse(""" "" """.trim))
+      case Type.Boolean => parseGenExpr(d.initValue.getOrElse("false".trim))
+      case Type.IntegerArray =>
+        val dim1 = parseGenExpr(d.lengthValue1)
+        s" new int[${dim1}] ".trim
+      case Type.RealArray =>
+        val dim1 = parseGenExpr(d.lengthValue1)
+        s" new double[${dim1}] ".trim
+      case Type.StringArray =>
+        val dim1 = parseGenExpr(d.lengthValue1)
+        s" new String[${dim1}] ".trim
+      case Type.BooleanArray =>
+        val dim1 = parseGenExpr(d.lengthValue1)
+        s" new boolean[${dim1}] ".trim
+      case Type.IntegerMatrix =>
+        val dim1 = parseGenExpr(d.lengthValue1)
+        val dim2 = parseGenExpr(d.lengthValue2)
+        s" new int[${dim1}][${dim2}] ".trim
+      case Type.RealMatrix =>
+        val dim1 = parseGenExpr(d.lengthValue1)
+        val dim2 = parseGenExpr(d.lengthValue2)
+        s" new double[${dim1}][${dim2}] ".trim
+      case Type.StringMatrix =>
+        val dim1 = parseGenExpr(d.lengthValue1)
+        val dim2 = parseGenExpr(d.lengthValue2)
+        s" new String[${dim1}][${dim2}] ".trim
+      case Type.BooleanMatrix =>
+        val dim1 = parseGenExpr(d.lengthValue1)
+        val dim2 = parseGenExpr(d.lengthValue2)
+        s" new boolean[${dim1}][${dim2}] ".trim
+    }
+
   import PredefinedFunction.*
+
   override def predefFun(name: String, genArgs: List[String]): String = {
     def argOpt(idx: Int) = genArgs.lift(idx).getOrElse("")
+
     PredefinedFunction.withName(name).get match {
       case Abs           => s"Math.abs(${argOpt(0)})"
       case Floor         => s"Math.floor(${argOpt(0)})"
       case Ceil          => s"Math.ceil(${argOpt(0)})"
-      case RandomInteger => s"Math.abs(${argOpt(0)})" // TODO
+      case RandomInteger => s"random.nextInt(${argOpt(0)})"
       case Sin           => s"Math.sin(${argOpt(0)})"
       case Cos           => s"Math.cos(${argOpt(0)})"
       case Tan           => s"Math.tan(${argOpt(0)})"
@@ -165,12 +209,20 @@ class JavaGenerator(val programAst: Program) extends CodeGenerator {
       case Log2          => s"Math.log10(${argOpt(0)})/Math.log10(2)"
       case Sqrt          => s"Math.sqrt(${argOpt(0)})"
       case Pow           => s"Math.pow(${argOpt(0)}, ${argOpt(1)})"
-      case Length        => s"${argOpt(0)}.length()"
-      case CharAt        => s"${argOpt(0)}.charAt(${argOpt(1)})"
-      case RealToInteger => s"(int)${argOpt(0)}"
-      case StringToInteger =>
-        s"""Integer.parseInt(${argOpt(0)})"""
-      case ReadInput => "Console.ReadLine()"
+      case Length =>
+        val sym = symTab.getSymbolVar("", argOpt(0))
+        sym.tpe match
+          case Type.IntegerArray => s"${argOpt(0)}.length"
+          case Type.RealArray    => s"${argOpt(0)}.length"
+          case Type.StringArray  => s"${argOpt(0)}.length"
+          case Type.BooleanArray => s"${argOpt(0)}.length"
+          case _                 => s"${argOpt(0)}.length()"
+      case CharAt          => s"${argOpt(0)}.charAt(${argOpt(1)})"
+      case RealToInteger   => s"(int)${argOpt(0)}"
+      case StringToInteger => s"""Integer.parseInt(${argOpt(0)})"""
+      case ReadInput       => "Console.ReadLine()"
+      case NumRows         => s"${argOpt(0)}.length"
+      case NumCols         => s"${argOpt(0)}[0].length"
     }
   }
 
@@ -178,23 +230,39 @@ class JavaGenerator(val programAst: Program) extends CodeGenerator {
     s""" $name(${genArgs.mkString(", ")}) """.trim
 
   /* TYPE */
-  private def genType(tpe: Expression.Type): String =
+  private def genType(tpe: Expression.Type): String = {
     import Expression.Type, Type._
     tpe match
-      case Void    => "void"
-      case Integer => "int"
-      case Real    => "double"
-      case String  => "String"
-      case Boolean => "boolean"
+      case Void          => "void"
+      case Integer       => "int"
+      case IntegerArray  => "int[]"
+      case IntegerMatrix => "int[][]"
+      case Real          => "double"
+      case RealArray     => "double[]"
+      case RealMatrix    => "double[][]"
+      case String        => "String"
+      case StringArray   => "String[]"
+      case StringMatrix  => "String[][]"
+      case Boolean       => "boolean"
+      case BooleanArray  => "boolean[]"
+      case BooleanMatrix => "boolean[][]"
+  }
 
   /* OTHER */
-  private def readFunction(tpeOpt: Option[Type]): String = tpeOpt match
+  private def readFunction(tpeOpt: Option[Type]): String = tpeOpt match {
     case None => "scanner.nextLine()"
     case Some(tpe) =>
       tpe match
-        case Type.Integer => "scanner.nextInt()"
-        case Type.Real    => "scanner.nextDouble()"
-        case Type.Boolean => "scanner.nextBoolean()"
-        case _            => "scanner.nextLine()"
+        case Type.Integer       => "scanner.nextInt()"
+        case Type.IntegerArray  => "scanner.nextInt()"
+        case Type.IntegerMatrix => "scanner.nextInt()"
+        case Type.Real          => "scanner.nextDouble()"
+        case Type.RealArray     => "scanner.nextDouble()"
+        case Type.RealMatrix    => "scanner.nextDouble()"
+        case Type.Boolean       => "scanner.nextBoolean()"
+        case Type.BooleanArray  => "scanner.nextBoolean()"
+        case Type.BooleanMatrix => "scanner.nextBoolean()"
+        case _                  => "scanner.nextLine()"
 
+  }
 }
