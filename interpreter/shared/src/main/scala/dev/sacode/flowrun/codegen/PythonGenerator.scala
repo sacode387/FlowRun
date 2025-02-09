@@ -59,20 +59,20 @@ class PythonGenerator(val programAst: Program) extends CodeGenerator {
     symTab.exitScope()
   }
 
-  private def genStatement(stmt: Statement): Unit =
+  private def genStatement(stmt: Statement): Unit = {
     import Statement._
     stmt match
       case _: Begin => // noop
       case d: Declare =>
         val key = SymbolKey(d.name, Symbol.Kind.Variable, d.id)
         symTab.add(d.id, key, d.tpe, None)
-        val initValue = d.initValue.getOrElse(defaultValue(d.tpe))
-        val genValue = parseGenExpr(initValue)
-        addLine(s"${d.name} = $genValue", d.id)
+        val initExpr = generateExpr(d)
+        addLine(s"${d.name} = $initExpr", d.id)
 
       case Assign(id, name, value) =>
+        val genName = parseGenExpr(name)
         val genValue = parseGenExpr(value)
-        addLine(s"$name = $genValue", id)
+        addLine(s"$genName = $genValue", id)
 
       case Call(id, value) =>
         val genValue = parseGenExpr(value)
@@ -138,6 +138,44 @@ class PythonGenerator(val programAst: Program) extends CodeGenerator {
 
       case Comment(id, text) =>
         addLine(s""" ""\" ${text} ""\" */""", id)
+  }
+
+  private def generateExpr(d: Statement.Declare) =
+    d.tpe match {
+      case Type.Void    => d.initValue.map(parseGenExpr).getOrElse("{}")
+      case Type.Integer => parseGenExpr(d.initValue.getOrElse("0"))
+      case Type.Real    => parseGenExpr(d.initValue.getOrElse("0.0"))
+      case Type.String  => parseGenExpr(d.initValue.getOrElse(""" "" """.trim))
+      case Type.Boolean => parseGenExpr(d.initValue.getOrElse("false".trim))
+      case Type.IntegerArray =>
+        val dim1 = parseGenExpr(d.lengthValue1)
+        s" [0] * ${dim1} ".trim
+      case Type.RealArray =>
+        val dim1 = parseGenExpr(d.lengthValue1)
+        s" [0.0] * ${dim1} ".trim
+      case Type.StringArray =>
+        val dim1 = parseGenExpr(d.lengthValue1)
+        s" [''] * ${dim1} ".trim
+      case Type.BooleanArray =>
+        val dim1 = parseGenExpr(d.lengthValue1)
+        s" [False] * ${dim1} ".trim
+      case Type.IntegerMatrix =>
+        val dim1 = parseGenExpr(d.lengthValue1)
+        val dim2 = parseGenExpr(d.lengthValue2)
+        s" [ [0] * ${dim2} ] * ${dim1} ".trim
+      case Type.RealMatrix =>
+        val dim1 = parseGenExpr(d.lengthValue1)
+        val dim2 = parseGenExpr(d.lengthValue2)
+        s" [ [0.0] * ${dim2} ] * ${dim1} ".trim
+      case Type.StringMatrix =>
+        val dim1 = parseGenExpr(d.lengthValue1)
+        val dim2 = parseGenExpr(d.lengthValue2)
+        s" [ [''] * ${dim2} ] * ${dim1} ".trim
+      case Type.BooleanMatrix =>
+        val dim1 = parseGenExpr(d.lengthValue1)
+        val dim2 = parseGenExpr(d.lengthValue2)
+        s" [ [False] * ${dim2} ] * ${dim1} ".trim
+    }
 
   import PredefinedFunction.*
   override def predefFun(name: String, genArgs: List[String]): String = {
@@ -159,11 +197,13 @@ class PythonGenerator(val programAst: Program) extends CodeGenerator {
       case CharAt          => s"${argOpt(0)}[${argOpt(1)}]"
       case RealToInteger   => s"int(${argOpt(0)})"
       case StringToInteger => s"int(${argOpt(0)})"
-      case ReadInput       => "Console.ReadLine()"
+      case ReadInput       => "input()"
+      case NumRows         => s"len(${argOpt(0)})"
+      case NumCols         => s"len(${argOpt(0)}[0])"
     }
   }
 
   override def funCall(name: String, genArgs: List[String]): String =
-    s""" $name (${genArgs.mkString(", ")}) """.trim
+    s""" $name(${genArgs.mkString(", ")}) """.trim
 
 }

@@ -12,9 +12,10 @@ class CPlusPlusGenerator(val programAst: Program) extends CodeGenerator {
 
   def generate: Try[CodeGenRes] = Try {
 
-    addLine(s"#include <iostream>")
-    addLine(s"#include <cmath>")
-    addLine(s"using namespace std;")
+    addLine("using namespace std;")
+    addLine("#include <stdbool.h>")
+    addLine("#include <cmath>")
+    addLine("#include <iostream>")
 
     genMain()
     programAst.functions.foreach(genFunction)
@@ -68,9 +69,94 @@ class CPlusPlusGenerator(val programAst: Program) extends CodeGenerator {
       case d: Declare =>
         val key = SymbolKey(d.name, Symbol.Kind.Variable, d.id)
         symTab.add(d.id, key, d.tpe, None)
-        val initValue = d.initValue.getOrElse(defaultValue(d.tpe))
-        val initValueExpr = parseGenExpr(initValue)
-        addLine(s"${genType(d.tpe)} ${d.name} = $initValueExpr;", d.id)
+        /*
+        int arr[5] = {0};
+        int m[5][5] = {{0}};
+         */
+        val generatedLine = d.tpe match {
+          case Type.Void => d.initValue.map(parseGenExpr).getOrElse("{}")
+          case Type.Integer =>
+            val initExpr = parseGenExpr(d.initValue.getOrElse("0"))
+            s"int ${d.name} = $initExpr;"
+          case Type.Real =>
+            val initExpr = parseGenExpr(d.initValue.getOrElse("0.0"))
+            s"double ${d.name} = $initExpr;"
+          case Type.String =>
+            val initExpr = parseGenExpr(d.initValue.getOrElse(""" "" """.trim))
+            s"char ${d.name}[] = $initExpr;"
+          case Type.Boolean =>
+            val initExpr = parseGenExpr(d.initValue.getOrElse("false".trim))
+            s"bool ${d.name} = $initExpr;"
+          case Type.IntegerArray =>
+            val dim1 = parseGenExpr(d.lengthValue1)
+            s"""|int ${d.name}[${dim1}];
+                |for (int i = 0; i < ${dim1}; i++) {
+                |  ${d.name}[i] = 0;
+                |}
+                |""".stripMargin
+          case Type.RealArray =>
+            val dim1 = parseGenExpr(d.lengthValue1)
+            s"""|double ${d.name}[${dim1}];
+                |for (int i = 0; i < ${dim1}; i++) {
+                |  ${d.name}[i] = 0.0;
+                |}
+                |""".stripMargin
+          case Type.StringArray =>
+            val dim1 = parseGenExpr(d.lengthValue1)
+            s"""|char ${d.name}[${dim1}][100];
+                |for (int i = 0; i < ${dim1}; i++) {
+                |  strcpy(${d.name}[i], "");
+                |}
+                |""".stripMargin
+          case Type.BooleanArray =>
+            val dim1 = parseGenExpr(d.lengthValue1)
+            s"""|bool ${d.name}[${dim1}];
+                |for (int i = 0; i < ${dim1}; i++) {
+                |  ${d.name}[i] = false;
+                |}
+                |""".stripMargin
+          case Type.IntegerMatrix =>
+            val dim1 = parseGenExpr(d.lengthValue1)
+            val dim2 = parseGenExpr(d.lengthValue2)
+            s"""|int ${d.name}[${dim1}];
+                |for (int i = 0; i < ${dim1}; i++) {
+                |  for (int j = 0; j < ${dim2}; j++) {
+                |    ${d.name}[i][j] = 0;
+                |  }
+                |}
+                |""".stripMargin
+          case Type.RealMatrix =>
+            val dim1 = parseGenExpr(d.lengthValue1)
+            val dim2 = parseGenExpr(d.lengthValue2)
+            s"""|double ${d.name}[${dim1}];
+                |for (int i = 0; i < ${dim1}; i++) {
+                |  for (int j = 0; j < ${dim2}; j++) {
+                |    ${d.name}[i][j] = 0.0;
+                |  }
+                |}
+                |""".stripMargin
+          case Type.StringMatrix =>
+            val dim1 = parseGenExpr(d.lengthValue1)
+            val dim2 = parseGenExpr(d.lengthValue2)
+            s"""|char ${d.name}[${dim1}][100];
+                |for (int i = 0; i < ${dim1}; i++) {
+                |  for (int j = 0; j < ${dim2}; j++) {
+                |    strcpy(${d.name}[i][j], "");
+                |  }
+                |}
+                |""".stripMargin
+          case Type.BooleanMatrix =>
+            val dim1 = parseGenExpr(d.lengthValue1)
+            val dim2 = parseGenExpr(d.lengthValue2)
+            s"""|bool ${d.name}[${dim1}];
+                |for (int i = 0; i < ${dim1}; i++) {
+                |  for (int j = 0; j < ${dim2}; j++) {
+                |    ${d.name}[i][j] = false;
+                |  }
+                |}
+                |""".stripMargin
+        }
+        addLine(generatedLine)
 
       case Assign(id, name, value) =>
         val genValue = parseGenExpr(value)
@@ -144,24 +230,27 @@ class CPlusPlusGenerator(val programAst: Program) extends CodeGenerator {
   override def predefFun(name: String, genArgs: List[String]): String = {
     def argOpt(idx: Int) = genArgs.lift(idx).getOrElse("")
     PredefinedFunction.withName(name).get match {
-      case Abs           => s"abs(${argOpt(0)})"
-      case Floor         => s"floor(${argOpt(0)})"
-      case Ceil          => s"ceil(${argOpt(0)})"
-      case RandomInteger => s"abs(${argOpt(0)})" // TODO
-      case Sin           => s"sin(${argOpt(0)})"
-      case Cos           => s"cos(${argOpt(0)})"
-      case Tan           => s"tan(${argOpt(0)})"
-      case Ln            => s"log(${argOpt(0)})"
-      case Log10         => s"log10(${argOpt(0)})"
-      case Log2          => s"log10(${argOpt(0)})/log10(2)"
-      case Sqrt          => s"Math.sqrt(${argOpt(0)})"
-      case Pow           => s"Math.pow(${argOpt(0)}, ${argOpt(1)})"
-      case Length        => s"${argOpt(0)}.length()"
-      case CharAt        => s"${argOpt(0)}.charAt(${argOpt(1)})"
-      case RealToInteger => s"(int)${argOpt(0)}"
-      case StringToInteger =>
-        s"""try { Convert.ToInt32(${argOpt(0)}) } catch (FormatException) { 0 }"""
-      case ReadInput => "cin >> dummy"
+      case Abs             => s"abs(${argOpt(0)})"
+      case Floor           => s"floor(${argOpt(0)})"
+      case Ceil            => s"ceil(${argOpt(0)})"
+      case RandomInteger   => s"(rand() % ${argOpt(0)})"
+      case Sin             => s"sin(${argOpt(0)})"
+      case Cos             => s"cos(${argOpt(0)})"
+      case Tan             => s"tan(${argOpt(0)})"
+      case Ln              => s"log(${argOpt(0)})"
+      case Log10           => s"log10(${argOpt(0)})"
+      case Log2            => s"log10(${argOpt(0)})/log10(2)"
+      case Sqrt            => s"Math.sqrt(${argOpt(0)})"
+      case Pow             => s"Math.pow(${argOpt(0)}, ${argOpt(1)})"
+      case Length          => s"${argOpt(0)}.length()"
+      case CharAt          => s"${argOpt(0)}.charAt(${argOpt(1)})"
+      case RealToInteger   => s"(int)${argOpt(0)}"
+      case StringToInteger => s"atoi(${argOpt(0)})"
+      case ReadInput       => s"""scanf("%s", ${argOpt(0)})"""
+      case NumRows         => s"sizeof(${argOpt(0)}) / sizeof(${argOpt(0)}[0])"
+      case NumCols =>
+        val arr = argOpt(0)
+        s"(sizeof(${arr})/sizeof(${arr}[0][0])) / (sizeof(${arr})/sizeof(${arr}[0]))"
     }
   }
 
@@ -172,10 +261,18 @@ class CPlusPlusGenerator(val programAst: Program) extends CodeGenerator {
   private def genType(tpe: Expression.Type): String =
     import Expression.Type, Type._
     tpe match
-      case Void    => "void"
-      case Integer => "int"
-      case Real    => "double"
-      case String  => "string"
-      case Boolean => "bool"
+      case Void          => "void"
+      case Integer       => "int"
+      case IntegerArray  => "int*"
+      case IntegerMatrix => "int**"
+      case Real          => "double"
+      case RealArray     => "double"
+      case RealMatrix    => "double"
+      case String        => "char"
+      case StringArray   => "char"
+      case StringMatrix  => "char"
+      case Boolean       => "bool"
+      case BooleanArray  => "bool"
+      case BooleanMatrix => "bool"
 
 }

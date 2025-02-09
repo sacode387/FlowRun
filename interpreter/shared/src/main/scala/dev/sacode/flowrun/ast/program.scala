@@ -45,16 +45,16 @@ case class Program(
   def hasInputs: Boolean =
     allStmts.exists(_.isInstanceOf[Statement.Input]) ||
       usesFunction(PredefinedFunction.ReadInput)
-    
+
   def usesFunction(f: PredefinedFunction): Boolean =
-    allExprs.exists{exprStr =>
+    allExprs.exists { exprStr =>
       val expr = parseExpr("dummy", exprStr)
       expr.collectAtoms.exists {
         case fc: Atom.FunctionCall => fc.name == f.name
-        case _=> false
+        case _                     => false
       }
     }
-  
+
   private def allStmts: Seq[Statement] = {
     def getStatements(s: Statement): Seq[Statement] = s match {
       case stmt: Statement.Block =>
@@ -62,7 +62,7 @@ case class Program(
       case stmt: Statement.If =>
         getStatements(stmt.trueBlock) ++ getStatements(stmt.falseBlock)
       case stmt: Statement.While =>
-         getStatements(stmt.body)
+        getStatements(stmt.body)
       case stmt: Statement.DoWhile =>
         getStatements(stmt.body)
       case stmt: Statement.ForLoop =>
@@ -71,8 +71,8 @@ case class Program(
     }
     allFunctions.flatMap(_.statements).flatMap(getStatements)
   }
-  
-  private def allExprs : Seq[String] = {
+
+  private def allExprs: Seq[String] = {
     def getExprs(s: Statement): Seq[String] = s match {
       case stmt: Statement.Return =>
         stmt.maybeValue.toSeq
@@ -97,7 +97,7 @@ case class Program(
       case _ => Seq.empty
     }
     allStmts.flatMap(getExprs)
-  } 
+  }
 
 final case class FlowRunConfig(
     lang: String,

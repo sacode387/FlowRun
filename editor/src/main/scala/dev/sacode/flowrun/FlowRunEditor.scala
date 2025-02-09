@@ -107,7 +107,7 @@ class FlowRunEditor(
   // meaning not-changeable with checkboxes
   private val fixedLayout = flowRunElements.mountElem.classList.exists(_.startsWith("flowrun-layout"))
 
-  if fixedLayout then 
+  if fixedLayout then
     flowRunElements.configWidget.querySelector(".flowrun-config-layout").remove()
     flowRunElements.showConfigButton.remove()
   else updateLayout()

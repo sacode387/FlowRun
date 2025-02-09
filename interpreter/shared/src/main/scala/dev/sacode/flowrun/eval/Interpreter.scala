@@ -690,7 +690,10 @@ final class Interpreter(
                     IntegerVal(value)
                   } catch {
                     case _: NumberFormatException =>
-                      throw EvalException(s"You entered invalid value for '${matrixName}[${index1}][${index2}]' : '${inputValue}'.", id)
+                      throw EvalException(
+                        s"You entered invalid value for '${matrixName}[${index1}][${index2}]' : '${inputValue}'.",
+                        id
+                      )
                   }
                 case RunVal.RealMatrixVal(values) =>
                   if !values.indices.contains(index1) then
@@ -706,7 +709,10 @@ final class Interpreter(
                     RealVal(value)
                   } catch {
                     case _: NumberFormatException =>
-                      throw EvalException(s"You entered invalid value for '${matrixName}[${index1}][${index2}]' : '${inputValue}'.", id)
+                      throw EvalException(
+                        s"You entered invalid value for '${matrixName}[${index1}][${index2}]' : '${inputValue}'.",
+                        id
+                      )
                   }
                 case RunVal.StringMatrixVal(values) =>
                   if !values.indices.contains(index1) then
@@ -732,7 +738,10 @@ final class Interpreter(
                     BooleanVal(value)
                   } catch {
                     case _: IllegalArgumentException =>
-                      throw EvalException(s"You entered invalid value for '${matrixName}[${index1}][${index2}]' : '${inputValue}'.", id)
+                      throw EvalException(
+                        s"You entered invalid value for '${matrixName}[${index1}][${index2}]' : '${inputValue}'.",
+                        id
+                      )
                   }
                 case _ =>
                   throw EvalException(
@@ -1159,13 +1168,13 @@ final class Interpreter(
             case Some(f) =>
               evalPredefinedFunction(id, f, args)
             case None =>
-              val funSym = symTab.getSymbolFun(id, name) // make sure it is defined
+              val _ = symTab.getSymbolFun(id, name) // make sure it is defined
               val fun = programModel.ast.allFunctions.find(_.name == name).get
               validateArgsNumber(id, fun.name, fun.parameters.size, args.size)
               val argsWithTypes = args.zip(fun.parameters).zipWithIndex.map { case ((arg, p), idx) =>
                 if arg.tpe != p.tpe then
                   throw EvalException(
-                    s"Expected: '${p}' at index $idx, got value '${arg}'",
+                    s"Expected: '${p.pretty}' at index $idx, got value '${arg}'",
                     id
                   )
                 (p.name, p.tpe, arg)

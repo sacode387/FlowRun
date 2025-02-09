@@ -145,6 +145,15 @@ class GolangGenerator(val programAst: Program) extends CodeGenerator {
       case Comment(id, text) =>
         addLine(s"/* ${text} */", id)
 
+  private def defaultValue(tpe: Type): String = tpe match {
+    case Type.Void    => ""
+    case Type.Boolean => "false"
+    case Type.Integer => "0"
+    case Type.Real    => "0.0"
+    case Type.String  => """ "" """.trim
+    case _            => sys.error(s"No default value for array or matrix")
+  }
+
   import PredefinedFunction.*
   override def predefFun(name: String, genArgs: List[String]): String = {
     def argOpt(idx: Int) = genArgs.lift(idx).getOrElse("")
@@ -165,7 +174,7 @@ class GolangGenerator(val programAst: Program) extends CodeGenerator {
       case CharAt          => s"${argOpt(0)}.charAt(${argOpt(1)})"
       case RealToInteger   => s"${argOpt(0)}.toInt"
       case StringToInteger => s"strconv.Itoa(${argOpt(0)})"
-      case ReadInput       => "Console.ReadLine()"
+      case ReadInput       => "TODO"
     }
   }
 

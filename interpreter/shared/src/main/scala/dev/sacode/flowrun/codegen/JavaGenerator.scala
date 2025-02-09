@@ -1,27 +1,27 @@
 package dev.sacode.flowrun.codegen
 
-import scala.util.Try
+import dev.sacode.flowrun.ast.*
+import dev.sacode.flowrun.ast.Expression.Type
+import dev.sacode.flowrun.eval.{Symbol, SymbolKey}
 import dev.sacode.flowrun.toIdentifier
-import dev.sacode.flowrun.FlowRun
-import dev.sacode.flowrun.ast.*, Expression.Type
-import dev.sacode.flowrun.eval.SymbolTable
-import dev.sacode.flowrun.eval.SymbolKey
-import dev.sacode.flowrun.eval.Symbol
+
+import scala.util.Try
 
 class JavaGenerator(val programAst: Program) extends CodeGenerator {
 
   def generate: Try[CodeGenRes] = Try {
+    val hasInputs = programAst.hasInputs
+    val usesRandom = programAst.usesFunction(PredefinedFunction.RandomInteger)
 
-    if programAst.hasInputs then
+    if hasInputs || usesRandom then
       addLine("import java.util.*;", programAst.main.id)
       addEmptyLine()
 
     addLine(s"public class ${programAst.name.toIdentifier} {", programAst.main.id)
 
     incrIndent()
-    if programAst.hasInputs then addLine("static Scanner scanner = new Scanner(System.in);", "")
-    if programAst.usesFunction(PredefinedFunction.RandomInteger) then
-      addLine("static Random random = new Random();", "")
+    if hasInputs then addLine("static Scanner scanner = new Scanner(System.in);", "")
+    if usesRandom then addLine("static Random random = new Random();", "")
     genMain()
     programAst.functions.foreach(genFunction)
     decrIndent()
@@ -73,7 +73,7 @@ class JavaGenerator(val programAst: Program) extends CodeGenerator {
   }
 
   private def genStatement(stmt: Statement): Unit = {
-    import Statement._
+    import Statement.*
     stmt match {
       case _: Begin => // noop
       case d: Declare =>
@@ -191,11 +191,9 @@ class JavaGenerator(val programAst: Program) extends CodeGenerator {
         s" new boolean[${dim1}][${dim2}] ".trim
     }
 
-  import PredefinedFunction.*
-
   override def predefFun(name: String, genArgs: List[String]): String = {
+    import PredefinedFunction.*
     def argOpt(idx: Int) = genArgs.lift(idx).getOrElse("")
-
     PredefinedFunction.withName(name).get match {
       case Abs           => s"Math.abs(${argOpt(0)})"
       case Floor         => s"Math.floor(${argOpt(0)})"
@@ -216,11 +214,12 @@ class JavaGenerator(val programAst: Program) extends CodeGenerator {
           case Type.RealArray    => s"${argOpt(0)}.length"
           case Type.StringArray  => s"${argOpt(0)}.length"
           case Type.BooleanArray => s"${argOpt(0)}.length"
-          case _                 => s"${argOpt(0)}.length()"
+          case Type.String       => s"${argOpt(0)}.length()"
+          case other             => sys.error(s"Length not supported on ${other}")
       case CharAt          => s"${argOpt(0)}.charAt(${argOpt(1)})"
       case RealToInteger   => s"(int)${argOpt(0)}"
       case StringToInteger => s"""Integer.parseInt(${argOpt(0)})"""
-      case ReadInput       => "Console.ReadLine()"
+      case ReadInput       => "scanner.nextLine()"
       case NumRows         => s"${argOpt(0)}.length"
       case NumCols         => s"${argOpt(0)}[0].length"
     }
@@ -229,9 +228,9 @@ class JavaGenerator(val programAst: Program) extends CodeGenerator {
   override def funCall(name: String, genArgs: List[String]): String =
     s""" $name(${genArgs.mkString(", ")}) """.trim
 
-  /* TYPE */
-  private def genType(tpe: Expression.Type): String = {
-    import Expression.Type, Type._
+  private def genType(tpe: Expression.Type): String =
+    import Expression.Type
+    import Type.*
     tpe match
       case Void          => "void"
       case Integer       => "int"
@@ -246,23 +245,14 @@ class JavaGenerator(val programAst: Program) extends CodeGenerator {
       case Boolean       => "boolean"
       case BooleanArray  => "boolean[]"
       case BooleanMatrix => "boolean[][]"
-  }
 
-  /* OTHER */
-  private def readFunction(tpeOpt: Option[Type]): String = tpeOpt match {
+  private def readFunction(tpeOpt: Option[Type]): String = tpeOpt match
     case None => "scanner.nextLine()"
     case Some(tpe) =>
       tpe match
-        case Type.Integer       => "scanner.nextInt()"
-        case Type.IntegerArray  => "scanner.nextInt()"
-        case Type.IntegerMatrix => "scanner.nextInt()"
-        case Type.Real          => "scanner.nextDouble()"
-        case Type.RealArray     => "scanner.nextDouble()"
-        case Type.RealMatrix    => "scanner.nextDouble()"
-        case Type.Boolean       => "scanner.nextBoolean()"
-        case Type.BooleanArray  => "scanner.nextBoolean()"
-        case Type.BooleanMatrix => "scanner.nextBoolean()"
-        case _                  => "scanner.nextLine()"
+        case Type.Integer | Type.IntegerArray | Type.IntegerMatrix => "scanner.nextInt()"
+        case Type.Real | Type.RealArray | Type.RealMatrix          => "scanner.nextDouble()"
+        case Type.Boolean | Type.BooleanArray | Type.BooleanMatrix => "scanner.nextBoolean()"
+        case _                                                     => "scanner.nextLine()"
 
-  }
 }

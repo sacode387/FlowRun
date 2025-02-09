@@ -48,18 +48,20 @@ class NodeJsGenerator(override val programAst: Program) extends JavascriptGenera
     symTab.exitScope()
   }
 
-  private def genStatement(stmt: Statement): Unit =
+  private def genStatement(stmt: Statement): Unit = {
     import Statement._
     stmt match
       case _: Begin => // noop
       case d: Declare =>
         val key = SymbolKey(d.name, Symbol.Kind.Variable, d.id)
         symTab.add(d.id, key, d.tpe, None)
-        val initValue = d.initValue.getOrElse(defaultValue(d.tpe))
-        addLine(s"let ${d.name} = $initValue;", d.id)
+        val initExpr = generateExpr(d)
+        addLine(s"let ${d.name} = $initExpr;", d.id)
 
       case Assign(id, name, value) =>
-        addLine(s"$name = $value;", id)
+        val genName = parseGenExpr(name)
+        val genValue = parseGenExpr(value)
+        addLine(s"$genName = $genValue;", id)
 
       case Call(id, value) =>
         addLine(s"$value;", id)
@@ -116,6 +118,44 @@ class NodeJsGenerator(override val programAst: Program) extends JavascriptGenera
 
       case Comment(id, text) =>
         addLine(s"/* ${text} */", id)
+  }
+
+  private def generateExpr(d: Statement.Declare) =
+    d.tpe match {
+      case Type.Void    => d.initValue.map(parseGenExpr).getOrElse("{}")
+      case Type.Integer => parseGenExpr(d.initValue.getOrElse("0"))
+      case Type.Real    => parseGenExpr(d.initValue.getOrElse("0.0"))
+      case Type.String  => parseGenExpr(d.initValue.getOrElse(""" "" """.trim))
+      case Type.Boolean => parseGenExpr(d.initValue.getOrElse("false".trim))
+      case Type.IntegerArray =>
+        val dim1 = parseGenExpr(d.lengthValue1)
+        s" Array(${dim1}).fill(0) ".trim
+      case Type.RealArray =>
+        val dim1 = parseGenExpr(d.lengthValue1)
+        s" Array(${dim1}).fill(0) ".trim
+      case Type.StringArray =>
+        val dim1 = parseGenExpr(d.lengthValue1)
+        s" Array(${dim1}).fill('') ".trim
+      case Type.BooleanArray =>
+        val dim1 = parseGenExpr(d.lengthValue1)
+        s" Array(${dim1}).fill(false) ".trim
+      case Type.IntegerMatrix =>
+        val dim1 = parseGenExpr(d.lengthValue1)
+        val dim2 = parseGenExpr(d.lengthValue2)
+        s" Array(${dim1}).fill(Array(${dim2}).fill(0)) ".trim
+      case Type.RealMatrix =>
+        val dim1 = parseGenExpr(d.lengthValue1)
+        val dim2 = parseGenExpr(d.lengthValue2)
+        s" Array(${dim1}).fill(Array(${dim2}).fill(0)) ".trim
+      case Type.StringMatrix =>
+        val dim1 = parseGenExpr(d.lengthValue1)
+        val dim2 = parseGenExpr(d.lengthValue2)
+        s" Array(${dim1}).fill(Array(${dim2}).fill('')) ".trim
+      case Type.BooleanMatrix =>
+        val dim1 = parseGenExpr(d.lengthValue1)
+        val dim2 = parseGenExpr(d.lengthValue2)
+        s" Array(${dim1}).fill(Array(${dim2}).fill(false)) ".trim
+    }
 
   private def readFunction(tpeOpt: Option[Type]): String = tpeOpt match
     case None => "line"

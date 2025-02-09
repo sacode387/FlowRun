@@ -126,28 +126,38 @@ class PhpGenerator(val programAst: Program) extends CodeGenerator {
       case Comment(id, text) =>
         addLine(s"/* ${text} */", id)
 
+  private def defaultValue(tpe: Type): String = tpe match {
+    case Type.Void    => ""
+    case Type.Boolean => "false"
+    case Type.Integer => "0"
+    case Type.Real    => "0.0"
+    case Type.String  => """ "" """.trim
+    case _            => sys.error(s"No default value for array or matrix")
+  }
+
   import PredefinedFunction.*
   override def predefFun(name: String, genArgs: List[String]): String = {
     def argOpt(idx: Int) = genArgs.lift(idx).getOrElse("")
     PredefinedFunction.withName(name).get match {
-      case Abs           => s"abs(${argOpt(0)})"
-      case Floor         => s"floor(${argOpt(0)})"
-      case Ceil          => s"ceil(${argOpt(0)})"
-      case RandomInteger => s"rand(0,${argOpt(0)})"
-      case Sin           => s"sin(${argOpt(0)})"
-      case Cos           => s"cos(${argOpt(0)})"
-      case Tan           => s"tan(${argOpt(0)})"
-      case Ln            => s"log(${argOpt(0)})"
-      case Log10         => s"log10(${argOpt(0)})"
-      case Log2          => s"log2(${argOpt(0)})"
-      case Sqrt          => s"sqrt(${argOpt(0)})"
-      case Pow           => s"pow(${argOpt(0)}, ${argOpt(1)})"
-      case Length        => s"strlen(${argOpt(0)})"
-      case CharAt        => s"${argOpt(0)}[${argOpt(1)}]"
-      case RealToInteger => argOpt(0) // ??
-      case StringToInteger =>
-        s""" intval(${argOpt(0)}) """.trim
-      case ReadInput => "Console.ReadLine()"
+      case Abs             => s"abs(${argOpt(0)})"
+      case Floor           => s"floor(${argOpt(0)})"
+      case Ceil            => s"ceil(${argOpt(0)})"
+      case RandomInteger   => s"rand(0,${argOpt(0)})"
+      case Sin             => s"sin(${argOpt(0)})"
+      case Cos             => s"cos(${argOpt(0)})"
+      case Tan             => s"tan(${argOpt(0)})"
+      case Ln              => s"log(${argOpt(0)})"
+      case Log10           => s"log10(${argOpt(0)})"
+      case Log2            => s"log2(${argOpt(0)})"
+      case Sqrt            => s"sqrt(${argOpt(0)})"
+      case Pow             => s"pow(${argOpt(0)}, ${argOpt(1)})"
+      case Length          => s"strlen(${argOpt(0)})"
+      case CharAt          => s"${argOpt(0)}[${argOpt(1)}]"
+      case RealToInteger   => argOpt(0)
+      case StringToInteger => s""" intval(${argOpt(0)}) """.trim
+      case ReadInput       => "readline()"
+      case NumRows         => s"count(${argOpt(0)})"
+      case NumCols         => s"count(${argOpt(0)}[0])"
     }
   }
 

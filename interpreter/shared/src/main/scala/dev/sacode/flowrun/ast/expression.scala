@@ -76,12 +76,12 @@ case class BoolOrComparison(
     boolAndComparison: BoolAndComparison,
     boolAndComparisons: List[BoolAndComparison]
 ) {
-  def collectAtoms: List[Atom] = 
+  def collectAtoms: List[Atom] =
     (List(boolAndComparison) ++ boolAndComparisons).flatMap(_.collectAtoms)
 }
 
 case class BoolAndComparison(numComparison: NumComparison, numComparisons: List[NumComparisonOpt]) {
-  def collectAtoms: List[Atom] = 
+  def collectAtoms: List[Atom] =
     numComparison.collectAtoms ++ numComparisons.flatMap(_.collectAtoms)
 }
 
@@ -97,15 +97,15 @@ case class Term(factor: Factor, factors: List[FactorOpt]) {
   def collectAtoms: List[Atom] =
     factor.collectAtoms ++ factors.flatMap(_.collectAtoms)
 }
-case class TermOpt(op: Token, term: Term){
+case class TermOpt(op: Token, term: Term) {
   def collectAtoms: List[Atom] = term.collectAtoms
 }
 
-case class Factor(unary: Unary, unaries: List[UnaryOpt]){
+case class Factor(unary: Unary, unaries: List[UnaryOpt]) {
   def collectAtoms: List[Atom] =
     unary.collectAtoms ++ unaries.flatMap(_.collectAtoms)
 }
-case class FactorOpt(op: Token, factor: Factor){
+case class FactorOpt(op: Token, factor: Factor) {
   def collectAtoms: List[Atom] = factor.collectAtoms
 }
 
@@ -115,7 +115,7 @@ enum Unary:
 
   def collectAtoms: List[Atom] = this match
     case Unary.Prefixed(op, unary) => unary.collectAtoms
-    case Unary.Simple(atom) => List(atom)
+    case Unary.Simple(atom)        => List(atom)
 
 case class UnaryOpt(op: Token, unary: Unary) {
   def collectAtoms: List[Atom] = unary.collectAtoms

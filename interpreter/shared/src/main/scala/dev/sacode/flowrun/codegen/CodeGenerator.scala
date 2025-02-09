@@ -26,6 +26,8 @@ trait CodeGenerator {
 
   protected def predefFun(name: String, genArgs: List[String]): String
   protected def funCall(name: String, genArgs: List[String]): String
+  protected def arrayGet(name: String, index: String): String = s"${name}[${index}]"
+  protected def matrixGet(name: String, index1: String, index2: String): String = s"${name}[${index1}][${index2}]"
   protected def identPrefix: String = ""
 
   private val indentAmount = 2
@@ -55,15 +57,6 @@ trait CodeGenerator {
     indent += indentAmount
   protected def decrIndent(): Unit =
     indent -= indentAmount
-
-  protected def defaultValue(tpe: Type): String = tpe match {
-    case Type.Void          => ""
-    case Type.Boolean       => "false"
-    case Type.Integer       => "0"
-    case Type.Real          => "0.0"
-    case Type.String        => """ "" """.trim
-    case Type.IntegerArray  => sys.error(s"No default value for array or matrix")
-  }
 
   /** Parse FlowRun expression and generate real code
     * @param exprString
@@ -102,6 +95,7 @@ trait CodeGenerator {
   }
   private def genTerm(term: Term): String = {
     // TODO handle string concatenation, lang specific...
+    // add toStr(expr).. coz swift cant ""+1
     val factors =
       List(genFactor(term.factor)) ++ term.factors.map(fo => s""" ${fo.op.text} ${genFactor(fo.factor)} """.trim)
     factors.mkString(" ")
@@ -135,11 +129,11 @@ trait CodeGenerator {
           funCall(name, genArgs)
     case ArrayIndexAccess(name, idxExpr) =>
       val idx = genExpr(idxExpr)
-      s""" ${name}[${idx}] """
+      arrayGet(name, idx)
     case MatrixIndexAccess(name, idxExpr1, idxExpr2) =>
       val idx1 = genExpr(idxExpr1)
       val idx2 = genExpr(idxExpr2)
-      s""" ${name}[${idx1}][${idx2}] """
+      matrixGet(name, idx1, idx2)
   }
 
 }

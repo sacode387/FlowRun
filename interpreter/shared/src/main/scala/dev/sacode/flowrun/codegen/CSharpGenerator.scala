@@ -10,12 +10,17 @@ import dev.sacode.flowrun.eval.Symbol
 
 class CSharpGenerator(val programAst: Program) extends CodeGenerator {
 
+  protected override def matrixGet(name: String, index1: String, index2: String): String =
+    s"${name}[${index1}, ${index2}]"
+
   def generate: Try[CodeGenRes] = Try {
 
     addLine(s"using System;")
     addLine(s"class ${programAst.name.toIdentifier} {", programAst.main.id)
 
     incrIndent()
+    if programAst.usesFunction(PredefinedFunction.RandomInteger) then
+      addLine("static Random random = new Random();", "")
     genMain()
     programAst.functions.foreach(genFunction)
     decrIndent()
@@ -70,13 +75,13 @@ class CSharpGenerator(val programAst: Program) extends CodeGenerator {
       case d: Declare =>
         val key = SymbolKey(d.name, Symbol.Kind.Variable, d.id)
         symTab.add(d.id, key, d.tpe, None)
-        val initValue = d.initValue.getOrElse(defaultValue(d.tpe))
-        val initValueExpr = parseGenExpr(initValue)
-        addLine(s"${genType(d.tpe)} ${d.name} = $initValueExpr;", d.id)
+        val initExpr = generateExpr(d)
+        addLine(s"${genType(d.tpe)} ${d.name} = $initExpr;", d.id)
 
       case Assign(id, name, value) =>
+        val genName = parseGenExpr(name)
         val genValue = parseGenExpr(value)
-        addLine(s"$name = $genValue;", id)
+        addLine(s"$genName = $genValue;", id)
 
       case Call(id, value) =>
         val genValue = parseGenExpr(value)
@@ -90,9 +95,11 @@ class CSharpGenerator(val programAst: Program) extends CodeGenerator {
           .foreach { prompt =>
             addLine(s"""Console.Write("$prompt");""", id)
           }
-        val symOpt = Try(symTab.getSymbolVar("", name)).toOption
+        val baseName = name.takeWhile(_ != '[')
+        val symOpt = Try(symTab.getSymbolVar("", baseName)).toOption
         val readFun = readFunction(symOpt.map(_.tpe))
-        addLine(s"$name = $readFun;", id)
+        val genName = parseGenExpr(name)
+        addLine(s"$genName = $readFun;", id)
 
       case Output(id, value, newline) =>
         val genValue = parseGenExpr(value)
@@ -145,6 +152,43 @@ class CSharpGenerator(val programAst: Program) extends CodeGenerator {
     }
   }
 
+  private def generateExpr(d: Statement.Declare) =
+    d.tpe match {
+      case Type.Void    => d.initValue.map(parseGenExpr).getOrElse("{}")
+      case Type.Integer => parseGenExpr(d.initValue.getOrElse("0"))
+      case Type.Real    => parseGenExpr(d.initValue.getOrElse("0.0"))
+      case Type.String  => parseGenExpr(d.initValue.getOrElse(""" "" """.trim))
+      case Type.Boolean => parseGenExpr(d.initValue.getOrElse("false".trim))
+      case Type.IntegerArray =>
+        val dim1 = parseGenExpr(d.lengthValue1)
+        s" new int[${dim1}] ".trim
+      case Type.RealArray =>
+        val dim1 = parseGenExpr(d.lengthValue1)
+        s" new double[${dim1}] ".trim
+      case Type.StringArray =>
+        val dim1 = parseGenExpr(d.lengthValue1)
+        s" new string[${dim1}] ".trim
+      case Type.BooleanArray =>
+        val dim1 = parseGenExpr(d.lengthValue1)
+        s" new bool[${dim1}] ".trim
+      case Type.IntegerMatrix =>
+        val dim1 = parseGenExpr(d.lengthValue1)
+        val dim2 = parseGenExpr(d.lengthValue2)
+        s" new int[${dim1}, ${dim2}] ".trim
+      case Type.RealMatrix =>
+        val dim1 = parseGenExpr(d.lengthValue1)
+        val dim2 = parseGenExpr(d.lengthValue2)
+        s" new double[${dim1}, ${dim2}] ".trim
+      case Type.StringMatrix =>
+        val dim1 = parseGenExpr(d.lengthValue1)
+        val dim2 = parseGenExpr(d.lengthValue2)
+        s" new string[${dim1}, ${dim2}] ".trim
+      case Type.BooleanMatrix =>
+        val dim1 = parseGenExpr(d.lengthValue1)
+        val dim2 = parseGenExpr(d.lengthValue2)
+        s" new bool[${dim1}, ${dim2}] ".trim
+    }
+
   import PredefinedFunction.*
   override def predefFun(name: String, genArgs: List[String]): String = {
     def argOpt(idx: Int) = genArgs.lift(idx).getOrElse("")
@@ -152,7 +196,7 @@ class CSharpGenerator(val programAst: Program) extends CodeGenerator {
       case Abs             => s"Math.abs(${argOpt(0)})"
       case Floor           => s"Math.floor(${argOpt(0)})"
       case Ceil            => s"Math.ceil(${argOpt(0)})"
-      case RandomInteger   => s"Math.abs(${argOpt(0)})" // TODO
+      case RandomInteger   => s"random.Next(${argOpt(0)})"
       case Sin             => s"Math.sin(${argOpt(0)})"
       case Cos             => s"Math.cos(${argOpt(0)})"
       case Tan             => s"Math.tan(${argOpt(0)})"
@@ -166,6 +210,8 @@ class CSharpGenerator(val programAst: Program) extends CodeGenerator {
       case RealToInteger   => s"(int)${argOpt(0)}"
       case StringToInteger => s"Convert.ToInt32(${argOpt(0)})"
       case ReadInput       => "Console.ReadLine()"
+      case NumRows         => s"${argOpt(0)}.GetLength(0)"
+      case NumCols         => s"${argOpt(0)}.GetLength(1)"
     }
   }
 
@@ -176,20 +222,28 @@ class CSharpGenerator(val programAst: Program) extends CodeGenerator {
   private def genType(tpe: Expression.Type): String =
     import Expression.Type, Type._
     tpe match
-      case Void    => "void"
-      case Integer => "int"
-      case Real    => "double"
-      case String  => "string"
-      case Boolean => "bool"
+      case Void          => "void"
+      case Integer       => "int"
+      case IntegerArray  => "int[]"
+      case IntegerMatrix => "int[,]"
+      case Real          => "double"
+      case RealArray     => "double[]"
+      case RealMatrix    => "double[,]"
+      case String        => "string"
+      case StringArray   => "string[]"
+      case StringMatrix  => "string[,]"
+      case Boolean       => "bool"
+      case BooleanArray  => "bool[]"
+      case BooleanMatrix => "bool[,]"
 
   /* OTHER */
   private def readFunction(tpeOpt: Option[Type]): String = tpeOpt match
     case None => "Console.ReadLine()"
     case Some(tpe) =>
       tpe match
-        case Type.Integer => "Convert.ToInt32(Console.ReadLine())"
-        case Type.Real    => "Convert.ToDouble(Console.ReadLine())"
-        case Type.Boolean => "Convert.ToBoolean(Console.ReadLine())"
-        case _            => "Console.ReadLine()"
+        case Type.Integer | Type.IntegerArray | Type.IntegerMatrix => "Convert.ToInt32(Console.ReadLine())"
+        case Type.Real | Type.RealArray | Type.RealMatrix          => "Convert.ToDouble(Console.ReadLine())"
+        case Type.Boolean | Type.BooleanArray | Type.BooleanMatrix => "Convert.ToBoolean(Console.ReadLine())"
+        case _                                                     => "Console.ReadLine()"
 
 }
