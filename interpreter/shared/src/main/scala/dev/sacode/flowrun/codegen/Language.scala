@@ -19,10 +19,8 @@ enum Language(val name: String, val prism: String):
 // unknown
 //case rust extends Language("rust", "rust")
 
+// issues: async input handling
 //case nodejs extends Language("nodejs", "javascript")
 
 // complex? variable declarations
 // case pascal extends Language("pascal", "pascal")
-
-// complex string handling..
-// case c extends Language("c", "c")

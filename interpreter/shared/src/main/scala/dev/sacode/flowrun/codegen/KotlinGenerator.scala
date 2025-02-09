@@ -198,9 +198,10 @@ class KotlinGenerator(val programAst: Program) extends CodeGenerator {
       case RealToInteger => s"(int)${argOpt(0)}"
       case StringToInteger =>
         s"""try { Integer.parseInt(${argOpt(0)}) } catch (NumberFormatException e) { 0 }"""
-      case ReadInput => "readLine()"
-      case NumRows   => s"${argOpt(0)}.size"
-      case NumCols   => s"${argOpt(0)}(1).size"
+      case ReadInput   => "readLine()"
+      case ClearOutput => """print("\u001b[H\u001b[2J")"""
+      case NumRows     => s"${argOpt(0)}.size"
+      case NumCols     => s"${argOpt(0)}(1).size"
     }
   }
 

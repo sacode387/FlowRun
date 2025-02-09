@@ -220,8 +220,10 @@ class JavaGenerator(val programAst: Program) extends CodeGenerator {
       case RealToInteger   => s"(int)${argOpt(0)}"
       case StringToInteger => s"""Integer.parseInt(${argOpt(0)})"""
       case ReadInput       => "scanner.nextLine()"
-      case NumRows         => s"${argOpt(0)}.length"
-      case NumCols         => s"${argOpt(0)}[0].length"
+      case ClearOutput => """|System.out.print("\u001b[H\u001b[2J");
+                             |System.out.flush();""".stripMargin
+      case NumRows => s"${argOpt(0)}.length"
+      case NumCols => s"${argOpt(0)}[0].length"
     }
   }
 

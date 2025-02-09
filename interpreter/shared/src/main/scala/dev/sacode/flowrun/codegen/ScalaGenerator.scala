@@ -212,6 +212,7 @@ class ScalaGenerator(val programAst: Program) extends CodeGenerator {
       case RealToInteger   => s"${argOpt(0)}.toInt"
       case StringToInteger => s"${argOpt(0)}.toInt"
       case ReadInput       => "StdIn.readLine()"
+      case ClearOutput     => """print("\u001b[H\u001b[2J")"""
       case NumRows         => s"${argOpt(0)}.length"
       case NumCols         => s"${argOpt(0)}(0).length"
     }

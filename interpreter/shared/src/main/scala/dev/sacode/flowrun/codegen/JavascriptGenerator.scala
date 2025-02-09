@@ -181,6 +181,7 @@ class JavascriptGenerator(val programAst: Program) extends CodeGenerator {
       case RealToInteger   => argOpt(0) // ??
       case StringToInteger => s"parseInt(${argOpt(0)})"
       case ReadInput       => "prompt()"
+      case ClearOutput     => "console.clear()"
       case NumRows         => s"${argOpt(0)}.length"
       case NumCols         => s"${argOpt(0)}[0].length"
     }

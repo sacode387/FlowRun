@@ -1,6 +1,6 @@
 
 GRAMMAR:
-```ebnf
+```
 expression          -> boolOrComparison ("||"  boolOrComparison)* ;
 boolOrComparison    -> boolAndComparison ("&&"  boolAndComparison)* ;
 boolAndComparison   -> numComparison (("!=" | "==" ) numComparison)* ;
@@ -9,7 +9,12 @@ term                -> factor (("+" | "-") factor)* ;
 factor              -> unary (("*" |  "/" | "%") unary)* ;
 unary               -> ("!" | "-") unary
                     | atom ;
-atom                -> NUMBER | STRING | "true" | "false"
+atom                -> NUMBER
+                    | STRING
+                    | "true"
+                    | "false"
+                    | ID[intExpression]
+                    | ID[intExpression][intExpression]
                     | ID
                     | ID "(" expression? ( "," expression)* ")"
                     | "(" expression ")" ;

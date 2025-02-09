@@ -247,6 +247,7 @@ class CPlusPlusGenerator(val programAst: Program) extends CodeGenerator {
       case RealToInteger   => s"(int)${argOpt(0)}"
       case StringToInteger => s"atoi(${argOpt(0)})"
       case ReadInput       => s"""scanf("%s", ${argOpt(0)})"""
+      case ClearOutput     => "printf(\"\\e[1;1H\\e[2J\")"
       case NumRows         => s"sizeof(${argOpt(0)}) / sizeof(${argOpt(0)}[0])"
       case NumCols =>
         val arr = argOpt(0)

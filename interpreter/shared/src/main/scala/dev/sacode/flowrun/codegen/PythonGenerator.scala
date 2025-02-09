@@ -21,9 +21,9 @@ class PythonGenerator(val programAst: Program) extends CodeGenerator {
   }
 
   def generate: Try[CodeGenRes] = Try {
-    // TODO optionally import
     addLine("import math", "")
-    addLine("from random import randrange", "")
+    val usesRandom = programAst.usesFunction(PredefinedFunction.RandomInteger)
+    if usesRandom then addLine("from random import randrange", "")
 
     programAst.functions.foreach(genFunction)
     addEmptyLine()
@@ -198,6 +198,7 @@ class PythonGenerator(val programAst: Program) extends CodeGenerator {
       case RealToInteger   => s"int(${argOpt(0)})"
       case StringToInteger => s"int(${argOpt(0)})"
       case ReadInput       => "input()"
+      case ClearOutput     => """ print("\033[H\033[J", end="") """.trim
       case NumRows         => s"len(${argOpt(0)})"
       case NumCols         => s"len(${argOpt(0)}[0])"
     }

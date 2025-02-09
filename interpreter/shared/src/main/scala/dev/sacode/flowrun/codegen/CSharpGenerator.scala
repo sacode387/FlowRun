@@ -210,6 +210,7 @@ class CSharpGenerator(val programAst: Program) extends CodeGenerator {
       case RealToInteger   => s"(int)${argOpt(0)}"
       case StringToInteger => s"Convert.ToInt32(${argOpt(0)})"
       case ReadInput       => "Console.ReadLine()"
+      case ClearOutput     => "Console.Clear()"
       case NumRows         => s"${argOpt(0)}.GetLength(0)"
       case NumCols         => s"${argOpt(0)}.GetLength(1)"
     }

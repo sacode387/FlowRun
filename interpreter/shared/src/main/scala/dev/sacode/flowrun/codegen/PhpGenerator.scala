@@ -156,6 +156,7 @@ class PhpGenerator(val programAst: Program) extends CodeGenerator {
       case RealToInteger   => argOpt(0)
       case StringToInteger => s""" intval(${argOpt(0)}) """.trim
       case ReadInput       => "readline()"
+      case ClearOutput     => s""" echo chr(27).chr(91).'H'.chr(27).chr(91).'J'; """
       case NumRows         => s"count(${argOpt(0)})"
       case NumCols         => s"count(${argOpt(0)}[0])"
     }

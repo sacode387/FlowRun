@@ -10,6 +10,7 @@ object FlowRun:
     case EvalError(nodeId: String, msg: String, funId: String)
     case EvalOutput(msg: String, newline: Boolean)
     case EvalInput(nodeId: String, name: String, prompt: Option[String])
+    case ClearOutput()
     case EvalFunctionStarted
     case EvalFunctionFinished
     case SyntaxSuccess

@@ -1377,6 +1377,9 @@ final class Interpreter(
         waitForContinue().map(_ =>
           lastReadInput.getOrElse(throw EvalException(s"readInput() did not get any input", id))
         )
+      case ClearOutput =>
+        flowrunChannel := FlowRun.Event.ClearOutput()
+        Future.successful(NoVal)
     }
 
   private def validateArgsNumber(id: String, funName: String, expected: Int, got: Int): Unit =

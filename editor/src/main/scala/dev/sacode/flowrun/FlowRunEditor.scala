@@ -229,6 +229,8 @@ class FlowRunEditor(
       flowchartPresenter.highlightExecuting(interpreter.nextExecStatementId)
       functionSelector.loadFunctions()
       flowchartPresenter.loadCurrentFunction()
+    case ClearOutput() =>
+      outputArea.clearRuntime()
     case SymbolTableUpdated =>
       debugArea.showVariables()
     case FunctionUpdated =>

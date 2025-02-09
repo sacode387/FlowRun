@@ -187,9 +187,10 @@ class SwiftGenerator(val programAst: Program) extends CodeGenerator {
         s"""try Int(${argOpt(0)})! catch {
            |  case _: NumberFormatException => 0
            |}""".stripMargin
-      case ReadInput => "readLine()!"
-      case NumRows   => s"${argOpt(0)}.count"
-      case NumCols   => s"${argOpt(0)}[0].count"
+      case ReadInput   => "readLine()!"
+      case ClearOutput => """print("\u{001B}[2J")"""
+      case NumRows     => s"${argOpt(0)}.count"
+      case NumCols     => s"${argOpt(0)}[0].count"
     }
   }
 

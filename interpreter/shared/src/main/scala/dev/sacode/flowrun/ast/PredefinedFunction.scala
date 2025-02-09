@@ -31,6 +31,7 @@ enum PredefinedFunction(val name: String) {
   case StringToInteger extends PredefinedFunction("string2int")
   // misc
   case ReadInput extends PredefinedFunction("readInput")
+  case ClearOutput extends PredefinedFunction("clearOutput")
 }
 
 object PredefinedFunction:

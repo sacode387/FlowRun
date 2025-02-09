@@ -196,6 +196,7 @@ class RubyGenerator(val programAst: Program) extends CodeGenerator {
       case RealToInteger   => s"${argOpt(0)}.toInt"
       case StringToInteger => s"${argOpt(0)}.to_i"
       case ReadInput       => "$stdin.read"
+      case ClearOutput     => s""" system "clear" || system "cls" """
       case NumRows         => s"${argOpt(0)}.length"
       case NumCols         => s"${argOpt(0)}[0].length"
     }
