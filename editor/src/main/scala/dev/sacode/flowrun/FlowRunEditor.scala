@@ -428,7 +428,6 @@ class FlowRunEditor(
     // context menu setup
     // handling pointer events manually because of ipad quirks
     locally {
-      println("Setting up context menu...")
       var   pressTimer = 0
       var startX = 0D
       var startY = 0D
@@ -464,7 +463,6 @@ class FlowRunEditor(
       element.addEventListener(
         "contextmenu",
         (event: dom.MouseEvent) => {
-          println("contextmenu event..")
           // Don't show if long-press already triggered
           if isLongPress then
             isLongPress = false;
@@ -473,7 +471,6 @@ class FlowRunEditor(
       )
 
       def showContextMenu(event: dom.MouseEvent) = {
-        println(s"Showing context menu..")
         event.preventDefault()
         DomUtils.getNearestSvgNode(event) match {
           case ("NODE", n) =>
