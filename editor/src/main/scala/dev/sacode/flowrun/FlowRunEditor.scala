@@ -425,9 +425,55 @@ class FlowRunEditor(
     if mode.editable then flowRunElements.addFunButton.onclick = _ => programModel.addFunction()
     else flowRunElements.addFunButton.remove()
 
-    flowRunElements.drawArea.addEventListener(
-      "contextmenu",
-      (event: dom.MouseEvent) => {
+    // context menu setup
+    // handling pointer events manually because of ipad quirks
+    locally {
+      println("Setting up context menu...")
+      var   pressTimer = 0
+      var startX = 0D
+      var startY = 0D
+      var isLongPress = false
+      val element = flowRunElements.drawArea
+      element.addEventListener(
+        "pointerdown",
+        (event: dom.PointerEvent) => {
+          startX = event.clientX;
+          startY = event.clientY;
+          isLongPress = false;
+
+          // Only set timer for touch/pen, not mouse
+          if event.pointerType != "mouse" then {
+            pressTimer =  dom.window.setTimeout(
+              () => {
+                isLongPress = true
+                showContextMenu(event)
+              },
+              500
+            )
+          }
+        }
+      )
+      element.addEventListener("pointermove", (_: dom.Event) =>
+        dom.window.clearTimeout(pressTimer)
+      )
+      element.addEventListener("pointerup", (_: dom.Event) =>
+        dom.window.clearTimeout(pressTimer)
+      )
+
+      // Handle right-click for mouse
+      element.addEventListener(
+        "contextmenu",
+        (event: dom.MouseEvent) => {
+          println("contextmenu event..")
+          // Don't show if long-press already triggered
+          if isLongPress then
+            isLongPress = false;
+          showContextMenu(event)
+        }
+      )
+
+      def showContextMenu(event: dom.MouseEvent) = {
+        println(s"Showing context menu..")
         event.preventDefault()
         DomUtils.getNearestSvgNode(event) match {
           case ("NODE", n) =>
@@ -441,7 +487,7 @@ class FlowRunEditor(
             flowrunChannel := FlowRun.Event.Deselected
         }
       }
-    )
+    }
 
     flowRunElements.showFunctionsCheckbox.checked = programModel.ast.config.showFunctions
     flowRunElements.showCodeCheckbox.checked = programModel.ast.config.showGenCode
