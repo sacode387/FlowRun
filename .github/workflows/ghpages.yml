@@ -1,0 +1,28 @@
+
+name: Deploy GhPages
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-deploy:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build
+        env:
+          FLATMARK_BASE_URL: https://sacode387.github.io/FlowRun
+        run: |
+          FLATMARK_VERSION=0.0.25
+          curl -L https://github.com/sake92/flatmark/releases/download/v${FLATMARK_VERSION}/flatmark-1.0.0.pkg -o flatmark.pkg
+          sudo installer -verbose -pkg flatmark.pkg -target /
+          flatmark build -i docs
+      - name: Deploy
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          folder: docs/_site
