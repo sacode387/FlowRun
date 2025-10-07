@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+ <head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FlowRun</title>
+  <link href="https://sacode387.github.io/FlowRun/vendor/prism.css" rel="stylesheet">
+  <link href="https://sacode387.github.io/FlowRun/vendor/material-icons.css" rel="stylesheet">
+  <link href="https://sacode387.github.io/FlowRun/vendor/toastify.min.css" rel="stylesheet" type="text/css">
+  <link href="https://sacode387.github.io/FlowRun/flowrun.css" rel="stylesheet" type="text/css">
+  <link href="https://sacode387.github.io/FlowRun/main.css" rel="stylesheet" type="text/css">
+ </head>
+ <body>
+  <template id="flowrun-template">
+   <div class="flowrun-functions-list flowrun--panel">
+    <div class="flowrun-fun-chooser"></div>
+    <button class="flowrun-btn-fun-add" title="Add new function"><span class="material-icons">add</span></button>
+   </div>
+   <div class="flowrun-diagram flowrun--panel">
+    <div class="flowrun-draw-io-btns">
+     <button class="flowrun-btn-download" title="Download"><span class="material-icons">file_download</span></button>
+     <button class="flowrun-btn-load" title="Load from file"><span class="material-icons">file_upload</span></button>
+     <button class="flowrun-btn-copy-source" title="Copy Source"><span class="material-icons">file_copy</span></button>
+     <button class="flowrun-btn-paste-source" title="Paste Source"><span class="material-icons">content_paste</span></button>
+     <button class="flowrun-btn-copy-dot" title="Copy DOT"><span class="material-icons">account_tree</span></button>
+    </div>
+    <div class="flowrun-diagram-info">
+     <input class="flowrun-program-name flowrun--disabled" type="text"> <span>&nbsp;</span>
+     <button class="flowrun-btn-config"><span class="material-icons">settings</span></button>
+     <button class="flowrun-btn-zoom-reset"><span class="material-icons">zoom_out_map</span></button>
+    </div>
+    <div class="flowrun-draw-exec-btns">
+     <button class="flowrun-btn-run" title="Run"><span class="material-icons">play_arrow</span></button>
+     <button class="flowrun-btn-run-step" title="Run Step By Step"><span class="material-icons">skip_next</span></button>
+     <button class="flowrun-btn-stop flowrun--disabled" title="Stop"><span class="material-icons">stop</span></button>
+    </div>
+    <div class="flowrun-draw"></div>
+    <div class="flowrun-debug-vars"></div>
+   </div>
+   <div class="flowrun-output flowrun--panel">
+    <div class="flowrun-scratchpad">
+     <div class="flowrun-output-statement"></div>
+     <div class="flowrun-output-syntax"></div>
+     <div class="flowrun-output-runtime"></div>
+    </div>
+    <button class="flowrun-btn-clear-output" title="Clear Output"><span class="material-icons">clear</span></button>
+   </div>
+   <div class="flowrun-gen-code flowrun--panel line-numbers">
+    <pre class="flowrun-code"></pre>
+    <div class="flowrun-gen-code-btns">
+     <button class="flowrun-btn-copy-gencode" title="Copy Generated Code"><span class="material-icons">code</span></button>
+     <select class="flowrun-gencode-lang"></select>
+    </div>
+   </div>
+   <!-- this whole div will be deleted -->
+   <div class="flowrun-template-transient">
+    <button class="flowrun-btn-fun-delete" title="Delete function"><span class="material-icons">remove</span></button>
+    <button class="flowrun-btn-fun-add-param" title="Add new parameter"><span class="material-icons">add</span></button>
+    <button class="flowrun-btn-fun-delete-param" title="Delete parameter"><span class="material-icons">remove</span></button>
+    <select class="flowrun-input-select"></select> <input class="flowrun-input-text" type="text" size="10"> <input type="radio" class="flowrun-input-radio"> <input type="checkbox" class="flowrun-input-checkbox">
+    <button class="flowrun-btn-enter"><span class="material-icons">input</span> Enter</button>
+   </div>
+   <!-- context menus -->
+   <div class="flowrun-edge-context-menu flowrun-context-menu">
+    <button class="flowrun-paste-stmt"><span class="material-icons">content_paste</span> Paste</button>
+    <button class="flowrun-add-declare"><span class="material-icons">post_add</span> Declare</button>
+    <button class="flowrun-add-assign"><span class="material-icons">sync_alt</span> Assign</button>
+    <button class="flowrun-add-input"><span class="material-icons">keyboard</span> Input</button>
+    <button class="flowrun-add-output"><span class="material-icons">desktop_windows</span> Output</button>
+    <button class="flowrun-add-if"><span class="material-icons">call_split</span> If</button>
+    <button class="flowrun-add-while"><span class="material-icons">repeat</span> While</button>
+    <button class="flowrun-add-do-while"><span class="material-icons">repeat</span> Do While</button>
+    <button class="flowrun-add-for"><span class="material-icons">repeat</span> For loop</button>
+    <button class="flowrun-add-call"><span class="material-icons">call</span> Call</button>
+    <button class="flowrun-add-comment"><span class="material-icons">comment</span> Comment</button>
+   </div>
+   <div class="flowrun-node-context-menu flowrun-context-menu">
+    <button class="flowrun-copy-stmt"><span class="material-icons">content_copy</span> Copy</button>
+    <button class="flowrun-delete"><span class="material-icons">remove</span> Delete</button>
+   </div>
+   <dialog class="flowrun-config">
+    <button class="flowrun-btn-config-close"><span class="material-icons">close</span></button>
+    <div class="flowrun-config-layout">
+     <label> <input class="flowrun-cb-show-functions" type="checkbox"> Show functions </label> <label> <input class="flowrun-cb-show-gen-code" type="checkbox"> Show generated code </label> <label> <input class="flowrun-cb-show-debug-vars" type="checkbox"> Show debug variables </label> <label> <input class="flowrun-cb-show-io-btns" type="checkbox"> Show import/export buttons </label> <label> <input class="flowrun-cb-use-input-prompt" type="checkbox"> Use input prompt </label> <label> <input class="flowrun-cb-echo-entered-value" type="checkbox"> Echo entered value </label>
+    </div>
+   </dialog>
+  </template>
+  <h1 id="readonly-editor">ReadOnly Editor<a href="#readonly-editor" class="flatmark-anchor" aria-label="Anchor"> 🔗</a></h1>
+  <div class="flowrun-instance flowrun-readonly flowrun--hidden ">{"id":"id_2680a766_5e3f_43c9_90da_f1e651fc3099","version":"0.1", "name":"ReadOnly","config":{"lang":"scala","showFunctions":true,"showGenCode":true},"main":{"rawId":"main","name":"main","parameters":[],"tpe":"Void","statements":[{"id":"id_87498624_665e_4bd4_ba04_718ac78142a2","@type":"Begin"},{"id":"id_51583a96_edb9_448b_b482_71a9bd8f1624","value":"fib(16)","@type":"Output", "newline": true},{"id":"id_a90ebc25_f9d7_4f36_aa9c_2c8cbb0148ea","maybeValue":null,"@type":"Return"}]},"functions":[{"rawId":"id_3ab18ee6_a2ca_4f61_bd44_0e775335b003","name":"fib","parameters":[{"id":"03049558-c257-420c-aca0-ec0ab9d379ea","name":"n","tpe":"Integer"}],"tpe":"Integer","statements":[{"id":"id_34908360_84e7_4a54_984f_d2784d05deef","@type":"Begin"},{"id":"id_3f36a122_d09c_4733_83d8_7f249fdafa1c","name":"a","tpe":"Integer","initValue":"0","@type":"Declare"},{"id":"id_33033dc0_fdc4_4008_9a50_33edf1642f85","name":"b","tpe":"Integer","initValue":"1","@type":"Declare"},{"id":"id_da88bdb6_c907_4b5c_9f87_f4314e56e6c7","name":"res","tpe":"Integer","initValue":null,"@type":"Declare"},{"id":"id_fc6ab968_021b_48c0_b054_98d0c646ebea","condition":"n &gt; 1","body":{"id":"id_f020a924_da55_4ad7_a235_1b7580ed4141","statements":[{"id":"id_1e1a3b3e_af6f_4ff8_aaa2_b77e8ff755cf","name":"res","value":"a+b","@type":"Assign"},{"id":"id_73f85b36_f964_4af0_9e43_d65fe435b6a6","name":"a","value":"b","@type":"Assign"},{"id":"id_3caffff1_f870_410f_85a6_0c651bb68b95","name":"b","value":"res","@type":"Assign"},{"id":"id_4e81bf27_b791_4a99_bc7e_4de870dedec2","name":"n","value":"n-1","@type":"Assign"}]},"@type":"While"},{"id":"id_67acb368_4b37_4e31_aeea_f168f03526d3","maybeValue":"res","@type":"Return"}]}]}</div>
+  <!-- graphviz -->
+  <script src="https://sacode387.github.io/FlowRun/vendor/graphviz.umd.js"></script>
+  <script src="https://sacode387.github.io/FlowRun/vendor/d3.min.js"></script>
+  <script src="https://sacode387.github.io/FlowRun/vendor/d3-graphviz.min.js"></script>
+  <!-- highlight code -->
+  <script src="https://sacode387.github.io/FlowRun/vendor/prism.js"></script>
+  <!-- popups -->
+  <script src="https://sacode387.github.io/FlowRun/vendor/toastify-js.js"></script>
+  <script src="https://sacode387.github.io/FlowRun/scripts/main.js"></script>
+ </body>
+</html>
