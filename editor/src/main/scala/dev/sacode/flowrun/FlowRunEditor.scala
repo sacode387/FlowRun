@@ -519,7 +519,6 @@ class FlowRunEditor(
     codeArea.render(id)
 
   private def doOnModelChange(): Unit =
-    programModel.incrRevision()
     Option(changeCallback).foreach(cb => cb(this))
 
   private def setLayout(): Unit = {

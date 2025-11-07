@@ -15,15 +15,17 @@ class ProgramModel(
   var currentSelectedFunctionId: String = MainFunId
   var currentSelectedStmtId: Option[String] = None
 
-  def incrRevision(): Unit =
+  private def incrRevision(): Unit =
     ast = ast.copy(revision = ast.revision + 1)
 
   def setName(name: String): Unit =
     ast = ast.copy(name = name)
+    incrRevision()
     flowrunChannel := FlowRun.Event.FunctionUpdated
 
   def setConfig(config: FlowRunConfig): Unit =
     ast = ast.copy(config = config)
+    incrRevision()
     flowrunChannel := FlowRun.Event.ConfigChanged
 
   def currentFunction: Function =
@@ -34,6 +36,7 @@ class ProgramModel(
     val newFunctions = ast.functions.appended(fun)
     ast = ast.copy(functions = newFunctions)
     currentSelectedFunctionId = fun.id
+    incrRevision()
     flowrunChannel := FlowRun.Event.Deselected
     flowrunChannel := FlowRun.Event.FunctionUpdated
 
@@ -55,6 +58,7 @@ class ProgramModel(
     val newFunctions = ast.functions.filterNot(_.id == id)
     ast = ast.copy(functions = newFunctions)
     currentSelectedFunctionId = MainFunId
+    incrRevision()
     flowrunChannel := FlowRun.Event.Deselected
     flowrunChannel := FlowRun.Event.FunctionUpdated
 
@@ -76,6 +80,7 @@ class ProgramModel(
       else f
     }
     ast = ast.copy(functions = newFunctions)
+    incrRevision()
     flowrunChannel := FlowRun.Event.FunctionUpdated
 
   /* per-function */
@@ -102,7 +107,7 @@ class ProgramModel(
           val newFunctions = ast.functions.updated(idx, newFunction)
           ast = ast.copy(functions = newFunctions)
     }
-
+    incrRevision()
     flowrunChannel := evt
   }
 }

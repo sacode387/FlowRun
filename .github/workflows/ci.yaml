@@ -18,4 +18,6 @@ jobs:
 
       - name: Build and test
         shell: bash
-        run: sbt test
+        run: |
+          npm install jsdom
+          sbt test

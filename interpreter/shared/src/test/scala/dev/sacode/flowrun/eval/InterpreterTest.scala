@@ -46,8 +46,8 @@ object InterpreterTests extends TestSuite {
         val scope = interpreter.symTab.globalScope.childScopes.head
         assert(!scope.isDeclaredVar("nope"))
         assert(scope.isDeclaredVar("empty"))
-        intercept[EvalException](scope.getValue("", "nope"))
-        intercept[EvalException](scope.getValue("", "empty"))
+        assertThrows[EvalException](scope.getValue("", "nope"))
+        assertThrows[EvalException](scope.getValue("", "empty"))
       }
     }
 

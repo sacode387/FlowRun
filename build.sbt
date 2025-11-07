@@ -31,7 +31,7 @@ lazy val editor = (project in file("editor"))
     name := "flowrun-editor",
     libraryDependencies ++= Seq(
       "com.lihaoyi" %%% "scalatags" % "0.13.1",
-      "com.lihaoyi" %%% "utest" % "0.8.5" % Test
+      "com.lihaoyi" %%% "utest" % "0.9.1" % Test
     ),
     scalacOptions ++= Seq(
       "-Xmax-inlines",
@@ -57,7 +57,7 @@ lazy val interpreter = crossProject(JVMPlatform, JSPlatform)
       "io.github.cquiroz" %%% "scala-java-time" % "2.6.0",
       "com.outr" %%% "reactify" % "4.1.3",
       "ba.sake" %%% "tupson" % "0.18.0",
-      "com.lihaoyi" %%% "utest" % "0.8.5" % Test
+      "com.lihaoyi" %%% "utest" % "0.9.1" % Test
     ),
     scalacOptions ++= Seq(
       "-Xmax-inlines",
