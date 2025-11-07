@@ -1,6 +1,6 @@
 
 ## Prerequisites
-- jdk 1.8, 11 or 17..
+- jdk 11+
 - sbt
 - VSCode or IntelliJ (with respective plugins: Metals/Scala)
 
