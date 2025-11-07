@@ -1,6 +1,6 @@
 inThisBuild(
   List(
-    scalaVersion := "3.6.2",
+    scalaVersion := "3.7.3",
     evictionErrorLevel := Level.Warn,
     publish / skip := true,
     scalafmtSbt := true,
@@ -56,7 +56,7 @@ lazy val interpreter = crossProject(JVMPlatform, JSPlatform)
     libraryDependencies ++= Seq(
       "io.github.cquiroz" %%% "scala-java-time" % "2.6.0",
       "com.outr" %%% "reactify" % "4.1.3",
-      "ba.sake" %%% "tupson" % "0.13.0",
+      "ba.sake" %%% "tupson" % "0.18.0",
       "com.lihaoyi" %%% "utest" % "0.8.5" % Test
     ),
     scalacOptions ++= Seq(
