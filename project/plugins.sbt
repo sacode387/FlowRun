@@ -11,4 +11,4 @@ addSbtPlugin("com.github.sbt" % "sbt-web" % "1.5.8")
 
 addSbtPlugin("org.scalameta" % "sbt-scalafmt" % "2.5.3")
 
-addSbtPlugin("com.github.sbt" % "sbt-ci-release" % "1.9.2")
+addSbtPlugin("com.github.sbt" % "sbt-ci-release" % "1.11.2")
