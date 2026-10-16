@@ -44,12 +44,10 @@ class FlowchartPresenter(
     graphviz.resetZoom()
 
   def disable(mode: ExecMode): Unit =
-    flowRunElements.drawArea.classList.add("flowrun--disabled")
     if mode == ExecMode.NORMAL then flowRunElements.runButton.classList.add("flowrun--disabled")
     flowRunElements.stopButton.classList.remove("flowrun--disabled")
 
   def enable(): Unit =
-    flowRunElements.drawArea.classList.remove("flowrun--disabled")
     flowRunElements.runButton.classList.remove("flowrun--disabled")
     flowRunElements.stopButton.classList.add("flowrun--disabled")
 

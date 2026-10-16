@@ -120,23 +120,25 @@ class FlowRunEditor(
     "click",
     (event: dom.MouseEvent) => {
       event.preventDefault()
-      DomUtils.getNearestSvgNode(event) match {
-        case ("NODE", n) =>
-          val idParts = n.id.split("#", -1)
-          val nodeId = idParts(0)
-          if !n.classList.contains("flowrun-not-selectable") then
-            programModel.currentSelectedStmtId = Some(nodeId)
-            if mode.editable then
-              outputArea.clearSyntax()
-              flowchartPresenter.loadCurrentFunction() // to highlight new node..
-              statementEditor.edit(nodeId)
-            end if
-            flowrunChannel := FlowRun.Event.StmtSelected
-        case ("EDGE", n) =>
-          if mode.editable then ctxMenu.handleEdgeRightClick(event, n)
-        case _ =>
-          flowrunChannel := FlowRun.Event.Deselected
-      }
+      // Keep zoom and pan available while execution locks chart editing.
+      if !interpreter.isRunning then
+        DomUtils.getNearestSvgNode(event) match {
+          case ("NODE", n) =>
+            val idParts = n.id.split("#", -1)
+            val nodeId = idParts(0)
+            if !n.classList.contains("flowrun-not-selectable") then
+              programModel.currentSelectedStmtId = Some(nodeId)
+              if mode.editable then
+                outputArea.clearSyntax()
+                flowchartPresenter.loadCurrentFunction() // to highlight new node..
+                statementEditor.edit(nodeId)
+              end if
+              flowrunChannel := FlowRun.Event.StmtSelected
+          case ("EDGE", n) =>
+            if mode.editable then ctxMenu.handleEdgeRightClick(event, n)
+          case _ =>
+            flowrunChannel := FlowRun.Event.Deselected
+        }
     }
   )
 
@@ -472,17 +474,18 @@ class FlowRunEditor(
 
       def showContextMenu(event: dom.MouseEvent) = {
         event.preventDefault()
-        DomUtils.getNearestSvgNode(event) match {
-          case ("NODE", n) =>
-            val idParts = n.id.split("#", -1)
-            val nodeId = idParts(0)
-            val tpe = idParts(1)
-            ctxMenu.handleNodeRightClick(event, nodeId, tpe)
-          case ("EDGE", n) =>
-            ctxMenu.handleEdgeRightClick(event, n)
-          case _ =>
-            flowrunChannel := FlowRun.Event.Deselected
-        }
+        if !interpreter.isRunning then
+          DomUtils.getNearestSvgNode(event) match {
+            case ("NODE", n) =>
+              val idParts = n.id.split("#", -1)
+              val nodeId = idParts(0)
+              val tpe = idParts(1)
+              ctxMenu.handleNodeRightClick(event, nodeId, tpe)
+            case ("EDGE", n) =>
+              ctxMenu.handleEdgeRightClick(event, n)
+            case _ =>
+              flowrunChannel := FlowRun.Event.Deselected
+          }
       }
     }
 
