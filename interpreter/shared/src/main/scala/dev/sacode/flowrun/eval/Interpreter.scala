@@ -30,7 +30,8 @@ final class Interpreter(
     val programModel: ProgramModel,
     flowrunChannel: Channel[FlowRun.Event],
     setInterval: (Long, => Unit) => Any,
-    clearInterval: Any => Unit
+    clearInterval: Any => Unit,
+    breakpoints: Set[String] = Set.empty
 ) {
   import Interpreter.*
 
@@ -336,12 +337,14 @@ final class Interpreter(
       case Input(id, name, prompt) =>
         val baseName = name.split("\\[").head
         if !symTab.isDeclaredVar(baseName) then throw EvalException(s"Variable '$name' is not declared.", id)
-        state = State.WAITING_FOR_INPUT
         pauseBeforeNext = true
         nextExecStatementId = Some(stmt.id)
         flowrunChannel := FlowRun.Event.EvalBeforeExecStatement
-        flowrunChannel := FlowRun.Event.EvalInput(id, name, prompt)
-        waitForContinue().map(_ => NoVal)
+        waitForContinue().flatMap { _ =>
+          state = State.WAITING_FOR_INPUT
+          flowrunChannel := FlowRun.Event.EvalInput(id, name, prompt)
+          waitForContinue(statementBoundary = false).map(_ => NoVal)
+        }
 
       case Output(id, expr, newline) =>
         pauseBeforeNext = true
@@ -1191,7 +1194,9 @@ final class Interpreter(
     *
     * Adapted from https://stackoverflow.com/a/46619347/4496364
     */
-  private def waitForContinue(): Future[Unit] = {
+  private def waitForContinue(statementBoundary: Boolean = true): Future[Unit] = {
+    // Capture this boundary once: Continue releases it without bypassing later loop visits.
+    val atBreakpoint = statementBoundary && nextExecStatementId.exists(breakpoints.contains)
     val p = Promise[Unit]()
     // poll every PollIntervalMs to check the state of program
     // - if RUNNING set as success, continue evaluating the program
@@ -1200,7 +1205,8 @@ final class Interpreter(
       PollIntervalMs, {
         if !p.isCompleted then {
           if state == State.RUNNING then {
-            if execMode == ExecMode.STEP_BY_STEP then {
+            if statementBoundary && (execMode == ExecMode.STEP_BY_STEP || (execMode == ExecMode.DEBUG && atBreakpoint))
+            then {
               // proceed with execution
               if !pauseBeforeNext then p.success({})
             } else p.success({})
@@ -1374,7 +1380,7 @@ final class Interpreter(
           case Some(s: StringVal) => Some(s.value)
           case _                  => None
         flowrunChannel := FlowRun.Event.EvalInput(id, name, prompt)
-        waitForContinue().map(_ =>
+        waitForContinue(statementBoundary = false).map(_ =>
           lastReadInput.getOrElse(throw EvalException(s"readInput() did not get any input", id))
         )
       case ClearOutput =>

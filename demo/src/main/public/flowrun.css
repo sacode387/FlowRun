@@ -597,3 +597,17 @@ input[type="text"].flowrun--disabled {
 .flowrun--running {
     border: 3px var(--flowrun-red-lighter) solid;
 }
+/* Breakpoints retain their red outline while execution uses the node fill. */
+.flowrun--breakpoint polygon,
+.flowrun--breakpoint ellipse,
+.flowrun--breakpoint path {
+    stroke: #d32f2f !important;
+    stroke-width: 3px;
+    stroke-dasharray: 5 2;
+}
+
+.flowrun--breakpoint.flowrun--to-execute polygon,
+.flowrun--breakpoint.flowrun--to-execute ellipse,
+.flowrun--breakpoint.flowrun--to-execute path {
+    fill: var(--flowrun-green);
+}

@@ -75,13 +75,15 @@ class FlowRunEditor(
 
   private val flowrunChannel = Channel[FlowRun.Event]
   private val programModel = ProgramModel(program, flowrunChannel)
+  private var breakpoints = Set.empty[String]
   private var interpreter = newInterpeter
 
   private def newInterpeter = Interpreter(
     programModel,
     flowrunChannel,
     setInterval = (interval, body) => js.timers.setInterval(interval.toDouble)(body),
-    clearInterval = (handle) => js.timers.clearInterval(handle.asInstanceOf[js.timers.SetIntervalHandle])
+    clearInterval = (handle) => js.timers.clearInterval(handle.asInstanceOf[js.timers.SetIntervalHandle]),
+    breakpoints = breakpoints
   )
 
   @JSExport
@@ -100,6 +102,22 @@ class FlowRunEditor(
   private var startedTime: Instant = uninitialized
 
   flowRunElements.programNameInput.value = program.name
+
+  private val breakpointButton = button(
+    tpe := "button",
+    cls := "flowrun-btn-breakpoint",
+    title := "Select an executable statement, then toggle its temporary breakpoint",
+    attr("aria-label") := "Toggle breakpoint",
+    span(cls := "material-icons", "fiber_manual_record")
+  ).render
+  flowRunElements.runStepButton.parentNode.insertBefore(breakpointButton, flowRunElements.runStepButton.nextSibling)
+  breakpointButton.onclick = _ =>
+    if !breakpointButton.disabled then
+      programModel.currentSelectedStmtId.foreach { id =>
+        breakpoints = if breakpoints(id) then breakpoints - id else breakpoints + id
+        updateBreakpointMarkers()
+      }
+  updateBreakpointMarkers()
 
   attachRunAndCopyListeners()
 
@@ -171,6 +189,7 @@ class FlowRunEditor(
   import FlowRun.Event.*
   flowrunChannel.attach {
     case EvalSuccess =>
+      flowchartPresenter.highlightExecuting(None)
       val finishedTime = Instant.now()
       val duration = Duration.between(startedTime, finishedTime)
       flowRunElements.runtimeOutput.appendChild(
@@ -261,9 +280,17 @@ class FlowRunEditor(
       doOnChange()
       doOnModelChange()
     case SvgMounted =>
+      updateBreakpointMarkers()
+      val pausedId = interpreter.nextExecStatementId.filter { id =>
+        interpreter.isRunning && interpreter.pauseBeforeNext &&
+        (interpreter.execMode == ExecMode.STEP_BY_STEP ||
+          (interpreter.execMode == ExecMode.DEBUG && breakpoints(id)))
+      }
+      flowchartPresenter.highlightExecuting(pausedId)
       Option(mountCallback).foreach { cb => cb(this) }
   }
   flowrunChannel.attach { _ =>
+    updateBreakpointMarkers()
     // on any event hide menus
     ctxMenu.hideAllMenus()
   }
@@ -301,17 +328,17 @@ class FlowRunEditor(
       )
     }
     flowRunElements.runButton.onclick = _ => {
-      if interpreter.isRunning then interpreter.execMode = ExecMode.NORMAL
-      else doRun(ExecMode.NORMAL)
+      if interpreter.isRunning then
+        interpreter.execMode = ExecMode.DEBUG
+        interpreter.pauseBeforeNext = false
+      else doRun(ExecMode.DEBUG)
     }
 
     flowRunElements.runStepButton.onclick = _ => {
-      if interpreter.isRunning
-      then interpreter.pauseBeforeNext = false // proceed
+      if interpreter.isRunning then
+        interpreter.execMode = ExecMode.STEP_BY_STEP
+        interpreter.pauseBeforeNext = false
       else doRun(ExecMode.STEP_BY_STEP)
-
-      // ako je RUNNING ne dat mu da steppa / restarta
-      // if interpreter.isRunning then interpreter.pauseBeforeNext = true
     }
 
     flowRunElements.stopButton.onclick = _ => {
@@ -346,6 +373,8 @@ class FlowRunEditor(
           file.text().`then` { fileText =>
             try {
               val loadedProgram = fileText.parseJson[Program].copy(id = AST.newId)
+              breakpoints = Set.empty
+              programModel.currentSelectedFunctionId = ProgramModel.MainFunId
               programModel.ast = loadedProgram
               flowRunElements.programNameInput.value = loadedProgram.name
               flowrunChannel := FlowRun.Event.FunctionSelected
@@ -385,6 +414,8 @@ class FlowRunEditor(
         dom.window.navigator.clipboard.readText().`then` { copiedText =>
           try {
             val loadedProgram = copiedText.parseJson[Program].copy(id = AST.newId)
+            breakpoints = Set.empty
+            programModel.currentSelectedFunctionId = ProgramModel.MainFunId
             programModel.ast = loadedProgram
             flowrunChannel := FlowRun.Event.FunctionSelected
           } catch { e =>
@@ -430,9 +461,9 @@ class FlowRunEditor(
     // context menu setup
     // handling pointer events manually because of ipad quirks
     locally {
-      var   pressTimer = 0
-      var startX = 0D
-      var startY = 0D
+      var pressTimer = 0
+      var startX = 0d
+      var startY = 0d
       var isLongPress = false
       val element = flowRunElements.drawArea
       element.addEventListener(
@@ -444,7 +475,7 @@ class FlowRunEditor(
 
           // Only set timer for touch/pen, not mouse
           if event.pointerType != "mouse" then {
-            pressTimer =  dom.window.setTimeout(
+            pressTimer = dom.window.setTimeout(
               () => {
                 isLongPress = true
                 showContextMenu(event)
@@ -454,20 +485,15 @@ class FlowRunEditor(
           }
         }
       )
-      element.addEventListener("pointermove", (_: dom.Event) =>
-        dom.window.clearTimeout(pressTimer)
-      )
-      element.addEventListener("pointerup", (_: dom.Event) =>
-        dom.window.clearTimeout(pressTimer)
-      )
+      element.addEventListener("pointermove", (_: dom.Event) => dom.window.clearTimeout(pressTimer))
+      element.addEventListener("pointerup", (_: dom.Event) => dom.window.clearTimeout(pressTimer))
 
       // Handle right-click for mouse
       element.addEventListener(
         "contextmenu",
         (event: dom.MouseEvent) => {
           // Don't show if long-press already triggered
-          if isLongPress then
-            isLongPress = false;
+          if isLongPress then isLongPress = false;
           showContextMenu(event)
         }
       )
@@ -516,6 +542,32 @@ class FlowRunEditor(
       programModel.setConfig(newConfig)
     }
   }
+
+  private def updateBreakpointMarkers(): Unit =
+    def ids(stmt: Statement): Set[String] =
+      val children = stmt match
+        case s: Statement.Block   => s.statements
+        case s: Statement.If      => List(s.trueBlock, s.falseBlock)
+        case s: Statement.While   => List(s.body)
+        case s: Statement.DoWhile => List(s.body)
+        case s: Statement.ForLoop => List(s.body)
+        case _                    => Nil
+      val ownId = stmt match
+        case _: (Statement.Comment | Statement.Block) => Set.empty[String]
+        case _                                        => Set(stmt.id)
+      children.flatMap(ids).toSet ++ ownId
+    val validIds = programModel.ast.allFunctions.flatMap(_.statements).flatMap(ids).toSet
+    breakpoints = breakpoints.intersect(validIds)
+    flowRunElements.runButton.title = if interpreter.isRunning then "Continue to next breakpoint" else "Run"
+    breakpointButton.disabled = interpreter.isRunning || !programModel.currentSelectedStmtId.exists(validIds.contains)
+    breakpointButton.setAttribute(
+      "aria-pressed",
+      programModel.currentSelectedStmtId.exists(breakpoints.contains).toString
+    )
+    flowRunElements.drawArea.querySelectorAll(".node").foreach { node =>
+      val id = node.id.split("#", -1).head
+      node.classList.toggle("flowrun--breakpoint", breakpoints(id))
+    }
 
   private def doOnChange(): Unit =
     val id = programModel.currentSelectedStmtId.getOrElse("")
