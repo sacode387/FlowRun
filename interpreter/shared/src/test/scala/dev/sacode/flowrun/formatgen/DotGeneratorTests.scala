@@ -86,8 +86,8 @@ object DotGeneratorTests extends TestSuite {
       p("c") ==> point(-1, 1)
       p("end_b") ==> point(1, 2)
       p("end_c") ==> point(-1, 2)
-      p("end_a") ==> point(0, 3)
-      p("return") ==> point(0, 4)
+      p("end_a") ==> point(0, 2)
+      p("return") ==> point(0, 3)
       editIds(dot) ==> Set(
         "begin@fun-main",
         "a@at",
@@ -100,7 +100,12 @@ object DotGeneratorTests extends TestSuite {
         "end_c@af",
         "end_a@fun-main"
       )
-      assert(dot.contains("a:e -> b:w"), dot.contains("a:w -> c:e"))
+      assert(
+        dot.contains("a:e -> b:w"),
+        dot.contains("a:w -> c:e"),
+        dot.contains("end_b:w -> end_a:e"),
+        dot.contains("end_c:e -> end_a:w")
+      )
       checkInsertionTargets(branch("a", List(branch("b")), List(branch("c"))), dot)
     }
 
@@ -138,7 +143,9 @@ object DotGeneratorTests extends TestSuite {
           if onTrue then p("a")._1 < p("b")._1 && p("b")._1 < p("c")._1
           else p("a")._1 > p("b")._1 && p("b")._1 > p("c")._1
         )
-        assert(p("end_c")._2 > p("end_b")._2, p("end_b")._2 > p("end_a")._2, p("end_a")._2 > p("return")._2)
+        p("end_c")._2 ==> p("end_b")._2
+        p("end_b")._2 ==> p("end_a")._2
+        assert(p("end_a")._2 > p("return")._2)
         val continuing = if onTrue then "t" else "f"
         val outcome = if onTrue then "f" else "t"
         editIds(dot) ==> Set(
@@ -174,9 +181,11 @@ object DotGeneratorTests extends TestSuite {
         p("c")._1 < p("a")._1,
         p("a")._1 < p("b")._1,
         p("b")._1 < p("d")._1,
-        p("end_a")._2 < p("end_b")._2,
-        p("end_a")._2 < p("end_c")._2
+        p("end_a")._2 < p("end_dummy_down_loop")._2
       )
+      p("end_a")._2 ==> p("end_b")._2
+      p("end_a")._2 ==> p("end_c")._2
+      p("end_a")._2 ==> p("end_d")._2
     }
 
     test("long conditions grow the column spacing to fit their rendered widths") {
