@@ -40,9 +40,26 @@ class ProgramModel(
     flowrunChannel := FlowRun.Event.Deselected
     flowrunChannel := FlowRun.Event.FunctionUpdated
 
+  // Calls in the body retain their original targets, including recursive calls.
+  def duplicateFunction(id: String): Unit =
+    val source = ast.functions.find(_.id == id).getOrElse {
+      throw IllegalArgumentException(s"Cannot duplicate function $id")
+    }
+    val names = ast.allFunctions.map(_.name).toSet
+    val base = s"${source.name}Copy"
+    val name = Iterator.from(1).map(n => if n == 1 then base else s"$base$n").find(!names(_)).get
+    addFunction(
+      source.copy(
+        rawId = AST.newId,
+        name = name,
+        parameters = source.parameters.map(_.copy(id = AST.newId)),
+        statements = source.statements.map(_.duplicated)
+      )
+    )
+
   def addFunction(): Unit =
     val lastFunNum = ast.functions
-      .map(_.name.substring(3))
+      .map(_.name.drop(3))
       .flatMap(_.toIntOption)
       .maxOption
       .getOrElse(0)

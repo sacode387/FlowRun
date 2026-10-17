@@ -26,7 +26,7 @@ end Statement
 object Statement:
 
   case class Begin(id: String) extends Statement derives JsonRW:
-    def duplicated: Statement = this
+    def duplicated: Statement = copy(id = AST.newId)
     override def label = "Begin"
 
   case class Return(

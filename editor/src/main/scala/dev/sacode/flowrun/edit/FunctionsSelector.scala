@@ -37,9 +37,18 @@ class FunctionSelector(
         programModel.deleteFunction(f.id)
       }
 
+      val duplicateFunButton = button(
+        tpe := "button",
+        cls := "flowrun-btn-duplicate-fun",
+        title := "Duplicate function (calls keep their original targets)",
+        attr("aria-label") := "Duplicate function",
+        span(cls := "material-icons", "content_copy")
+      ).render
+      duplicateFunButton.onclick = _ => programModel.duplicateFunction(f.id)
+
       div(
         label(title := f.verboseLabel)(radio, span(f.label)),
-        Option.when(!f.isMain && mode.editable)(deleteFunButton)
+        Option.when(!f.isMain && mode.editable)(Seq(duplicateFunButton, deleteFunButton))
       )
     }
 
