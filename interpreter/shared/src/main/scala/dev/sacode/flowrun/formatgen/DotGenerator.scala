@@ -2,13 +2,14 @@ package dev.sacode.flowrun
 package formatgen
 
 import dev.sacode.flowrun.parse.*
-import dev.sacode.flowrun.ast.*, Expression.Type, Statement.*
+import dev.sacode.flowrun.ast.*, Statement.*
+import DotFormatting.*
 
 class DotGenerator(function: Function, flowRunTheme: FlowRunTheme) {
 
-  private val xIncrement = 120
-  private val yIncrement = 90
-  private val PxInInch = 96
+  private val layout = FlowchartLayout(function)
+  private val choices = CompactChoiceDotGenerator(layout, flowRunTheme, nodeDOT, edgeDOT)
+  import layout.{widthFalse, widthTrue}
 
   def generate: String =
     s"""
@@ -49,8 +50,6 @@ class DotGenerator(function: Function, flowRunTheme: FlowRunTheme) {
       posX: Int,
       posY: Int
   ): (String, Int) = {
-    import AST.newId
-
     // group puts elements of one branch in a straight line
     val group = s""" group="$blockId" """.trim
 
@@ -112,6 +111,9 @@ class DotGenerator(function: Function, flowRunTheme: FlowRunTheme) {
               |  label="$lbl" tooltip="$lbl" ${flowRunTheme.callNode.graphvizColors}]
               |""".stripMargin.replaceAll("\n", " ")
         (dot, posY)
+
+      case stmt: If if choices.supports(stmt) =>
+        choices.nodes(stmt, blockId, posX, posY)
 
       case stmt: If =>
         val lbl = stmt.label.toGraphvizLbl
@@ -324,6 +326,9 @@ class DotGenerator(function: Function, flowRunTheme: FlowRunTheme) {
         val edgeId = s"${stmt.id}@$blockId"
         s"""${stmt.id}:s -> $nextStmtId:$nextStmtDir [id="$edgeId" ${edgeAttrs(nextStmtId)}]"""
 
+      case stmt: If if choices.supports(stmt) =>
+        choices.edges(stmt, blockId, nextStmtId, nextStmtDir)
+
       case stmt: If =>
         val ifEndId = s"end_${stmt.id}"
         val ifEndEdgeId = s"$ifEndId@${blockId}"
@@ -528,70 +533,4 @@ class DotGenerator(function: Function, flowRunTheme: FlowRunTheme) {
     }
   }
 
-  // Graphviz uses "mathematical" coordinates, with bottom left corner being (0,0)
-  // https://stackoverflow.com/questions/55905661/how-to-force-neato-engine-to-reverse-node-order
-  // it's easier here to have (0,0) at top-center (we just flip y axis that is..)
-  private def pos(x: Int, y: Int, yOff: Int = 0): String =
-    val xPx: Double = if x == 0 then 0 else px2Inch(x * xIncrement)
-    val yPx = if y == 0 then 0 else px2Inch(y * yIncrement + yOff)
-    val realY = 10_000 - yPx
-    s""" pos="$xPx,$realY!" """.trim
-
-  // neato requires inches for "pos"
-  private def px2Inch(px: Int): Double =
-    px.toDouble / PxInInch
-
-  private def dimensions(label: String, luft: Boolean = false): String =
-    val w = label.length * 0.11 + (if luft then 0.5 else 0.2)
-    val width = w max 1
-    val h = 0.4 + (if luft then 0.1 else 0)
-    s"height=$h width=$width fixedsize=true"
-
-  private def edgeAttrs(nextStmtId: String): String =
-    val maybeNoArrow = Option.when(nextStmtId.contains("dummy"))("arrowhead=none").getOrElse("")
-    s""" tailtooltip=" " edgetooltip=" " $maybeNoArrow """.trim
-
-  //// Statement utils
-
-  // umm, this logic is a bit hard to explain
-  // best to concentrate on it visually
-  // look nested ifs
-  // depth is CRUCIAL
-  private def widthFalse(stmt: Statement, depth: Int): Int = stmt match
-    case stmt: If =>
-      val wlMax = stmt.falseBlock.statements.map(s => widthFalse(s, depth + 1)).maxOption.getOrElse(0)
-      val wrMax = stmt.falseBlock.statements.map(s => widthTrue(s, depth + 1)).maxOption.getOrElse(0)
-      width(stmt) + 1 + (if depth == 0 then wrMax else wlMax + wrMax)
-    case stmt: While   => width(stmt) + 1
-    case stmt: DoWhile => width(stmt)
-    case stmt: ForLoop => width(stmt) + 1
-    case stmt          => width(stmt)
-
-  private def widthTrue(statement: Statement, depth: Int): Int = statement match
-    case stmt: If =>
-      val wlMax = stmt.trueBlock.statements.map(s => widthFalse(s, depth + 1)).maxOption.getOrElse(0)
-      val wrMax = stmt.trueBlock.statements.map(s => widthTrue(s, depth + 1)).maxOption.getOrElse(0)
-      width(stmt) + 1 + (if depth == 0 then wlMax else wlMax + wrMax)
-    case stmt: While =>
-      val wlMax = stmt.body.statements.map(s => widthFalse(s, depth + 1)).maxOption.getOrElse(0)
-      val wrMax = stmt.body.statements.map(s => widthTrue(s, depth + 1)).maxOption.getOrElse(0)
-      width(stmt) + 1 + (if depth == 0 then wlMax else wlMax + wrMax)
-    case stmt: DoWhile =>
-      val wlMax = stmt.body.statements.map(s => widthFalse(s, depth + 1)).maxOption.getOrElse(0)
-      val wrMax = stmt.body.statements.map(s => widthTrue(s, depth + 1)).maxOption.getOrElse(0)
-      width(stmt) + 1 + (if depth == 0 then wrMax else wlMax + wrMax)
-    case stmt: ForLoop =>
-      val wlMax = stmt.body.statements.map(s => widthFalse(s, depth + 1)).maxOption.getOrElse(0)
-      val wrMax = stmt.body.statements.map(s => widthTrue(s, depth + 1)).maxOption.getOrElse(0)
-      width(stmt) + 1 + (if depth == 0 then wlMax else wlMax + wrMax)
-    case stmt => width(stmt)
-
-  private def width(stmt: Statement): Int =
-    (stmt.label.toGraphvizLbl.length.toDouble / 19).floor.toInt
-
-  extension (str: String) {
-    def toGraphvizLbl: String =
-      val escaped = str.replace("\"", "\\\"")
-      if escaped.endsWith("\\") then s"${escaped}\\" else escaped
-  }
 }
