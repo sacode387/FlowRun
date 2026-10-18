@@ -23,6 +23,7 @@ object FlowRun:
     case FunctionSelected
     case StmtSelected
     case Deselected
+    case ProgramReplaced
     case ConfigChanged
     case SvgMounted
 

@@ -9,24 +9,78 @@ class ProgramModel(
 ) {
   import ProgramModel.*
 
-  var ast: Program = initAst
+  private var currentAst: Program = initAst
+  def ast: Program = currentAst
+
+  private case class Snapshot(program: Program, functionId: String, statementId: Option[String])
+  private var past = List.empty[Snapshot]
+  private var future = List.empty[Snapshot]
+  private var textEditPending = false
+  private var textGroupRecorded = false
+
+  def canUndo: Boolean = past.nonEmpty
+  def canRedo: Boolean = future.nonEmpty
+
+  // Called before a text input event; only its mutation may join the current typing group.
+  def recordTextEdit(): Unit = textEditPending = true
+
+  def endEditGroup(): Unit =
+    textEditPending = false
+    textGroupRecorded = false
+
+  private def snapshot: Snapshot = Snapshot(ast, currentSelectedFunctionId, currentSelectedStmtId)
+
+  private def commit(next: Program, event: FlowRun.Event)(select: => Unit = ()): Unit =
+    val typing = textEditPending
+    textEditPending = false
+    if next != ast then
+      if !typing || !textGroupRecorded then past = (snapshot :: past).take(100)
+      future = Nil
+      textGroupRecorded = typing
+      currentAst = next.copy(revision = math.max(ast.revision, next.revision) + 1)
+      select
+      flowrunChannel := event
+
+  def replaceProgram(program: Program): Unit =
+    endEditGroup()
+    commit(program, FlowRun.Event.ProgramReplaced) {
+      currentSelectedFunctionId = MainFunId
+      currentSelectedStmtId = None
+    }
+
+  def undo(): Unit =
+    past.headOption.foreach { previous =>
+      future = snapshot :: future
+      past = past.tail
+      restore(previous)
+    }
+
+  def redo(): Unit =
+    future.headOption.foreach { next =>
+      past = (snapshot :: past).take(100)
+      future = future.tail
+      restore(next)
+    }
+
+  private def restore(saved: Snapshot): Unit =
+    endEditGroup()
+    currentAst = saved.program.copy(revision = ast.revision + 1)
+    currentSelectedFunctionId = saved.functionId
+    if !ast.allFunctions.exists(_.id == currentSelectedFunctionId) then currentSelectedFunctionId = MainFunId
+    currentSelectedStmtId = saved.statementId.filter { id =>
+      FunctionModel(currentFunction).findById(currentFunction.statements, id).nonEmpty
+    }
+    flowrunChannel := FlowRun.Event.ProgramReplaced
 
   // global vars go brrrrr
   var currentSelectedFunctionId: String = MainFunId
   var currentSelectedStmtId: Option[String] = None
 
-  private def incrRevision(): Unit =
-    ast = ast.copy(revision = ast.revision + 1)
-
   def setName(name: String): Unit =
-    ast = ast.copy(name = name)
-    incrRevision()
-    flowrunChannel := FlowRun.Event.FunctionUpdated
+    commit(ast.copy(name = name), FlowRun.Event.FunctionUpdated)()
 
   def setConfig(config: FlowRunConfig): Unit =
-    ast = ast.copy(config = config)
-    incrRevision()
-    flowrunChannel := FlowRun.Event.ConfigChanged
+    commit(ast.copy(config = config), FlowRun.Event.ConfigChanged)()
 
   def currentFunction: Function =
     if currentSelectedFunctionId == MainFunId then ast.main
@@ -34,11 +88,11 @@ class ProgramModel(
 
   def addFunction(fun: Function): Unit =
     val newFunctions = ast.functions.appended(fun)
-    ast = ast.copy(functions = newFunctions)
-    currentSelectedFunctionId = fun.id
-    incrRevision()
+    commit(ast.copy(functions = newFunctions), FlowRun.Event.FunctionUpdated) {
+      currentSelectedFunctionId = fun.id
+      currentSelectedStmtId = None
+    }
     flowrunChannel := FlowRun.Event.Deselected
-    flowrunChannel := FlowRun.Event.FunctionUpdated
 
   // Calls in the body retain their original targets, including recursive calls.
   def duplicateFunction(id: String): Unit =
@@ -73,11 +127,11 @@ class ProgramModel(
 
   def deleteFunction(id: String): Unit =
     val newFunctions = ast.functions.filterNot(_.id == id)
-    ast = ast.copy(functions = newFunctions)
-    currentSelectedFunctionId = MainFunId
-    incrRevision()
+    commit(ast.copy(functions = newFunctions), FlowRun.Event.FunctionUpdated) {
+      currentSelectedFunctionId = MainFunId
+      currentSelectedStmtId = None
+    }
     flowrunChannel := FlowRun.Event.Deselected
-    flowrunChannel := FlowRun.Event.FunctionUpdated
 
   def updateFunction(
       id: String,
@@ -96,9 +150,7 @@ class ProgramModel(
         updatedFun
       else f
     }
-    ast = ast.copy(functions = newFunctions)
-    incrRevision()
-    flowrunChannel := FlowRun.Event.FunctionUpdated
+    commit(ast.copy(functions = newFunctions), FlowRun.Event.FunctionUpdated)()
 
   /* per-function */
   def addStmt(stmt: Statement, blockId: String, afterId: String): Unit =
@@ -115,17 +167,12 @@ class ProgramModel(
 
   private def update(transform: FunctionModel => FunctionModel, evt: FlowRun.Event): Unit = {
     val newFunction = transform(FunctionModel(currentFunction)).ast
-    if currentFunction.isMain then ast = ast.copy(main = newFunction)
-    else {
-      ast.functions.indexWhere(_.id == currentSelectedFunctionId) match
-        case -1 =>
-          println(s"Oops, function $currentSelectedFunctionId does not exist...")
-        case idx =>
-          val newFunctions = ast.functions.updated(idx, newFunction)
-          ast = ast.copy(functions = newFunctions)
-    }
-    incrRevision()
-    flowrunChannel := evt
+    val next =
+      if currentFunction.isMain then ast.copy(main = newFunction)
+      else
+        val idx = ast.functions.indexWhere(_.id == currentSelectedFunctionId)
+        ast.copy(functions = ast.functions.updated(idx, newFunction))
+    commit(next, evt)()
   }
 }
 
@@ -287,7 +334,7 @@ case class FunctionModel(
   def doFind(statementId: String): Statement =
     findById(ast.statements, statementId).get
 
-  private def findById(
+  private[flowrun] def findById(
       statements: List[Statement],
       statementId: String
   ): Option[Statement] =

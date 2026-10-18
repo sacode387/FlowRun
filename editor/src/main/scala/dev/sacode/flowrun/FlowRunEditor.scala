@@ -119,6 +119,30 @@ class FlowRunEditor(
       }
   updateBreakpointMarkers()
 
+  private val undoButton = historyButton("undo", "Undo (Ctrl/Cmd+Z)")
+  private val redoButton = historyButton("redo", "Redo (Ctrl/Cmd+Shift+Z or Ctrl+Y)")
+  if mode.editable then
+    val toolbar = flowRunElements.runButton.parentNode
+    toolbar.insertBefore(undoButton, flowRunElements.runButton)
+    toolbar.insertBefore(redoButton, flowRunElements.runButton)
+    undoButton.onclick = _ => restoreHistory(redo = false)
+    redoButton.onclick = _ => restoreHistory(redo = true)
+    mountElem.tabIndex = 0
+    flowRunElements.drawArea.setAttribute("tabindex", "0")
+    mountElem.addEventListener("keydown", (event: dom.KeyboardEvent) => {
+      if !isTextField(event.target) && !event.defaultPrevented && !event.altKey &&
+          (event.ctrlKey || event.metaKey) then
+        val key = event.key.toLowerCase
+        if key == "z" || (key == "y" && event.ctrlKey) then
+          event.preventDefault()
+          restoreHistory(redo = event.shiftKey || key == "y")
+    })
+    mountElem.addEventListener("input", (event: dom.Event) => {
+      if isTextField(event.target) then programModel.recordTextEdit()
+    }, true)
+    mountElem.addEventListener("focusout", (_: dom.Event) => programModel.endEditGroup())
+  updateHistoryButtons()
+
   attachRunAndCopyListeners()
 
   // fixed layout is when you force layout with a class
@@ -215,6 +239,7 @@ class FlowRunEditor(
       doOnChange()
       doOnModelChange()
     case StmtDeleted | StmtAdded =>
+      programModel.endEditGroup()
       programModel.currentSelectedStmtId = None
       outputArea.clearStmt()
       outputArea.clearSyntax()
@@ -261,22 +286,35 @@ class FlowRunEditor(
       doOnChange()
       doOnModelChange()
     case FunctionSelected =>
+      programModel.endEditGroup()
       programModel.currentSelectedStmtId = None
       outputArea.clearStmt()
       outputArea.clearSyntax()
       functionSelector.loadFunctions()
       flowchartPresenter.loadCurrentFunction()
-      doOnModelChange()
       doOnChange()
     case StmtSelected =>
       doOnChange()
     case Deselected =>
+      programModel.endEditGroup()
       programModel.currentSelectedStmtId = None
       outputArea.clearStmt()
       outputArea.clearSyntax()
       flowchartPresenter.clearSelected()
       doOnChange()
+    case ProgramReplaced =>
+      outputArea.clearAll()
+      debugArea.clear()
+      syncConfigControls()
+      flowRunElements.programNameInput.value = programModel.ast.name
+      flowRunElements.programNameInput.style.width = s"${math.max(programModel.ast.name.length + 3, 10)}ch"
+      functionSelector.loadFunctions()
+      programModel.currentSelectedStmtId.foreach(statementEditor.edit)
+      flowchartPresenter.loadCurrentFunction()
+      doOnChange()
+      doOnModelChange()
     case ConfigChanged =>
+      syncConfigControls()
       doOnChange()
       doOnModelChange()
     case SvgMounted =>
@@ -291,6 +329,7 @@ class FlowRunEditor(
   }
   flowrunChannel.attach { _ =>
     updateBreakpointMarkers()
+    updateHistoryButtons()
     // on any event hide menus
     ctxMenu.hideAllMenus()
   }
@@ -316,7 +355,9 @@ class FlowRunEditor(
       outputArea = OutputArea(interpreter, flowRunElements, flowrunChannel)
       debugArea = DebugArea(interpreter, flowRunElements)
 
+      programModel.endEditGroup()
       interpreter.run(execMode)
+      updateHistoryButtons()
       dom.window.setTimeout(
         () => {
           // check after delay if it's running, to avoid flicker
@@ -373,11 +414,9 @@ class FlowRunEditor(
           file.text().`then` { fileText =>
             try {
               val loadedProgram = fileText.parseJson[Program].copy(id = AST.newId)
-              breakpoints = Set.empty
-              programModel.currentSelectedFunctionId = ProgramModel.MainFunId
-              programModel.ast = loadedProgram
-              flowRunElements.programNameInput.value = loadedProgram.name
-              flowrunChannel := FlowRun.Event.FunctionSelected
+              if !interpreter.isRunning then
+                breakpoints = Set.empty
+                programModel.replaceProgram(loadedProgram)
             } catch {
               case NonFatal(_) =>
                 toastify.Toastify(ToastifyOptions("Not a valid program", Color.yellow)).showToast()
@@ -414,10 +453,9 @@ class FlowRunEditor(
         dom.window.navigator.clipboard.readText().`then` { copiedText =>
           try {
             val loadedProgram = copiedText.parseJson[Program].copy(id = AST.newId)
-            breakpoints = Set.empty
-            programModel.currentSelectedFunctionId = ProgramModel.MainFunId
-            programModel.ast = loadedProgram
-            flowrunChannel := FlowRun.Event.FunctionSelected
+            if !interpreter.isRunning then
+              breakpoints = Set.empty
+              programModel.replaceProgram(loadedProgram)
           } catch { e =>
             toastify.Toastify(ToastifyOptions("Not a valid program", Color.yellow)).showToast()
           }
@@ -515,12 +553,7 @@ class FlowRunEditor(
       }
     }
 
-    flowRunElements.showFunctionsCheckbox.checked = programModel.ast.config.showFunctions
-    flowRunElements.showCodeCheckbox.checked = programModel.ast.config.showGenCode
-    flowRunElements.showDebugVarsCheckbox.checked = programModel.ast.config.showDebugVars
-    flowRunElements.showIoBtnsCheckbox.checked = programModel.ast.config.showIoBtns
-    flowRunElements.useInputPromptCheckbox.checked = programModel.ast.config.useInputPrompt
-    flowRunElements.echoEnteredValueCheckbox.checked = programModel.ast.config.echoEnteredValue
+    syncConfigControls()
 
     if !fixedLayout then
       flowRunElements.showFunctionsCheckbox.oninput = _ => setLayout()
@@ -542,6 +575,42 @@ class FlowRunEditor(
       programModel.setConfig(newConfig)
     }
   }
+
+  private def historyButton(icon: String, description: String): dom.html.Button =
+    button(
+      tpe := "button",
+      cls := s"flowrun-btn-$icon",
+      title := description,
+      attr("aria-label") := icon.capitalize,
+      span(cls := "material-icons", icon)
+    ).render
+
+  private def isTextField(target: dom.EventTarget): Boolean = target match
+    case input: dom.html.Input =>
+      Set("text", "search", "email", "url", "tel", "password", "number").contains(input.`type`)
+    case _: dom.html.TextArea => true
+    case element: dom.html.Element => element.isContentEditable
+    case _ => false
+
+  private def restoreHistory(redo: Boolean): Unit =
+    if mode.editable && !interpreter.isRunning then
+      if redo then programModel.redo() else programModel.undo()
+      mountElem.focus()
+
+  private def updateHistoryButtons(): Unit =
+    undoButton.disabled = interpreter.isRunning || !programModel.canUndo
+    redoButton.disabled = interpreter.isRunning || !programModel.canRedo
+
+  private def syncConfigControls(): Unit =
+    val config = programModel.ast.config
+    flowRunElements.showFunctionsCheckbox.checked = config.showFunctions
+    flowRunElements.showCodeCheckbox.checked = config.showGenCode
+    flowRunElements.showDebugVarsCheckbox.checked = config.showDebugVars
+    flowRunElements.showIoBtnsCheckbox.checked = config.showIoBtns
+    flowRunElements.useInputPromptCheckbox.checked = config.useInputPrompt
+    flowRunElements.echoEnteredValueCheckbox.checked = config.echoEnteredValue
+    flowRunElements.codeLang.value = config.lang
+    if !fixedLayout then updateLayout()
 
   private def updateBreakpointMarkers(): Unit =
     def ids(stmt: Statement): Set[String] =
