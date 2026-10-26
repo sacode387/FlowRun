@@ -103,14 +103,7 @@ class FlowRunEditor(
 
   flowRunElements.programNameInput.value = program.name
 
-  private val breakpointButton = button(
-    tpe := "button",
-    cls := "flowrun-btn-breakpoint",
-    title := "Select an executable statement, then toggle its temporary breakpoint",
-    attr("aria-label") := "Toggle breakpoint",
-    span(cls := "material-icons", "fiber_manual_record")
-  ).render
-  flowRunElements.runStepButton.parentNode.insertBefore(breakpointButton, flowRunElements.runStepButton.nextSibling)
+  private val breakpointButton = flowRunElements.breakpointButton
   breakpointButton.onclick = _ =>
     if !breakpointButton.disabled then
       programModel.currentSelectedStmtId.foreach { id =>
@@ -119,12 +112,9 @@ class FlowRunEditor(
       }
   updateBreakpointMarkers()
 
-  private val undoButton = historyButton("undo", "Undo (Ctrl/Cmd+Z)")
-  private val redoButton = historyButton("redo", "Redo (Ctrl/Cmd+Shift+Z or Ctrl+Y)")
+  private val undoButton = flowRunElements.undoButton
+  private val redoButton = flowRunElements.redoButton
   if mode.editable then
-    val toolbar = flowRunElements.runButton.parentNode
-    toolbar.insertBefore(undoButton, flowRunElements.runButton)
-    toolbar.insertBefore(redoButton, flowRunElements.runButton)
     undoButton.onclick = _ => restoreHistory(redo = false)
     redoButton.onclick = _ => restoreHistory(redo = true)
     mountElem.tabIndex = 0
@@ -576,15 +566,6 @@ class FlowRunEditor(
     }
   }
 
-  private def historyButton(icon: String, description: String): dom.html.Button =
-    button(
-      tpe := "button",
-      cls := s"flowrun-btn-$icon",
-      title := description,
-      attr("aria-label") := icon.capitalize,
-      span(cls := "material-icons", icon)
-    ).render
-
   private def isTextField(target: dom.EventTarget): Boolean = target match
     case input: dom.html.Input =>
       Set("text", "search", "email", "url", "tel", "password", "number").contains(input.`type`)
@@ -598,8 +579,11 @@ class FlowRunEditor(
       mountElem.focus()
 
   private def updateHistoryButtons(): Unit =
-    undoButton.disabled = interpreter.isRunning || !programModel.canUndo
-    redoButton.disabled = interpreter.isRunning || !programModel.canRedo
+    val historyVisible = mode.editable && !interpreter.isRunning
+    undoButton.classList.toggle("flowrun--hidden", !historyVisible)
+    redoButton.classList.toggle("flowrun--hidden", !historyVisible)
+    undoButton.disabled = !programModel.canUndo
+    redoButton.disabled = !programModel.canRedo
 
   private def syncConfigControls(): Unit =
     val config = programModel.ast.config

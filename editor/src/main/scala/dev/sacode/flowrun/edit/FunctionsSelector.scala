@@ -37,13 +37,7 @@ class FunctionSelector(
         programModel.deleteFunction(f.id)
       }
 
-      val duplicateFunButton = button(
-        tpe := "button",
-        cls := "flowrun-btn-duplicate-fun",
-        title := "Duplicate function (calls keep their original targets)",
-        attr("aria-label") := "Duplicate function",
-        span(cls := "material-icons", "content_copy")
-      ).render
+      val duplicateFunButton = flowRunElements.newDuplicateFunButton
       duplicateFunButton.onclick = _ => programModel.duplicateFunction(f.id)
 
       div(

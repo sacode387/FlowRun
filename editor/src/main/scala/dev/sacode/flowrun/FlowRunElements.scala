@@ -33,6 +33,10 @@ class FlowRunElements(
   val runButton: dom.html.Element = mountElem.querySelector(".flowrun-btn-run").asInstanceOf[dom.html.Element]
   val runStepButton: dom.html.Element = mountElem.querySelector(".flowrun-btn-run-step").asInstanceOf[dom.html.Element]
   val stopButton: dom.html.Element = mountElem.querySelector(".flowrun-btn-stop").asInstanceOf[dom.html.Element]
+  val breakpointButton: dom.html.Button =
+    mountElem.querySelector(".flowrun-btn-breakpoint").asInstanceOf[dom.html.Button]
+  val undoButton: dom.html.Button = mountElem.querySelector(".flowrun-btn-undo").asInstanceOf[dom.html.Button]
+  val redoButton: dom.html.Button = mountElem.querySelector(".flowrun-btn-redo").asInstanceOf[dom.html.Button]
 
   val flowrunDrawIoBtns: dom.html.Element =
     mountElem.querySelector(".flowrun-draw-io-btns").asInstanceOf[dom.html.Element]
@@ -54,6 +58,8 @@ class FlowRunElements(
   val addFunButton: dom.html.Element = mountElem.querySelector(".flowrun-btn-fun-add").asInstanceOf[dom.html.Element]
   private val deleteFunButton: dom.html.Element =
     mountElem.querySelector(".flowrun-btn-fun-delete").asInstanceOf[dom.html.Element]
+  private val duplicateFunButton: dom.html.Button =
+    mountElem.querySelector(".flowrun-btn-duplicate-fun").asInstanceOf[dom.html.Button]
 
   val addParamButton: dom.html.Element =
     mountElem.querySelector(".flowrun-btn-fun-add-param").asInstanceOf[dom.html.Element]
@@ -114,6 +120,9 @@ class FlowRunElements(
 
   def newDeleteFunButton: dom.html.Element =
     deleteFunButton.cloneNode(true).asInstanceOf[dom.html.Button]
+
+  def newDuplicateFunButton: dom.html.Button =
+    duplicateFunButton.cloneNode(true).asInstanceOf[dom.html.Button]
 
   def newDeleteParamButton: dom.html.Element =
     deleteParamButton.cloneNode(true).asInstanceOf[dom.html.Button]
