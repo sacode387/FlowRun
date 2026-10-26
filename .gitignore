@@ -21,6 +21,7 @@ bin/
 .metals/
 .vscode/
 .bsp/
+.basamake/
 out/
 
 node_modules/
