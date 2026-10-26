@@ -31,8 +31,11 @@
      <button class="flowrun-btn-zoom-reset"><span class="material-icons">zoom_out_map</span></button>
     </div>
     <div class="flowrun-draw-exec-btns">
+     <button class="flowrun-btn-undo" title="Undo (Ctrl/Cmd+Z)" aria-label="Undo"><span class="material-icons">undo</span></button>
+     <button class="flowrun-btn-redo" title="Redo (Ctrl/Cmd+Shift+Z or Ctrl+Y)" aria-label="Redo"><span class="material-icons">redo</span></button>
      <button class="flowrun-btn-run" title="Run"><span class="material-icons">play_arrow</span></button>
      <button class="flowrun-btn-run-step" title="Run Step By Step"><span class="material-icons">skip_next</span></button>
+     <button class="flowrun-btn-breakpoint" title="Select an executable statement, then toggle its temporary breakpoint" aria-label="Toggle breakpoint"><span class="material-icons">fiber_manual_record</span></button>
      <button class="flowrun-btn-stop flowrun--disabled" title="Stop"><span class="material-icons">stop</span></button>
     </div>
     <div class="flowrun-draw"></div>
@@ -56,6 +59,7 @@
    <!-- this whole div will be deleted -->
    <div class="flowrun-template-transient">
     <button class="flowrun-btn-fun-delete" title="Delete function"><span class="material-icons">remove</span></button>
+    <button class="flowrun-btn-duplicate-fun" title="Duplicate function (calls keep their original targets)" aria-label="Duplicate function"><span class="material-icons">content_copy</span></button>
     <button class="flowrun-btn-fun-add-param" title="Add new parameter"><span class="material-icons">add</span></button>
     <button class="flowrun-btn-fun-delete-param" title="Delete parameter"><span class="material-icons">remove</span></button>
     <select class="flowrun-input-select"></select> <input class="flowrun-input-text" type="text" size="10"> <input type="radio" class="flowrun-input-radio"> <input type="checkbox" class="flowrun-input-checkbox">
