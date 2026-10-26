@@ -59,6 +59,20 @@ object DotGeneratorTests extends TestSuite {
   }
 
   val tests = Tests {
+    test("diagram defaults soften the palette without changing semantic shapes") {
+      val dot = chart(Assign("assign", "x", "1"), Input("input", "x", None), branch("if"))
+
+      assert(
+        dot.contains("node [penwidth=1.2"),
+        dot.contains("style=\"filled\""),
+        dot.contains("edge [penwidth=1.35"),
+        dot.contains("color=\"#475569\""),
+        dot.contains("assign [id=\"assign#Assign\""),
+        dot.contains("shape=\"invtrapezium\""),
+        dot.contains("shape=\"diamond\"")
+      )
+    }
+
     test("ordinary decisions retain symmetric branches, merge and insertion targets") {
       val dot = chart(branch("a", List(Assign("yes", "x", "1")), List(Output("no", "x", true))))
       val p = positions(dot)

@@ -16,8 +16,8 @@ class DotGenerator(function: Function, flowRunTheme: FlowRunTheme) {
     |digraph {
     |  bgcolor="transparent"
     |
-    |  node [penwidth=0.5 fontsize="12" shape="box" style="filled" fontcolor="white" fontname="${flowRunTheme.fontName}"]
-    |  edge [penwidth=2 fontsize="10" color="#0A1931" arrowsize=0.8 fontname="${flowRunTheme.fontName}"]
+    |  node [penwidth=1.2 fontsize="12" shape="box" style="filled" fontcolor="#1E293B" fontname="${flowRunTheme.fontName}"]
+    |  edge [penwidth=1.35 fontsize="10" color="#475569" arrowsize=0.7 fontname="${flowRunTheme.fontName}"]
     |
     |#########
     |# NODES #

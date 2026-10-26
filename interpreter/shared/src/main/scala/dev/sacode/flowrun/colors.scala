@@ -26,8 +26,6 @@ case class FlowRunTheme(
 
 @JSExportTopLevel("FlowRunThemeObj")
 object FlowRunTheme:
-  // yellow, light_blue, blue, red
-  // #ffd166, #8de4ff, #015692,
   @JSExport
   val default = FlowRunTheme(
     fontName = "Courier New",
@@ -56,9 +54,9 @@ case class Color(
 }
 
 object Color:
-  val lightBlue = Color("#8de4ff", "#00799e", "#982b13")
-  val blue = Color("#015692", "#002a3a", "white")
-  val darkBlue = Color("#002a3a", "#001117", "white")
-  val yellow = Color("#ffd166", "#8f6400", "black")
-  val green = Color("#258139", "#214426", "white")
-  val grey = Color("#C0C0C0", "#A9A9A9", "white")
+  val lightBlue = Color("#D9F6E5", "#3A8C68", "#1B4332")
+  val blue = Color("#E0E7FF", "#6366F1", "#1E1B4B")
+  val darkBlue = Color("#C7D2FE", "#4F46E5", "#1E1B4B")
+  val yellow = Color("#FFF0C2", "#D38A11", "#713F12")
+  val green = Color("#D9F6E5", "#258139", "#1B4332")
+  val grey = Color("#E5E7EB", "#94A3B8", "#334155")
