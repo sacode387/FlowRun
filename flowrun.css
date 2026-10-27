@@ -180,6 +180,12 @@
     align-items: center;
     width: 100%;
     height: 100%;
+    overflow: hidden;
+    border: 1px solid #dbe7ea;
+    border-radius: 6px;
+    background-color: #f8fcfc;
+    background-image: radial-gradient(#cbdde0 0.75px, transparent 0.75px);
+    background-size: 16px 16px;
 }
 
 .flowrun-draw svg {
@@ -340,35 +346,43 @@ pre[class*=language-].flowrun-code {
 /* NODES */
 /**************************/
 .node:not(.flowrun-not-selectable):not(.flowrun--selected):hover polygon,
-.node:not(.flowrun-not-selectable):not(.flowrun--selected):hover ellipse {
-    stroke: var(--flowrun-light_blue-darker);
-    stroke-width: 1.5;
-    stroke-dasharray: 10 3;
+.node:not(.flowrun-not-selectable):not(.flowrun--selected):hover ellipse,
+.node:not(.flowrun-not-selectable):not(.flowrun--selected):hover path {
+    stroke: #0f766e;
+    stroke-width: 2;
+    stroke-dasharray: none;
     stroke-linejoin: round;
 }
 
 .node.flowrun--selected polygon,
-.node.flowrun--selected ellipse {
-    stroke: var(--flowrun-blue-darker);
-    stroke-width: 2;
-    stroke-dasharray: 10 3;
+.node.flowrun--selected ellipse,
+.node.flowrun--selected path {
+    stroke: #0f766e;
+    stroke-width: 2.5;
+    stroke-dasharray: none;
     stroke-linejoin: round;
+    filter: drop-shadow(0 2px 3px rgb(15 118 110 / 24%));
 }
 
 .node.flowrun--to-execute polygon,
-.node.flowrun--to-execute ellipse {
-    stroke: var(--flowrun-green);
-    stroke-width: 3;
-    stroke-dasharray: 10 5;
+.node.flowrun--to-execute ellipse,
+.node.flowrun--to-execute path {
+    stroke: #15803d;
+    stroke-width: 3.5;
+    stroke-dasharray: none;
     stroke-linejoin: round;
+    filter: drop-shadow(0 2px 4px rgb(21 128 61 / 34%));
 }
 
 
-.node.flowrun--error polygon {
+.node.flowrun--error polygon,
+.node.flowrun--error ellipse,
+.node.flowrun--error path {
     stroke: var(--flowrun-red);
     stroke-width: 3px;
     stroke-dasharray: 3 1;
     stroke-linejoin: round;
+    filter: drop-shadow(0 2px 4px rgb(212 54 39 / 30%));
 }
 
 
